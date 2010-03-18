@@ -3,7 +3,7 @@
     <parent>
         <artifactId>aved</artifactId>
         <groupId>aved</groupId>
-        <version>0.4.2-SNAPSHOT</version>
+        <version>0.4.2</version>
     </parent>
     <profiles>
         <profile>
@@ -65,7 +65,7 @@
             <plugin>
                 <groupId>org.mbari.aved.classifier</groupId>
                 <artifactId>NarMojo</artifactId>
-                <version>0.4.2-SNAPSHOT</version>
+                <version>0.4.2</version>
                 <configuration>
                     <name>MacOSX</name>
                     <arch>i386</arch>
@@ -130,18 +130,18 @@
     <groupId>aved</groupId>
     <artifactId>aved-ui</artifactId>
     <name>AVED graphical user interface</name>
-    <version>0.4.2-SNAPSHOT</version>
+    <version>0.4.2</version>
     <url>http://maven.apache.org</url>
     <dependencies>
         <dependency>
             <groupId>org.mbari.aved.mbarivision</groupId>
             <artifactId>api</artifactId>
-            <version>0.4.2-SNAPSHOT</version>
+            <version>0.4.2</version>
         </dependency>
         <dependency>
             <groupId>org.mbari.aved.classifier</groupId>
             <artifactId>sharedlibjni</artifactId>
-            <version>0.4.2-SNAPSHOT</version>
+            <version>0.4.2</version>
         </dependency>
         <dependency>
             <groupId>javax.media</groupId>
