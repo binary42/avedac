@@ -1,0 +1,32 @@
+##############################################################################
+# Setup vanilla universe, this means this program is not compiled with the
+# condor wrapper, and cannot be checkpointed or migrated.
+##################################m############################################
+universe = vanilla
+
+##############################################################################
+# Define the executable and don't transfer it
+##############################################################################
+executable = /bin/echo
+getenv = False
+transfer_executable = False
+requirements = (OpSys == "LINUX")
+
+##############################################################################
+# Arguments to pass to the executable 
+##############################################################################
+arguments = "AVED workflow completed"
+
+############################################################################
+# Notify user if this job experiences an error
+#############################################################################
+Notification = Error
+
+##############################################################################
+# Log files for this job
+##############################################################################
+log = condor_log/job.aved.log
+output = condor_log/job.finalizeaved.out.$(cluster)
+error = condor_log/job.finalizeaved.err.$(cluster)
+
+queue

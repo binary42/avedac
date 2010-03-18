@@ -1,0 +1,678 @@
+/* DEFAULT STYLESHEET FOR INTERIOR WEB PAGES */
+body
+{
+	background-color: #6d91d0;
+	margin: 5px;
+	background-image: url(./art/global/backgrounds/sea_bg.jpg);
+	background-repeat: repeat;
+	background-attachment: fixed;
+	font-family: Arial, sans-serif;
+	color: #000000;
+	font-size: px;
+}
+#command
+{
+	font-family: Times;
+	font-size: 12px;
+	font-weight: bold;
+	margin: 30px;
+}
+
+/* PAGE WIDTH (use "pagetable" to control the width of the interior pages) */
+#pagetable
+{
+	width: 80%;
+	background-color: #ffffff;
+	margin: 0px auto 0px auto;
+	padding: 0px;
+	min-width: 800px;
+}
+
+/* HEADER ELEMENTS */
+#printheader 
+	{ visibility:hidden;
+	display:none;
+		}
+
+#header
+{
+	height: 100px;
+	background-image: url(./art/global/header/logo_blue.jpg);
+	background-repeat: no-repeat;
+	background-color: #01014f;
+	position: relative;
+	margin: 0px;
+	padding: 0px;
+}
+#header_title
+{ 
+    font-family: papyrus;
+	color: #ffffff;
+	text-align: right;
+	padding: 1px 4px 1px 4px;
+	font-size: 20px; 
+}
+
+/* HEADER SEARCH BOX */
+#header_search
+{
+	position: absolute;
+	top: 50px;
+	right: 0px;
+	padding: 0px;
+	margin: 0px 10px 0px 0px;
+	text-align: right;
+}
+
+#header_search_box
+{
+	font-family: sans-serif;
+	padding: 2px 2px 2px 2px;
+	margin: 2px 0px 2px 0px;
+	border-width: 0px;
+	background-color: #ffffff;
+	color: #000000;
+	font-size: 1em;
+}
+
+#header_search_button
+{
+	font-family: Arial, sans-serif;
+	padding: 1px 4px 1px 4px;
+	margin: 0px 0px 2px 0px;
+	background-color: #04549a;
+	color: #ffffff;
+	font-size: 1em;
+	font-weight: bold;
+	border-width: 0px;
+}
+
+#header_search_button:hover
+{
+	background-color: #0091cc;
+	color: #ffffff;
+	cursor: pointer;
+}
+
+/* HEADER MENU BAR  */
+#header_menu
+{
+	height: auto;
+	width: 100%;
+	padding: 0px;
+	margin: 0px;
+	background-color: #04549a;
+	float: left;
+}
+
+#header_menu ul
+{
+	margin: 0px 0px 0px 0px;
+	padding: 0px;
+	line-height: normal;
+	list-style-type: none;
+	font-size: 1.2em;
+}
+
+#header_menu li
+{
+	display: inline;
+	margin: 0px;
+	padding: 0px;
+	white-space: nowrap;
+	float: left;
+}
+
+#header_menu a
+{
+	margin: 0px 0px 0px 0px;
+	padding: 4px 15px 4px 10px;
+	font-family: Arial, sans-serif;
+	font-size: 1em;
+	font-weight: bold;
+	display: block;
+}
+
+#header_menu a:link
+{
+	color: #ffffff;
+	text-decoration: none;
+}
+
+#header_menu a:visited
+{
+	color: #ffffff;
+	text-decoration: none;
+}
+
+#header_menu a:hover
+{
+	color: #ffffff;
+	text-decoration: none;
+	background-color: #0091cc;
+}
+
+/* CURRENT LOCATION (provide class attribute inside the header_menu 
+link to identify location and match the submenu) As in: 
+<a class="current" href="/news/">News & Information</a> */
+
+#header_menu a.current:link, #header_menu a.current:visited
+{
+	background-color: #42a8d2;
+	color: #01014f;
+}
+
+#header_menu a.current:hover
+{
+	color: #ffffff;
+	text-decoration: none;
+}
+
+/* HEADER SUB MENU  */
+#header_submenu
+{
+	height: auto;
+	width: 100%;
+	padding: 0px;
+	margin: 0px;
+	background-color: #42a8d2;
+	float: left;
+}
+
+#header_submenu ul
+{
+	margin: 0px 0px 0px 0px;
+	padding: 0px;
+	line-height: normal;
+	white-space: nowrap;
+	list-style-type: none;
+	font-size: 1.1em;
+}
+
+#header_submenu li
+{
+	display: inline;
+	margin: 0px;
+	padding: 0px;
+	white-space: nowrap;
+	float: left;
+}
+
+#header_submenu a
+{
+	margin: 0px 0px 0px 0px;
+	padding: 2px 10px 2px 10px;
+	font-family: Arial, sans-serif;
+	font-size: 1em;
+	font-weight: bold;
+	display: block;
+}
+
+#header_submenu a:link, #header_submenu a:visited
+{
+	color: #01014f;
+	text-decoration: none;
+}
+
+#header_submenu a:hover
+{
+	color: #ffffff;
+	text-decoration: none;
+	background-color: #42a8d2;
+}
+
+/* 2ND fof ROW BENEATH HEADER */
+/* 1ST CELL (provide bg color in this table cell above the navbar) */
+#second_row_left_cell
+{
+	background-color: #01014f;
+	width: 160px;
+	/* provide width for Safari */
+}
+
+/* 2ND CELL (untility row: with print, email, text size icons) */
+#second_row_middle_cell
+{
+	padding: 0px 0px 3px 20px;
+	margin: 0px 0px 0px 0px;
+	background-color: #ffffff;
+	vertical-align: bottom;
+	text-align: left;
+}
+
+/* 3RD CELL (empty) */
+#second_row_right_cell { height: 0px; }
+
+/* LEFT NAVBAR ELEMENTS */
+/* NAVBAR WIDTH (set desired width & keep navbar from collapsing in IE) */
+#navbar_width { width: 160px; }
+
+/* NAVBAR CELL */
+#navbar_cell
+{
+	background-color: #01014f;
+	background-image: url(./art/interior/footer/coral_corner_blue.gif);
+	background-position: left bottom;
+	background-repeat: no-repeat;
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 130px 0px;
+	font-weight: bold;
+	color: #ffffff;
+}
+
+/* NAVBAR TITLE (section title at top of left navbar) */
+#navtitle
+{
+	font-size: 1.4em;
+	font-weight: bold;
+	position: relative;
+	top: -25px;
+	left: 0px;
+	text-transform: uppercase;
+	margin: 0px 0px 0px 0px;
+	padding: 0px;
+	width: auto;
+}
+
+a.navtitle
+{
+	padding: 5px 10px 0px 10px;
+	margin: 0px 0px 0px 0px;
+	display: block;
+}
+
+a.navtitle:link
+{
+	color: #ffffff;
+	text-decoration: none;
+}
+
+a.navtitle:visited
+{
+	color: #ffffff;
+	text-decoration: none;
+}
+
+a.navtitle:hover
+{
+	text-decoration: underline;
+	color: #ffffff;
+}
+
+/* LEFT NAVBAR LINKS (Second level links) */
+a.navlink
+{
+	display: block;
+	font-family: Arial, sans-serif;
+	font-size: 1.2em;
+	font-weight: bold;
+	float: left;
+	clear: left;
+	padding: 3px 10px 3px 10px;
+	margin: 2px 0px 2px 0px;
+	height: auto;
+}
+
+a.navlink:link, a.navlink:visited
+{
+	color: #5ed0ff;
+	text-decoration: none;
+}
+
+a.navlink:hover
+{
+	color: #ffffff;
+	text-decoration: none;
+}
+
+/*LEFT NAVBAR, TEXT LABELS THAT ARE NOT LINKS*/
+.label
+{
+	display: block;
+	font-family: Arial, sans-serif;
+	font-size: 1.2em;
+	font-weight: bold;
+	float: left;
+	clear: left;
+	padding: 3px 10px 0px 10px;
+	margin: 2px 0px 2px 0px;
+	height: auto;
+	color: #CCCCCC;
+}
+
+.subnavbar .label { margin-left: -8px; }
+
+/* SUB NAVBAR LINKS (Third level links) */
+.subnavbar
+{
+	display: block;
+	float: left;
+	clear: left;
+	border-color: #42a8d2;
+	border-width: 1px;
+	border-style: solid;
+	font-family: Arial, sans-serif;
+	font-size: 1em;
+	font-weight: bold;
+	background-color: #04549a;
+	padding: 5px 5px 5px 5px;
+	margin: 5px 10px 10px 10px;
+	width: 128px;
+}
+
+.subnavlink
+{
+	display: block;
+	float: left;
+	clear: left;
+	padding: 3px 0px 3px 0px;
+	margin: 0px 0px 0px 0px;
+}
+
+a.subnavlink:link
+{
+	color: #ffffff;
+	text-decoration: none;
+}
+
+a.subnavlink:visited
+{
+	color: #ffffff;
+	text-decoration: none;
+}
+
+a.subnavlink:hover
+{
+	color: #ffffff;
+	text-decoration: underline;
+}
+
+/* NAVBAR CREATURES (turn off legacy navbar creature images) */
+#navbar_cell img { display: none; }
+
+/* MAIN CONTENT BODY */
+#content_cell
+{
+	margin: 0px 0px 0px 0px;
+	padding: 0px 20px 20px 20px;
+	position: relative;
+	width: 100%;
+}
+
+#content
+{
+	margin: 0px 0px 0px 0px;
+	padding: 10px 0px 0px 0px;
+	height: 100%;
+	position: relative;
+	font-size: 12 pixels;
+}
+
+/* needed for IE inheritance bug - for font control inside nested tables */
+#content table { font-size: 1em; }
+
+#sectiontitle
+{
+	margin: 30px 20px 0px 20px;
+	padding: 0px;
+	color: #04549a;
+	font-size: 18 pixels;
+	font-weight: bold;
+}
+
+#pagetitle
+{
+	margin: -10px 0px 0px 0px;
+	padding: 0px;
+	font-size: 1.6em;
+	font-weight: bold;
+	color: #ffffff;
+	line-height: 200%;
+	background-color: #04549a;
+}
+
+/* PAGE TITLES: This is the same as above except that it is used when there are two lines in the title. */
+#pagetitle_2lines
+{
+	margin: -10px 0px 0px 0px;
+	padding: 0px;
+	font-size: 1.6em;
+	font-weight: bold;
+	color: #ffffff;
+	line-height: 160%;
+	background-color: #04549a;
+}
+
+/* FEATURED PHOTOS (available for main photos on second level pages) */
+.feature_photo
+{
+	padding: 1px;
+	margin: 0px 0px 0px 0px;
+	border-color: #04549a;
+	border-width: 2px;
+	border-style: solid;
+	background-color: #ffffff;
+}
+
+/* DEFAULT SITE LINKS (these are the links in the main text body) */
+a:link
+{
+	color: #04549a;
+	text-decoration: none;
+}
+
+a:visited
+{
+	color: #0091cc;
+	text-decoration: none;
+}
+
+a:hover { text-decoration: underline; }
+
+/* BOLD LINKS (legacy bodylinks class) */
+a.bodylink:link
+{
+	color: #04549a;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+a.bodylink:visited
+{
+	color: #0091cc;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+a.bodylink:hover { text-decoration: underline; }
+
+/* BULLETED LIST ITEMS */
+li
+{
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+}
+
+ol { font-size: 1em; }
+
+ul
+{
+	list-style-image: url(./art/global/bullets/arrow.gif);
+	list-style-position: outside;
+	margin: 5px 0px 10px 0px;
+	padding: 0px 0px 0px 40px;
+	font-size: 1em;
+}
+
+ul ul
+{
+	list-style-image: url(./art/global/bullets/disc_medium.gif);
+	list-style-position: outside;
+	margin: 5px 0px 5px 0px;
+	padding: 0px 0px 0px 40px;
+	font-size: 1em;
+}
+
+ul ul ul
+{
+	list-style-image: url(./art/global/bullets/disc_small.gif);
+	list-style-position: outside;
+	margin: 5px 0px 5px 0px;
+	padding: 0px 0px 0px 40px;
+	font-size: 1em;
+}
+
+ul ul ul ul
+{
+	list-style-image: url(./art/global/bullets/disc_tiny.gif);
+	list-style-position: outside;
+	margin: 5px 0px 5px 0px;
+	padding: 0px 0px 0px 40px;
+	font-size: 1em;
+}
+
+/* HORIZONTAL RULES (thin blue horizontal rules) */
+hr
+{
+	padding: 0px;
+	margin: 10px 0px 10px 0px;
+	height: 1px;
+	background-color: #04549A;
+	border-style: none;
+	color: #04549A;
+}
+
+/* LEGACY HORIZONTAL RULES (sand_line & blue_line are now thin blue) */
+div.blue_line, div.sand_line
+{
+	display: block;
+	padding: 1px 0px 0px 0px;
+	background-color: #336699;
+	margin: 10px 0px 10px 0px;
+}
+
+/* FOOTER ELEMENTS*/
+#footer
+{
+	height: 100px;
+	width: 100%;
+	position: relative;
+	background-image: url(./art/global/footer/coral_sea_floor.jpg);
+	background-repeat: no-repeat;
+	background-color: #01014f;
+}
+
+#footer_menu
+{
+	padding: 0px;
+	margin: 0px;
+	background-color: #04549a;
+	height: auto;
+	width: 100%;
+	position: absolute;
+	top: 65px;
+	left: 0px;
+	float: left;
+}
+
+#footer_menu ul
+{
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+	line-height: normal;
+	list-style-type: none;
+	font-size: 1.2em;
+}
+
+#footer_menu li
+{
+	display: inline;
+	margin: 0px;
+	padding: 0px;
+	white-space: nowrap;
+	float: left;
+}
+
+#footer_menu a
+{
+	margin: 0px 0px 0px 0px;
+	padding: 4px 15px 4px 10px;
+	font-family: Arial, sans-serif;
+	font-size: 1em;
+	font-weight: bold;
+	display: block;
+}
+
+#footer_menu a:link
+{
+	color: #ffffff;
+	text-decoration: none;
+}
+
+#footer_menu a:visited
+{
+	color: #ffffff;
+	text-decoration: none;
+}
+
+#footer_menu a:hover
+{
+	text-decoration: none;
+	background-color: #0091cc;
+}
+
+/* MISC FONT SIZE ELEMENTS */
+.timestamp
+{
+	margin: 0px;
+	padding: 0px;
+	position: absolute;
+	bottom: -15px;
+	right: 0px;
+	font-size: .8em;
+	font-family: Arial, sans-serif;
+	color: #666666;
+}
+
+/* ******************************************************************** */
+/* ALL MIGRATED FONT ELEMENTS BELOW (legacy css) */
+.smalltext
+{
+	font-size: .9em;
+	font-family: Arial, sans-serif;
+}
+p.caption
+{
+	font-family: Arial, sans-serif;
+	font-size: .9em;
+	text-align: center;
+	margin-top: -1px;
+}
+
+.top_photo
+{
+	text-align: center;
+	display: block;
+}
+
+/*These two rules are for aligning photos with their captions. The width is arbitrarily set to 400 pixels here, but can be overridden with an inline style within the div tag on the page.*/
+.caption_image_left
+{
+	margin: 2px;
+	padding: 6px 12px 6px 2px;
+	float: left;
+	width: 400px;
+	text-align: left;
+}
+
+.caption_image_right
+{
+	margin: 2px;
+	padding: 6px 2px 6px 12px;
+	float: right;
+	width: 400px;
+	text-align: left;
+}
+
+.caption { font-size: .9em; }
+

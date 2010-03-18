@@ -1,0 +1,114 @@
+#!/bin/bash
+#set -x
+#
+# Name: dpx2ppm
+# This script converts a .DPX image file to a .PPM file format.
+#
+# Usage: dpx2ppm filename.dpx
+#
+# Copyright (c) MBARI 2005
+# Author: Danelle E. Clnie
+# Date: Octoboer 31, 2005
+#
+#exit on error; this will exit this bash script when any command exists with
+#a non-zero exit code
+set -e 
+###################################################################################
+# Print usage
+print_usage()
+{
+  echo "  "
+  echo "  "
+  echo -e "USAGE:  dpx2ppm [OPTIONS] -i filename.dpx"
+  echo "  "
+  echo "  "
+  echo "  "
+  echo "OPTIONS"
+  echo "  "
+  echo -e "\033[1m -t \033[0m"
+  echo "     options to pass to the transcoder - these must work with transcode binary"
+  echo "      (Example:  dpx2ppm  -t '-J smartdeinter=diffmode=2:highq=1:cubic=1,xsharpen=strength=25' -i filename.AVI )"  echo -e "\033[1m -o \033[0m"
+  echo "     output file name - if this file exists, it will not rewrite it"
+
+  echo "  "
+}
+##################################################################
+# test whether first character is alphabetic
+isalpha()
+{
+	[ $# -eq 1 ] || return -1;
+	
+	case $1 in 
+	[a-zA-Z]*) return 0;; #begins with a letter
+		 *) return -1;;
+	esac
+}
+input=0
+output=0
+# List usage properties should the user only type the script name.
+##################################################################
+# Check arguments
+while getopts i:o:t:c option 
+do
+  case $option in   
+   i)  input="$OPTARG";;
+   o)  output="$OPTARG";;
+   t)  transcode_opts="$OPTARG";;
+   *)  echo "Unimplemented option chosen."
+       echo "  "
+       print_usage;;
+  esac
+done
+##################################################################
+if [ $input == 0 ]
+then print_usage
+exit 1
+fi
+
+# Convert the file name to a *.dpx file based on its extension.
+# If the file is already a *.ppm - state so. If the file is not a 
+# *.index.dpx file format, remind the user that this assumes the 
+# file is in the format <frameseed>.<index>.dpx
+file=${input%.*}.dpx
+filestem=${input%.*.dpx}
+fileindex1=${input%.*}
+fileindex=${fileindex1#*.}
+
+if isalpha $fileindex ; then
+    echo "Cannot convert this - file must be in the format <frameseed>.<index>.dpx"
+ 	exit 
+fi 
+
+case $input in
+    *.ppm ) echo "  "
+	echo "procfile:  ERROR - $input is already a .ppm file!"
+	echo "  "
+	exit 0 ;;
+    
+    *.dpx )
+	# if the specified output file already exists, then exit with error message
+	if [ -f $output ]; then
+	    echo "Error - $output file exists"
+	    exit 0;
+	fi
+        # get the image height and width
+	size=`gm identify $file | cut -f3 -d " " | cut -f1 -d "+"`
+	cp $input tmp.$fileindex.dpx
+	transcode -H 0 -q 0 -i tmp.$fileindex.dpx -o tmp -x dpx,null -y ppm,null -g $size -z --use_rgb $transcode_opts;	
+
+	# if an output file was not specfied, form one with the file root
+	if [ $output = 0 ]; then
+	# get the relative name for the file root
+	    filebase=$(basename $file)
+	    filestem=${filebase%.*.dpx}
+	    output=$filestem$fileindex.ppm
+	fi
+	mv -f tmp*.ppm $output
+	rm tmp*;;
+    
+    * ) echo "  "
+	echo "procfile:  ERROR - $input is not a .dpx file!"
+	echo "  "
+	exit 1 ;;
+    
+esac

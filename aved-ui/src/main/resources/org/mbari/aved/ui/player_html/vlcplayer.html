@@ -1,0 +1,64 @@
+<!-- based on url=(0059)http://clement.stenac.org/projects/videolan/plugin/vlc.html -->
+<HTML>
+<HEAD><TITLE>VLC video player</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+<LINK href="vlcplayer.css" rel=stylesheet name="default">
+<SCRIPT language=javascript src="vlcplayer.js"></SCRIPT>
+</HEAD>
+
+<BODY>
+<SCRIPT language=javascript>
+ srchStr = location.search;
+ videofile = srchStr.split("f=")[1];
+ document.write(videofile); 
+</SCRIPT>
+
+<DIV class=all>
+<DIV class=plugin>
+<EMBED id=video1 width=720 height=480 type=application/x-vlc-plugin loop="no" autoplay="no"> </DIV>
+</CENTER>
+<DIV class=controls>
+<DIV class=playback>
+<DIV class=head>Playback Control</DIV>
+<DIV class=content>
+<INPUT onclick=document.video1.play(); type=button value=Play name=chewa> 
+<INPUT onclick=document.video1.stop(); type=button value=Stop name=chewa><BR>
+<INPUT onclick=document.video1.pause(); type=button value=Pause name=chewa> 
+<INPUT onclick=document.video1.seek(-5,true); type=button value="Seek -5s" name=chewa> 
+<INPUT onclick=document.video1.seek(5,true); type=button value="Seek +5s" name=chewa> 
+</DIV></DIV>
+<DIV class=status>
+<DIV class=head>Status</DIV>
+<DIV class=content>
+<TABLE>
+  <TBODY>
+  <TR>
+    <TD>Status</TD>
+    <TD><SPAN id=play_status>Unknown</SPAN></TD></TR>
+  <TR>
+    <TD>Time</TD>
+    <TD><SPAN id=time>--:--:--</SPAN></TD></TR>
+  <TR>
+    <TD>Total Length</TD>
+    <TD><SPAN id=length>--:--:--</SPAN></TD></TR>
+  <TR>
+    <TD>Volume</TD>
+    <TD><SPAN id=volume_status></SPAN></TD></TR></TBODY></TABLE></DIV></DIV>
+<DIV class=av>
+<DIV class=head>A / V Control</DIV>
+<DIV class=content><INPUT onclick=volume_up() type=button value="Increase volume" name=chewa> 
+<INPUT onclick=volume_down() type=button value="Decrease volume" name=chewa> 
+<INPUT onclick=document.video1.mute() type=button value=Mute name=chewa> 
+<INPUT onclick=document.video1.fullscreen(); type=button value=FullScreen name=chewa> 
+<INPUT onclick="document.video1.set_str_variable( 'extraintf', 'sap' );alert( document.video1.get_str_variable('extraintf'));" type=button value=Volume name=chewa> 
+</DIV></DIV><BR></DIV><BR></DIV><!-- Init -->
+<SCRIPT language=javascript>
+     set_item(videofile);
+     var volume = document.getElementById("volume_status");
+     volume.innerHTML = document.video1.get_volume()+ " %";
+     setTimeout("status()", 1 );
+     srchStr = location.search;
+     document.video1.play();
+  </SCRIPT>
+
+</BODY></HTML>

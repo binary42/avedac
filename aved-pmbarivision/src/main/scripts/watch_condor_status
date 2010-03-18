@@ -1,0 +1,5 @@
+#!/bin/sh
+while true; do
+	condor_status
+	sleep 30
+done

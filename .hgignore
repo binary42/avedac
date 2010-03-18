@@ -1,0 +1,16 @@
+\.orig$
+\.orig\..*$
+\.chg\..*$
+\.rej$
+\.conflict\~$
+\.DS_Store$
+\.mat$
+\.class$
+\.releaseBackup$
+\.jpg$
+\.dylib$
+\.so$
+\.nar$
+\.*.flag$ 
+\.nar$
+\.hprof$

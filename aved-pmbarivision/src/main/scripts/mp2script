@@ -1,0 +1,130 @@
+#!/bin/bash
+# set -x
+# Name: mp2script
+# This script is to be used with Condor
+# to launch an MPICH2 executable with the mpirun command
+#
+# The number of processes and condor parallel universe logic
+# can be overriden in this with the -n and -c options respectively
+# These are used in AVED processing to allow execution of
+# more than on MPI process on a given node.
+#
+# Author: D. Cline
+# Date: July 09, 2007
+#
+###################################################################################
+# Exit on error; thie will exit this script when any command exist with a non-zero
+# exit code
+set -e
+#############################################################
+rundbg()
+{
+gdbinit="`pwd`"\/.gdbinit
+cat > $gdbinit <<_ACEOF
+file $2
+set args $3
+handle SIGUSR1
+handle SIGUSR2
+handle SIGSEGV
+handle SIGABRT
+path /home/dcline/aved/saliency/src
+path /u/dcline/project_aved/code/workspace/pmbarivision/src
+path /u/dcline/project_aved/code/workspace/mbarivision/src
+_ACEOF
+$1
+}
+#############################################################
+# Initialize defaults
+skip_condor_proc=0
+debug=0
+job_alias=$USER
+executable=/bin/echo
+final_args=
+# Set this to the directory of your MPICH installation
+MPDIR=/opt/mpich2-1.1p1
+PATH=$MPDIR/bin:.:$PATH
+export PATH
+machine_file=
+
+# Check arguments
+while getopts a:h:e:g:n:cd option 
+do
+  case $option in   
+   a)  job_alias="$OPTARG";;
+   d)  debug=1;;
+   e)  executable="$OPTARG";;
+   h)  machine_file="$OPTARG";;
+   g)  final_args="$OPTARG";;
+   n)  override_nprocs="$OPTARG";;
+   c)  skip_condor_proc=1;;
+   *)  echo "Unimplemented option chosen."
+       echo "  ";;
+  esac
+done
+
+if [ ! "$machine_file" ]; then
+    echo "Error -no machine file specified" 
+fi
+
+# Used when running with Condor, but not for debugging
+if [ $skip_condor_proc -eq 0 ] ;then
+    _condor_procno=$_condor_procno
+    _condor_nprocs=$_condor_nprocs
+    # If not the head node, just sleep forever
+    if [ $_condor_procno -ne 0 ]
+	then
+	wait
+	exit 0
+    fi
+fi
+
+
+# Start the mpich2 environment
+export LD_LIBRARY_PATH=/lib:/usr/lib:/home/aved/lib:$MPDIR/lib
+export P4_RSHCOMMAND=/usr/bin/rsh
+
+if [ ! -f $machine_file ]; then
+    echo "Machine file '$machine_file' invalid or missing "
+    exit 1
+fi
+
+# The first field in the contact file is the machine name
+# that condor_ssh knows how to use
+echo "----MPI machines in $machine_file ------------"
+sort -n +0 < $machine_file | awk '{print $1}' 
+echo "----MPI machines------------"
+
+# Override the number of processes if requested
+if [ $override_nprocs ]; then
+    _condor_nprocs=$override_nprocs
+fi   
+
+# MPICH2 requires an mpd.conf file with a password in it on the host starting the job.
+export MPD_CONF_FILE=$HOME/.mpd.conf
+echo "MPD_SECRETWORD=nanomia" > $MPD_CONF_FILE
+chmod 600 $MPD_CONF_FILE
+cmd="mpdboot --rsh=$P4_RSHCOMMAND --file=$machine_file --totalnum=$_condor_nprocs --mpd=$MPDIR/bin/mpd.py"
+echo "Executing $cmd"
+#$cmd
+
+echo "----MPI trace------------"
+mpdtrace
+echo "----MPI trace------------"
+
+# If not debugging, run the MPI job
+if [ $debug -eq 0  ] ;then
+    echo "Executing mpirun -machinefile $machine_file -a $job_alias -np $_condor_nprocs $executable $final_args"
+    mpirun -a $job_alias -machinefile $machine_file -np $_condor_nprocs $executable $final_args
+else	
+    # Run in debugger
+    echo "Executing mpigdb -n $_condor_nprocs -l -m -s $executable" "$executable" "$final_args"
+    rundbg "mpigdb -machinefile $machine_file -n $_condor_nprocs -machinefile $machinefile -l -m -s $executable" "$executable" "$final_args" ;
+fi
+
+rc=$?
+rm $MPD_CONF_FILE
+
+echo "----------------->mp2script done - return code $rc !!<--------------------------"	 
+exit $rc
+
+

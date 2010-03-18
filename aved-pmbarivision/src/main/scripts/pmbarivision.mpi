@@ -1,0 +1,15 @@
+#######################################################################
+# Configuration file for AVED parallel version
+#######################################################################
+# Defines the ports to use for the parallel mbarivision
+# The PMBARIVISION_PORT_START/END must be a different
+# range than the PVISIONWORKER_PORT_START/END
+#######################################################################
+PMBARIVISION_PORT_START=9700
+PMBARIVISION_PORT_END=9800
+
+#######################################################################
+# Defines the ports to use for the pvision workers
+#######################################################################
+PVISIONWORKER_PORT_START=9900
+PVISIONWORKER_PORT_END=10000

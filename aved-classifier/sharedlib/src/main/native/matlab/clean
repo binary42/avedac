@@ -1,0 +1,8 @@
+# This is a simple script to remove a file only if it exists
+# Execute remove
+if [ -e $1 ]; then
+	echo "Removing $1"
+	rm $1
+fi
+exit 0 
+

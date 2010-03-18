@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Popup Media Player</title>
+  <script type="text/javascript"><!--
+
+   srchStr = location.search;
+   files = srchStr.split("f=")[1];
+   var dims   = "720x480";
+
+   obj     = document.getElementById("medObj");
+   objType = files.split(".")[1];
+   objType = (objType=="mpg"||objType=="mpeg")?"video/mpeg":
+            (objType=="avi"||objType=="wmv") ?"video/x-msvideo":"video/quicktime";
+
+   var pluginspace = (objType=="video/x-msvideo")?"http://www.microsoft.com/windows/windowsmedia/default.aspx":
+		     (objType=="video/quicktime")?"http://www.apple.com/quicktime/download/":"";
+
+   var codebase    = (objType=="video/x-msvideo")?"http://www.microsoft.com/windows/windowsmedia/default.aspx":
+	            (objType=="vide/quicktime")?"http://www.apple.com/qtactivex/qtplugin.cab":"";
+
+   document.title += " | "+files;
+   dimW    = Number(dims.split("x")[0]);
+   dimH    = Number(dims.split("x")[1]);
+   window.resizeTo(dimW+100, dimH+200);
+   window.moveTo  (10  ,   10);
+   document.write (files);
+  //--></script>
+ </head>
+ <body>
+
+  <script type="text/javascript"><!--
+   if(navigator.appName != "Microsoft Internet Explorer")  
+	document.write('<obj'+'ect id="medObj" pluginspace="'+pluginspace+'" codebase="'+codebase+'" data="'+files+'" standby="Loading Video..." type="'+objType+'" width="'+dimW+'" height="'+dimH+'"></object>');
+
+   if(navigator.appName == "Microsoft Internet Explorer")  
+	document.write('<embed pluginspace="'+pluginspace+'" src="'+files+'" type="'+objType+'" width="'+dimW+'" height="'+dimH+'"></embed>');
+  --></script>
+<NOSCRIPT>
+  <h1>Error opening video file</h1>  
+  <p>Either a pop-up blocker is disabling this script, or your have javascript disabled in your browser.</p>
+  <p>See the following link for instructions on how to enable Javascript in your Browser</p>
+  <a href = http://www.iatn.net/help/javascript>http://www.iatn.net/help/javascript</a>
+  <p>To enable javascript in Mozilla, go to the Edit Menu, select Preference</p><br>
+  <img border="0" src="mozilla_edit_preferences.jpg"><br>
+  <p>Next, select the Scripts &amp; Plug-ins in the Advanced menu tree</p><br>
+   <img border="0" src="mozilla_advanced_scripts.jpg"><br>
+  <p>Lastly, check the Navigator box, then select OK.</p><br>
+  <img border="0" src="mozilla_enable_javascript.jpg"></p>
+  <br>
+</NOSCRIPT>
+ </body>
+</html>

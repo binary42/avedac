@@ -1,0 +1,92 @@
+#!/bin/bash
+#set -x
+# This script is designed to be executed periodically from a cronjob
+# If video is arriving at the remove server every 5 minutes,
+# then you'll want to run this every 5 minutes
+set -e
+#exit on error; this will exit this bash script when
+#any command exists with a non-zero exit code
+
+if test $# -ne 2
+then
+	echo " "
+	echo -e "\033[1mUSAGE:rsyncclips <rsynclogfile> <rsyncdir>\033[0m"
+	echo " "
+	exit 1
+fi
+
+# Defines the directory to place the rsync'd data in
+rsyncdir=$2
+
+# Defines the rsync log
+rsynclog=$1
+
+# Remove the sync log if it exists
+if [ -f $rsynclog ]; then
+    rm -f $rsynclog
+fi
+
+# Define the temporary file to place the changelog in
+# puts this is the same directory as the rsynclog
+dir=$(dirname $rsynclog)
+tmplog=$dir/EITSchangelog
+
+# Defines the rsync server name and module to sync up with
+user=aved
+server=seabass.shore.mbari.org
+modname=EITSsimulateincoming
+
+# Test if the log directory exists and if caller has write permissions
+if [ ! -d $logdir ] || [ ! -w $logdir ]; then
+	echo "ERROR:  $logdir doesn't exist or your don't have write permission - contact your system administrator"
+	exit 1
+fi
+
+# Create the rsyncdir if it doesn't exist, this assumes the user has write permission in this directory
+if [ ! -d $rsyncdir ]; then
+	echo "$rsyncdir doesn't exist - creating it now"
+	mkdir -p $rsyncdir
+fi
+
+# Do a quick check to see if any other rsync processed are running and abort if so.
+# This is kind of brain dead - but avoids multiple rsync processes for now
+if [ `ps x | grep -w rsync | grep -v grep` ]; then
+    echo "ERROR: alreading running rsync"
+    exit 0
+fi
+
+# Get the change log from the server
+echo "Running rsync -az $user@$server::$modname/changelog $tmplog" 
+rsync -az $user@$server::$modname/changelog $tmplog 
+
+if [ -f $rsyncdir/changelog ]; then 
+# Check if any changes are detected. Note, ths initial rsync of the changelog will 
+# determine if anything has changed and we could omit this test, but everytime
+# the data is fetched, rsync builds a complete listing and this could potentially
+# take a lot of memory, so using the change log helps reduce memory
+sum1=`sum $tmplog`
+sum2=`sum $rsyncdir/changelog`
+if [ "$sum1" = "$sum2" ]; then
+	echo "nothing to sync up" 
+	exit 0;
+fi
+fi
+
+# Sync the directories and output to the log
+rsync -az --log-format="$rsyncdir/%f" $user@$server::$modname $rsyncdir > $rsynclog
+
+if [ -f $rsynclog ]; then
+    echo "Synced up the following files:"
+    cat $rsynclog
+    
+# Delete all blank lines in $rsynclog, then change ownership of files
+    echo "Changing file ownership to aved:aved"
+    cat $rsynclog | sed "/^$/d" | sed "s/^/chown aved:aved /" > $rsynclog.tmp
+    chmod u+x $rsynclog.tmp
+    $rsynclog.tmp
+    rm $rsynclog.tmp
+else
+    echo "Nothing to sync up"
+fi
+
+exit 0

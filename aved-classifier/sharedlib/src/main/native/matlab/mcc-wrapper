@@ -1,0 +1,11 @@
+# This is a wrapper script  used to install the classifier library from maven
+#
+echo "------------------------------------------------------------"
+echo " Running the mcc compiler. You must run this as the same user" 
+echo " that holds the Matlab License "
+echo "------------------------------------------------------------"
+
+# Execute install script
+echo "Executing $1"
+$1 
+exit 0 

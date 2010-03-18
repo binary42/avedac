@@ -1,0 +1,44 @@
+<HTML>
+<HEAD>
+<title>AVED Project Launch VLC player</title>
+</HEAD>
+
+<BODY>
+<SCRIPT type=text/javascript>
+ srchStr = location.search;
+ videofile = srchStr.split("f=")[1];
+ var dims   = "720x480";
+
+ ref = "vlcplayer.html?f=";
+ ref += videofile;
+
+ document.title += videofile;
+
+ dimW    = Number(dims.split("x")[0]);
+ dimH    = Number(dims.split("x")[1]);
+ window.resizeTo(dimW+100, dimH+600);
+ window.moveTo  (10  ,   10);
+
+ if(navigator.appName != "Microsoft Internet Explorer")
+	location = ref;	
+ else
+	alert("ERROR: this script only works with Mozilla on Linux");
+
+</SCRIPT>
+
+<NOSCRIPT>
+  <h1>Error opening video file</h1>  
+:wq
+  <p>Either a pop-up blocker is disabling this script, or you have javascript disabled in your browser.</p>
+  <p>See the following link for instructions on how to enable Javascript in your Browser</p>
+  <a href = http://www.iatn.net/help/javascript>http://www.iatn.net/help/javascript</a>
+  <p>To enable javascript in Mozilla, go to the Edit Menu, select Preference</p><br>
+  <img border="0" src="mozilla_edit_preferences.jpg"><br>
+  <p>Next, select the Scripts &amp; Plug-ins in the Advanced menu tree</p><br>
+   <img border="0" src="mozilla_advanced_scripts.jpg"><br>
+  <p>Lastly, check the Navigator box, then select OK.</p><br>
+  <img border="0" src="mozilla_enable_javascript.jpg"></p>
+  <br>
+</NOSCRIPT>
+</BODY>
+</HTML>

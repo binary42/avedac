@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>AVED Introduction</title> <link rel="stylesheet" type="text/css" href="mbariexternal.css"></head>
+<body>
+<div id="pagetable" background-color="#ffffff">
+<div id="header">
+<div id="header_title">Automated Visual Event Detection 
+</div>
+</div> 
+<br>
+<div id="pagetitle" style="font-size: 18px;" align="center">AVED </div>
+Copyright 2008 Monterey Bay Aquarium Research Institute. All
+rights reserved. <a href="http://www.mbari.org">http://www.mbari.org</a><br>
+<h3>About AVED<br></h3>
+In order to study the distribution and abundance of oceanic animals, MBARI uses high-resolution video equipment on remotely operated vehicles. Quantitative video transects (QVTs) supplant traditional net tows to assess the quantity and diversity of organisms in the water column. QVTs are run from 50 m to 4000 m and provide high-resolution data at the scale of the individual animals as well as their natural aggregation patterns. However, the current, manual method of analyzing QVTs is labor intensive and tedious.  
+<p> 
+AVED was developing to assist this process by automated the detecting marine organisms visible in the videos. Video frames are processed with a neuromorphic selective attention algorithm. The candidate objects of interest are tracked across video frames using linear Kalman filters. If objects can be tracked successfully over several frames, they are labeled as potentially interesting and marked in the video frames. The plan is that the system will enhance the productivity of human video annotators and/or cue a subsequent object classification module by marking candidate objects. 
+<p>
+For more information about the AVED software, see <a href="http://www.mbari.org/aved">http://www.mbari.org/aved</a>
+<p>
+Once events are detected, they are written to a AVED events XML file. This tool is designed for editing these automatically generated AVED events. Currently, the only editing cability is to only delete events. However, more complex functions may be added in the future, as well as the ability to process the video from this graphical interface (execution is now only through command-line or user generate scripts).
+<p>For this tool to be useful, you need the AVED generated event XML file <span style="font-weight: bold;"> and </span> the original video processed by AVED to generate the XML file. 
+<p>
+Please not that this tool is not an XML editor and does not display the complete AVED xml data. 
+Open the XML file in your favorite XML editor to see all of the XML data.<br>
+
+<h3><a href="#Installation_"><span style="font-weight: bold;">Installation</span></a></h3>
+<h3><a href="QuickStart.html">Quick Start</a></h3>
+<h3><a href="Overview.html">Editor Overview</a></h3>
+<ul><li><a href="EventTable.html">Event Table</a></li>
+<ui><li><a href="EventThumbnail.html">Event Thumbnails</a></li>
+<li><a href="EventPlayer.html">Event Player</a></li>
+</ul><h3>Installation</h3>
+AVED requires <span style="font-weight: bold;">Java
+1.5 </span>or higher. You can download Java from <a href="http://www.java.com">http://www.java.com</a> if
+you don't already have it.<br>
+<br>AVED user interface also requires the <span style="font-weight: bold;">transcode</span>
+software. Transcode is used to convert the video processed by AVED into individual frames. The instructions for installing transcode depend on the computer you are running on.<br><br>
+
+<ul><li>If you are running this on a <span style="font-weight: bold;">Mac</span>, transcode can
+be downloaded from: <a href="http://transcode.darwinports.com/">http://transcode.darwinports.com/.</a>
+
+<ul><li><span style="font-weight: bold;">This requires a tool called Darwinports, and if you dont have Darwinports installed, you will need to install it first</span> before installing transcode by downloading it from here: <a href="http://darwinports.com/">http://darwinports.com/.</a> Installing darwing ports requires X11, Xcode Tools, and changing your ~/.profile.  Detailed instructions for installing this can be found here: <a href="http://darwinports.com/install">http://darwinports.com/install.</a> </ul></li>
+ 
+</ul></li>
+
+<ul><li>If you are running this on <span style="font-weight: bold;">Unix/Linux,</span>
+transcode can be downloaded from various RPM sources, or installed from source code from: <a href="http://www.transcoding.org/">http://www.transcoding.org/.</a> A word to the wise - this is not an easy tool to build and install from source because it has many dependent libraries. Install it from RPM to simplify your life.</li></ul> 
+
+<br>AVED Editor is packaged as an executable jar. To run it,
+simply double-click on the icon. If your operating system doesn't
+support running executable JAR files, you can alternatively run it this
+way:<br>
+<div id="command">java -jar aved-ui-1.0-SNAPSHOT.jar</div><br>
+<h3>Credits</h3>
+The design of this tool would not be possible without the following
+open source software. Thank you to all of the following contributors: <br>
+<br>Abeille Forms Designer<br>
+<a href="https://abeille.dev.java.net/">https://abeille.dev.java.net/</a><br>
+<br>Browser Launcher<br>
+<a href="http://browserlaunch2.sourceforge.net/">http://browserlaunch2.sourceforge.net/</a><br>
+<div id="footer">
+<div id="aquarium_link" style="text-align: right;"><a title="visit Monterey Bay Aquarium's website" target="_blank" href="http://www.mbayaq.org/"><img alt="visit Monterey Bay Aquarium's website" src="art/home/misc/aquarium_link.gif" border="0" height="40" hspace="0" vspace="0" width="211"></a>
+</div>
+<div id="footer_menu"> <ul type="disc"> <li class="address"><address><span class="current" style="color: rgb(255, 255, 255);">MBARI&nbsp;
+&middot; 7700 Sandholdt Road &nbsp; &middot; &nbsp;
+Moss Landing, CA 95039-USA &nbsp; &middot; &nbsp; Tel: (831) 775-1700 &nbsp;&nbsp;&middot; &copy; 2007 MBARI</span></address></li></ul>
+</div>
+</div>
+</div>
+</body>
+</html>

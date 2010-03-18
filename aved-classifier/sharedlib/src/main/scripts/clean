@@ -1,0 +1,16 @@
+# This is a wrapper script used to remove the classifier Matlab library from maven
+#
+echo "------------------------------------------------------------"
+echo " Removing the Matlab library. You must run this as the same user"
+echo " that installed the library "
+echo "------------------------------------------------------------"
+
+# Execute remove
+if [ -e $1 ]; then
+	echo "Removing $1"
+	rm $1
+else
+	echo "Invalid argument $@"
+fi
+exit 0 
+

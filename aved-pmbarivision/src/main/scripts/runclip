@@ -1,0 +1,438 @@
+#!/bin/bash
+#set -x
+# Name: runclip
+# This script transcodes an .AVI or .MOV into a sequence of frames. First
+# it transcodes frames into .PPM format, runs the frames into the Saliency 
+# Vision program and translates the Vision RGB output frames into a Quicktime 
+# movie (.MOV file). The script is executed from any directory containing 
+# .AVI or .MOV files.  
+# 
+# Usage:  runclip [] filename.AVI or filename.MOV
+#
+# Copyright (c) MBARI 2002
+# Author: Karen A. Salamy, D. Cline
+# Date: September 2, 2003 - Created based on runavi script
+# Added support for .MOV files. Removed mask option and replaced 
+# with display option
+#
+# Runclip is currently set up to have 3 possible variables entered
+# to run an AVI or MOV file into the Saliency system.
+# These include the script name, options and the filename.
+# 
+# After the saliency command has been run, a Quicktime .MOV file is 
+# created of the results 
+#
+###################################################################################
+# Exit! on error; thie will exit this script when any command exist with a non-zero
+# exit code
+set -e
+# Print usage
+print_usage()
+{
+  echo "  "
+  echo "  "
+  echo -e "\033[1m USAGE:  runclip [OPTION] -i [filename.AVI or filename.MOV or frame input directory] \033[0m"
+  echo "  "
+  echo "  "
+  echo "OPTION"
+  echo -e "\033[1m -a \033[0m"
+  echo "      Use pmbarivision alternative exectuable file or script instead of default mbarivision"
+  echo "      (Example:  runclip -a runpmbarivision -i filename.avi)"
+  echo "  "
+  echo -e "\033[1m -x \033[0m"
+  echo "      Display output to X Window"
+  echo "      (Example:  runclip -x -i filename.AVI )"
+  echo "  "
+  echo -e "\033[1m -X \033[0m"
+  echo "      Process DPX frames instead of AVI,MOV. Must define output directory instead of .MOV or .AVI file "
+  echo "  "
+  echo "      Example: process DPX frames 0-100 of dive234 "
+  echo "  "
+  echo "      (Example:  runclip -X -c 0-100 -i dive234)"
+  echo "  "
+  echo -e "\033[1m -v \033[0m"
+  echo "      Save all events clips  "
+  echo "      (Example:  runclip -v -i filename.AVI )"
+  echo "  "
+  echo -e "\033[1m -g \033[0m"
+  echo "      Create mpeg of output frames "
+  echo "      (Example:  runclip -g -i filename.AVI )"
+  echo "  "
+  echo -e "\033[1m -p  \033[0m"
+  echo "      Use parallel machine for mpeg creation"
+  echo "      (Example:  runclip -g -p benthic -i filename.AVI)"
+  echo "  " 
+  echo -e "\033[1m -s <BinaryAdaptive|GraphCut> \033[0m"
+  echo "      Process with the specified segmentation algorithm BinaryAdaptive default" 
+  echo "  " 
+  echo -e "\033[1m -b <first frame> -e <last frame>\033[0m"
+  echo "      Specify frames to be processed.  If processing DPX frames, "
+  echo "      must define output directory instead of .MOV or .AVI file "
+  echo "  "
+  echo "      Example: process first 30 frames from clip "
+  echo "  "
+  echo "       runclip -b 0 -e 30 -i filename.AVI " 
+  echo "  "
+  echo "      Example: process DPX frames 0-100 of dive234 "
+  echo "  "
+  echo "      (Example:  runclip -X -b 0 -e 100 -i dive234)"
+  echo "  " 
+  echo -e "\033[1m -t \033[0m"
+  echo "      Pass options to the transcoder"
+  echo "      To deinterlace file before processing" 
+  echo "      This does some low level processing and uses the following transcode options"
+  echo "  "
+  echo "      (Example:  runclip  -t '-J smartdeinter=diffmode=2:highq=1:cubic=1,xsharpen=strength=255' -d filename.AVI)"
+  echo "  "
+  echo -e "\033[1m -f benthic|midwater \033[0m"
+  echo "      Process with benthic or midwater defaults" 
+  echo "      (Example:  runclip -f benthic -i filename.AVI )"
+  echo "  "
+    echo -e "\033[1m -s <BinaryAdaptive|GraphCut> \033[0m"
+  echo "      Process with the specified segmentation algorithm BinaryAdaptive default" 
+  echo "      (Example:  runclip -s GraphCut -i filename.AVI )"
+  echo "  "
+  echo -e "\033[1m -m <image mask>|x-y-w-h \033[0m"
+  echo "      mask the specified area where the system won't detect anything: the mask can be defined by 2 ways (the image mask path or coordinate of a rectangle)" 
+  echo "      (Example:  runclip -m 1-1-50-200 filename.AVI or filename.MOV)"
+  echo "      (Example:  runclip -m /home/aved/mask.ppm -i filename.AVI )" 
+  echo "  "
+  echo -e "\033[1m -u <url reference \033[0m"
+  echo "      (Example:  runclip -u http://nanomia.shore.mbari.org/`pwd`/filename.AVI -i filename.AVI)" 
+  echo "  "
+}
+###################################################################################
+# Beginning of runclip script
+###################################################################################
+rmall()
+{
+   tmp=./tmp.$RANDOM
+   echo "find ./ -type f -name '$1' -exec rm {} \;" > $tmp 
+   chmod u+x $tmp
+   $tmp
+   rm -f $tmp
+}
+###################################################################################
+checkexe()
+{
+# Find the executable 
+exe="`type -p $1`" 
+
+# If not found then we cannot use this script so bail out now
+if [ ! $exe ]; then
+   echo "Error: $1 not found"
+   exit 1
+fi
+
+# Change permissions if not set correctly by Condor transfer 
+if [ ! -x $exe ]; then
+   echo "Changing $exe to executable by user"
+   chmod u+x $exe
+fi
+}
+###################################################################################
+# Initialize variables
+input=""
+scratch_env=0 #1 if a scratch environment variable was defined
+profile="" #default profile option
+diplayx=0
+width=720
+height=480
+displayx=0
+saveevents=0
+creatempeg=0
+visionexe="mbarivision"
+display_options=
+start_frame=0
+end_frame=0
+dpxframes=0
+inputURL="" # the default input URL to format into the XML output (optional)
+segmentAlgorithm="" # the default segmentaion algorithm used (optional)
+# a mask can be defined by 2 ways: an image OR a rectangle(1 point and its dimension)
+mask=0
+mask_path="" # path to the mask image
+mask_x=0 # postion x of the reference point of the mask
+mask_y=0 # postion y of the reference point of the mask
+mask_width=0 # width of the mask
+mask_height=0 # height of the mask
+transcode_opts=
+use_system_scratch=0
+use_parallel_mpeg=0
+
+# Check arguments
+args=`getopt -o Xxvpgb:e:i:a:f:s:m:u:t: -- "$@" `
+if test $? != 0; then
+    print_usage
+    exit
+fi
+
+eval set -- "$args" 
+for i
+do
+  case $i in  
+   -i)  shift;input="$1";shift;;   
+   -a)  shift;visionexe="$1";shift;;
+   -b)  shift;start_frame=$1;shift;;
+   -e)  shift;end_frame=$1;shift;;
+   -g)  shift;creatempeg=1
+       echo "Saving output"
+       echo "Create mpeg of output";;
+   -p)  shift;use_parallel_mpeg=1
+       echo "Using parallel mpeg encoder";;
+   -t) shift;transcode_opts="$1";shift;;
+   -f) shift;profile="$1";shift
+       echo "Process with default settings for $profile video ";;
+   -u) shift;inputURL=${1%-*};shift
+       echo "Using input URL $inputURL " ;;
+   -s) shift;segmentAlgorithm=${1%-*};shift
+       echo "Process with $segmentAlgorithm segmentation algorithm " ;;
+   -m) shift;part1tmp=${1%-*};shift
+       part2tmp=${1#*-}
+       mask=1  
+       if [ $part1tmp = $part2tmp ]; then # Just 1 parameter so a file is in reference
+   	   mask_path=$part1tmp
+	   if [ -f $mask_path ]; then
+	       echo "Process with the following mask: $mask_path"  
+	   else
+	       echo "The mask does not exist ..."  
+	   fi
+       else # the mask is given by 1 point and its dimension
+	   part1=${part1tmp%-*}
+	   part2=${part2tmp#*-}
+	   mask_x=${part1%-*}
+	   mask_y=${part1#*-}
+	   mask_width=${part2%-*}
+	   mask_height=${part2#*-}
+	   echo "Process with the following mask: [$mask_x;$mask_y] width=$mask_width & height=$mask_height"  
+       fi;;
+   -v)  shift;saveevents=1
+       echo "Saving interesting event clips";; 
+   -x)  shift;displayx=1 
+       echo "Display processed output to X Window";;
+   -X)  shift;dpxframes=1
+       echo "Processing DPX frames";;
+  esac
+done
+
+# Define the scratch directory as Condor scratch, system, or the user scratch space
+if [ $_CONDOR_SCRATCH_DIR ]; then	   
+    export PATH=$_CONDOR_SCRATCH_DIR:$PATH
+    # If running this with condor just wait if not the head node forever
+    _CONDOR_PROCNO=$_CONDOR_PROCNO
+    _CONDOR_NPROCS=$_CONDOR_NPROCS
+    # If not the head node, just sleep forever
+    if [ $_CONDOR_PROCNO ]; then
+	wait
+	exit 0
+    else
+	output_dir=$_CONDOR_SCRATCH_DIR
+    fi
+elif [ $SCRATCH_DIR ]; then
+    use_system_scratch=1
+    output_dir=$SCRATCH_DIR/$USER
+else
+    output_dir=`pwd`
+fi
+
+# Add the path to the aved binaries if AVED_BIN is set
+if [ $AVED_BIN ]; then
+    PATH=$PATH:$AVED_BIN
+    export PATH
+fi
+
+# Check all the bash dependencies for executable
+# permissions as Condor doesn't always retain file
+# permissions upon transferring these dependencies
+echo "Checking dependencies for executable permissions"
+checkexe "runmbarivision"
+checkexe "extract_source_metadata.pl"
+checkexe "frames2mpeg"
+checkexe "clip2ppm"
+checkexe "$visionexe"
+
+if [ $input ]; then
+    basefile=$(basename $input)
+    stem=${basefile%.*} 
+    input_file_stem=${stem%.*} 
+    
+    # If final argument is a directory
+    if [ -d $input ]; then 
+
+	# Check for existence first
+	if [ -d $input ]; then 
+	    echo "Found  $input"
+	else
+	    echo "Cannot find  $input"
+	    exit
+	fi   
+	# Get the absolute path of the input directory 
+	# Append the output directory with the input file stem
+	D=$input
+	abspath="`cd $D && pwd `" 
+	output_dir=$output_dir/$input_file_stem
+
+        # If these are DPX frames, then specify the dpxframes flag in case user forgot
+	pushd $input;
+	tmp=./tmp.$RANDOM
+	find | grep '[A-Z0-9._%+-]*[0-9]\.[dpx|jpg|ppm|png]' | sort > $tmp;
+	h=`cat $tmp | head --lines=1`
+	t=`cat $tmp | tail --lines=1`
+	fileext=${h##*.}
+
+	if [ "$fileext" == "dpx" ]; then
+	    dpxframes=1
+	    input_file_stem="`perl -e '$_="'$h'";' -e '($b)=m/.([a-zA-Z_%+-]+).*.'$fileext'/g;' -e 'print $b;'`"
+	    # If start/end frames are not specified, then get start and end frame information from DPX files
+	    if [ $start_frame = 0 ] && [ $end_frame = 0 ];then
+                # DPX files are in the format e.g. dive123.0000001.dpx, so slightly different search string used 	    
+		start_frame="`perl -e '$_='"$h"';' -e '($b)=m/.([0-9]+).'$fileext'/g;'  -e 'print $b;'`"
+		end_frame="`perl -e '$_="'$t"';' -e '($b)=m/.([0-9]+).'$fileext'/g;'  -e 'print $b;'`"
+	    fi
+	fi
+	rm $tmp
+    	popd
+
+    # Otherwise is a file
+    else
+	# Check for existence first
+	if [ -e $input ]; then 
+	    echo "Found $input"
+	else
+	    echo "Cannot find $input"
+	    exit
+	fi 
+	D=$(dirname $input)
+	abspath="`cd $D && pwd `" 
+	# Format the output directory to be the scratch directory appended with the input file stem
+	output_dir=$output_dir/$input_file_stem
+    fi
+else
+    print_usage
+    exit
+fi
+
+echo "Using $output_dir as scratch space"
+ 
+# Assume output frames are the output directory name these output file stems will be further 
+# appended with keys in the binary, depending on what the output is;
+# "evt" for event-centered clips, and "results" for output overlayed with the results
+output_file_stem=$input_file_stem
+
+# If the output directory exists in the system scratch space
+# and there are left over output files, clean up
+# This is a little dangerous, but cleaning up old output directories 
+# saves space and old data results aren't confused with newly processed data
+# this also makes the start/end frame search logic work as designed
+if [ -d $output_dir ]; then
+    echo "Found $output_dir removing previous results in directory"
+    pushd $output_dir;
+    rmall '*'
+    popd;    
+fi
+
+# Create output directory and parent dirs in case they don't exist 
+mkdir -p $output_dir
+
+# Format all the mbarivision model options per the command line input
+case $profile in
+    benthic )  profile_options="--mbari-cache-size=15 --mbari-tracking-mode=BoundingBox --mbari-min-event-area=100 --mbari-max-event-area=10000";;
+    midwater )  profile_options="--mbari-cache-size=10 --mbari-tracking-mode=KalmanFilter --mbari-min-event-area=50 --mbari-max-event-area=1000";;
+    *  )  profile_options=""
+esac
+
+if [ "$segmentAlgorithm" != "" ]; then
+    model_options="$model_options --mbari-segment-algorithm=$segmentAlgorithm"
+fi
+
+if [ $mask = 1 ]; then
+    if [ "$mask_path" == "" ]; then # the mask is given by a point and its dimension
+	model_options="$model_options --mbari-mask-xposition=$mask_x"
+	model_options="$model_options --mbari-mask-yposition=$mask_y"
+	model_options="$model_options --mbari-mask-width=$mask_width"
+	model_options="$model_options --mbari-mask-height=$mask_height"
+    else # the mask is given by an image
+	model_options="$model_options --mbari-mask-path=$mask_path"
+    fi
+fi
+
+if [ $displayx = 1 ]; then
+    display_options='--mbari-display-output --mbari-display-results'
+fi
+
+if [ $saveevents = 1 ]; then
+    model_options="$model_options --mbari-save-event-num=all"
+fi
+
+# Change to the directory where the clip is to be decompressed
+pushd  $output_dir;
+
+
+# Convert to ppm frames
+cmd="clip2ppm -i $abspath/$basefile -o $output_dir"
+
+# Add the start/ending frame if defined
+if [ $start_frame -lt $end_frame ]; then
+    cmd="$cmd -b $start_frame -e $end_frame"
+fi
+
+# Add in transcode options if any
+if [ "$transcode_opts" ]; then
+    echo "Running $cmd -t \"$transcode_opts\""
+    $cmd -t "$transcode_opts"
+else
+    echo "Running $cmd"
+    $cmd
+fi
+
+# Format the  URL for the video metadata
+if [ "$inputURL" == "" ]; then
+   inputURL="file://`hostname`/$abspath/$basefile"
+fi
+
+# Move out of the input directory 
+popd; 
+
+# Get the video metadata information.
+metadata=`pwd`/$basefile.metadata.xml
+perl -w -S extract_source_metadata.pl -i="$abspath/$basefile" -o="$metadata" -u=$inputURL
+
+# Format the options and put them in the environment variable
+options="$profile_options $display_options $model_options"
+export MBARIVISION_OPTIONS="$MBARIVISION_OPTIONS $options"
+export LAM_MPI_MBARIVISION_OPTIONS="$MBARIVISION_OPTIONS"
+
+# Format the command to execute runmbarivision
+if [ $start_frame = 0 ] && [ $end_frame = 0 ];then
+  cmd="runmbarivision -a $visionexe -i $output_dir" 
+else
+  cmd="runmbarivision -a $visionexe -i $output_dir -b $start_frame -e $end_frame"
+fi
+
+# Add in metadata 
+cmd="$cmd -m $basefile.metadata.xml "
+
+# Run the command
+echo "Running $cmd"
+$cmd
+
+# Create an mpeg if requested
+if [ $creatempeg = 1 ]; then
+# if using system scratch or CONDOR scratch, assume scratch is also NFS mounted for parallel execution
+# otherwise, use the default mpeg creation
+    if [ $use_system_scratch = 1 ]; then
+	cmd="frames2mpeg -i $input_file_stem -f $output_file_stem-results -s -p -o $input_file_stem.results.mpeg"
+    elif [ $_CONDOR_SCRATCH_DIR  ] &&  [ "$use_parallel_mpeg" -eq  1 ]; then	   
+	cmd="frames2mpeg -i $input_file_stem -f $output_file_stem-results -p -o $input_file_stem.results.mpeg"
+    else
+	cmd="frames2mpeg -i $input_file_stem -f $output_file_stem-results -o $input_file_stem.results.mpeg"
+    fi
+fi
+
+echo "Running $cmd"
+$cmd
+
+echo "Cleaning output directory"
+rm -Rf $output_dir
+
+echo "Done with runclip !!"
+exit 0

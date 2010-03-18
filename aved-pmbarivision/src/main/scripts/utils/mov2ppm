@@ -1,0 +1,52 @@
+#!/bin/bash
+#set -x
+#
+# Name: mov2ppm 
+# This script creates ppms from a Quicktime movie
+# 
+# Usage: mov2ppm <moviename>
+#
+# Copyright (c) MBARI 2003
+# Author: Danelle Cline, Karen Salamy 
+# Date: September 17, 2003
+#exit on error; this will exit this bash script when any command exists with
+#a non-zero exit code
+set -e 
+# List usage properties should the user not list 2 arguments
+if test $# -lt 1 
+then
+  echo "  "
+  echo "  "
+  echo -e "\033[1mUSAGE:  mov2ppm [filename.mov] [OPTIONAL framestem]\033[0m"
+  echo "  "
+  echo -e "\033[1mexample:  mov2ppm results.mov \033[0m"
+  echo "  "
+  echo -e "\033[1mexample:  mov2ppm results.mov f0 \033[0m"
+  exit 1
+fi
+
+# Verify the file is a .mov file
+case $1 in 
+   *.mov ) echo "Creating ppms from Quicktime movie called $1";; 
+   *.MOV ) echo "Creating ppms from Quicktime movie called $1";; 
+       * ) echo -e "\033[1mprocfile:  ERROR - $1 is not an .mov file!\033[0m"
+           echo "  "
+           exit 1 ;;
+esac
+
+# Add the path to the aved binaries if AVED_BIN is set
+if [ $AVED_BIN ]; then
+    PATH=$PATH:$AVED_BIN
+    export PATH
+fi
+
+width=`oqtinfo -l $1 | grep Width | cut -f2 -d":" | cut -f2 -d " "`
+height=`oqtinfo -l $1 | grep Height | cut -f2 -d":" | cut -f2 -d " "` 
+delimx="x"
+filestem=f0
+if [ $2 ]; then
+filestem=$2;
+fi
+
+# Make ppms from Quicktime movie
+echo transcode -H 0 -i $1 -q 2 -o $filestem -x oqtmov,null -y ppm,null --use_rgb -g $width$delimx$height

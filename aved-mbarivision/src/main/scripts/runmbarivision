@@ -1,0 +1,260 @@
+#!/bin/bash
+#set -x
+#
+# Name: runmbarivision
+# This script searches for PPM's in the input directory and runs mbarivision
+# 
+# Usage:  runmbarivision
+#
+# Copyright (c) MBARI 2007
+# Author: D. Cline
+# Date: March 23, 2007 - Created based on runclip script
+# 
+###################################################################################
+# Exit on error; thie will exit this script when any command exist with a non-zero
+# exit code
+set -e
+###################################################################################
+# Print usage
+print_usage()
+{
+  echo "  "
+  echo "  "
+  echo -e "USAGE:  runmbarivision [OPTIONS] -i [ppm input directory]"
+  echo "  "
+  echo -e "[OPTIONS]"
+  echo "  " 
+  echo -e "\033[1m -s \033[0m"
+  echo "     ppm input directory is defined relative to local machine users scratch directory"
+  echo "      (Example:  runmbarivision -s -i testclip/20040513T001230 )"
+  echo "  " 
+  echo -e "\033[1m -m [input source metadata] \033[0m"
+  echo "     input video source information is defined in the file input_source_metadata.xml"
+  echo "      (Example:  runmbarivision -s -i 20040513T001230 -m input_source_metadata.xml )"
+  echo "  " 
+  echo -e "\033[1m -a \033[0m"
+  echo "     use alternative script or executable to process - this alternative must understand the same arguments at mbarivision "
+  echo "     it can be a script, or a binary but is typically used to run the runpmbarivision script that launches pmbarivision "
+  echo "     instead of mbarivision"
+  echo "     (Example:  runmbarivision -a runpmbarivision -s -i testclip/20040513T001230 )"
+  echo "  "
+  echo -e "\033[1m -b \033[0m"
+  echo "      Specify frames to be processed. "
+  echo "      Example: process first 30 frames of directory 20040513T001230 "
+  echo "  "
+  echo "       runmbarivision -c 0-30 -i 20040513T001230" 
+  echo "  "
+  echo -e "\033[1m -b \033[0m"
+  echo "     beginning frame to process. This is generally used with the ending frame option '-e'. For example
+  echo "     to process everything from frame 120 to the end 20040513T001230.avi 
+  echo "      (Example:  runmbarivision -b 120 -i 20040513T001230.avi  )"
+  echo "  "
+  echo -e "\033[1m -e \033[0m"
+  echo "     ending frame to process. This is generally used with the beginning frame option '-b'. For example
+  echo "     to process everything from frame 0 to 60 in the clip 20040513T001230.avi
+  echo "      (Example:  runmbarivision -b 0 -e 60 -i 20040513T001230.avi  )"
+}
+###################################################################################
+rmall() {
+   tmp=./tmp.$RANDOM
+   echo "Removing files with stem $filepattern"
+   echo "find ./ -type f -name '$1' -exec rm {} \;" > $tmp
+   chmod u+x $tmp
+   $tmp 
+   rm -f $tmp
+}
+###################################################################################
+# Beginning of rununmbarivision script
+###################################################################################
+# Initialize variables
+input=0
+use_system_scratch=0
+splat="*"
+dash="-"
+delim="_"
+delimx="x"
+framefileext=".ppm" 
+visionexe="mbarivision"
+displayoptions=
+framegrab=0
+start_frame=0
+end_frame=0
+dpxframes=0
+use_metadata=0
+use_modeloptions=0
+mbarivision_options=
+worker_option=
+
+# Check arguments
+while getopts a:i:m:l:b:e:w:s option 
+do
+  case $option in   
+   a)  visionexe="$OPTARG";;
+   i)  input="$OPTARG";;
+   m)  input_metadata="$OPTARG"
+       use_metadata=1;;
+   b)  start_frame=$OPTARG;;
+   e)  end_frame=$OPTARG;;
+   w)  # this option is used in runpmbarivision - just pass it through 
+       worker_option="-w ${OPTARG}";;
+   *)  echo "Unimplemented option chosen."
+       echo "  "
+       print_usage;;
+  esac
+done
+
+if [ $input = 0  ]
+then print_usage
+exit 1
+fi
+
+basefile=$(basename $input)
+dir_name=${basefile%.*} 
+orig_dir=`pwd`
+
+#Define the scratch directory as Condor scratch, system, or the user scratch space
+if [ $_CONDOR_SCRATCH_DIR ]; then	   
+    export PATH=$_CONDOR_SCRATCH_DIR:$PATH
+    # If running this with condor just wait if not the head node forever
+    _CONDOR_PROCNO=$_CONDOR_PROCNO
+    _CONDOR_NPROCS=$_CONDOR_NPROCS
+    # If not the head node, just sleep forever
+    if [ $_CONDOR_PROCNO ]; then
+	wait
+	exit 0
+    else
+	output_dir=$_CONDOR_SCRATCH_DIR/$dir_name
+	orig_dir=$_CONDOR_SCRATCH_DIR
+    fi
+elif [ $SCRATCH_DIR ]; then
+    use_system_scratch=1
+    output_dir=$SCRATCH_DIR/$USER/$dir_name
+else
+    D=$(dirname $input)
+    abspath="`cd \"$D\" && pwd `"
+    output_dir=$abspath/$dir_name
+fi
+
+# Add the path to the aved binaries if AVED_BIN is set
+if [ $AVED_BIN ]; then
+    export PATH=$PATH:$AVED_BIN
+fi
+
+visionexe_final="`type -p $visionexe`"
+if [ ! "$visionexe_final" ]; then
+    echo "Error: $visionexe not found in search path $PATH"
+    exit 0
+fi 
+
+# Initialize outputfile seed to the input file stem
+output_file_stem=$dir_name
+
+if [ -d $output_dir ]; then
+    pushd $output_dir;
+    echo "Found $output_dir removing previous results in directory"
+    rmall "$output_file_stem*.*"
+    popd;
+fi
+
+# Create output directory and parent dirs in case they don't exist
+mkdir -p $output_dir
+
+# Change into output directory
+pushd $output_dir;
+
+# Find start and end frame indexes, exclude xml explicitly because grep doesn't always
+# exclude through pattern match the xml output files
+# We do this with a find followed by exec as a work around for very long listing bug 
+
+# First, find the file extension of the input frames - this could be jpeg/jpg, ppm, or png
+tmp=./tmp.$RANDOM
+find | grep '[A-Z0-9._%+-]*[0-9]\.[jp*g|ppm|png]' | grep '[A-Z0-9._%+-]*[0-9]\.[^xml]' | sort > $tmp;
+h=`cat $tmp | head --lines=1`
+t=`cat $tmp | tail --lines=1`
+input_file_ext=${h##*.}	
+input_file_stem=`perl -e '$_="'$h'";' -e '($b)=m/.([a-z._%+-]+)[0-9]+.'$input_file_ext'/g;' -e 'print $b;'`
+
+if [ ! "$input_file_ext" ]; then
+  echo "Error: cannot find the file extension for the input frames"
+  exit 1 
+fi
+
+if [ ! "$input_file_stem" ]; then
+  echo "Error: cannot find the file stem for the input frames"
+  exit 1 
+fi
+
+# Next, if start/end frames not specified find starting and ending frames 
+if [ $start_frame = 0 ] && [ $end_frame = 0 ]; then
+    start_frame=`perl -e '$_="'$h'";' -e '($b)=m/.\/[a-zA-Z._%+-\/]+([0-9]+).'$input_file_ext'/g;' -e 'print "$b";'`
+    end_frame=`perl -e '$_="'$t'";' -e '($b)=m/.\/[a-zA-Z._%+-\/]+([0-9]+).'$input_file_ext'/g;' -e 'print $b;'` 
+fi
+echo "head:$h tail:$t filestem:$input_file_stem fileext:$input_file_ext startframe:$start_frame endframe:$end_frame"
+
+# Move out of output directory
+popd;
+
+echo "startframe:$start_frame endframe:$end_frame filestem:$input_file_stem fileext:$input_file_ext"
+
+# Add in the mbarivision options if there are any
+if [ -n "$MBARIVISION_OPTIONS" ]; then
+    mbarivision_options="$mbarivision_options $MBARIVISION_OPTIONS"
+fi
+
+# In the parallel code, mbarivision options are passed with the LAM_MPI_ prefix automatically by the mpi library
+export LAM_MPI_MBARIVISION_OPTIONS="$MBARIVISION_OPTIONS"
+
+# Add in the input source metadata if one was defined
+if [ $use_metadata = 1 ]; then
+    mbarivision_options="$mbarivision_options --mbari-source-metadata=$input_metadata"    
+fi
+
+# format the remainder of the user options
+# save the output frames in the same directory as the input frames
+# everything else will be saved in the same directory
+# the script was executed in
+mbarivision_options="\
+--logverb=Error \
+--input-frames=$start_frame$dash$end_frame@1 \
+--in=raster:$output_dir/$input_file_stem#.ppm \
+--out=raster:$output_dir/$output_file_stem --mbari-save-output \
+--mbari-save-events-xml=$dir_name.events.xml \
+--mbari-save-event-summary=$dir_name.summary \
+$mbarivision_options \
+"
+if [ $worker_option ]; then
+ mbarivision_options="$worker_option -a '$mbarivision_options'"
+fi
+
+# Insert Vision Saliency commands and run.
+cat >mbarivis_command <<_ACEOF 
+#!/bin/bash
+set -e
+$visionexe_final $mbarivision_options
+exit 0
+_ACEOF
+
+# Make the command executable by all and run it.
+chmod ugo+x mbarivis_command
+echo "executing mbarivis_command"
+cat ./mbarivis_command 
+./mbarivis_command 
+
+# If there are any events created, copy them back to the originator
+# the event-centered clips are stored in the same directory as the output
+# so  move into the output directory to search for them and copy
+# them back to the originator 
+pushd $output_dir;
+if [ `find ./ -maxdepth 1 -type f -name '*evt*.p?m' | wc -l` -gt 0 ]; then
+    gtarfile=$dir_name.events.tar.gz
+    echo "Finding files with the pattern evt*.p?m and compresssing them in $gtarfile"
+    find ./ -maxdepth 1 -type f -name '*evt*.p?m' > listing
+    gtar -c -v -z -h --files-from listing -f $gtarfile
+    mv $gtarfile $orig_dir
+    rm listing
+fi
+popd;
+
+echo "Done with runmbarivision !"
+exit 0
+

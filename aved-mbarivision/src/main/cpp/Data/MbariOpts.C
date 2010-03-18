@@ -1,0 +1,342 @@
+
+#include "Data/MbariOpts.H"
+
+#include "Component/ModelOptionDef.H"
+#include "Image/ArrayData.H"
+#include "Component/OptionManager.H" 
+
+#include "DetectionAndTracking/TrackingModes.H"
+#include "DetectionAndTracking/SaliencyTypes.H"
+#include "DetectionAndTracking/SegmentTypes.H"
+#include "DetectionAndTracking/Segmentation.H"
+#include "Image/BitObjectDrawModes.H"
+
+// Format here is:
+//
+// { MODOPT_TYPE, "name", &MOC_CATEG, OPTEXP_CORE,
+//   "description of what option does",
+//   "long option name", 'short option name', "valid values", "default value" }
+//
+
+// alternatively, for MODOPT_ALIAS option types, format is:
+//
+// { MODOPT_ALIAS, "", &MOC_ALIAS, OPTEXP_CORE,
+//   "description of what alias does",
+//   "long option name", 'short option name', "", "list of options" }
+//
+
+// NOTE: do not change the default value of any existing option unless
+// you really know what you are doing!  Many components will determine
+// their default behavior from that default value, so you may break
+// lots of executables if you change it.
+
+const ModelOptionCateg MOC_MBARI = {
+  MOC_SORTPRI_4, "MBARI Related Options" };
+
+const ModelOptionType MODOPT_ARG_INT = {
+  MOK_ARG, &(typeid(int))
+};
+
+void REQUEST_OPTIONALIAS_MBARI(OptionManager& m)
+{
+  m.requestOptionAlias(&OPT_MDPMosaicBenthicStills);
+  m.requestOptionAlias(&OPT_MDPBenthicVideo);
+  m.requestOptionAlias(&OPT_MDPMidwaterVideo);
+  m.requestOptionAlias(&OPT_MDPMosaicStills);
+  m.requestOptionAlias(&OPT_MDPTimeLapseStills);
+  m.requestOptionAlias(&OPT_MDPTimeLapseRover);
+}
+
+// #################### Mbari Alias options:
+const ModelOptionDef OPT_MDPMosaicBenthicStills =
+  { MODOPT_ALIAS, "ALIASMosaicBenthicStills", &MOC_MBARI, OPTEXP_MRV,
+    "Implements good choice of options to experiment with "
+    "processing still images from a still or moving camera traversing the sea bottom",
+    "mbari-mosaic-benthic-stills", '\0',"",
+    "--mbari-saliency-dist=1 --mbari-tracking-mode=None "
+    "--mbari-keep-boring-WTA-points=yes "
+    "--mbari-save-non-interesting-events=yes "
+    "--mbari-segment-algorithm-input-image=MaxRGB "
+    "--mbari-saliency-input-image=Raw --mbari-cache-size=2 "
+    "--mbari-max-WTA-points=15 --mbari-max-evolve-msec=15000 "
+    "--vc-type=OIC --use-random=false --test-mode=true "
+    "--oricomp-type=Steerable "
+    "--mbari-cache-size=2 --use-random=false --use-older-version=false "
+    "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst "  };
+const ModelOptionDef OPT_MDPBenthicVideo =
+  { MODOPT_ALIAS, "ALIASBenthicVideo", &MOC_MBARI, OPTEXP_MRV,
+    "Implements good choice of options to experiment with "
+    "processing video from a moving camera traversing the sea bottom",
+    "mbari-benthic-video", '\0',"",
+    "--mbari-saliency-dist=5 --mbari-tracking-mode=NearestNeighbor "
+    "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=MaxRGB "
+    "--vc-type=O:5IC --use-random=false --test-mode=true "
+    "--ori-interaction=None --oricomp-type=Steerable "
+    "--mbari-cache-size=15 --use-random=false --use-older-version=false "
+    "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst "  };
+
+const ModelOptionDef OPT_MDPMidwaterVideo =
+  { MODOPT_ALIAS, "ALIASMidwaterVideo", &MOC_MBARI, OPTEXP_MRV,
+   "Implements good choice of options to experiment with "
+    "processing video from a moving camera traversing the midwater sea column",
+    "mbari-midwater-video", '\0',"",
+    "--mbari-saliency-dist=5 --mbari-tracking-mode=KalmanFilter "
+    "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=MaxRGB "
+    "--vc-type=O:5IC --use-random=false --test-mode=true "
+    "--mbari-cache-size=10 --use-random=false --use-older-version=false "
+    "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst  "  };
+
+const ModelOptionDef OPT_MDPMosaicStills =
+  { MODOPT_ALIAS, "ALIASMosaicStills", &MOC_MBARI, OPTEXP_MRV,
+    "Implements good choice of options to experiment with "
+    "still frames collected from a moving camera in mosaic form",
+    "mbari-mosaic-stills", '\0',"",
+    "--mbari-saliency-dist=1 --mbari-tracking-mode=None "
+    "--mbari-keep-boring-WTA-points=yes "
+    "--boring-sm-mv=0.25 "
+    "--mbari-save-non-interesting-events=yes "
+    "--mbari-segment-algorithm-input-image=MaxRGB "
+    "--vc-type=Variance --use-random=false "
+    "--mbari-saliency-input-image=Raw --mbari-cache-size=2 "
+    "--mbari-max-WTA-points=25 --mbari-max-evolve-msec=15000" };
+
+const ModelOptionDef OPT_MDPTimeLapseStills =
+  { MODOPT_ALIAS, "ALIASTimeLapseStills", &MOC_MBARI, OPTEXP_MRV,
+    "Implements good choice of options to experiment with "
+    "still frames collected from a stationary time-lapse camera",
+    "mbari-timelapse-stills", '\0',"",
+    "--mbari-saliency-dist=1 --mbari-tracking-mode=NearestNeighbor "
+    "--mbari-keep-boring-WTA-points=yes "
+    "--mbari-save-non-interesting-events=yes "
+    "--mbari-segment-algorithm-input-image=MaxRGB "
+    "--mbari-saliency-input-image=Raw --mbari-cache-size=10 "
+    "--qtime-decay=1.0 "
+    "--vc-type=Variance  --use-random=false "
+    "--mbari-max-WTA-points=30 --mbari-max-evolve-msec=15000 "
+    "--use-random=false --use-older-version=false "  };
+
+const ModelOptionDef OPT_MDPTimeLapseRover =
+  { MODOPT_ALIAS, "ALIASTimeLapseRover", &MOC_MBARI, OPTEXP_MRV,
+    "Implements good choice of options to experiment with "
+    "time-lapse still frames collected from a benthic moving camera ",
+    "mbari-timelapse-rover-stills", '\0', "",
+    "--mbari-saliency-dist=1  --mbari-tracking-mode=None "
+    "--mbari-keep-boring-WTA-points=yes "
+    "--qtime-decay=1.0 "
+    "--mbari-save-non-interesting-events=yes "
+    "--mbari-segment-algorithm-input-image=MaxRGB "
+    "--mbari-saliency-input-image=Raw "
+    "--vc-type=O:5IC --use-random=false  "
+    "--mbari-max-WTA-points=15 --mbari-max-evolve-msec=15000" };
+
+// #################### MbariResultViewer options:
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVsaveEvents =
+  { MODOPT_ARG_STRING, "MRVsaveEvents", &MOC_MBARI, OPTEXP_MRV,
+    "Save the event structure to a text file",
+    "mbari-save-events", '\0', "fileName", "" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVloadEvents =
+  { MODOPT_ARG_STRING, "MRVloadEvents", &MOC_MBARI, OPTEXP_MRV,
+    "Load the event structure from a text file "
+    "instead of computing it from the frames",
+    "mbari-load-events", '\0', "fileName", "" };
+    
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVsaveProperties =
+  { MODOPT_ARG_STRING, "MRVsaveProperties", &MOC_MBARI, OPTEXP_MRV,
+    "Save the event property vector to a text file",
+    "mbari-save-properties", '\0', "fileName", "" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVloadProperties =
+  { MODOPT_ARG_STRING, "MRVloadProperties", &MOC_MBARI, OPTEXP_MRV,
+    "Load the event property vector from a text file",
+    "mbari-load-properties", '\0', "fileName", "" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVsavePositions =
+  { MODOPT_ARG_STRING, "MRVsavePositions", &MOC_MBARI, OPTEXP_MRV,
+    "Save the positions of events to a text file",
+    "mbari-save-positions", '\0', "fileName", "" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVmarkInteresting =
+  { MODOPT_ARG(BitObjectDrawMode), "MRVmarkInteresting", &MOC_MBARI, OPTEXP_MRV,
+    "Way to mark interesting events in output frames of MBARI programs",
+    "mbari-mark-interesting", '\0', "<None|Shape|Outline|BoundingBox>",
+    "BoundingBox" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVopacity =
+  { MODOPT_ARG(float), "MRVopacity", &MOC_MBARI, OPTEXP_MRV,
+    "Opacity of shape or outline markings of events",
+    "mbari-opacity", '\0', "<0.0 ... 1.0>", "1.0" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVmarkCandidate =
+  { MODOPT_FLAG, "MRVmarkCandidate", &MOC_MBARI, OPTEXP_MRV,
+    "Mark candidates for interesting events in output frames of MBARI programs",
+    "mbari-mark-candidate", '\0', "", "true" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVmarkPrediction =
+  { MODOPT_FLAG, "MRVmarkPrediction", &MOC_MBARI, OPTEXP_MRV,
+    "Mark the Kalman Filter's prediction for the location of an object "
+    "in output frames of MBARI programs",
+    "mbari-mark-prediction", '\0', "", "false" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVmarkFOE =
+  { MODOPT_FLAG, "MRVmarkFOE", &MOC_MBARI, OPTEXP_MRV,
+    "Mark the focus of expansion in the output frames of MBARI programs",
+    "mbari-mark-foe", '\0', "", "false" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVsaveResults =
+  { MODOPT_FLAG, "MRVsaveResults", &MOC_MBARI, OPTEXP_MRV,
+    "Save intermediate results in MBARI programs to disc",
+    "mbari-save-results", '\0', "", "false" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVdisplayResults =
+  { MODOPT_FLAG, "MRVdisplayResults", &MOC_MBARI, OPTEXP_MRV,
+    "Display intermediate results in MBARI programs",
+    "mbari-display-results", '\0', "", "false" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVsaveOutput =
+  { MODOPT_FLAG, "MRVsaveOutput", &MOC_MBARI, OPTEXP_MRV,
+    "Save output frames in MBARI programs",
+    "mbari-save-output", '\0', "", "false" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVdisplayOutput =
+  { MODOPT_FLAG, "MRVdisplayOutput", &MOC_MBARI, OPTEXP_MRV,
+    "Display output frames in MBARI programs",
+    "mbari-display-output", '\0', "", "false" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVshowEventLabels =
+  { MODOPT_FLAG, "MRVshowEventLabels", &MOC_MBARI, OPTEXP_MRV,
+    "Write event labels into the output frames",
+    "mbari-label-events", '\0', "", "true" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVrescaleDisplay =
+  { MODOPT_ARG(Dims), "MRVrescaleDisplay", &MOC_MBARI, OPTEXP_MRV,
+    "Rescale displays to <width>x<height>, or 0x0 for no rescaling",
+    "mbari-rescale-display", '\0', "<width>x<height>", "0x0" };
+
+// Used by: MbariResultViewer
+const ModelOptionDef OPT_MRVsaveEventNums =
+  { MODOPT_ARG_STRING, "MRVsaveEventNums", &MOC_MBARI, OPTEXP_MRV,
+    "Save video clips showing specific events",
+    "mbari-save-event-num", '\0', "ev1,ev1,...,evN; or: all", "" };
+
+const ModelOptionDef OPT_MRVsaveSummaryEventsName =
+  { MODOPT_ARG_STRING, "MRVsummaryEvents", &MOC_MBARI, OPTEXP_MRV,
+    "Save a human readable summary of all the events to a text file",
+    "mbari-save-event-summary", '\0', "fileName", "" };
+
+const ModelOptionDef OPT_MRVsaveNonInterestingEvents =
+  { MODOPT_FLAG, "OPT_MRVsaveNonInterestingEvents", &MOC_MBARI, OPTEXP_MRV,
+    "Save non-interesting events. Default is to remove non-interesting events, set to true to save",
+    "mbari-save-non-interesting-events", '\1', "", "false" };
+    
+const ModelOptionDef OPT_MRVsaveXMLEventSet =
+  { MODOPT_ARG_STRING, "MRVsaveXMLEventSet", &MOC_MBARI, OPTEXP_MRV,
+    "Save a XML output per all events",
+    "mbari-save-events-xml", '\0', "fileName", "" }; 
+
+const ModelOptionDef OPT_MRVmetadataSource =
+  { MODOPT_ARG_STRING, "MRVmetadataSource", &MOC_MBARI, OPTEXP_MRV,
+    "Add video input source information to XML output",
+    "mbari-source-metadata", '\0', "fileName", "" };
+
+// #################### DetectionParametersModelComponent options:
+const ModelOptionDef OPT_MDPtrackingMode =
+  { MODOPT_ARG(TrackingMode), "MDPtrackingMode", &MOC_MBARI, OPTEXP_MRV,
+    "Way to mark interesting events in output of MBARI programs",
+    "mbari-tracking-mode", '\0', "<KalmanFilter|NearestNeighbor|None>",
+    "KalmanFilter" };
+const ModelOptionDef OPT_MDPsegmentAlgorithm =
+  { MODOPT_ARG(SegmentAlgorithmType), "MDPsegmentAlgorithm", &MOC_MBARI, OPTEXP_MRV,
+    "Segment algorithm to find foreground objects",
+    "mbari-segment-algorithm", '\0', "<BinaryAdaptive|AdaptiveThreshold|BackgroundCanny|HomomorphicCanny|ExtractForegroundBW>", 
+    "BinaryAdaptive" };
+const ModelOptionDef OPT_MDPsegmentAlgorithmInputImage = {
+   MODOPT_ARG(SegmentAlgorithmInputImageType), "MDPsegmentInputImage", &MOC_MBARI, OPTEXP_MRV,
+   "Segment algorithm input images type",
+    "mbari-segment-algorithm-input-image", '\0', "<MaxRGB|Luminance>",
+    "MaxRGB" };
+const ModelOptionDef OPT_MDPsaliencyInputImage = {
+      MODOPT_ARG(SaliencyInputImageType), "MDPsaliencyInputImage", &MOC_MBARI, OPTEXP_MRV,
+    "Saliency input image type",
+    "mbari-saliency-input-image", '\0', "<Raw|DiffMean>",
+    "DiffMean" };
+const ModelOptionDef OPT_MDPsegmentSEType =    
+  { MODOPT_ARG_STRING, "MDPsegmentationSEType", &MOC_MBARI, OPTEXP_MRV,
+    "Jerome segmentation algorithm structure element test",
+    "mbari-segment-algorithm-se-type", '\0', "<benthic|midwater>",
+    "benthic" };
+const ModelOptionDef OPT_MDPmaskPath =
+  { MODOPT_ARG_STRING, "MDPmaskPath", &MOC_MBARI, OPTEXP_MRV,
+    "MaskPath: path to the mask image",
+    "mbari-mask-path", '\0', "<file>",
+    "" };
+const ModelOptionDef OPT_MDPmaskXPosition =
+  { MODOPT_ARG_INT, "MDPmaskXPosition", &MOC_MBARI, OPTEXP_MRV,
+    "MaskXPosition: x position of the mask point of reference; ",
+    "mbari-mask-xposition", '\0', "<int>", "1" };
+const ModelOptionDef OPT_MDPmaskYPosition =
+  { MODOPT_ARG_INT, "MDPmaskYPosition", &MOC_MBARI, OPTEXP_MRV,
+    "MaskYPosition: y position of the mask point of reference; ",
+    "mbari-mask-yposition", '\0', "<int>", "1" };
+const ModelOptionDef OPT_MDPmaskWidth =
+  { MODOPT_ARG_INT, "MDPmaskWidth", &MOC_MBARI, OPTEXP_MRV,
+    "MaskWidth: mask width; ",
+    "mbari-mask-width", '\0', "<int>", "1" };
+const ModelOptionDef OPT_MDPmaskHeight =
+  { MODOPT_ARG_INT, "MDPmaskHeight", &MOC_MBARI, OPTEXP_MRV,
+    "MaskHeight: mask height; ",
+    "mbari-mask-height", '\0', "<int>", "1" };
+const ModelOptionDef OPT_MDPminEventArea =
+  { MODOPT_ARG_INT, "MDPBminEventArea", &MOC_MBARI, OPTEXP_MRV,
+    "The minimum area an event must be to be candidate",
+    "mbari-min-event-area", '\0', "<int>", "34" };
+const ModelOptionDef OPT_MDPmaxEventArea =
+  { MODOPT_ARG_INT, "MDPBmaxEventArea", &MOC_MBARI, OPTEXP_MRV,
+    "The maximum area an event can be, to be candidate",
+    "mbari-max-event-area", '\0', "<int>", "1000" };
+const ModelOptionDef OPT_MDPsizeAvgCache =
+  { MODOPT_ARG_INT, "MDPBsizeAvgCache", &MOC_MBARI, OPTEXP_MRV,
+    "The number of frames used to compute the running average",
+    "mbari-cache-size", '\0', "<int>", "30" };
+const ModelOptionDef OPT_MDPsaliencyFrameDist =
+  { MODOPT_ARG_INT, "MDPBsaliencyFrameDist", &MOC_MBARI, OPTEXP_MRV,
+    "The number of frames to delay between saliency map computations ",
+    "mbari-saliency-dist", '\0', "<int>", "5" };
+const ModelOptionDef OPT_MDPmaxEvolveTime =
+  { MODOPT_ARG_INT, "MDPBmaxEvolveTime", &MOC_MBARI, OPTEXP_MRV,
+    "Maximum amount of time in milliseconds to evolve the brain until stopping",
+    "mbari-max-evolve-msec", '\0', "<int>", "500" };
+const ModelOptionDef OPT_MDPmaxWTAPoints =
+  { MODOPT_ARG_INT, "MDPBmaxWTAPoints", &MOC_MBARI, OPTEXP_MRV,
+    "Maximum number of winner-take-all points to find in each frame",
+    "mbari-max-WTA-points", '\0', "<int>", "20" };
+const ModelOptionDef OPT_MDPkeepBoringWTAPoints =
+  { MODOPT_FLAG, "MDPkeepBoringWTAPoints", &MOC_MBARI, OPTEXP_MRV,
+    "Keep boring WTA points from saliency computation. Turning this on "
+    "will increase the number of candidates but can also increase the"
+    "number of false detections",
+    "mbari-keep-boring-WTA-points", '\0', "", "false" };
+// ####################
+
+// #################### Version options:
+const ModelOptionDef OPT_MbariVersion =
+  { MODOPT_FLAG, "MBARIVersion", &MOC_MBARI, OPTEXP_MRV,
+    "Print version",
+    "version", 'v', "", "false" };
+// ####################

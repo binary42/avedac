@@ -1,0 +1,31 @@
+# This is a script that can be used to build the classifier library 
+# into a shared library. This is given as an example, but is not used
+# in the default Maven build.
+# 
+# This script creates a shared library and installs it into /usr/local/aved/lib
+#
+# We have a single-user Matlab license that runs under the user aved
+# and, therefore, requires that this be run as the user aved. You can
+# remove this check if you do not have a requirement that only a particular
+# user can only execute the Matlab compiler mcc
+#
+# Test for user aved
+USERID=`id -u`
+if [ $USERID != 300 ]; then
+  echo "You must be user aved to run this script, and you must have a valid X display window"
+  exit 0
+fi
+
+# Test for lib. if doesn't exist create it
+installdir=/usr/local/aved/lib
+if [ -d $installdir ]
+  then echo "Found $installdir"
+else
+  echo "Creating $installdir directory"
+  mkdir $installdir 
+fi
+
+# Execute matlab compiler
+echo "Executing matlab compiler" 
+mcc -W lib:libAVEDClassifierMatlab -T link:lib -d $installdir -d $installdir/netlab -I ./ -g collect collect_class assign_class test_class init_classifier
+

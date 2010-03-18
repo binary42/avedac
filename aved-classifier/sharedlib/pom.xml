@@ -1,0 +1,180 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <groupId>org.mbari.aved</groupId>
+        <artifactId>classifier</artifactId>
+        <version>0.4.2-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.mbari.aved.classifier</groupId>
+    <artifactId>sharedlib</artifactId>
+    <packaging>nar</packaging>
+    <version>0.4.2-SNAPSHOT</version>
+    <name>AVED classifier Matlab shared library</name>
+    <url>http://www.mbari.org</url>
+    <repositories>
+        <repository>
+            <id>freehep-maven</id>
+            <name>Maven FreeHEP</name>
+            <url>http://java.freehep.org/maven2</url>
+        </repository>
+    </repositories>
+    <build>
+        <plugins>
+            <plugin> 
+                  <!-- This uses the freehep-nar plugin to package up the matlab 
+                  generated library into a nar file. It ignores all c code
+                  and is simply used for convenience to package up
+                  native code and attach it to a jar file -->
+                <groupId>org.freehep</groupId>
+                <artifactId>freehep-nar-plugin</artifactId> 
+                <extensions>true</extensions>
+                <configuration>
+                    <classifiers>
+                        <classifier>i386-MacOSX-g++</classifier>
+                    </classifiers>
+                    <libraries>
+                        <library>
+                            <type>shared</type>
+                            <linkCPP>true</linkCPP>
+                        </library>
+                    </libraries>
+                    <!--exclude the files generated from the mcc matlab compiler -->
+                    <c>
+                        <excludes>
+                            <exclude>**/libAVEDClassifierMatlab_mcc_component_data.c</exclude>
+                            <exclude>**/libAVEDClassifierMatlab.c</exclude>
+                        </excludes>
+                        <includes>
+                            <include>${basedir}/target/${narLibDir}/libsharedlib.h</include>
+                        </includes>
+                    </c> 
+                </configuration>
+            </plugin>
+            <!-- Since the freehep-nar cannot handle matlab compilation this
+            mojo is used to execute commands needed to compile the
+            matlab modules into a shared library. It is also used to
+            install the shared library to this system.-->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                         <!--Creates the nar directory for storing this shared 
+                         library. This is used to store the shared library in
+                         the appropriate nar directory for inclusion in the
+                         nar packaging phase. -->
+                        <id>exec-mcc-one</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${basedir}/target</workingDirectory>
+                            <executable>${basedir}/src/main/scripts/execute</executable>
+                            <arguments>
+                                <cmdlineArguments>mkdir -p ${basedir}/target/${narLibDir}</cmdlineArguments>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Runs the matlab compiler to create a shared 
+                        library in the directory from exec-mcc-one above-->
+                        <id>exec-mcc-two</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
+                            <executable>${basedir}/src/main/native/matlab/mcc-wrapper</executable>
+                            <!-- The ${version} is left off from the -W argument 
+                            because the format isn't supported in the mcc compiler.
+                            Adding versioning is handled in the install phases -->
+                            <arguments>
+                                <cmdlineArguments>${matlabRoot}/bin/mcc -v -W lib:lib${artifactId} -T link:lib -I ${basedir}/src/main/native/matlab -I ${basedir}/src/main/native/matlab/netlab -g run_tests_ui collect_ui collect_tests collect_class assign_class test_class train_classes_ui
+                                </cmdlineArguments>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Copies the library to one with the version-->
+                        <id>exec-nar-package-one</id>
+                        <phase>nar-package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
+                            <executable>${basedir}/src/main/native/matlab/mcc-wrapper</executable>
+                            <arguments>
+                                <cmdlineArguments>cp -f lib${artifactId}.${sharedExtension} lib${artifactId}-${version}.${sharedExtension}</cmdlineArguments>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Creates the library directory an all parent directories if needed-->
+                        <id>exec-install-one</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${basedir}/target</workingDirectory>
+                            <executable>${basedir}/src/main/scripts/execute</executable>
+                            <arguments>
+                                <cmdlineArguments>install -d ${installPath}</cmdlineArguments>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Installs the library -->
+                        <id>exec-install-two</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
+                            <executable>${basedir}/src/main/scripts/execute</executable>
+                            <arguments>
+                                <cmdlineArguments>install lib${artifactId}-${project.version}* ${installPath}</cmdlineArguments>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                         <!-- Installs a symbolic link to the versioned library-->
+                        <id>exec-install-three</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${installPath}</workingDirectory>
+                            <executable>${basedir}/src/main/scripts/execute</executable>
+                            <arguments>
+                                <!-- Adds a soft link to the shared library-->
+                                <cmdlineArguments>ln -sf lib${artifactId}-${version}.${sharedExtension} lib${artifactId}.${sharedExtension}</cmdlineArguments>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Cleans the library -->
+                        <id>exec-clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${installPath}</workingDirectory>
+                            <executable>${basedir}/src/main/native/matlab/clean</executable>
+                            <arguments>
+                                <cmdlineArguments>lib${artifactId}-${project.version}.*</cmdlineArguments>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

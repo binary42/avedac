@@ -1,0 +1,289 @@
+#!/bin/bash
+#set -x
+# Name: frames2mpeg
+# This script creates an MPEG-1 from sequence of pnm,ppm,or jpg frames
+#  
+# Usage:  frames2mpeg -i [input frames directory] -o [outfilename] [OPTIONS] 
+#
+# Copyright (c) MBARI 2003
+# Author: Danelle Cline, Karen A. Salamy
+# Date: July 11, 2003
+#
+# In part, based on runavi script written by Karen Salamy.
+# modified to run mpeg_encode after running through transcode
+# software
+set -e 
+###################################################################################
+# Print usage
+print_usage()
+{
+  echo "  "
+  echo "  " 
+  echo "  "
+  echo "  "
+  echo -e "\033[1mUSAGE:  frames2mpeg -i [input frames directory] -o [outfilename] [OPTIONS] \033[0m"
+  echo "  "
+  echo "OPTION"
+  echo "  "
+  echo -e "\033[1m -s \033[0m"
+  echo "     input directory is defined relative to local machine users scratch directory"
+  echo "      (Example:  frames2mpeg -s -i testclip/20040513T001230 -o 20040513T001230.mpeg)"
+  echo "  "
+  echo -e "\033[1m -p \033[0m"
+  echo "     process using parallel mpeg encoder. Only works on cluster configuration. Typically use"
+  echo "     this with the -s option, where the -s option defines the NFS mounted directory containing"
+  echo "     the input frames"
+  echo "      (Example:  frames2mpeg -p -s -i testclip/20040513T001230 -o 20040513T001230.mpeg)"
+  echo "  "
+  echo "  "
+  echo -e "\033[1m -f [filestem] \033[0m"
+  echo "    defines filestem for frames in input directory"
+  echo "      (Example:  frames2mpeg -i  testclip/20040513T001230 -o 20040513T001230.mpeg -f f0)"
+  echo "  "
+  echo -e "\033[1m -m [input source metadata] \033[0m"
+  echo "     input video source information is defined in the file input_source_metadata.xml"
+  echo "      (Example:  runmbarivision -i  testclip/20040513T001230 -o 20040513T001230.mpeg -m 20040513T001230.metadata.xml )"
+  echo "  "
+  echo -e "\033[1m -r [output framerate] \033[0m"
+  echo "      video frame rate to encode in the output mpeg-r 29.97. If not defined, defaults 29.97"
+  echo "      can alternatively set the video frame rate using the metadata xml from the source these" 
+  echo "      frames were extracted from (see the -m option) "
+  echo "      (Example:  runmbarivision -i  testclip/20040513T001230 -r 29.97 -o 20040513T001230.mpeg -m 20040513T001230.metadata.xml )"
+  echo "  "
+  echo -e "\033[1m -c \033[0m"
+  echo "      Specify starting and ending frames to create mpeg from. "
+  echo "  "
+  echo "       runmbarivision -c 0-30 -i 20040513T001230" 
+  echo "(Example:  frames2mpeg -i  testclip/20040513T001230 -c 0-10 -o 20040513T001230.mpeg)"
+  echo "  "
+}
+###################################################################################
+input=""
+output=""
+user=`whoami`
+use_system_scratch=0
+use_parallel=0
+filestem=0
+frame_rate=29.97
+scratch=""
+startframe=0
+endframe=0
+
+# Check arguments
+while getopts i:o:f:r:m:c:sp option
+do
+  case $option in   
+   i)  input="$OPTARG";;
+   o)  output="$OPTARG";;
+   f)  filestem="$OPTARG";;
+   r)  frame_rate="$OPTARG";;
+   m)  if [ ! -f "$OPTARG" ]; then
+          echo "Error - cannot find file $OPTARG"
+	  exit 1
+       fi
+       frame_rate=`perl -S -w extract_source_framerate.pl -i=$OPTARG`;;
+   s)  use_system_scratch=1;;
+   p)  use_parallel=1;;
+   c)  startframe=${OPTARG%-*}
+       endframe=${OPTARG#*-}
+       echo "Creating mpeg from frames $OPTARG";; 
+   *)  echo "Unimplemented option chosen."
+       echo "  "
+       print_usage;;
+  esac
+done
+
+# If the input and output files are empty print usage and exit
+if [ ! -n "$input" ] || [ !  -n "$output" ]; then
+    print_usage
+    exit 1
+fi
+
+# Add the path to the aved binaries if AVED_BIN is set
+if [ $AVED_BIN ]; then
+    export PATH=$PATH:$AVED_BIN
+fi
+
+# Source the mpeg configuration
+if [ -e /etc/profile.d/mpeg.sh ]; then
+  . /etc/profile.d/mpeg.sh
+fi 
+
+# Format the output directory
+if [ $use_system_scratch = 1 ]; then
+    if [ $SCRATCH_DIR ]; then
+	scratch=$SCRATCH_DIR
+  	inputdir=$SCRATCH_DIR/$USER/$input
+    else
+	echo "Error - \$SCRATCH_DIR environment variable is not defined"
+	exit 1
+    fi
+else
+# Get the current frames directory, excluding the symbolic link. This is 
+# required for the mpeg parallel encoder to work correctly
+    abspath="`cd $input && pwd -P`"  
+    inputdir=$abspath
+fi
+
+# Check if input directory exists
+if [ -d $inputdir ]; then
+    echo "Found $inputdir"
+else
+    echo "$inputdir does not exist"
+    exit 1
+fi 
+
+# If the file seed is not specified, format the outputfilestem as the base input name followed by _
+if [ $filestem = 0 ]; then
+    # Initialize directory seed
+    framesdir_base=$(basename $inputdir)
+    filestem=$framesdir_base\_
+fi
+
+# Change into input directory. 
+pushd $inputdir;
+
+# First, find the file extension of the input frames - this could be jpeg/jpg, ppm, or png
+tmp=./tmp.$RANDOM
+find $inputdir | grep $filestem | sort > $tmp;# | grep '[A-Z0-9._%+-]*[0-9]\.[^xml]' | sort > $tmp;
+h="`cat $tmp | head --lines=1`"
+t="`cat $tmp | tail --lines=1`"
+input_file_ext=${h##*.}	
+# Strip off the last /
+h=${h##*/}
+t=${t##*/}
+
+# Convert to upper case for mpeg encoder parameter file
+uc_input_file_ext="`echo "$input_file_ext" | tr "[a-z]" "[A-Z]"`"
+
+# If not specified, find the input file stem, and starting and ending frames
+if [ "$startframe" -eq 0 ] && [ "$endframe" -eq 0 ];then
+    startframe="`echo $h | sed "s/\($filestem$cero\)\([0-9]*\)\(.$input_file_ext\)/\2/"`" 
+    endframe="`echo $t | sed "s/\($filestem$cero\)\([0-9]*\)\(.$input_file_ext\)/\2/"`" 
+else
+    # Need to find the exact frame digit for mpeg to work
+    # Try to find the exact digit, frames are generally 5 or 6 digits 
+    a="`printf "$filestem%05d.$input_file_ext" $startframe`"
+    b="`printf "$filestem%06d.$input_file_ext" $startframe`"
+    if [ -f $a ]; then
+	startframe=`printf "%05d" $startframe`   
+    elif [ -f $b ]; then
+	startframe=`printf "%06d" $startframe` 
+    else
+	echo "Cannot find the exact start frame using $a or $b"
+    fi
+
+    a="`printf "$filestem%05d.$input_file_ext" $endframe`"
+    b="`printf "$filestem%06d.$input_file_ext" $endframe`"
+    if [ -f $a ]; then
+	endframe="`printf "%05d" $endframe`"     
+    elif [ -f $b ]; then
+	endframe="`printf "%06d" $endframe`" 
+    else
+	echo "Cannot find the exact end frame using $a or $b"
+    fi
+fi
+echo "startframe: $startframe endframe:$endframe filestem:$filestem fileext:$input_file_ext"
+
+# Check if the first file exists
+if [ ! -f $filestem$startframe.$input_file_ext ]; then
+    echo "Error - cannot find $filestem$startframe.$input_file_ext. Specify correct file stem using -f option"
+    exit 1
+fi
+
+# Get image wxh size
+imsize="`gm identify $filestem$startframe.$input_file_ext | cut -f3 -d " " | cut -f1 -d "+"`"
+
+curdir=$PWD
+# Factor out the file stem from the input file
+basefile=$(basename $output)
+mpegparm_file=$curdir/$basefile.parm
+
+#if using parallel mpeg encoder. This requires a NFS mounted file system for the INPUT and OUTPUT
+if [ $use_parallel = 1 ]; then 
+echo $mpegparm_file
+# Create mpeg_encode parm file to use as argument for mpeg_encode
+cat >$mpegparm_file <<_ACEOF
+PATTERN		ibbpbbpbbpbbpbb
+OUTPUT		$curdir/$output
+BASE_FILE_FORMAT	$uc_input_file_ext
+YUV_SIZE	$imsize
+INPUT_CONVERT * 
+SLICES_PER_FRAME	1 
+INPUT_DIR	$PWD
+GOP_SIZE	30
+INPUT
+$filestem*.$input_file_ext [$startframe-$endframe] 
+END_INPUT 
+PIXEL		HALF 
+RANGE		10 
+PSEARCH_ALG	LOGARITHMIC 
+BSEARCH_ALG	CROSS2 
+IQSCALE		1 
+PQSCALE		1 
+BQSCALE		1 
+REFERENCE_FRAME	ORIGINAL 
+FRAME_RATE      $frame_rate 
+PARALLEL 
+node1 $user /home/aved/bin/mpeg_encode 
+node2 $user /home/aved/bin/mpeg_encode 
+node3 $user /home/aved/bin/mpeg_encode 
+node4 $user /home/aved/bin/mpeg_encode 
+node5 $user /home/aved/bin/mpeg_encode 
+node6 $user /home/aved/bin/mpeg_encode 
+node7 $user /home/aved/bin/mpeg_encode 
+node8 $user /home/aved/bin/mpeg_encode 
+END_PARALLEL
+PARALLEL_PERFECT
+RSH rsh 
+_ACEOF
+# Run mpeg_encode
+cmd="mpeg_encode -debug_machines -max_machines 8 $mpegparm_file"
+echo "Running $cmd"
+$cmd
+else
+cat >$mpegparm_file <<_ACEOF
+PATTERN		ibbpbbpbbpbbpbb
+OUTPUT		$output
+BASE_FILE_FORMAT	$uc_input_file_ext 
+YUV_SIZE	$imsize
+INPUT_CONVERT * 
+SLICES_PER_FRAME	1 
+INPUT_DIR	$PWD
+GOP_SIZE	30
+INPUT 
+$filestem*.$input_file_ext [$startframe-$endframe] 
+END_INPUT 
+PIXEL		HALF 
+RANGE		10 
+PSEARCH_ALG	LOGARITHMIC 
+BSEARCH_ALG	CROSS2 
+IQSCALE		1 
+PQSCALE		1 
+BQSCALE		1 
+REFERENCE_FRAME	ORIGINAL 
+FRAME_RATE      $frame_rate
+_ACEOF
+# Run mpeg_encode
+cmd="mpeg_encode $mpegparm_file"
+echo "Running $cmd"
+$cmd
+fi
+
+# Cleanup 
+rm $mpegparm_file
+popd; 
+
+# Copy results back to originator directory
+echo "Copy results back to originator directory"
+if [ $_CONDOR_SCRATCH_DIR ]; then	   
+    orig_dir=$_CONDOR_SCRATCH_DIR
+else
+    orig_dir=.
+fi
+
+cp -f $inputdir/$output $orig_dir
+#killall -9 mpeg_encode
+#cexec :1-8 `killall -9 mpeg_enocde`
+echo "Done with frames2mpeg !"
+exit 0

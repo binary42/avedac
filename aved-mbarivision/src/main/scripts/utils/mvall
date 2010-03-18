@@ -1,0 +1,43 @@
+#!/bin/bash
+#
+# Name: mvall
+# This script moves a very long listing of files
+
+# Copyright (c) MBARI 2005
+# Author: D. Cline
+# Date: February 07, 2005
+#
+#exit on error; this will exit this bash script when any command exists with
+#a non-zero exit code
+set -e 
+###################################################################################
+# Print usage
+print_usage()
+{
+  echo "  "
+  echo "  "
+  echo -e "\033[1mUSAGE:  mvall [filepattern] [directoryname] \033[0m"
+  echo "  "
+  echo "  Move all files in directory with the pattern f0*.ppm to directory ppmframes"
+  echo "      (Example:  mvall "f0*.ppm" ppmframes"
+  echo "  "
+}
+###################################################################################
+if test $# -lt 2
+then print_usage
+exit 1
+fi
+filepattern=$1
+directory=$2
+tmp=./tmp.$RANDOM
+if [ -d $directory ]; then
+    echo "Moving files with stem $filepattern to directory $directory"
+    echo "find ./ -maxdepth 1 -type f -name '$filepattern' -exec mv {} $directory \;" > $tmp
+    chmod u+x $tmp
+    $tmp
+    rm $tmp
+else
+    echo -e "\033[1mmvall:  ERROR - $2 is not a valid directory\033[0m"
+    exit 1
+fi
+

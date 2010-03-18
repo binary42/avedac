@@ -1,0 +1,50 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Script to collect classes, given a list of training classnames
+% This is intended to be run from the JNI layer and not the
+% Matlab command-line
+%
+% Author: dcline@mbari.org
+% Date: July 2005
+%
+function collect_class_ui(dbroot, classfiles)
+
+%declare the training model data ris global
+global RIS;
+
+%format the training data file
+trainingdatafile = [dbroot '/' ];
+
+%format feature directory root for saving feature info from tests
+featurerootdir = [dbroot '/features/class/']; 
+
+%insert the training classes matlab files names into an array
+for ii=1:length(classfiles)
+    datafiles{ii} = [dbroot featurerootdir classfiles{ii} '_data_collection_avljNL3_cl_pcsnew'];
+    resolfiles{ii} = [dbroot featurerootdir classfiles{ii} '_resol_collection_avljNL3_cl_pcsnew'];
+    
+    %cat the training class names to the training data file - this is where
+    %the trained matlab data will be stored to test against
+            
+    trainingdatafile = [dbroot trainingdatafile classfiles{ii}];
+    
+    if(ii < length(classfiles) )
+        trainingdatafile = [trainingdatafile '_'];
+    else
+        %pad ending to matlab training data file
+        trainingdatafile = [trainingdatafile '_training_data' '.mat'];
+    end 
+            
+end
+                 
+% input parameters 
+%if<trainingdatafile> does not exist, train and save combined classes into <trainingdatafile>
+if (~exist(trainingdatafile))
+  fprintf(1, '%s does not exists, so training classes\n', trainingdatafile); 
+  RIS = train_classes(classfiles, resolfiles, datafiles, trainingdatafile); 
+else
+  fprintf(1, 'Loading classes \n'); 
+  load(trainingdatafile);
+  RIS = ris;
+end
+end

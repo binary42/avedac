@@ -1,0 +1,22 @@
+Created: 8/22/05 D.Cline
+-----------------------------------------------------------------
+These instructions are only if you are building the AVED classifier
+Matlab shared library outside of a Maven build. This is not
+recommended, unless you planning on developing your own interface
+to the code. To build using the Maven build, see the README
+file in the parent directory to this submodule, e.g. if you
+installed this into your home directory, 
+see /home/dcline/aved/aved-classifier/README.
+
+At MBARI, we use this classifier code both on Linux and Mac OS X.
+
+When running this on Linux, we run this as the user aved with
+a single-user Matlab license.
+
+To build the shared library as user aved, execute the following 
+in this directory:
+
+su aved -c './createlib'
+
+For more details, see the createlib script. You can modify
+this for your installation.
