@@ -3,14 +3,14 @@
     <parent>
         <groupId>aved</groupId>
         <artifactId>aved</artifactId>
-        <version>0.4.2</version>
+        <version>0.4.3-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.mbari.aved</groupId>
     <artifactId>classifier</artifactId>
     <packaging>pom</packaging>
     <name>AVED classifier</name>
-    <version>0.4.2</version>
+    <version>0.4.3-SNAPSHOT</version>
     <description>AVED Classifier</description>
     <repositories>
         <repository>
