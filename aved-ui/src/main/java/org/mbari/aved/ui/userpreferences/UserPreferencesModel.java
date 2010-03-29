@@ -1,5 +1,5 @@
 /*
- * @(#)UserPreferencesModel.java   10/03/17
+ * @(#)UserPreferencesModel.java
  * 
  * Copyright 2010 MBARI
  *
@@ -49,7 +49,7 @@ public final class UserPreferencesModel extends AbstractModel {
     private static final String CLASS_DATABASE_DIR_ROOT             = "CLASS_DATABASE_DIR_ROOT";
     private static final String CLASS_NAME_LIST                     = "CLASS_NAME_LIST";
     private static final String CLASS_TRAINING_DIR_ROOT             = "CLASS_TRAINING_DIR_ROOT";
-    private static final String DELETE_WITHOUT_WARNING              = "DELETE_WITHOUT_WARNING";
+    private static final String ASK_BEFORE_DELETE              = "ASK_BEFORE_DELETE";
     private static final String EVENT_IMAGE_DIR                     = "EVENT_IMAGE_DIR";
     private static final String EXCEL_EXPORT_DIR                    = "EXCEL_EXPORT_DIR";
     private static final String ID_LIST                             = "ID_LIST";
@@ -65,6 +65,17 @@ public final class UserPreferencesModel extends AbstractModel {
     private static final String LAST_TRAINING_SELECTION             = "LAST_TRAINING_SELECTION";
     private static final String LAST_VIDEO_IMPORT_DIR               = "LAST_VIDEO_IMPORT_DIR";
 
+    private static final String PREDICTED_CLASS_NAME_LIST = "SPECIES_NAME_LIST";
+    
+    private static final String TAG_LIST                  = "TAG_LIST";
+    private static final String VIDEO_BATCH_INPUT_DIR     = "VIDEO_BATCH_INPUT_DIR";
+    private static final String VIDEO_MASK_DIR            = "VIDEO_MASK_DIR";
+    
+    private static final String XML_EXPORT_DIR            = "XML_EXPORT_DIR";
+    private static final String XML_IMPORT_DIR            = "XML_IMPORT_DIR";
+    
+    private static final String SCRATCH_DIR               = "SCRATCH_DIR";
+    
     /** The maximum number of class names store */
     public static int MAX_NUM_CLASS_NAMES = 30;
 
@@ -73,15 +84,10 @@ public final class UserPreferencesModel extends AbstractModel {
 
     /** The maximum number of tags to store */
     public static int           MAX_NUM_TAGS              = 30;
-    private static final String PREDICTED_CLASS_NAME_LIST = "SPECIES_NAME_LIST";
-    private static final String SCRATCH_DIR               = "SCRATCH_DIR";
-    public static int           SCRATCH_DIR_CHANGED       = 1;
-    private static final String TAG_LIST                  = "TAG_LIST";
-    private static final String VIDEO_BATCH_INPUT_DIR     = "VIDEO_BATCH_INPUT_DIR";
-    private static final String VIDEO_MASK_DIR            = "VIDEO_MASK_DIR";
-    public static int           VIDEO_PLAYOUT_CHANGED     = 0;
-    private static final String XML_EXPORT_DIR            = "XML_EXPORT_DIR";
-    private static final String XML_IMPORT_DIR            = "XML_IMPORT_DIR";
+    
+    public static int           VIDEO_PLAYOUT_CHANGED     = 0;    
+    public static int           SCRATCH_DIR_CHANGED       = 1;    
+    public static int           ASK_BEFORE_DELETE_CHANGED = 2;
 
     /** TODO: rename this to something meaningful number of docking directories */
     private int dockingDirsCnt = 0;
@@ -288,8 +294,8 @@ public final class UserPreferencesModel extends AbstractModel {
     /**
      * Gets the delete without warning preference
      */
-    public boolean getDeleteWithoutWarning() {
-        String delete = get(DELETE_WITHOUT_WARNING, "false");
+    public boolean getAskBeforeDelete() {
+        String delete = get(ASK_BEFORE_DELETE, "false");
 
         if (delete.equals("false")) {
             return false;
@@ -574,10 +580,19 @@ public final class UserPreferencesModel extends AbstractModel {
     }
 
     /**
-     * Sets the delete without warning preference
+     * Sets the delete without warning preference 
      */
-    public void setDeleteWithoutWarning() {
-        put(DELETE_WITHOUT_WARNING, "true");
+    public void setAskBeforeDelete(boolean state) {
+        if(!state) {            
+            put(ASK_BEFORE_DELETE, "false");
+            ModelEvent e = new ModelEvent(this, ASK_BEFORE_DELETE_CHANGED, "false");
+            notifyChanged(e);
+        }
+        else {
+            put(ASK_BEFORE_DELETE, "true");
+            ModelEvent e = new ModelEvent(this, ASK_BEFORE_DELETE_CHANGED, "true");
+            notifyChanged(e);
+        } 
     }
 
     /** Sets the last docking container directories */
@@ -628,7 +643,7 @@ public final class UserPreferencesModel extends AbstractModel {
     public void setScratchDirectory(File f) {
         put(SCRATCH_DIR, f.getAbsolutePath());
 
-        ModelEvent e = new ModelEvent(this, SCRATCH_DIR_CHANGED, f.getAbsolutePath());
+        ModelEvent e = new ModelEvent(this, SCRATCH_DIR_CHANGED, f.getAbsolutePath());       
 
         notifyChanged(e);
     }

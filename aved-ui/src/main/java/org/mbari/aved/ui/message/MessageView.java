@@ -1,5 +1,5 @@
 /*
- * @(#)MessageView.java   10/03/17
+ * @(#)MessageView.java
  * 
  * Copyright 2010 MBARI
  *

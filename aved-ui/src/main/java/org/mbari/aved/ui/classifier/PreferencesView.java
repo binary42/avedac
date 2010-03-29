@@ -1,5 +1,5 @@
 /*
- * @(#)PreferencesView.java   10/03/17
+ * @(#)PreferencesView.java
  * 
  * Copyright 2010 MBARI
  *

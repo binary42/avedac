@@ -9,12 +9,13 @@
 % Author: dcline@mbari.org
 % Date: July 2005
 %
+% @param kill kill boolean to break this from a GUI
 % @param dbroot database root directory
 % @param classalias the alias for this class
 % @param classnames array of class names to use in this training class
 % @param description description of this training class
 
-function train_classes_ui(dbroot, classalias, classnames, description)
+function train_classes_ui(kill, dbroot, classalias, classnames, description)
 
 %declare the training model data ris global
 global RIS;
@@ -38,6 +39,7 @@ color_space = -1;
 
 %insert the training classes matlab files names into an array
 for ii=1:length(classnames)
+    
     datafiles{ii} = [featurerootdir classnames{ii} '_data_collection_avljNL3_cl_pcsnew'];
     resolfiles{ii} = [featurerootdir classnames{ii} '_resol_collection_avljNL3_cl_pcsnew'];
     metadata = [featurerootdir classnames{ii} '_metadata_collection_avljNL3_cl_pcsnew' '.mat'];
@@ -56,11 +58,22 @@ for ii=1:length(classnames)
     
 end
 
-trainingfile = [trainingdir classalias '_training_data'];
+%append the color space to the name to make it unique
+if (color_space == RGB)
+    rootname = [classalias '_rgb'];
+elseif (color_space == GRAY)
+    rootname = [classalias '_gray'];
+elseif (color_space == YCBCR)
+    rootname = [classalias '_ycbcr'];
+else
+    rootname = classalias;
+end
+
+trainingfile = [trainingdir rootname '_training_data'];
 
 %run training
 fprintf(1, 'training classes %s\n', trainingfile);
-RIS = train_classes(classnames, resolfiles, datafiles, trainingfile); 
+RIS = train_classes(kill, classnames, resolfiles, datafiles, trainingfile); 
 
 %format the metadata file name and data structure
 metadatafile = [trainingdir classalias '_training_metadata.mat'];
@@ -68,7 +81,7 @@ training_metadata.dbroot = dbroot;
 training_metadata.classalias = classalias;
 training_metadata.description = description;
 training_metadata.color_space = color_space;
-training_metadata.  = classnames;
+training_metadata.classes = classnames;
 
 %save the metadata
 fprintf(1,'saving %s\n', metadatafile);

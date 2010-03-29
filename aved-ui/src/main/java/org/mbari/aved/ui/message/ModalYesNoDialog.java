@@ -1,5 +1,5 @@
 /*
- * @(#)ModalYesNoDialog.java   10/03/17
+ * @(#)ModalYesNoDialog.java
  * 
  * Copyright 2010 MBARI
  *

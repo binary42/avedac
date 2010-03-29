@@ -1,5 +1,5 @@
 /*
- * @(#)TrainingLibraryPopupMenu.java   10/03/17
+ * @(#)TrainingLibraryPopupMenu.java
  * 
  * Copyright 2010 MBARI
  *

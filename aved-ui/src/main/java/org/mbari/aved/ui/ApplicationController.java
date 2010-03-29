@@ -1,5 +1,5 @@
 /*
- * @(#)ApplicationController.java   10/03/17
+ * @(#)ApplicationController.java
  * 
  * Copyright 2010 MBARI
  *
@@ -46,6 +46,7 @@ import org.mbari.aved.ui.thumbnail.ThumbnailController;
 import org.mbari.aved.ui.thumbnail.ThumbnailView;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
 import org.mbari.aved.ui.userpreferences.UserPreferencesModel.VideoPlayoutMode;
+import org.mbari.aved.ui.utils.ExcelExporter;
 import org.mbari.aved.ui.utils.ImageFileFilter;
 import org.mbari.aved.ui.utils.ParseUtils;
 import org.mbari.aved.ui.utils.ProcessedResultsFileFilter;
@@ -57,6 +58,7 @@ import java.awt.event.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -70,6 +72,7 @@ import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
+import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
@@ -156,7 +159,7 @@ public class ApplicationController extends AbstractController implements ModelLi
     }
 
     /**
-     * Helper function that returns the TableController 
+     * Helper function that returns the TableController
      */
     public TableController getTableController() {
         return this.tableController;
@@ -209,6 +212,59 @@ public class ApplicationController extends AbstractController implements ModelLi
         SummaryModel model = getModel().getSummaryModel();
 
         exportProcessedResults(model.getXmlFile());
+    }
+
+    /**
+     * Export the results in simple Excel format.
+     * This will prompt the user first to browse for
+     * a suitable file
+     */
+    void exportProcessedResultsAsXls() {
+        File   dir   = UserPreferences.getModel().getLastExportedExcelDirectory();
+        File   xml   = getModel().getSummaryModel().getXmlFile();
+        File   tmp   = new File(dir + "/" + ParseUtils.removeFileExtension(xml.getName()) + ".xls");
+        File   f     = browseForXlsExport(tmp);
+        JTable table = tableController.getTable();
+
+        if (f != null) {
+            try {
+                getView().setBusyCursor();
+                ExcelExporter.exportTable(table, f);
+                getView().setDefaultCursor();
+            } catch (IOException ex) {
+                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    /**
+     *    Browse for Excel file to save the results to
+     *
+     *    @param file the default file to save
+     *    @return the file to save exported results to or null if
+     *    a selection was not made
+     */
+    private File browseForXlsExport(File file) {
+
+        // Browse for XML to import starting with the last exported directory
+        JFileChooser chooser = new JFileChooser();
+
+        chooser.setCurrentDirectory(UserPreferences.getModel().getLastExportedExcelDirectory());
+        chooser.setSelectedFile(file);
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        chooser.setDialogTitle("Choose Excel file to save the results to");
+
+        if (chooser.showDialog(getView(), "Export") == JFileChooser.APPROVE_OPTION) {
+            File f = chooser.getSelectedFile();
+
+            UserPreferences.getModel().setLastExportedExcelDirectory(new File(f.getAbsolutePath()));
+
+            return f;
+        } else {
+
+            // TODO: print dialog message box with something meaningful here
+            return null;
+        }
     }
 
     /** Exports the model data to XML file */
@@ -963,7 +1019,7 @@ public class ApplicationController extends AbstractController implements ModelLi
 
                                         /**
                                          * If  doing a save-as operation, then bypass looking
-                                         * for a mpeg because we already have a valid mpeg 
+                                         * for a mpeg because we already have a valid mpeg
                                          */
                                         if (isSaveAs == true) {
                                             isSaveAs = false;
@@ -989,7 +1045,7 @@ public class ApplicationController extends AbstractController implements ModelLi
                                                     /**
                                                      * Remove the file extension (this assumes only one . in the end
                                                      *  of the string. If the video is formatted differently, e.g.
-                                                     * http://localhost/foobar.master.avi rework this code 
+                                                     * http://localhost/foobar.master.avi rework this code
                                                      */
                                                     String fileName = lasturl.toString();
 

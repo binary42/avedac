@@ -1,5 +1,5 @@
 /*
- * @(#)TagCommand.java   10/03/17
+ * @(#)TagCommand.java
  * 
  * Copyright 2010 MBARI
  *

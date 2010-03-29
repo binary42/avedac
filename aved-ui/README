@@ -1,9 +1,0 @@
-Building the AVED GUI requires Maven
-
-To build run:
-	mvn build
-
-To create a OS X package for Mac
-
-	cd aved-ui
-	mvn package osxappbundle:bundle

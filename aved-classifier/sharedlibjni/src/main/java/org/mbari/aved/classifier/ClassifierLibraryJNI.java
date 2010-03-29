@@ -120,7 +120,7 @@ public class ClassifierLibraryJNI {
      */
     public native void test_class(String killfile, String[] eventfilenames, int[] classindex, float[] probability,
                                   String testclassname, String trainingclasses, float minprobthreshold,
-                                  String matlabdbDirName);
+                                  String matlabdbDirName,  ColorSpace colorspace);
 
     /**
      * Test data against set of training classes in <code>trainingclasses
@@ -139,16 +139,18 @@ public class ClassifierLibraryJNI {
      * @param probability probability of the class match in the probability
      * rule class assignment
      * @param testclassname a subset of the training classes to test
-     * @param trainingclasses the name of the trainig classes to use
+     * @param trainingalias the name of the training classes to use
      * @param minprobthreshold the minimum probability threshold between 0-1.0
      * for a given assignment and is typically 0.8 - 0.9.  The lower this
      * number, the more misclassifications returned.
      * @param matlabdbDirName the name of the root directory of the
      * stored classifier matlab (.mat) data
+     * @param colorSpace the color space to use for this class
      */
     public native void run_test(String killfile, String[] eventids, int[] majoritywinnerindex,
                                 int[] probabilitywinnerindex, float[] probability, String testclassname,
-                                String trainingalias, float minprobthreshold, String matlabdbDirName);
+                                String trainingalias, float minprobthreshold, String matlabdbDirName,
+                                ColorSpace colorspace);
 
     /**
      * This will initialialize the classifier with a training classes
@@ -163,28 +165,11 @@ public class ClassifierLibraryJNI {
      * @param trainingalias alias to name this training data to
      * @param matlabdbDirName the name of the root directory of the stored
      * classifier matlab (.mat) data
+     * @param colorSpace the color space to use for this test
      * @param description the description of this training class
      */
     public native void train_classes(String killfile, String trainingclasses, String trainingalias,
-                                     String matlabdbDirName, String description);
-
-    /**
-     * Assign class for single file. Same as test_class, but for assignment of
-     * individual files not necessarily from the  same test class. This would
-     * be used to test a single file, versus a collection of files,
-     * against a trainingclasses.
-     *
-     * @param killfile a file used to signal a kill to this matlab function.
-     * @param classindex an array of class indexes of the assigned classes
-     * @param storeprob a float array that returns the probability a class is assigned
-     * @param file the image file to test
-     * @param minprobthreshold  the minimum probability threshold between 0-1.0
-     * for a given assignment and is typically 0.8 - 0.9.  The lower this
-     * number, the more misclassifications returned.
-     * @param trainingclasses
-     */
-    public native void assign_class(String killfile, int[] classindex, float[] storeprob, String file,
-                                    float minprobthreshold, String trainingclasses);
+                                     String matlabdbDirName, ColorSpace colorspace, String description);
 
     /**
      * Returns training class names.  A training classes name is simply appended

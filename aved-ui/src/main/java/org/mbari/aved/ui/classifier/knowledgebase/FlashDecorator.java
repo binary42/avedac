@@ -1,5 +1,5 @@
 /*
- * @(#)FlashDecorator.java   10/03/17
+ * @(#)FlashDecorator.java
  * 
  * Copyright 2010 MBARI
  *

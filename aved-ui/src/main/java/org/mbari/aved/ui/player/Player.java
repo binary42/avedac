@@ -1,5 +1,5 @@
 /*
- * @(#)Player.java   10/03/17
+ * @(#)Player.java
  * 
  * Copyright 2010 MBARI
  *

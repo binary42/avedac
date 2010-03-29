@@ -1,5 +1,5 @@
 /*
- * @(#)DetectionSettingsController.java   10/03/17
+ * @(#)DetectionSettingsController.java
  * 
  * Copyright 2010 MBARI
  *

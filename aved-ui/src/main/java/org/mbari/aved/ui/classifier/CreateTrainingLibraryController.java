@@ -1,5 +1,5 @@
 /*
- * @(#)CreateTrainingLibraryController.java   10/03/17
+ * @(#)CreateTrainingLibraryController.java
  * 
  * Copyright 2010 MBARI
  *
@@ -174,12 +174,18 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         if (actionCommand.equals("Browse")) {
             browse();
         } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
-            JComboBox  box        = ((JComboBox) e.getSource());
-            ColorSpace colorSpace = (ColorSpace) box.getSelectedItem();
+            JComboBox  box           = ((JComboBox) e.getSource());
+            ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
+            ColorSpace oldColorSpace = trainingLibrary.getColorSpace();
 
-            trainingLibrary.setColorSpace(colorSpace);
-            getView().populateAvailableClassList(colorSpace);
-            getView().clearAllSelected();
+            trainingLibrary.setColorSpace(newColorSpace);
+            getView().populateAvailableClassList(newColorSpace);
+
+            // If a different color space, clear the selected list
+            if (!newColorSpace.equals(oldColorSpace)) {
+                getView().selectAll();
+                removeItemFromSelected();
+            }
         } else if (actionCommand.equals("Stop")) {
             if (worker != null) {
                 worker.cancelWorker(false);
@@ -238,15 +244,12 @@ public class CreateTrainingLibraryController extends AbstractController implemen
 
     public void modelChanged(ModelEvent event) {
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
-            ClassifierModel.ClassifierModelEvent e = (ClassifierModel.ClassifierModelEvent) event;
-
             switch (event.getID()) {
 
-            // When the database root directory changes, update the available
-            // libraries
+            // When the database root directory changeso the models are updated
+            // update the available libraries
             case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
-
-                // case ClassifierModel.ClassifierModelEvent.TRAINING_CLASS_DIR_UPDATED:
+            case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
                 getView().selectColorSpace(trainingLibrary.getColorSpace());
 
                 break;
@@ -339,7 +342,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
 
                 app.train_classes(this.getCancel(), trainingClasses, trainingLibrary.getName(),
                                   trainingLibrary.getDatabaseRootdirectory().toString(),
-                                  trainingLibrary.getDescription());
+                                  trainingLibrary.getColorSpace(), trainingLibrary.getDescription());
                 progressDisplayStream.isDone = true;
                 progressDisplay.getView().dispose();
 

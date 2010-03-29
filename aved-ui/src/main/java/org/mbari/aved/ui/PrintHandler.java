@@ -1,5 +1,5 @@
 /*
- * @(#)PrintHandler.java   10/03/17
+ * @(#)PrintHandler.java
  * 
  * Copyright 2010 MBARI
  *

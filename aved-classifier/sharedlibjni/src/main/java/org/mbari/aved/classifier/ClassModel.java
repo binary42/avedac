@@ -65,7 +65,7 @@ public class ClassModel {
      * Constructor
      */
     void ClassModel() {}
-
+  
     /**
      * Get the raw image directory. This is the directory the images
      * are stored in before conversion to square images for classification
@@ -132,7 +132,7 @@ public class ClassModel {
     }
 
     /**
-     * Updates the valid file listing
+     * Updates the valid file listing in the raw image directory
      */
     public void updateFileList() {
         if (fileList.isEmpty() == false) {
@@ -317,7 +317,7 @@ public class ClassModel {
     }
 
     /**
-     * 
+     *
      * @return A formatted string ouput of this object
      */
     @Override

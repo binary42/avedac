@@ -11,7 +11,7 @@
 % @param dirct directory to start search
 % @param pattern directory pattern to search
 % @param dbroot database root directory
-% @param color_space GRAY = 1, RGB = 2, YCBCR = 3;
+% @param color_space GRAY = 1, RGB = 2, YCBCR = 3
 %
 %Modified by doliver@mbari.org on December 5, 2004
 %Modified by dcline@mbari.org on April 19, 2005 - created from
@@ -19,7 +19,9 @@
 %both collectclasses and collect_tests
 %Modified by Marco Aurelio Moreira marco@mbari.org (lelinhosgp@yahoo.com.br) 
 %on August 21, 2009 to support 3-channel feature analysis.
-%
+%Modified by dcline@mbari.org  Mar 25, 2010 appended color space to
+%metadata name 
+
 function testmfiles = collect(kill, dirct, pattern, dbroot, color_space)
 
     GRAY = 1;
@@ -168,16 +170,27 @@ function testmfiles = collect(kill, dirct, pattern, dbroot, color_space)
             ii = ii + 1;        
 
             % update status in console 
-            fprintf(1,'collecting %d of %d\r', ii, ttl );
+            fprintf(1,'Collecting %d of %d\r', ii, ttl );
             
         end
         
         %modified - store the resolution, data and file names from linear 3d application
         if (size(filenames,1) > 1)
             
-            d=[dbroot str '_data_collection_avljNL3_cl_pcsnew' ];
-            r=[dbroot str '_resol_collection_avljNL3_cl_pcsnew'];
-            n=[dbroot str '_names_collection_avljNL3_cl_pcsnew'] ; 
+            %append the color space to the name to make it unique
+            if (color_space == RGB)
+                rootname = [str '_rgb'];
+            elseif (color_space == GRAY)
+                rootname = [str '_gray'];
+            elseif (color_space == YCBCR)
+                rootname = [str '_ycbcr'];
+            else
+                rootname = str;
+            end
+            
+            d=[dbroot rootname '_data_collection_avljNL3_cl_pcsnew' ];
+            r=[dbroot rootname '_resol_collection_avljNL3_cl_pcsnew'];
+            n=[dbroot rootname '_names_collection_avljNL3_cl_pcsnew'] ;
             
             fprintf(1, '\nSaving collection to %s', d);
             save(d,'store');

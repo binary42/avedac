@@ -10,8 +10,12 @@
 % method1='majority';
 % method2='probability';
 % methods=[{method1} {method2}];
-function [eventids, majoritywinnerindex, probabilitywinnerindex, probability] = run_tests_ui(kill, dbroot, testclassname, trainingalias, threshold)
+function [eventids, majoritywinnerindex, probabilitywinnerindex, probability] = run_tests_ui(kill, dbroot, color_space, testclassname, trainingalias, threshold)
  
+GRAY = 1;
+RGB = 2;
+YCBCR = 3;
+
 %test for correct arguments
 if(size(testclassname,1) > 1)
     error('Error - argument %s invalid - can only test one class at a time', testclassname);
@@ -19,12 +23,23 @@ end
 
 fprintf(1,'TESTING %s STARTING...\n', testclassname)
 
+%append the color space to the name to make it unique
+if (color_space == RGB)
+    rootname = [testclassname '_rgb'];
+elseif (color_space == GRAY)
+    rootname = [testclassname '_gray'];
+elseif (color_space == YCBCR)
+    rootname = [testclassname '_ycbcr'];
+else
+    rootname = testclassname;
+end
+
 % the test files - this should already by collected
-data = [testclassname '_data_collection_avljNL3_cl_pcsnew'];
+data = [rootname '_data_collection_avljNL3_cl_pcsnew'];
 testclassdata  = [dbroot '/features/tests/' data '.mat'];
-names = [testclassname '_names_collection_avljNL3_cl_pcsnew'];
+names = [rootname '_names_collection_avljNL3_cl_pcsnew'];
 testclassfiles  = [dbroot '/features/tests/' names '.mat'];
-resol = [testclassname '_resol_collection_avljNL3_cl_pcsnew'];
+resol = [rootname '_resol_collection_avljNL3_cl_pcsnew'];
 testclassresol  = [dbroot '/features/tests/' resol '.mat'];
 
 %load and test class data
@@ -116,19 +131,6 @@ for ii = 1:length(class_table_header) + 1
     end
 end
 
-fprintf(1,'Saving event classifier results to %s\n', [saveresultsname '-CM.mat']);
-save([saveresultsname '-CM.mat'], 'statsfinal');
-
-fprintf(1,'Saving results to %s\n', [saveresultsname '.mat']);
-save([saveresultsname '.mat'],'names');
-
-fprintf(1,'Saving event classifier results to %s\n', [saveresultsname '-storeprob.mat']);
-save([saveresultsname '-storeprob.mat'], 'storeprob');
-
-fprintf(1,'Saving event classifier results to %s\n', [saveresultsname '-recfiles.mat']);
-save([saveresultsname '-recfiles.mat'], 'recfiles');
- 
-
 % run all methods by default
 method1='majority';
 method2='probability';
@@ -191,16 +193,7 @@ for k = 1:length(methods)
             for jj = 1:length(class_table_header)
                 statsfinal(ii+1,jj) = {stats(ii,jj)};
             end
-        end
-        
-        fprintf(1,'Saving event classifier results to %s\n', [saveresultsname '-' method '.mat']);
-        save([saveresultsname '-' method '.mat'], 'event_classifier_results');
-        
-        fprintf(1,'Saving event classifier results to %s\n', [saveresultsname '-' method '-CM.mat']);
-        save([saveresultsname '-' method '-CM' '.mat'], 'statsfinal'); 
-        
-        fprintf(1,'Saving event classifier results to %s\n', [saveresultsname '-' method '-event_classifier_results.mat']);
-        save([saveresultsname '-' method '-event_classifier_results' '.mat'], 'event_classifier_results');
+        end        
         
     end
 end

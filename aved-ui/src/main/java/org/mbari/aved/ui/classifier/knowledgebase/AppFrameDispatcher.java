@@ -1,5 +1,5 @@
 /*
- * @(#)AppFrameDispatcher.java   10/03/17
+ * @(#)AppFrameDispatcher.java
  * 
  * Copyright 2010 MBARI
  *

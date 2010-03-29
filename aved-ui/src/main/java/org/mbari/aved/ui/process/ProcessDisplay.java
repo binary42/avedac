@@ -1,5 +1,5 @@
 /*
- * @(#)ProcessDisplay.java   10/03/17
+ * @(#)ProcessDisplay.java
  * 
  * Copyright 2010 MBARI
  *

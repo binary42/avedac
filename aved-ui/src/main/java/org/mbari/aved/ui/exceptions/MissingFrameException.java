@@ -1,5 +1,5 @@
 /*
- * @(#)MissingFrameException.java   10/03/17
+ * @(#)MissingFrameException.java
  * 
  * Copyright 2010 MBARI
  *

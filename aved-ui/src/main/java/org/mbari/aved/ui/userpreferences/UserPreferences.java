@@ -1,5 +1,5 @@
 /*
- * @(#)UserPreferences.java   10/03/17
+ * @(#)UserPreferences.java
  * 
  * Copyright 2010 MBARI
  *

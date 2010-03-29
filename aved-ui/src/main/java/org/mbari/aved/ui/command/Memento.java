@@ -1,5 +1,5 @@
 /*
- * @(#)Memento.java   10/03/17
+ * @(#)Memento.java
  * 
  * Copyright 2010 MBARI
  *

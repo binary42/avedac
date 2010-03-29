@@ -1,5 +1,5 @@
 /*
- * @(#)SummaryModel.java   10/03/17
+ * @(#)SummaryModel.java
  * 
  * Copyright 2010 MBARI
  *

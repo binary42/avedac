@@ -1,5 +1,5 @@
 /*
- * @(#)Dispatcher.java   10/03/17
+ * @(#)Dispatcher.java
  * 
  * Copyright 2010 MBARI
  *

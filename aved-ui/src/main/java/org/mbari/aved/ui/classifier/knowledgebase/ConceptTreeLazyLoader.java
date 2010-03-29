@@ -1,5 +1,5 @@
 /*
- * @(#)ConceptTreeLazyLoader.java   10/03/17
+ * @(#)ConceptTreeLazyLoader.java
  * 
  * Copyright 2010 MBARI
  *

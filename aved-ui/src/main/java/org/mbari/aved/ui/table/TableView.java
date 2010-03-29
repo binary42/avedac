@@ -1,5 +1,5 @@
 /*
- * @(#)TableView.java   10/03/17
+ * @(#)TableView.java
  * 
  * Copyright 2010 MBARI
  *

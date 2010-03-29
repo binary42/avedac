@@ -1,5 +1,5 @@
 /*
- * @(#)ThumbnailController.java   10/03/17
+ * @(#)ThumbnailController.java
  * 
  * Copyright 2010 MBARI
  *

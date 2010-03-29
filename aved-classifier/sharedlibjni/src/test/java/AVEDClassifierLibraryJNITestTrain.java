@@ -88,7 +88,7 @@ public class AVEDClassifierLibraryJNITestTrain extends TestCase {
             app.train_classes(killFile,
                     trainingset, 
                     trainingalias,
-                    dbRoot, "Test benthic training class");
+                    dbRoot, ColorSpace.GRAY, "Test benthic training class");
         } catch (Exception e) {
             System.out.println("Exception" + e);
         }

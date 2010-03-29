@@ -1,5 +1,5 @@
 /*
- * @(#)TableModel.java   10/03/17
+ * @(#)TableModel.java
  * 
  * Copyright 2010 MBARI
  *

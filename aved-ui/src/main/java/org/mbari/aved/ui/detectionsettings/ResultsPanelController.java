@@ -1,5 +1,5 @@
 /*
- * @(#)ResultsPanelController.java   10/03/17
+ * @(#)ResultsPanelController.java
  * 
  * Copyright 2010 MBARI
  *

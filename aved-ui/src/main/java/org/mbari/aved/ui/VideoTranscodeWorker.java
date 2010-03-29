@@ -1,5 +1,5 @@
 /*
- * @(#)VideoTranscodeWorker.java   10/03/17
+ * @(#)VideoTranscodeWorker.java
  * 
  * Copyright 2010 MBARI
  *
@@ -51,7 +51,7 @@ class VideoTranscodeWorker extends SwingWorker {
 
     /**
      * Flag used to control cancellation messages
-     * when cancel requested by the user 
+     * when cancel requested by the user
      */
     private boolean isUserCancel = false;
 
@@ -118,7 +118,6 @@ class VideoTranscodeWorker extends SwingWorker {
      *
      * @throws Exception
      */
-
     @Override
     protected Object doInBackground() throws Exception {
         ApplicationView view  = controller.getView();

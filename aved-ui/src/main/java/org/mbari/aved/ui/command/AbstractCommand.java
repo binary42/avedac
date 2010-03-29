@@ -1,5 +1,5 @@
 /*
- * @(#)AbstractCommand.java   10/03/17
+ * @(#)AbstractCommand.java
  * 
  * Copyright 2010 MBARI
  *

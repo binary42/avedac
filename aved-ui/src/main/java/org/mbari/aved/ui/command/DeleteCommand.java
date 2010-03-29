@@ -1,5 +1,5 @@
 /*
- * @(#)DeleteCommand.java   10/03/17
+ * @(#)DeleteCommand.java
  * 
  * Copyright 2010 MBARI
  *

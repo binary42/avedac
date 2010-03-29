@@ -1,5 +1,5 @@
 /*
- * @(#)SearchableConceptTreePanel.java   10/03/17
+ * @(#)SearchableConceptTreePanel.java
  * 
  * Copyright 2010 MBARI
  *

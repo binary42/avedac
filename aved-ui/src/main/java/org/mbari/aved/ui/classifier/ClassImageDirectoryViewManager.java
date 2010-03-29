@@ -1,5 +1,5 @@
 /*
- * @(#)ClassImageDirectoryViewManager.java   10/03/17
+ * @(#)ClassImageDirectoryViewManager.java
  * 
  * Copyright 2010 MBARI
  *

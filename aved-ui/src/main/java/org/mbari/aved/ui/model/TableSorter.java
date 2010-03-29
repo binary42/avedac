@@ -1,5 +1,5 @@
 /*
- * @(#)TableSorter.java   10/03/17
+ * @(#)TableSorter.java
  * 
  * Copyright 2010 MBARI
  *

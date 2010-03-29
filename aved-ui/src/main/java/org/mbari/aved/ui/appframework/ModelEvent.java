@@ -1,5 +1,5 @@
 /*
- * @(#)ModelEvent.java   10/03/17
+ * @(#)ModelEvent.java
  * 
  * Copyright 2010 MBARI
  *

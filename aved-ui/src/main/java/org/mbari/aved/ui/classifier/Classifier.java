@@ -1,5 +1,5 @@
 /*
- * @(#)Classifier.java   10/03/17
+ * @(#)Classifier.java
  * 
  * Copyright 2010 MBARI
  *

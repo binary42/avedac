@@ -1,5 +1,5 @@
 /*
- * @(#)ModelListener.java   10/03/17
+ * @(#)ModelListener.java
  * 
  * Copyright 2010 MBARI
  *

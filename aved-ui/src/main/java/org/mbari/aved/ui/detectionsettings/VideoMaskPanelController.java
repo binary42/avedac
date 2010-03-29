@@ -1,5 +1,5 @@
 /*
- * @(#)VideoMaskPanelController.java   10/03/17
+ * @(#)VideoMaskPanelController.java
  * 
  * Copyright 2010 MBARI
  *

@@ -1,5 +1,5 @@
 /*
- * @(#)ImageChangeUtil.java   10/03/17
+ * @(#)ImageChangeUtil.java
  * 
  * Copyright 2010 MBARI
  *

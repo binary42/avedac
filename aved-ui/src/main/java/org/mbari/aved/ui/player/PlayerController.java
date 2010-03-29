@@ -1,5 +1,5 @@
 /*
- * @(#)PlayerController.java   10/03/17
+ * @(#)PlayerController.java
  * 
  * Copyright 2010 MBARI
  *
@@ -259,7 +259,7 @@ public class PlayerController extends AbstractController implements ActionListen
             } else if (actionCommand.equals("Delete")) {
                 UserPreferencesModel prefs = UserPreferences.getModel();
 
-                if (prefs.getDeleteWithoutWarning() == false) {
+                if (prefs.getAskBeforeDelete() == true) {
                     String question = new String("Are you sure you want to delete" + Execute.getObjectIdDescription()
                                                  + " ?");
                     ModalYesNoNeverDialog dialog;
@@ -269,7 +269,7 @@ public class PlayerController extends AbstractController implements ActionListen
                         dialog.setVisible(true);
 
                         if (dialog.isNever() == true) {
-                            prefs.setDeleteWithoutWarning();
+                            prefs.setAskBeforeDelete(false);
                         }
 
                         if (dialog.answer() == true) {

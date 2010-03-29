@@ -1,5 +1,5 @@
 /*
- * @(#)SensitivityPanelController.java   10/03/17
+ * @(#)SensitivityPanelController.java
  * 
  * Copyright 2010 MBARI
  *

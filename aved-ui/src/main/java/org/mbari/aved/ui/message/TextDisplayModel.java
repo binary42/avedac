@@ -1,5 +1,5 @@
 /*
- * @(#)TextDisplayModel.java   10/03/17
+ * @(#)TextDisplayModel.java
  * 
  * Copyright 2010 MBARI
  *

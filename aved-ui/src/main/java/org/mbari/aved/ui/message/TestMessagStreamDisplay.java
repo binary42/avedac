@@ -1,5 +1,5 @@
 /*
- * @(#)TestMessagStreamDisplay.java   10/03/17
+ * @(#)TestMessagStreamDisplay.java
  * 
  * Copyright 2010 MBARI
  *

@@ -1,5 +1,5 @@
 /*
- * @(#)CreateTrainingLibraryView.java   10/03/17
+ * @(#)CreateTrainingLibraryView.java
  * 
  * Copyright 2010 MBARI
  *
@@ -125,11 +125,11 @@ public class CreateTrainingLibraryView extends JFrameView {
             switch (event.getID()) {
 
             // When the database root directory changes, update the available
-            // classes, defaulting to those in the RGB color space.
+            // classes in the currently selected color space
             case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
             case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
-                populateAvailableClassList(ColorSpace.RGB);
-
+                ColorSpace colorSpace = (ColorSpace) colorSpaceComboBox.getSelectedItem();
+                populateAvailableClassList(colorSpace);
                 break;
             }
         }
@@ -156,6 +156,7 @@ public class CreateTrainingLibraryView extends JFrameView {
             }
         }
 
+        availableList.removeAll();
         availableList.setModel(list);
 
         ClassModelListRenderer renderer = new ClassModelListRenderer(list);
@@ -216,7 +217,7 @@ public class CreateTrainingLibraryView extends JFrameView {
             ListModel  list     = availableList.getModel();
             int        numAvail = list.getSize();
 
-            if (model.classExists(cls)) {
+            if (model.checkClassExists(cls)) {
                 for (int j = 0; j < numAvail; j++) {
                     ClassModel availClass = (ClassModel) list.getElementAt(j);
 
@@ -252,13 +253,6 @@ public class CreateTrainingLibraryView extends JFrameView {
      */
     public void clearAllSelected() {
         selectedList.clearSelection();
-    }
-
-    /**
-     * Removes all the items in the selected list
-     */
-    public void removeAllSelected() {
-        selectedList.removeAll();
     }
 
     /**

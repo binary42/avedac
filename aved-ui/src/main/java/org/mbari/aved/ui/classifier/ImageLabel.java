@@ -1,5 +1,5 @@
 /*
- * @(#)ImageLabel.java   10/03/17
+ * @(#)ImageLabel.java
  * 
  * Copyright 2010 MBARI
  *

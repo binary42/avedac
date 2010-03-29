@@ -1,5 +1,5 @@
 /*
- * @(#)ApplicationView.java   10/03/17
+ * @(#)ApplicationView.java
  * 
  * Copyright 2010 MBARI
  *
@@ -439,7 +439,7 @@ public class ApplicationView extends JFrameView {
                         /**
                          * This is a URL. Since it can be long, so only display the name
                          * not the fullpath.  Only display the URL if it doesn't end with
-                         * a tar tgz, or tar.gz 
+                         * a tar tgz, or tar.gz
                          */
                         File f = new File(inputsource.getPath());
 

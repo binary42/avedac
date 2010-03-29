@@ -1,5 +1,5 @@
 /*
- * @(#)CreateClassView.java   10/03/17
+ * @(#)CreateClassView.java
  * 
  * Copyright 2010 MBARI
  *

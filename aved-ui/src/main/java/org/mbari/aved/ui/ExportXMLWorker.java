@@ -1,5 +1,5 @@
 /*
- * @(#)ExportXMLWorker.java   10/03/17
+ * @(#)ExportXMLWorker.java
  * 
  * Copyright 2010 MBARI
  *

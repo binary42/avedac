@@ -1,5 +1,5 @@
 /*
- * @(#)LabelCommand.java   10/03/17
+ * @(#)LabelCommand.java
  * 
  * Copyright 2010 MBARI
  *

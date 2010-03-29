@@ -1,16 +1,31 @@
-/*!@file pmbarivision/src/pvisionTCpmbari.C, based on the pvisionTCP3.C  
-   in the The iLab Neuromorphic Vision C++ Toolkit - Copyright (C) 2000-2002
-   by the University of Southern California (USC) and the iLab at USC. 
-   See http://iLab.usc.edu for information about this project. Work
-   as a parallel vision worker with pvisionTCP3master
- */
-
-/*! See the test-pvisionTCPmbari-gdb for how to launch the workers, and
-  see Pmbarivision.C is the master program. */
-
-// Primary maintainer for this file: Danelle Cline <dcline@mbari.org>
-// $Id: pvisionTCpmbari.C,v 1.2 2007/09/26 23:06:54 dcline Exp $
-
+/*
+ * Copyright 2010 MBARI
+ *
+ * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1 
+ * (the "License"); you may not use this file except in compliance 
+ * with the License. You may obtain a copy of the License at
+ *
+ * http://www.gnu.org/copyleft/lesser.html
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * This is a program to automate detection and tracking of events in underwater 
+ * video. This is based on modified version from Dirk Walther's 
+ * work that originated at the 2002 Workshop  Neuromorphic Engineering 
+ * in Telluride, CO, USA. 
+ * 
+ * This code requires the The iLab Neuromorphic Vision C++ Toolkit developed
+ * by the University of Southern California (USC) and the iLab at USC. 
+ * See http://iLab.usc.edu for information about this project. 
+ *  
+ * This work would not be possible without the generous support of the 
+ * David and Lucile Packard Foundation
+ */ 
+  
 #include "Parallel/pvisionTCP-defs.H"
 #include "Image/fancynorm.H"
 #include "Image/Pixels.H"
@@ -221,8 +236,3 @@ void computeCMAP(const Image<float>& fima, const PyramidType ptyp,
   // send off the result:
   b->send(-1, smsg);
 }
-// ######################################################################
-/* So things look consistent in everyone's emacs... */
-/* Local Variables: */
-/* indent-tabs-mode: nil */
-/* End: */

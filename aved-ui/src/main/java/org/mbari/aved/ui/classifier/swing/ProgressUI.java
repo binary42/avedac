@@ -1,5 +1,5 @@
 /*
- * @(#)ProgressUI.java   10/03/17
+ * @(#)ProgressUI.java
  * 
  * Copyright 2010 MBARI
  *

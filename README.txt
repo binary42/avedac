@@ -33,19 +33,11 @@ The zipped package will be in aved-ui/target
 ###################################################
 Create a release
 ###################################################
-1.  Edit release.properties and increment
-    the version of each modules to the next
-    version level: 
-    e.g. for a minor release
-	0.1.1 to 0.1.2 
-    for a major release
-	1.0.0 to 2.0.0	
-
-2.  Increment the version (version displayed in the "About"
+1.  Increment the version (version displayed in the "About"
     box in the graphical user interface)
  	$ mvn generate-sources  -P version-increment
 
-3.  Run the release script
+2.  Run the release script
 	$ ./release.sh
  
 ###################################################

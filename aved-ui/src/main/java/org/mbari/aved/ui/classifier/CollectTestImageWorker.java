@@ -1,5 +1,5 @@
 /*
- * @(#)CollectTestImageWorker.java   10/03/17
+ * @(#)CollectTestImageWorker.java
  * 
  * Copyright 2010 MBARI
  *

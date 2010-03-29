@@ -1,5 +1,5 @@
 /*
- * @(#)ProcessedResultsFileFilter.java   10/03/17
+ * @(#)ProcessedResultsFileFilter.java
  * 
  * Copyright 2010 MBARI
  *

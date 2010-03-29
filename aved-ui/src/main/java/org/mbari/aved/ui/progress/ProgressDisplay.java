@@ -1,5 +1,5 @@
 /*
- * @(#)ProgressDisplay.java   10/03/17
+ * @(#)ProgressDisplay.java
  * 
  * Copyright 2010 MBARI
  *

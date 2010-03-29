@@ -1,5 +1,5 @@
 /*
- * @(#)ListModelManager.java   10/03/17
+ * @(#)ListModelManager.java
  * 
  * Copyright 2010 MBARI
  *

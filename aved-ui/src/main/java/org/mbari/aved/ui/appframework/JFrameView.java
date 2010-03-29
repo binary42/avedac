@@ -1,5 +1,5 @@
 /*
- * @(#)JFrameView.java   10/03/17
+ * @(#)JFrameView.java
  * 
  * Copyright 2010 MBARI
  *

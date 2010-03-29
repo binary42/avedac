@@ -1,5 +1,5 @@
 /*
- * @(#)Execute.java   10/03/17
+ * @(#)Execute.java
  * 
  * Copyright 2010 MBARI
  *
@@ -44,10 +44,8 @@ public class Execute {
 
     /**
      * Returns a string description of the objects in the list selection
-     * model. This currently only lists the object id. It might make sense
-     * in the future to make this smart, based on the number of selections,
-     * i.e. display more information when you can when fewer selections are
-     * made
+     * model. This currently only lists the object id, otherwise it is
+     * probably too verbose a message, depending on the number of objects
      *
      * @param command
      */
@@ -56,6 +54,7 @@ public class Execute {
         ArrayList<Integer> selections  = getTranslatedRows();
         EventListModel     list        = model.getEventListModel();
         String             description = new String("");
+        int                j           = 0;
 
         if (selections.size() > 0) {
             Iterator<Integer> i = selections.iterator();
@@ -63,9 +62,18 @@ public class Execute {
             while (i.hasNext()) {
                 description += " object id:" + list.getElementAt(i.next()).getObjectId();
 
+                // When more than 5 objects, append ... and return
+                if (j > 5) {
+                    description += "...";
+                    break;
+                }
+                
                 if (i.hasNext()) {
                     description += ",";
                 }
+
+                j++;
+                
             }
         }
 

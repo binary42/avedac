@@ -1,5 +1,5 @@
 /*
- * @(#)ShutdownHandler.java   10/03/17
+ * @(#)ShutdownHandler.java
  * 
  * Copyright 2010 MBARI
  *

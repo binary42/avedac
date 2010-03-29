@@ -1,5 +1,5 @@
 /*
- * @(#)TestClassView.java   10/03/17
+ * @(#)TestClassView.java
  * 
  * Copyright 2010 MBARI
  *

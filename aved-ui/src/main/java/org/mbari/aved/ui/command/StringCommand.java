@@ -1,5 +1,5 @@
 /*
- * @(#)StringCommand.java   10/03/17
+ * @(#)StringCommand.java
  * 
  * Copyright 2010 MBARI
  *

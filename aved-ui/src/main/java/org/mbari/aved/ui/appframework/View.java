@@ -1,5 +1,5 @@
 /*
- * @(#)View.java   10/03/17
+ * @(#)View.java
  * 
  * Copyright 2010 MBARI
  *

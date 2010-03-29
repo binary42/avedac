@@ -1,5 +1,5 @@
 /*
- * @(#)CommandHistory.java   10/03/17
+ * @(#)CommandHistory.java
  * 
  * Copyright 2010 MBARI
  *

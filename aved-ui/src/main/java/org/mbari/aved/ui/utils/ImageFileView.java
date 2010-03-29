@@ -1,5 +1,5 @@
 /*
- * @(#)ImageFileView.java   10/03/17
+ * @(#)ImageFileView.java
  * 
  * Copyright 2010 MBARI
  *

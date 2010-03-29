@@ -1,5 +1,5 @@
 /*
- * @(#)ErrorLog.java   10/03/17
+ * @(#)ErrorLog.java
  * 
  * Copyright 2010 MBARI
  *

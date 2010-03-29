@@ -1,5 +1,5 @@
 /*
- * @(#)ClassifierController.java   10/03/17
+ * @(#)ClassifierController.java
  * 
  * Copyright 2010 MBARI
  *
@@ -193,16 +193,16 @@ public class ClassifierController extends AbstractController implements ModelLis
                                 }
                             }
 
-                            if (!getModel().classExists(className)) {
+                            // create a new model with some reasonable
+                            // defaults
+                            ClassModel newModel = new ClassModel();
 
-                                // create a new model with some reasonable
-                                // defaults
-                                ClassModel newModel = new ClassModel();
+                            newModel.setRawImageDirectory(dir);
+                            newModel.setName(className);
+                            newModel.setVarsClassName(eoc.getClassName());
+                            newModel.setDescription(eoc.getClassName());
 
-                                newModel.setRawImageDirectory(dir);
-                                newModel.setName(className);
-                                newModel.setVarsClassName(eoc.getClassName());
-                                newModel.setDescription(eoc.getClassName());
+                            if (!getModel().checkClassExists(newModel)) {
                                 getModel().addClassModel(newModel);
                             } else {
 

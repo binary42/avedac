@@ -1,5 +1,5 @@
 /*
- * @(#)ApplicationLookandFeelSettings.java   10/03/17
+ * @(#)ApplicationLookandFeelSettings.java
  * 
  * Copyright 2010 MBARI
  *

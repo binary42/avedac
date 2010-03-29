@@ -1,5 +1,5 @@
 /*
- * @(#)UserPreferencesView.java   10/03/17
+ * @(#)UserPreferencesView.java
  * 
  * Copyright 2010 MBARI
  *
@@ -34,6 +34,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JRadioButton;
@@ -41,43 +42,42 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 
 public class UserPreferencesView extends JFrameView {
-    public static final String ID_BROWSE_BUTTON_PLAYER  = "browseplayer";
-    public static final String ID_BROWSE_BUTTON_SCRATCH = "browsescratch";    // javax.swing.JButton
-    public static final String ID_CLOSE_BUTTON          = "close";
 
     /*
      *  Component names in the ApplicationPreferences form
      * If any of the component name are changed in the Abeille form designer, they
      * should be modified here too
      */
-    public static final String ID_PLAYER_DEFAULT_RADIO    = "playervlc";      // javax.swing.JRadioButton
-    public static final String ID_PLAYER_OTHER_RADIO      = "playerother";    // javax.swing.JRadioButton
-    public static final String ID_SCRATCH_DIRECTORY_COMBO = "scratchdir";     // javax.swing.JComboBox
-    public static final String ID_VIDEO_PLAYER_TEXTFIELD  = "videoplayer";    // javax.swing.JTextField
-    private JButton            browsePlayerButton;
+    public static final String ID_ASK_BEFORE_DELETE       = "askbeforedelete";    // javax.swing.JCheckBox
+    public static final String ID_BROWSE_BUTTON_PLAYER    = "browseplayer";
+    public static final String ID_BROWSE_BUTTON_SCRATCH   = "browsescratch";      // javax.swing.JButton
+    public static final String ID_CLOSE_BUTTON            = "close";
+    public static final String ID_PLAYER_DEFAULT_RADIO    = "playervlc";          // javax.swing.JRadioButton
+    public static final String ID_PLAYER_OTHER_RADIO      = "playerother";        // javax.swing.JRadioButton
+    public static final String ID_SCRATCH_DIRECTORY_COMBO = "scratchdir";         // javax.swing.JComboBox
+    public static final String ID_VIDEO_PLAYER_TEXTFIELD  = "videoplayer";        // javax.swing.JTextField
+    private final JCheckBox    askBeforeDeleteCheckBox;
+    private final JButton      browsePlayerButton;
 
     // Frequently accessed view variables
-    private JFormattedTextField  maxDiskSpaceSliderTextField;
-    private UserPreferencesModel model;
-    private JRadioButton         playerDefaultRadio, playerOtherRadio;
-    private JComboBox            scratchDirCombo;
-    SpinnerNumberModel           textFieldModel;
-    private JTextField           videoPlayerTextField;
+    // private final JFormattedTextField  maxDiskSpaceSliderTextField;
+    // private final SpinnerNumberModel           textFieldModel;
+    private final JRadioButton   playerDefaultRadio, playerOtherRadio;
+    private final JComboBox      scratchDirCombo;
+    private final JTextField     videoPlayerTextField;
 
     public UserPreferencesView(UserPreferencesModel model, UserPreferencesController controller) {
         super("org/mbari/aved/ui/forms/UserPreferences.xml", model, controller);
-        model = (UserPreferencesModel) getModel();
-
+     
         // Initialize frequently accessed fields
-        videoPlayerTextField = (JTextField) getForm().getComponentByName(ID_VIDEO_PLAYER_TEXTFIELD);
-        scratchDirCombo      = getForm().getComboBox(ID_SCRATCH_DIRECTORY_COMBO);
-        playerDefaultRadio   = getForm().getRadioButton(ID_PLAYER_DEFAULT_RADIO);
-        playerOtherRadio     = getForm().getRadioButton(ID_PLAYER_OTHER_RADIO);
+        videoPlayerTextField    = (JTextField) getForm().getComponentByName(ID_VIDEO_PLAYER_TEXTFIELD);
+        scratchDirCombo         = getForm().getComboBox(ID_SCRATCH_DIRECTORY_COMBO);
+        playerDefaultRadio      = getForm().getRadioButton(ID_PLAYER_DEFAULT_RADIO);
+        playerOtherRadio        = getForm().getRadioButton(ID_PLAYER_OTHER_RADIO);
+        askBeforeDeleteCheckBox = getForm().getCheckBox(ID_ASK_BEFORE_DELETE);
+        browsePlayerButton      = (JButton) getForm().getButton(ID_BROWSE_BUTTON_PLAYER);
 
-        JButton closeButton;
-
-        closeButton        = (JButton) getForm().getButton(ID_CLOSE_BUTTON);
-        browsePlayerButton = (JButton) getForm().getButton(ID_BROWSE_BUTTON_PLAYER);;
+        JButton closeButton = (JButton) getForm().getButton(ID_CLOSE_BUTTON);
 
         // Add handler to buttons and combo boxes
         ActionHandler actionHandler = getActionHandler();
@@ -88,6 +88,7 @@ public class UserPreferencesView extends JFrameView {
         playerOtherRadio.addActionListener(actionHandler);
         scratchDirCombo.addActionListener(actionHandler);
         videoPlayerTextField.addActionListener(actionHandler);
+        askBeforeDeleteCheckBox.addActionListener(actionHandler);
         loadModel(model);
 
         // Set default size and.getName()
@@ -123,9 +124,14 @@ public class UserPreferencesView extends JFrameView {
 
         scratchComboBox.insertItemAt(model.getScratchDirectory(), 0);
         scratchComboBox.setSelectedIndex(0);
+
+        askBeforeDeleteCheckBox.setSelected(model.getAskBeforeDelete());        
     }
 
     public void modelChanged(ModelEvent e) {
+
+        UserPreferencesModel model = (UserPreferencesModel) getModel();
+        
         if (e.getID() == UserPreferencesModel.VIDEO_PLAYOUT_CHANGED) {
 
             // Some logic to enable/disable associated components in setting
@@ -139,6 +145,9 @@ public class UserPreferencesView extends JFrameView {
                 videoPlayerTextField.setEnabled(false);
             }
         }
+        else if (e.getID() == UserPreferencesModel.ASK_BEFORE_DELETE_CHANGED) {
+            askBeforeDeleteCheckBox.setSelected(model.getAskBeforeDelete());
+        }
     }
 
     public void updateVideoPlayoutDisplay(File dir) {
@@ -151,15 +160,18 @@ public class UserPreferencesView extends JFrameView {
         scratchDirCombo.setSelectedIndex(0);
     }
 
-    public JFormattedTextField getMaxDiskSpaceSliderTextField() {
-        return maxDiskSpaceSliderTextField;
-    }
-
+    /*
+     * public JFormattedTextField getMaxDiskSpaceSliderTextField() {
+     *   return maxDiskSpaceSliderTextField;
+     * }
+     */
     public JTextField getVideoPlayerTextField() {
         return videoPlayerTextField;
     }
 
-    public void addSliderTextPropertyChangeListener(PropertyChangeListener listener) {
-        maxDiskSpaceSliderTextField.addPropertyChangeListener(listener);
-    }
+    /*
+     * public void addSliderTextPropertyChangeListener(PropertyChangeListener listener) {
+     *   maxDiskSpaceSliderTextField.addPropertyChangeListener(listener);
+     * }
+     */
 }

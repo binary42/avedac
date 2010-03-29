@@ -1,5 +1,5 @@
 /*
- * @(#)AbstractController.java   10/03/17
+ * @(#)AbstractController.java
  * 
  * Copyright 2010 MBARI
  *

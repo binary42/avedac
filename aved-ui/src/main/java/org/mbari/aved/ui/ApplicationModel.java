@@ -1,5 +1,5 @@
 /*
- * @(#)ApplicationModel.java   10/03/17
+ * @(#)ApplicationModel.java
  * 
  * Copyright 2010 MBARI
  *

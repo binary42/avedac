@@ -1,5 +1,5 @@
 /*
- * @(#)PlayerManager.java   10/03/17
+ * @(#)PlayerManager.java
  * 
  * Copyright 2010 MBARI
  *

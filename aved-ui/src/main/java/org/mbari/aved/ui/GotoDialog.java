@@ -1,5 +1,5 @@
 /*
- * @(#)GotoDialog.java   10/03/17
+ * @(#)GotoDialog.java
  * 
  * Copyright 2010 MBARI
  *
@@ -99,13 +99,13 @@ public class GotoDialog extends JDialog implements ActionListener {
     // Use synchronization to insure only one
     // thread can call answer at one time
     synchronized public boolean answer() {
-        while (!isAnswered)    // Use wait() to give up lock while waiting for
+        while (!isAnswered)                       // Use wait() to give up lock while waiting for
 
         // button to be clicked.
         {
             try {
                 wait();
-            } catch (InterruptedException e) { /* error TODO print exception */
+            } catch (InterruptedException e) {    /* error TODO print exception */
             }
         }
 

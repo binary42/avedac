@@ -45,9 +45,6 @@
                             <exclude>**/libAVEDClassifierMatlab_mcc_component_data.c</exclude>
                             <exclude>**/libAVEDClassifierMatlab.c</exclude>
                         </excludes>
-                        <includes>
-                            <include>${basedir}/target/${narLibDir}/libsharedlib.h</include>
-                        </includes>
                     </c> 
                 </configuration>
             </plugin>
@@ -78,7 +75,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <!-- Runs the matlab compiler to create a shared 
+                        <!-- Runs the matlab compiler to create a sha/red 
                         library in the directory from exec-mcc-one above-->
                         <id>exec-mcc-two</id>
                         <phase>compile</phase>
@@ -97,10 +94,27 @@
                             </arguments>
                         </configuration>
                     </execution>
+                     <execution>
+                           <!--copy the header files from the matlab compile
+                           to a directory that will be included the header 
+                           file in the nar noarch package -->
+                        <id>exec-mcc-install-header</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
+                            <executable>${basedir}/src/main/scripts/execute</executable>
+                            <arguments>
+                                <cmdlineArguments>cp -f libsharedlib.h ${basedir}/src/main/include</cmdlineArguments>
+                            </arguments>
+                        </configuration>
+                    </execution>
                     <execution>
                         <!-- Copies the library to one with the version-->
-                        <id>exec-nar-package-one</id>
-                        <phase>nar-package</phase>
+                        <id>exec-version-library</id>
+                        <phase>test</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
@@ -138,7 +152,7 @@
                             <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                             <executable>${basedir}/src/main/scripts/execute</executable>
                             <arguments>
-                                <cmdlineArguments>install lib${artifactId}-${project.version}* ${installPath}</cmdlineArguments>
+                                <cmdlineArguments>install lib${artifactId}-${version}.${sharedExtension} ${installPath}</cmdlineArguments>
                             </arguments>
                         </configuration>
                     </execution>
@@ -159,17 +173,19 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <!-- Cleans the library -->
-                        <id>exec-clean</id>
-                        <phase>clean</phase>
+                           <!--copy the header files from the matlab compile
+                           to a directory that will be included the header 
+                           file in the nar noarch package -->
+                        <id>exec-install-four</id>
+                        <phase>install</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <workingDirectory>${installPath}</workingDirectory>
-                            <executable>${basedir}/src/main/native/matlab/clean</executable>
+                            <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
+                            <executable>${basedir}/src/main/scripts/execute</executable>
                             <arguments>
-                                <cmdlineArguments>lib${artifactId}-${project.version}.*</cmdlineArguments>
+                                <cmdlineArguments>rm -f ${basedir}/src/main/include/libsharedlib.h</cmdlineArguments>
                             </arguments>
                         </configuration>
                     </execution>

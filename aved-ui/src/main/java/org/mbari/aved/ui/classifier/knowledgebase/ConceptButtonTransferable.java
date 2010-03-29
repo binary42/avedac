@@ -1,5 +1,5 @@
 /*
- * @(#)ConceptButtonTransferable.java   10/03/17
+ * @(#)ConceptButtonTransferable.java
  * 
  * Copyright 2010 MBARI
  *

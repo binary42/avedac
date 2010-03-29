@@ -1,13 +1,38 @@
+/*
+ * @(#)AvedProcess.java
+ * 
+ * Copyright 2010 MBARI
+ *
+ * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
+ * (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ * http://www.gnu.org/copyleft/lesser.html
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
 package org.mbari.aved.mbarivision.api;
 
-import java.io.File;
-import java.io.IOException;
+//~--- non-JDK imports --------------------------------------------------------
 
 import org.kohsuke.args4j.CmdLineException;
+
 import org.mbari.aved.mbarivision.api.parser.MbarivisionOptionCmdLineParser;
 import org.mbari.aved.mbarivision.api.parser.MbarivisionOptionXMLParser;
 import org.mbari.aved.mbarivision.api.parser.MbarivisionOptionXMLParserException;
 import org.mbari.aved.mbarivision.api.utils.StreamGobbler;
+
+//~--- JDK imports ------------------------------------------------------------
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Requires mbarivision set on the machine
@@ -16,19 +41,25 @@ import org.mbari.aved.mbarivision.api.utils.StreamGobbler;
  * or directly set into the object (GUI usage)
  */
 public class AvedProcess extends Thread {
-
-    private MbarivisionOptions mbariOptions;
     public final static String DEFAULT_PATH_TO_AVED_XML_CONFIGURATION_FILE = "configuration.xml";
-    private String pathToXML;
+    private MbarivisionOptions mbariOptions;
+    private String             pathToXML;
+
     /* AVED take for parameter only a Folder containing frames */
     private AvedVideo videoToProcess;
 
+    /*
+     * Options Profiles
+     * TODO modify this code to move to a Profile folder with different XML file embeding different profiles
+     */
+    public enum Profiles { Benthic, Midwater }
+
     public AvedProcess(AvedVideo v) {
-        mbariOptions = new MbarivisionOptions(); // Set the options as default
-        pathToXML = AvedProcess.DEFAULT_PATH_TO_AVED_XML_CONFIGURATION_FILE;
-        this.videoToProcess = v;
+        mbariOptions              = new MbarivisionOptions();    // Set the options as default
+        pathToXML                 = AvedProcess.DEFAULT_PATH_TO_AVED_XML_CONFIGURATION_FILE;
+        this.videoToProcess       = v;
         mbariOptions.eventSummary = new File(this.videoToProcess.getName() + ".events.summary");
-        mbariOptions.eventxml = new File(this.videoToProcess.getName() + ".events.xml");
+        mbariOptions.eventxml     = new File(this.videoToProcess.getName() + ".events.xml");
     }
 
     /**
@@ -46,6 +77,7 @@ public class AvedProcess extends Thread {
      */
     public void setMbarivisionOptions() throws MbarivisionOptionXMLParserException {
         MbarivisionOptionXMLParser parser = new MbarivisionOptionXMLParser(mbariOptions);
+
         parser.read(this.pathToXML);
     }
 
@@ -56,6 +88,7 @@ public class AvedProcess extends Thread {
      */
     public void setMbarivisionOptions(String[] args) throws CmdLineException {
         MbarivisionOptionCmdLineParser parser = new MbarivisionOptionCmdLineParser(mbariOptions, videoToProcess);
+
         parser.read(args);
     }
 
@@ -66,14 +99,7 @@ public class AvedProcess extends Thread {
         return mbariOptions;
     }
 
-    /*
-     * Options Profiles
-     * TODO modify this code to move to a Profile folder with different XML file embeding different profiles
-     */
-    public enum Profiles {
-
-        Benthic, Midwater
-    };
+    ;
 
     /**
      * Sets several parameters throught a profile
@@ -81,12 +107,12 @@ public class AvedProcess extends Thread {
      */
     public void setProfiles(Profiles p) {
         if (p == AvedProcess.Profiles.Benthic) {
-            this.mbariOptions.cacheSize = 25;
+            this.mbariOptions.cacheSize    = 25;
             this.mbariOptions.trackingMode = MbarivisionOptions.TrackingMode.BoundingBox;
             this.mbariOptions.minEventArea = 100;
             this.mbariOptions.maxEventArea = 10000;
         } else if (p == AvedProcess.Profiles.Midwater) {
-            this.mbariOptions.cacheSize = 10;
+            this.mbariOptions.cacheSize    = 10;
             this.mbariOptions.trackingMode = MbarivisionOptions.TrackingMode.KalmanFilter;
             this.mbariOptions.minEventArea = 50;
             this.mbariOptions.maxEventArea = 1000;
@@ -111,19 +137,23 @@ public class AvedProcess extends Thread {
 
     /**
      * Runs the process
-     * @throws ProcessException 
+     * @throws ProcessException
      */
     public synchronized void run() {
         MbarivisionOptionCmdLineParser parser = new MbarivisionOptionCmdLineParser(mbariOptions, videoToProcess);
+
         try {
+
             /* get the command line */
-            String cmd = parser.getCommand();
-            Runtime rt = Runtime.getRuntime();
+            String  cmd = parser.getCommand();
+            Runtime rt  = Runtime.getRuntime();
+
             /* execute the command */
             Process proc = rt.exec(cmd);
 
             // any error message?
             StreamGobbler errorGobbler = new StreamGobbler(proc.getErrorStream(), System.out);
+
             // any output?
             StreamGobbler outputGobbler = new StreamGobbler(proc.getInputStream(), System.out, "OUTPUT");
 
@@ -133,12 +163,13 @@ public class AvedProcess extends Thread {
 
             // any error???
             int exitVal = proc.waitFor();
-            System.out.println("ExitValue: " + exitVal);
 
+            System.out.println("ExitValue: " + exitVal);
         } catch (InterruptedException e) {
             throw new AvedRuntimeException("The AVED process has been interupted");
         } catch (IOException e) {
-            throw new AvedRuntimeException("Error launching the mbarivision command, check if mbarivision command is instal or set in your path");
+            throw new AvedRuntimeException(
+                "Error launching the mbarivision command, check if mbarivision command is instal or set in your path");
         }
     }
 }

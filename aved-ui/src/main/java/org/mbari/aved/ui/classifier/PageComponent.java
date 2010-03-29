@@ -1,5 +1,5 @@
 /*
- * @(#)PageComponent.java   10/03/17
+ * @(#)PageComponent.java
  * 
  * Copyright 2010 MBARI
  *

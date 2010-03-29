@@ -1,5 +1,5 @@
 /*
- * @(#)TrackingSegmentationPanelController.java   10/03/17
+ * @(#)TrackingSegmentationPanelController.java
  * 
  * Copyright 2010 MBARI
  *

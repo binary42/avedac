@@ -118,7 +118,8 @@ public class AVEDClassifierLibraryJNITestRunTest extends TestCase {
             app.train_classes(killFile,
                     trainingClasses, 
                     trainingAlias, 
-                    dbRoot, "Test benthic training class");
+                    dbRoot, ColorSpace.GRAY, 
+                    "Test benthic training class");
 
             // Test  - this section tests images against the created  training library  
             URL testDir = getClass().getResource("2526_Test_Cases/2526_00_47_53_05-events");
@@ -156,7 +157,7 @@ public class AVEDClassifierLibraryJNITestRunTest extends TestCase {
                     testClassName, 
                     trainingAlias, 
                     minprobthreshold, 
-                    dbRoot);
+                    dbRoot, ColorSpace.GRAY);
 
             for (int i = 0; i < numEvents; i++) {
                 System.out.println("event:" + eventids[i] 

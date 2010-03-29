@@ -1,5 +1,5 @@
 /*
- * @(#)TextEntryPanel.java   10/03/17
+ * @(#)TextEntryPanel.java
  * 
  * Copyright 2010 MBARI
  *

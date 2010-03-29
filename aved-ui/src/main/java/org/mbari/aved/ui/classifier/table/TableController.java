@@ -1,5 +1,5 @@
 /*
- * @(#)TableController.java   10/03/17
+ * @(#)TableController.java
  * 
  * Copyright 2010 MBARI
  *

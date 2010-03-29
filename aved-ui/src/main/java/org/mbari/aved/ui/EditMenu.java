@@ -1,5 +1,5 @@
 /*
- * @(#)EditMenu.java   10/03/17
+ * @(#)EditMenu.java
  * 
  * Copyright 2010 MBARI
  *
@@ -31,8 +31,6 @@ import org.mbari.aved.ui.command.CommandHistory.UndoRedoState;
 import org.mbari.aved.ui.command.DeleteCommand;
 import org.mbari.aved.ui.command.Execute;
 import org.mbari.aved.ui.command.IdCommand;
-import org.mbari.aved.ui.command.PredictedClassCommand;
-import org.mbari.aved.ui.command.StringCommand;
 import org.mbari.aved.ui.command.TagCommand;
 import org.mbari.aved.ui.message.ModalYesNoNeverDialog;
 import org.mbari.aved.ui.model.EventAbstractTableModel;
@@ -721,7 +719,7 @@ public class EditMenu extends JFrame {
             } else if (source.equals(deleteMenuItem)) {
                 UserPreferencesModel prefs = UserPreferences.getModel();
 
-                if (prefs.getDeleteWithoutWarning() == false) {
+                if (prefs.getAskBeforeDelete() == true) {
                     String question = new String("Are you sure you want to delete" + Execute.getObjectIdDescription()
                                                  + " ?");
                     ModalYesNoNeverDialog dialog;
@@ -731,7 +729,7 @@ public class EditMenu extends JFrame {
                         dialog.setVisible(true);
 
                         if (dialog.isNever() == true) {
-                            prefs.setDeleteWithoutWarning();
+                            prefs.setAskBeforeDelete(false);
                         }
 
                         if (dialog.answer() == true) {
@@ -896,28 +894,14 @@ public class EditMenu extends JFrame {
                 }
 
                 ArrayList<Integer> selections            = Execute.getTranslatedRows();
-                EventListModel     model                 = mainModel.getEventListModel();
-                boolean            hasPredictedClassName = false;
+                EventListModel     model                 = mainModel.getEventListModel(); 
                 boolean            hasClassName          = false;
                 boolean            hasTag                = false;
                 boolean            hasId                 = false;
 
                 if (selections.size() > 0) {
                     Iterator<Integer> i = selections.iterator();
-
-                    while (i.hasNext()) {
-                        EventObjectContainer obj = model.getElementAt(i.next().intValue());
-
-                        if (obj != null) {
-                            String classname = obj.getPredictedClassName();
-
-                            if ((classname != null) && (classname.length() > 0)) {
-                                hasPredictedClassName = true;
-
-                                break;
-                            }
-                        }
-                    }
+ 
 
                     while (i.hasNext()) {
                         EventObjectContainer obj = model.getElementAt(i.next().intValue());

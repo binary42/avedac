@@ -1,5 +1,5 @@
 /*
- * @(#)TestClassController.java   10/03/17
+ * @(#)TestClassController.java
  * 
  * Copyright 2010 MBARI
  *
@@ -212,7 +212,8 @@ class TestClassController extends AbstractController implements ModelListener {
                 // Run the class tests
                 app.test_class(this.getCancel(), eventFilenames, classIndex, probability, classModel.getName(),
                                trainingModel.getName(), minProbThreshold,
-                               classModel.getDatabaseRootdirectory().toString());
+                               classModel.getDatabaseRootdirectory().toString(),
+                               classModel.getColorSpace());
                 System.out.println("Testing " + classModel.getName() + "against training library:"
                                    + trainingModel.getName() + "with  minimum probability:" + minProbThreshold);
 
@@ -245,6 +246,7 @@ class TestClassController extends AbstractController implements ModelListener {
                     }
                 }
 
+                // Sum up all the winners and put into the appropriate bucket
                 for (int k = 0; k < numEvents; k++) {
                     if (classIndex[k] > 0) {
                         sum[classIndex[k] - 1]++;

@@ -1,5 +1,5 @@
 /*
- * @(#)CreateClassController.java   10/03/17
+ * @(#)CreateClassController.java
  * 
  * Copyright 2010 MBARI
  *
@@ -72,6 +72,7 @@ class CreateClassController extends AbstractController implements ModelListener,
         setModel(model);
         setView(new CreateClassView(model, this));
         this.eventListModel = eventListModel;
+        classModel          = new ClassModel();
 
         // Register as listener to the models
         getModel().addModelListener(this);
@@ -122,10 +123,7 @@ class CreateClassController extends AbstractController implements ModelListener,
             try {
                 JComboBox box = (JComboBox) e.getSource();
                 Object    dir = box.getSelectedItem();
-
-                classModel = new ClassModel();
-
-                File directory;
+                File      directory;
 
                 if (dir.getClass().equals(File.class)) {
                     directory = (File) dir;
@@ -136,7 +134,6 @@ class CreateClassController extends AbstractController implements ModelListener,
                 classModel.setDescription(directory.getName());
                 classModel.setName(directory.getName());
                 classModel.setVarsClassName(directory.getName());
-                classModel.setColorSpace(getView().getColorSpace());
                 classModel.setRawImageDirectory(directory);
                 getView().loadModel(classModel);
             } catch (Exception ex) {
@@ -156,11 +153,9 @@ class CreateClassController extends AbstractController implements ModelListener,
             }
         } else if (actionCommand.equals("Run")) {
             try {
-                String className      = getView().getClassName();
-                File   dbRoot         = UserPreferences.getModel().getClassDatabaseDirectory();
-                String description    = getView().getDescription();
-                File   imageDirectory = getView().getImageDirectory();
-                String varsClassName  = getView().getClassNameVars();
+                String className      = classModel.getName();
+                File   imageDirectory = classModel.getRawImageDirectory();
+                String varsClassName  = classModel.getVarsClassName();
 
                 if (className.length() == 0) {
                     String                message = new String("Class name is empty. Please enter a new class name.");
@@ -208,12 +203,16 @@ class CreateClassController extends AbstractController implements ModelListener,
                     }
                 }
 
-                classModel.setVarsClassName(varsClassName);
-                classModel.setName(className);
-                classModel.setDatabaseRoot(dbRoot);
-                classModel.setDescription(description);
-                classModel.setRawImageDirectory(imageDirectory);
-                worker = new CreateClassWorker(classModel);
+                ClassModel newModel = new ClassModel();
+
+                newModel.setVarsClassName(classModel.getVarsClassName());
+                newModel.setName(classModel.getName()); 
+                newModel.setDescription(classModel.getDescription());
+                newModel.setRawImageDirectory(classModel.getRawImageDirectory());
+                newModel.setColorSpace(classModel.getColorSpace()); 
+                newModel.setDatabaseRoot(UserPreferences.getModel().getClassDatabaseDirectory());
+                
+                worker = new CreateClassWorker(newModel);
                 worker.execute();
                 getView().setRunButton(false);
                 getView().setStopButton(true);
@@ -317,11 +316,13 @@ class CreateClassController extends AbstractController implements ModelListener,
     public void windowOpened(WindowEvent e) {}
 
     private class CreateClassWorker extends MatlabWorker {
+        private ClassModel            newClassModel;
         private final ProgressDisplay progressDisplay;
 
-        public CreateClassWorker(ClassModel classModel) throws Exception {
-            super(classModel.getName());
-            this.progressDisplay = new ProgressDisplay(this, "Creating class " + classModel.getName());
+        public CreateClassWorker(ClassModel newClassModel) throws Exception {
+            super(newClassModel.getName());
+            this.newClassModel   = newClassModel;
+            this.progressDisplay = new ProgressDisplay(this, "Creating class " + newClassModel.getName());
         }
 
         /**
@@ -337,12 +338,12 @@ class CreateClassController extends AbstractController implements ModelListener,
         protected Object doInBackground() throws Exception {
             progressDisplay.display("Creating class ...");
 
-            ArrayList<String> filePaths = classModel.getRawImageFileListing();
+            ArrayList<String> filePaths = newClassModel.getRawImageFileListing();
             LibraryImage[]    imageset  = new LibraryImage[filePaths.size()];
-            File              rootPath  = classModel.getRawImageDirectory();
+            File              rootPath  = newClassModel.getRawImageDirectory();
             File              path      = new File(rootPath.toString() + "/square/");
 
-            classModel.setSquareImageDirectory(path);
+            newClassModel.setSquareImageDirectory(path);
 
             // Check if you have permission to write to the target
             // parent directory
@@ -383,10 +384,12 @@ class CreateClassController extends AbstractController implements ModelListener,
                         return this;
                     }
                 }
-            }
+            }  
 
-            // convert images to square images as required for the classifier
+            // Convert images to square images as required for the classifier
             for (int i = 0; i < filePaths.size(); i++) {
+                
+                // If user cancelled, return
                 if (isCancelled()) {
                     reset();
 
@@ -429,19 +432,20 @@ class CreateClassController extends AbstractController implements ModelListener,
                 progressDisplayStream.execute();
 
                 // Run the collection - this creates a new class
-                app.collect_class(this.getCancel(), classModel.getRawImageDirectory().toString(),
-                                  classModel.getSquareImageDirectory().toString(), classModel.getName(),
-                                  classModel.getDatabaseRootdirectory().toString(), classModel.getVarsClassName(),
-                                  classModel.getDescription(), classModel.getColorSpace());
+                app.collect_class(this.getCancel(), newClassModel.getRawImageDirectory().toString(),
+                                  newClassModel.getSquareImageDirectory().toString(), newClassModel.getName(),
+                                  newClassModel.getDatabaseRootdirectory().toString(),
+                                  newClassModel.getVarsClassName(), newClassModel.getDescription(),
+                                  newClassModel.getColorSpace());
 
-                // Add the model only when successfully created
-                getModel().addClassModel(classModel);
+                // Add the model only after successfully created
+                getModel().addClassModel(newClassModel);
                 progressDisplayStream.isDone = true;
                 progressDisplay.getView().dispose();
 
                 NonModalMessageDialog dialog;
 
-                dialog = new NonModalMessageDialog(getView(), classModel.getName() + " class finished");
+                dialog = new NonModalMessageDialog(getView(), newClassModel.getName() + " class finished");
                 dialog.setVisible(true);
             } catch (Exception ex) {
 

@@ -1,5 +1,5 @@
 /*
- * @(#)ClassifierModel.java   10/03/17
+ * @(#)ClassifierModel.java
  * 
  * Copyright 2010 MBARI
  *
@@ -121,10 +121,7 @@ public class ClassifierModel extends AbstractModel {
      * @param model class model to add
      */
     public void addClassModel(ClassModel model) {
-        if (classExists(model)) {
-            classModelList.remove(model);
-        }
-
+        checkClassModel(model);  
         classModelList.add(model);
         notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASS_MODELS_UPDATED, model.getName()));
     }
@@ -134,10 +131,7 @@ public class ClassifierModel extends AbstractModel {
      * @param model training model to add
      */
     public void addTrainingModel(TrainingModel model) {
-        if (trainingClassExists(model)) {
-            trainingModelList.remove(model);
-        }
-
+        checkTrainingModel(model);  
         trainingModelList.add(model);
         notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODELS_UPDATED, model.getName()));
     }
@@ -147,13 +141,14 @@ public class ClassifierModel extends AbstractModel {
      * @param model the class model to check
      * @return true if it exists
      */
-    public boolean classExists(ClassModel newModel) {
+    public boolean checkClassExists(ClassModel newModel) {
         Iterator<ClassModel> i = classModelList.iterator();
 
         while (i.hasNext()) {
             ClassModel model = i.next();
 
-            if (newModel.getName().equals(model.getName()) && newModel.getColorSpace().equals(model.getColorSpace())
+            if (newModel.getName().equals(model.getName()) 
+                    && newModel.getColorSpace().equals(model.getColorSpace())
                     && newModel.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
                     && newModel.getDescription().equals(model.getDescription())
                     && newModel.getRawImageDirectory().equals(model.getRawImageDirectory())
@@ -166,44 +161,43 @@ public class ClassifierModel extends AbstractModel {
     }
 
     /**
-     * Checks if the training model exists
-     * @param model the training model to check
-     * @return true if it exists
+     * Checks if the training model exists and delete it if so
+     * @param m the training model to check 
      */
-    public boolean trainingClassExists(TrainingModel newModel) {
+    public void checkTrainingModel(TrainingModel m) {
         Iterator<TrainingModel> i = trainingModelList.iterator();
 
         while (i.hasNext()) {
             TrainingModel model = i.next();
 
-            if (newModel.getName().equals(model.getName()) && newModel.getColorSpace().equals(model.getColorSpace())
-                    && newModel.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
-                    && newModel.getDescription().equals(model.getDescription())) {
-                return true;
+            if (m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())
+                    && m.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
+                    && m.getDescription().equals(model.getDescription())) {
+                trainingModelList.remove(model); 
+                break;
             }
         }
-
-        return false;
-    }
-
+     }
+    
     /**
-     * Checks if a model with the given classname exists
-     * @param className the class name to check
-     * @return true if it exists
+     * Checks if the class model exists and delete it if so
+     * @param m the class model to check 
      */
-    public boolean classExists(String className) {
+    public void checkClassModel(ClassModel m) {
         Iterator<ClassModel> i = classModelList.iterator();
 
         while (i.hasNext()) {
             ClassModel model = i.next();
 
-            if (model.getName().equals(className)) {
-                return true;
+            if (m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())
+                    && m.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
+                    && m.getDescription().equals(model.getDescription())) {
+                classModelList.remove(model); 
+                break;
             }
         }
-
-        return false;
-    }
+     }
+ 
 
     /**
      * Gets the class model with the given class name.

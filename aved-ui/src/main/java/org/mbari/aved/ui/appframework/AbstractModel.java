@@ -1,5 +1,5 @@
 /*
- * @(#)AbstractModel.java   10/03/17
+ * @(#)AbstractModel.java
  * 
  * Copyright 2010 MBARI
  *

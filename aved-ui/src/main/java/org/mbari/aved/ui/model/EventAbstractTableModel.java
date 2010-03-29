@@ -1,5 +1,5 @@
 /*
- * @(#)EventAbstractTableModel.java   10/03/17
+ * @(#)EventAbstractTableModel.java
  * 
  * Copyright 2010 MBARI
  *

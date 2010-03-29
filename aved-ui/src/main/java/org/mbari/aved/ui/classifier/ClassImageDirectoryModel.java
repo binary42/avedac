@@ -1,5 +1,5 @@
 /*
- * @(#)ClassImageDirectoryModel.java   10/03/17
+ * @(#)ClassImageDirectoryModel.java
  * 
  * Copyright 2010 MBARI
  *

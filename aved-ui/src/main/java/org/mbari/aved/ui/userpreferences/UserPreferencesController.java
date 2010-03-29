@@ -1,5 +1,5 @@
 /*
- * @(#)UserPreferencesController.java   10/03/17
+ * @(#)UserPreferencesController.java
  * 
  * Copyright 2010 MBARI
  *
@@ -122,9 +122,11 @@ public class UserPreferencesController extends AbstractController {
             getModel().setPlayoutMode(VideoPlayoutMode.DEFAULT);
         } else if (op.equals("ScratchDirComboBoxChanged")) {
             File f = (File) ((JComboBox) e.getSource()).getSelectedItem();
-
             getModel().setScratchDirectory(f);
-        } else if (op.equals("Close")) {
+         } else if (op.equals("AskBeforeDelete")) {
+            boolean state = ((JCheckBox) e.getSource()).isSelected();
+            getModel().setAskBeforeDelete(state);
+         } else if (op.equals("Close")) {
             getView().setVisible(false);
         } else {}
     }

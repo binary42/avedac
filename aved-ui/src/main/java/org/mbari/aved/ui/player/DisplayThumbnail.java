@@ -1,5 +1,5 @@
 /*
- * @(#)DisplayThumbnail.java   10/03/17
+ * @(#)DisplayThumbnail.java
  * 
  * Copyright 2010 MBARI
  *

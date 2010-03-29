@@ -28,6 +28,8 @@
 %user-interface.  
 %Modified by dcline@mbari.org Jan 15, 2010 added varsclassname name and
 %description
+%Modified by dcline@mbari.org  Mar 25, 2010 appended color space to
+%metadata name 
         
 function [filenames,store] = collect_ui(kill, rawdirct, sqdirct, classname, dbroot, color_space, varsclassname, description)
 
@@ -37,7 +39,7 @@ YCBCR = 3;
 
 if ( (color_space ~= GRAY) && (color_space ~= RGB) && (color_space ~= YCBCR) )
     color_space = GRAY;
-    fprintf(1, '\nWarning: Color space should be 1, 2, or 3. Converting to 1.\n');
+    fprintf(1, '\nWarning: Color space should be 1, 2, or 3. Converting to 1 (GRAY).\n');
 end
 
 %resolution and data files
@@ -158,26 +160,37 @@ while ( ii < sz )
 end
 
 
-fprintf(1, '\n'); 
+fprintf(1, '\n');                     
 
 if(sz > 1)
+    %append the color space to the name to make it unique
+    if (color_space == RGB)
+        rootname = [classname '_rgb'];
+    elseif (color_space == GRAY)
+        rootname = [classname '_gray'];
+    elseif (color_space == YCBCR)
+        rootname = [classname '_ycbcr'];
+    else
+        rootname = classname;
+    end
+    
     %modified - store the data from linear 3d application
-    str = [featurerootdir '/' classname '_data_collection_avljNL3_cl_pcsnew' '.mat'];
+    str = [featurerootdir rootname '_data_collection_avljNL3_cl_pcsnew' '.mat'];
     fprintf(1, 'Saving %s\n', str);
     save(str,'store');
     
     %modified - store the resolution from linear 3d application
-    str = [featurerootdir '/' classname '_resol_collection_avljNL3_cl_pcsnew' '.mat'];
+    str = [featurerootdir rootname '_resol_collection_avljNL3_cl_pcsnew' '.mat'];
     fprintf(1, 'Saving %s\n', str);
     save(str,'resol');
     
     %modified - store name of class files from the directory
-    str = [featurerootdir '/' classname '_names_collection_avljNL3_cl_pcsnew' '.mat'];
+    str = [featurerootdir rootname '_names_collection_avljNL3_cl_pcsnew' '.mat'];
     fprintf(1, 'Saving %s\n', str);
     save(str,'filenames');
-     
-    str = [featurerootdir '/' classname '_metadata_collection_avljNL3_cl_pcsnew' '.mat'];
-    fprintf(1, 'Saving %s\n', str); 
+    
+    str = [featurerootdir rootname '_metadata_collection_avljNL3_cl_pcsnew' '.mat'];
+    fprintf(1, 'Saving %s\n', str);
     class_metadata.raw_directory = rawdirct;
     class_metadata.square_directory = sqdirct;
     class_metadata.classname = classname;

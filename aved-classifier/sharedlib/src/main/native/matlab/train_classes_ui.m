@@ -11,14 +11,16 @@
 %
 % @param kill kill boolean to break this from a GUI
 % @param dbroot database root directory
+% @param color_space GRAY = 1, RGB = 2, YCBCR = 3
 % @param classalias the alias for this class
 % @param classnames array of class names to use in this training class
 % @param description description of this training class
 
-function train_classes_ui(kill, dbroot, classalias, classnames, description)
+function train_classes_ui(kill, dbroot, color_space, classalias, classnames, description)
 
-%declare the training model data ris global
-global RIS;
+GRAY = 1;
+RGB = 2;
+YCBCR = 3;
 
 %format the training data file
 trainingdir = [dbroot '/training/class/' ];
@@ -35,33 +37,35 @@ if(isdir(featurerootdir)  == 0)
     mkdir(featurerootdir);
 end
 
-color_space = -1;
 
 %insert the training classes matlab files names into an array
 for ii=1:length(classnames)
-    datafiles{ii} = [featurerootdir classnames{ii} '_data_collection_avljNL3_cl_pcsnew'];
-    resolfiles{ii} = [featurerootdir classnames{ii} '_resol_collection_avljNL3_cl_pcsnew'];
-    metadata = [featurerootdir classnames{ii} '_metadata_collection_avljNL3_cl_pcsnew' '.mat'];
+    
+    %append the color space to the name to make it unique
+    if (color_space == RGB)
+        rootname = [classnames{ii} '_rgb'];
+    elseif (color_space == GRAY)
+        rootname = [classnames{ii} '_gray'];
+    elseif (color_space == YCBCR)
+        rootname = [classnames{ii} '_ycbcr'];
+    else
+        rootname = classnames{ii};
+    end
+    
+    datafiles{ii} = [featurerootdir rootname '_data_collection_avljNL3_cl_pcsnew'];
+    resolfiles{ii} = [featurerootdir rootname '_resol_collection_avljNL3_cl_pcsnew'];
+    metadata = [featurerootdir rootname '_metadata_collection_avljNL3_cl_pcsnew' '.mat'];
     if(~exist([metadata]))
         error('%s does not exist', metadata);
     end
     load(metadata);
-    % check if classes have the same color space
-    % this tries to match the first class loaded
-    if (color_space >=0 && color_space ~= class_metadata.color_space)
-        fprintf(1, 'Error - color space %d for class: %s and must have color space %d\n', class_metadata.color_space, classnames{ii}, color_space);
-        error('All classes must have the same color space');
-    else
-        color_space = class_metadata.color_space;
-    end
-    
 end
 
 trainingfile = [trainingdir classalias '_training_data'];
 
 %run training
 fprintf(1, 'training classes %s\n', trainingfile);
-RIS = train_classes(kill, classnames, resolfiles, datafiles, trainingfile); 
+train_classes(kill, classnames, resolfiles, datafiles, trainingfile); 
 
 %format the metadata file name and data structure
 metadatafile = [trainingdir classalias '_training_metadata.mat'];

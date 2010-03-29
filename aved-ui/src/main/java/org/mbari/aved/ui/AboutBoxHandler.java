@@ -1,6 +1,6 @@
 /*
- * @(#)AboutBoxHandler.java   10/03/17
- * 
+ * @(#)AboutBoxHandler.java
+ *  
  * Copyright 2010 MBARI
  *
  * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1

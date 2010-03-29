@@ -1,5 +1,5 @@
 /*
- * @(#)SortedTreeNode.java   10/03/17
+ * @(#)SortedTreeNode.java
  * 
  * Copyright 2010 MBARI
  *

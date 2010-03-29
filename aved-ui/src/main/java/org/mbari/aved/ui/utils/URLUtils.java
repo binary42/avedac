@@ -1,5 +1,5 @@
 /*
- * @(#)URLUtils.java   10/03/17
+ * @(#)URLUtils.java
  * 
  * Copyright 2010 MBARI
  *

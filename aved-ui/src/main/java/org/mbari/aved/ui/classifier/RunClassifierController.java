@@ -1,5 +1,5 @@
 /*
- * @(#)RunClassifierController.java   10/03/17
+ * @(#)RunClassifierController.java
  * 
  * Copyright 2010 MBARI
  *
@@ -239,7 +239,8 @@ public class RunClassifierController extends AbstractController implements Model
                 float    minProbThreshold       = getView().getProbabilityThreshold();
 
                 app.run_test(this.getCancel(), eventids, majoritywinnerindex, probabilitywinnerindex, probability,
-                             testDir.getName(), trainingModel.getName(), minProbThreshold, dbRoot);
+                             testDir.getName(), trainingModel.getName(), minProbThreshold, dbRoot,
+                             trainingModel.getColorSpace());
 
                 // Add one column for the Unknown class
                 int      columns     = trainingModel.getNumClasses() + 1;
@@ -271,7 +272,7 @@ public class RunClassifierController extends AbstractController implements Model
                     mapbyid.put(new Integer(j), trainingModel.getClassModel(j - 1).getName());
                 }
 
-                // Temporariliy turn off this user preference to not add all the
+                // Temporarily turn off this user preference to not add all the
                 // predicted images to the library during assignment to the output
                 boolean isAddTrainingImages = UserPreferences.getModel().getAddTrainingImages();
 
@@ -279,7 +280,7 @@ public class RunClassifierController extends AbstractController implements Model
                     UserPreferences.getModel().setAddLabeledTrainingImages(false);
                 }
 
-                // Put the predicted class to the list model
+                // Put the predicted class in the list model using the majority winner
                 for (int i = 0; i < size; i++) {
                     EventObjectContainer event = eventListModel.getElementAt(i);
 
@@ -414,7 +415,7 @@ public class RunClassifierController extends AbstractController implements Model
         }
 
         /**
-         * Resets the start/stop buttons and disables the progress display.
+         * Reset the start/stop buttons and disables the progress display.
          */
         private void reset() {
             getView().setRunButton(true);

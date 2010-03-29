@@ -1,5 +1,5 @@
 /*
- * @(#)MainMenu.java   10/03/17
+ * @(#)MainMenu.java
  * 
  * Copyright 2010 MBARI
  *
@@ -95,6 +95,7 @@ public class MainMenu implements ModelListener {
     public static String CREATE_TRAINING_LIBRARY = "Create training library";
     public static String DETECTION_SETTINGS      = "Detection Settings";
     public static String EXIT                    = "Exit";
+    public static String EXPORT_EVENTS           = "Export events";
 
     /**
      * These menu items are only enabled when the GUI is running on Linux
@@ -128,6 +129,7 @@ public class MainMenu implements ModelListener {
     private EditMenu               editM;
     private JMenu                  editMenu;
     private JMenuItem              exitItem;
+    private JMenuItem              exportExcelEventsItems;
     private JMenuItem              helpContentsMenuItem;
     private final ApplicationModel model;
     private JMenuItem              openClassifierPreferenceItem;
@@ -296,6 +298,13 @@ public class MainMenu implements ModelListener {
         saveEventsItemAs.setEnabled(false);
         closeEventsItem = new JMenuItem(CLOSE_EVENTS);
 
+        // Export to Excel file
+        // This is not enabled, until there is something to export
+        exportExcelEventsItems = new JMenuItem(EXPORT_EVENTS);
+        exportExcelEventsItems.setEnabled(false);
+        exportExcelEventsItems.addActionListener(l);
+        fileMenu.add(exportExcelEventsItems);
+
         String s = System.getProperty("os.name").toLowerCase();
 
         if ((s.indexOf("linux") != -1) || (s.indexOf("windows") != -1)) {
@@ -414,7 +423,7 @@ public class MainMenu implements ModelListener {
         menubar.add(viewMenu);
 
         // If not mac then add the tools menu
-        if (s.indexOf("mac") != -1) {
+        if (s.indexOf("mac") == -1) {
             menubar.add(toolsMenu);
         }
 
@@ -446,12 +455,14 @@ public class MainMenu implements ModelListener {
             openEventsItem.setEnabled(false);
             saveEventsMenuItem.setEnabled(true);
             saveEventsItemAs.setEnabled(true);
+            exportExcelEventsItems.setEnabled(true);
             closeEventsItem.setEnabled(true);
         } else {
             openEventsItem.setEnabled(true);
             closeEventsItem.setEnabled(false);
             saveEventsMenuItem.setEnabled(false);
             saveEventsItemAs.setEnabled(false);
+            exportExcelEventsItems.setEnabled(false);
         }
     }
 
@@ -471,6 +482,7 @@ public class MainMenu implements ModelListener {
                 closeEventsItem.setEnabled(false);
                 saveEventsMenuItem.setEnabled(false);
                 saveEventsItemAs.setEnabled(false);
+                exportExcelEventsItems.setEnabled(false);
 
                 break;
 
@@ -553,7 +565,7 @@ public class MainMenu implements ModelListener {
                                         change.start();
                                     }
                                 });
-                            } else if (actionCommand.equals(MainMenu.SAVE_EVENTS)) {
+                            } else if (obj.equals(saveEventsMenuItem)) {
                                 SwingUtilities.invokeLater(new Runnable() {
                                     public void run() {
                                         Thread change = new Thread(new Runnable() {
@@ -571,13 +583,31 @@ public class MainMenu implements ModelListener {
                                         change.start();
                                     }
                                 });
-                            } else if (actionCommand.equals(MainMenu.SAVE_EVENTS_AS)) {
+                            } else if (obj.equals(saveEventsItemAs)) {
                                 SwingUtilities.invokeLater(new Runnable() {
                                     public void run() {
                                         Thread change = new Thread(new Runnable() {
                                             public void run() {
                                                 try {
                                                     Application.getController().saveProcessedResultsAs();
+                                                } catch (Exception e) {
+
+                                                    // TODO Auto-generated catch block
+                                                    e.printStackTrace();
+                                                }
+                                            }
+                                        });
+
+                                        change.start();
+                                    }
+                                });
+                            } else if (obj.equals(exportExcelEventsItems)) {
+                                SwingUtilities.invokeLater(new Runnable() {
+                                    public void run() {
+                                        Thread change = new Thread(new Runnable() {
+                                            public void run() {
+                                                try {
+                                                    Application.getController().exportProcessedResultsAsXls();
                                                 } catch (Exception e) {
 
                                                     // TODO Auto-generated catch block
@@ -791,7 +821,7 @@ public class MainMenu implements ModelListener {
                         /**
                          * This is a URL. Since it can be long, so only display the name
                          * not the fullpath.  Only display the URL if it doesn't end with
-                         * a tar tgz, or tar.gz 
+                         * a tar tgz, or tar.gz
                          */
                         File f = new File(inputsource.getPath());
 

@@ -1,5 +1,5 @@
 /*
- * @(#)EventLabelerView.java   10/03/17
+ * @(#)EventLabelerView.java
  * 
  * Copyright 2010 MBARI
  *

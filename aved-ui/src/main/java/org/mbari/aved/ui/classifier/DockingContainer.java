@@ -1,5 +1,5 @@
 /*
- * @(#)DockingContainer.java   10/03/17
+ * @(#)DockingContainer.java
  * 
  * Copyright 2010 MBARI
  *
