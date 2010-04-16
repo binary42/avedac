@@ -267,7 +267,7 @@ public class PlayerView extends JFrameView {
 
             // If the bounding box is beyond the image image size, adjust
             // this. This can occur if there is a discrepancy  between the
-            // image used in AVED mbarivision processing and the
+            // image used in p/mbarivision processing and the
             // image used in the graphical interface
             if (xorigin + width > image.getWidth()) {
                 width = image.getWidth() - xorigin;
@@ -299,13 +299,13 @@ public class PlayerView extends JFrameView {
                     this.validate();
                 }
 
-                // Scale JAI if the image is larger than 80% of the main display
+                // Scale JAI if the image is larger than 60% of the main display
                 // TODO: this is somewhat arbitrary and really should be scaled by
                 // the total size of the PlayerView, and not just the JAI component
                 // of the PlayerView.
                 Dimension d      = Application.getView().getSize();
                 float     scale  = 1.0f;
-                float     factor = 0.80f;
+                float     factor = 0.60f;
 
                 if ((image.getWidth() >= factor * d.width) || (image.getHeight() >= factor * d.height)) {
                     scale = ImageChangeUtil.calcTheta(image.getWidth(), image.getHeight(), factor * d.width,

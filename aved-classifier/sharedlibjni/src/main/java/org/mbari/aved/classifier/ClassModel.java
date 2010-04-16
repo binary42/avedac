@@ -243,16 +243,10 @@ public class ClassModel {
 
     /**
      * Set the database root directory to store this model information to.
-     * This directory must exist.
      * @param directory the name of the root directory
-     * @throws java.lang.Exception if the directory does not exist
      */
-    public void setDatabaseRoot(File directory) throws Exception {
-        dbrootDirectory = directory;
-
-        if (dbrootDirectory.isDirectory() == false) {
-            throw new Exception(dbrootDirectory + " is not a directory");
-        }
+    public void setDatabaseRoot(File directory) {
+        dbrootDirectory = directory; 
     }
 
     /**

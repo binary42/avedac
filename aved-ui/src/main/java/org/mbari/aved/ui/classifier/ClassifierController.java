@@ -82,6 +82,7 @@ public class ClassifierController extends AbstractController implements ModelLis
 
         // Register as listener to the model
         model.addModelListener(this);
+        
         createTrainingLib = new CreateTrainingLibrary(model);
         createClass       = new CreateClass(model, list);
         testClass         = new TestClass(model);
@@ -95,6 +96,10 @@ public class ClassifierController extends AbstractController implements ModelLis
 
         // TODO: make this a function of screen size
         view.pack();
+        
+        // Initialize the database directory from the user-defined preferences
+        File dir = UserPreferences.getModel().getClassDatabaseDirectory();         
+        model.setDatabaseRoot(dir);
     }
 
     @Override
@@ -151,6 +156,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                         }
                     }
                 } catch (RuntimeException ex) {
+                    Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
                     return;
                 } catch (Exception ex) {
                     Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);

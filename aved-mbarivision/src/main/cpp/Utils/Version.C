@@ -37,7 +37,7 @@ namespace Version
   std::string versionString() {
     std::stringbuf sb;
     std::ostream  os(&sb);  
-    os << PACKAGE  << " v" << VERSION  << " (C) 2003-2009 MBARI built " << __DATE__ << " at " << __TIME__  << "\n";
+    os << PACKAGE  << " v" << VERSION  << " (C) 2003-2010 MBARI built " << __DATE__ << " at " << __TIME__  << "\n";
     os.flush();  
     return sb.str();
   }

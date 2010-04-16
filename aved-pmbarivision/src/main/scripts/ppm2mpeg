@@ -1,5 +1,1 @@
-#!/bin/bash
-#set -x
-# Name: ppm2mpeg
-# This script creates an MPEG-1 from sequence of pnm,ppm,or jpg frames
-frames2mpeg $@
+../../../../aved-mbarivision/src/main/scripts/ppm2mpeg

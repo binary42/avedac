@@ -25,6 +25,7 @@ package org.mbari.aved.classifier;
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * A <code>TrainingModel</code> is simply a collection
@@ -55,12 +56,43 @@ public class TrainingModel {
 
     /**
      * Add the class model to this training model
+     * 
      * @param model
+     * 
+     * @return false if the class model was not added,
+     * otherwise true
      */
-    public void addClassModel(ClassModel model) {
-        if (!classModels.contains(model)) {
+    public boolean addClassModel(ClassModel model) {
+        if (!classModels.contains(model) && 
+                !this.checkClassExists(model)) {
             classModels.add(model);
+            return true;
         }
+        return false;
+    }
+
+     /**
+     * Checks if the model exists
+     * @param model the class model to check
+     * @return true if it exists
+     */
+    private boolean checkClassExists(ClassModel newModel) {
+        Iterator<ClassModel> i = classModels.iterator();
+
+        while (i.hasNext()) {
+            ClassModel model = i.next();
+
+            if (newModel.getName().equals(model.getName()) 
+                    && newModel.getColorSpace().equals(model.getColorSpace())
+                    && newModel.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
+                    && newModel.getDescription().equals(model.getDescription())
+                    && newModel.getRawImageDirectory().equals(model.getRawImageDirectory())
+                    && newModel.getVarsClassName().equals(model.getVarsClassName())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

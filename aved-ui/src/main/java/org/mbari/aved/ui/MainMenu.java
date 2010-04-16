@@ -86,34 +86,26 @@ import javax.swing.border.EmptyBorder;
  *
  */
 public class MainMenu implements ModelListener {
-    public static String BATCH_PROCESS          = "Batch process";
-    public static String CLASSIFIER_PREFERENCES = "Preferences";
-    public static String CLOSE_EVENTS           = "Close events";
-
-    /** Classifier menu items */
-    public static String CREATE_CLASS            = "Create class";
-    public static String CREATE_TRAINING_LIBRARY = "Create training library";
-    public static String DETECTION_SETTINGS      = "Detection Settings";
-    public static String EXIT                    = "Exit";
-    public static String EXPORT_EVENTS           = "Export events";
-
-    /**
-     * These menu items are only enabled when the GUI is running on Linux
-     * otherwise, these are disabled.
-     */
-    public static String       FILE_PROCESS     = "Video file";
-    public static String       HELP_CONTENTS    = "Contents";
-    public static String       MESSAGES         = "Messages";
-    public static String       OPEN_EVENTS      = "Open events";
-    public static String       ORGANIZE_CLASSES = "Organize classes";
-    public static String       PREFERENCES      = "Preferences";
-    public static String       RUN_CLASSIFIER   = "Run";
-    public static String       SAVE_EVENTS      = "Save events";
-    public static String       SAVE_EVENTS_AS   = "Save events as...";
-    public static String       STREAM_PROCESS   = "Video stream";
-    public static String       TEST_CLASS       = "Test class";
-    private static final long  serialVersionUID = 1L;
-    public final static Cursor defaultCursor    = Cursor.getDefaultCursor();
+    public static String       BATCH_PROCESS           = "Batch process";
+    public static String       CLOSE_EVENTS            = "Close events";
+    public static String       CREATE_CLASS            = "Create class";
+    public static String       CREATE_TRAINING_LIBRARY = "Create training library";
+    public static String       DETECTION_SETTINGS      = "Detection Settings";
+    public static String       EXIT                    = "Exit";
+    public static String       EXPORT_EVENTS           = "Export events";
+    public static String       FILE_PROCESS            = "Video file";
+    public static String       HELP_CONTENTS           = "Contents";
+    public static String       MESSAGES                = "Messages";
+    public static String       OPEN_EVENTS             = "Open events";
+    public static String       ORGANIZE_CLASSES        = "Organize classes";
+    public static String       PREFERENCES             = "Preferences";
+    public static String       RUN_CLASSIFIER          = "Run";
+    public static String       SAVE_EVENTS             = "Save events";
+    public static String       SAVE_EVENTS_AS          = "Save events as...";
+    public static String       STREAM_PROCESS          = "Video stream";
+    public static String       TEST_CLASS              = "Test class";
+    private static final long  serialVersionUID        = 1L;
+    public final static Cursor defaultCursor           = Cursor.getDefaultCursor();
 
     /** Busy and wait cursor */
     public final static Cursor busyCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
@@ -342,18 +334,18 @@ public class MainMenu implements ModelListener {
         createClassItem = new JMenuItem(CREATE_CLASS);
         classifierMenu.add(createClassItem);
         createClassItem.addActionListener(l);
-        testClassItem = new JMenuItem(TEST_CLASS);
-        classifierMenu.add(testClassItem);
-        testClassItem.addActionListener(l);
         createTrainingLibraryItem = new JMenuItem(CREATE_TRAINING_LIBRARY);
         classifierMenu.add(createTrainingLibraryItem);
         createTrainingLibraryItem.addActionListener(l);
+        testClassItem = new JMenuItem(TEST_CLASS);
+        classifierMenu.add(testClassItem);
+        testClassItem.addActionListener(l);
         classifierMenu.addSeparator();
         organizeClassImagesMenuItem = new JMenuItem(ORGANIZE_CLASSES);
         classifierMenu.add(organizeClassImagesMenuItem);
         organizeClassImagesMenuItem.addActionListener(l);
         classifierMenu.addSeparator();
-        openClassifierPreferenceItem = new JMenuItem(CLASSIFIER_PREFERENCES);
+        openClassifierPreferenceItem = new JMenuItem(PREFERENCES);
         classifierMenu.add(openClassifierPreferenceItem);
         openClassifierPreferenceItem.addActionListener(l);
 

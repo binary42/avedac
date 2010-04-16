@@ -1,9 +1,1 @@
-#!/usr/bin/perl
-
-$username = `whoami`;
-chomp($username);
-
-$results = `condor_q $username`;
-
-print $results;
-
+../../../../aved-mbarivision/src/main/scripts/show_my_jobs.pl

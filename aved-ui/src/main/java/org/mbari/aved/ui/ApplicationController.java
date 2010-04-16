@@ -390,7 +390,7 @@ public class ApplicationController extends AbstractController implements ModelLi
                     File f = new File(xmlfile.toString());
 
                     if ((file = searchForClip(xmlfile, ".avi")) != null
-                            || (file = searchForClip(xmlfile, ".avi", f)) != null
+                            || (file = searchForClip(xmlfile, ".avi", f)) != null 
                             || (file = searchForClip(xmlfile, ".mov")) != null
                             || (file = searchForClip(xmlfile, ".mov", f)) != null
                             || (file = searchForClip(xmlfile, ".tar")) != null
@@ -915,18 +915,16 @@ public class ApplicationController extends AbstractController implements ModelLi
 
                                     if (url != null) {
                                         File file = null;
+                                        File tmpDir = new File("/tmp"); 
 
-                                        // Get the scratch directory and create it if it doesn't exist
-                                        File scratchDir = UserPreferences.getModel().getScratchDirectory();
-
-                                        // Initialize the transcoder output directory to be the scratch directory
-                                        if (!scratchDir.exists()) {
-                                            scratchDir.mkdir();
+                                        // Initialize the transcoder output directory to be the temporary directory
+                                        if (!tmpDir.exists()) {
+                                            tmpDir.mkdir();
                                         }
 
-                                        if (scratchDir != null) {
+                                        if (tmpDir != null) {
                                             String v =
-                                                new String(scratchDir.toString() + "/"
+                                                new String(tmpDir.toString() + "/"
                                                            + ParseUtils.parseFileNameRemoveDirectory(url.getFile()));
 
                                             file = new File(v);
@@ -960,6 +958,14 @@ public class ApplicationController extends AbstractController implements ModelLi
                                                 dialog = new NonModalMessageDialog((ApplicationView) getView(),
                                                                                    ex.getMessage());
                                                 dialog.setVisible(true);
+                                                
+                                                 /**
+                                                 * Can't find the file automatically so prompt
+                                                 * the user for one.
+                                                 */
+                                                URL u = searchVideoSource(model.getXmlFile(), url);
+
+                                                model.setTranscodeSource(new File(u.getFile()));
                                             } catch (Exception ex1) {
                                                 Logger.getLogger(ApplicationController.class.getName()).log(
                                                     Level.SEVERE, null, ex1);

@@ -129,7 +129,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>aved</groupId>
     <artifactId>aved-ui</artifactId>
-    <name>AVED graphical user interface</name>
+    <name>AVEDac (graphical user interface)</name>
     <version>0.4.3-SNAPSHOT</version>
     <url>http://maven.apache.org</url>
     <dependencies>

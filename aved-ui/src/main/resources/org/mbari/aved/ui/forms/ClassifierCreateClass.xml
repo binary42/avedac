@@ -24,8 +24,7 @@
     </at>
     <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
    </super>
-   <at name="id">/Users/dcline/aved/ui/aved-ui/src/main/resources/org/mbari/aved/ui/forms/ClassifierCreateClass.xml</at>
-   <at name="path">ClassifierCreateClass.xml</at>
+   <at name="id">/Users/dcline/Desktop/aved/aved-ui/src/main/resources/org/mbari/aved/ui/forms/ClassifierCreateClass.xml</at>
    <at name="rowspecs">FILL:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:50DLU:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,FILL:DEFAULT:NONE,BOTTOM:DEFAULT:NONE</at>
    <at name="colspecs">RIGHT:DEFAULT:NONE,FILL:6PX:NONE,FILL:250PX:NONE,FILL:4PX:NONE,FILL:DEFAULT:NONE,FILL:MIN:GROW(1.0),FILL:DEFAULT:NONE,FILL:DEFAULT:NONE</at>
    <at name="components">
@@ -123,8 +122,8 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
-            <at name="width">76</at>
-            <at name="text">Class name:</at>
+            <at name="width">136</at>
+            <at name="text">Predicted class name:</at>
             <at name="height">16</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
@@ -244,9 +243,10 @@
           <at name="classname">javax.swing.JTextField</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
+            <at name="horizontalAlignment">2</at>
             <at name="width">246</at>
             <at name="height">28</at>
-            <at name="toolTipText">Name of the class.  May be the same as the VARS classification, or can be a user-defined class.</at>
+            <at name="toolTipText">Name  the class will be assigned in the predicted column of tha Event Table.  May be the same as the VARS classification, or can be a user-defined class.</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
               <super classname="com.jeta.forms.store.properties.BorderProperty">
@@ -411,7 +411,7 @@
           <at name="classname">javax.swing.JPanel</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
-            <at name="width">471</at>
+            <at name="width">373</at>
             <at name="height">357</at>
             <at name="name">knowledgebase</at>
             <at name="autoscrolls">true</at>
@@ -450,6 +450,7 @@
             <at name="width">227</at>
             <at name="rows">5</at>
             <at name="height">80</at>
+            <at name="toolTipText">Optional description of the class </at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
               <super classname="com.jeta.forms.store.properties.BorderProperty">
@@ -541,6 +542,7 @@
              </object>
             </at>
             <at name="actionCommand">imageDirComboBoxChanged</at>
+            <at name="toolTipText">Select the image directory that contains representations of the class</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
               <super classname="com.jeta.forms.store.properties.BorderProperty">
@@ -656,9 +658,10 @@
           <at name="classname">javax.swing.JTextField</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
+            <at name="horizontalAlignment">2</at>
             <at name="width">246</at>
             <at name="height">28</at>
-            <at name="toolTipText">Select the class from the tree on the right</at>
+            <at name="toolTipText">Select the class from the tree on the right. The VARS class doesn&apos;t necessarily match the predicted class.</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
               <super classname="com.jeta.forms.store.properties.BorderProperty">
@@ -1007,10 +1010,11 @@
           <at name="classname">com.jeta.forms.components.label.JETALabel</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
-            <at name="horizontalAlignment">4</at>
+            <at name="horizontalAlignment">2</at>
             <at name="width">12</at>
             <at name="text">-</at>
             <at name="height">16</at>
+            <at name="toolTipText">The total images in this class</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
               <super classname="com.jeta.forms.store.properties.BorderProperty">

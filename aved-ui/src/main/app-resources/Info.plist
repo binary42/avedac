@@ -3,7 +3,7 @@
 <plist version="0.9">
   <dict>
     <key>CFBundleName</key>
-    <string>AVEDAC</string>
+    <string>AVEDac</string>
     <key>CFBundleVersion</key>
     <string>10.2</string>
     <key>CFBundleAllowMixedLocalizations</key>

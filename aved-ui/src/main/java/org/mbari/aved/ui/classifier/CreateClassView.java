@@ -37,16 +37,12 @@ import org.mbari.aved.ui.Application;
 import org.mbari.aved.ui.ApplicationInfo;
 import org.mbari.aved.ui.appframework.JFrameView;
 import org.mbari.aved.ui.appframework.ModelEvent;
-import org.mbari.aved.ui.userpreferences.UserPreferences;
-
-//~--- JDK imports ------------------------------------------------------------
 
 import java.awt.Image;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowListener;
 
 import java.io.File;
-import java.io.FileFilter;
 
 import java.net.URL;
 

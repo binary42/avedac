@@ -59,8 +59,13 @@ public class Execute {
         if (selections.size() > 0) {
             Iterator<Integer> i = selections.iterator();
 
+            if(selections.size() > 1)
+                description = "object ids: ";
+            else
+                description = "object id: ";
+            
             while (i.hasNext()) {
-                description += " object id:" + list.getElementAt(i.next()).getObjectId();
+                description +=  list.getElementAt(i.next()).getObjectId();
 
                 // When more than 5 objects, append ... and return
                 if (j > 5) {

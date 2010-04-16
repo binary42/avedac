@@ -72,9 +72,7 @@ public final class UserPreferencesModel extends AbstractModel {
     private static final String VIDEO_MASK_DIR            = "VIDEO_MASK_DIR";
     
     private static final String XML_EXPORT_DIR            = "XML_EXPORT_DIR";
-    private static final String XML_IMPORT_DIR            = "XML_IMPORT_DIR";
-    
-    private static final String SCRATCH_DIR               = "SCRATCH_DIR";
+    private static final String XML_IMPORT_DIR            = "XML_IMPORT_DIR"; 
     
     /** The maximum number of class names store */
     public static int MAX_NUM_CLASS_NAMES = 30;
@@ -85,9 +83,8 @@ public final class UserPreferencesModel extends AbstractModel {
     /** The maximum number of tags to store */
     public static int           MAX_NUM_TAGS              = 30;
     
-    public static int           VIDEO_PLAYOUT_CHANGED     = 0;    
-    public static int           SCRATCH_DIR_CHANGED       = 1;    
-    public static int           ASK_BEFORE_DELETE_CHANGED = 2;
+    public static int           VIDEO_PLAYOUT_CHANGED     = 0;     
+    public static int           ASK_BEFORE_DELETE_CHANGED = 1;
 
     /** TODO: rename this to something meaningful number of docking directories */
     private int dockingDirsCnt = 0;
@@ -639,15 +636,7 @@ public final class UserPreferencesModel extends AbstractModel {
     public File getEventImageDirectory() {
         return new File(get(EVENT_IMAGE_DIR, getDefaultDirectoryString()));
     }
-
-    public void setScratchDirectory(File f) {
-        put(SCRATCH_DIR, f.getAbsolutePath());
-
-        ModelEvent e = new ModelEvent(this, SCRATCH_DIR_CHANGED, f.getAbsolutePath());       
-
-        notifyChanged(e);
-    }
-
+ 
     public void setVideoBatchInputDirectory(File f) {
         put(VIDEO_BATCH_INPUT_DIR, f.getAbsolutePath());
     }
@@ -913,14 +902,7 @@ public final class UserPreferencesModel extends AbstractModel {
     public void setLastImportedMPEGDirectory(URL u) {
         put(LAST_MPEG_RESULTS_IMPORT_URL_PARENT, u.toString());
     }
-
-    /** Returns the scratch directory, and if not available set to PWD environment variable */
-    public File getScratchDirectory() {
-        File f = getDefaultScratchDirectory();
-
-        return new File(get(SCRATCH_DIR, f.toString()));
-    }
-
+ 
     /** Returns the video batch input directory, and if not available set to PWD environment variable */
     public File getVideoBatchInputDirectory() {
         return new File(get(VIDEO_BATCH_INPUT_DIR, getDefaultDirectoryString()));

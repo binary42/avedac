@@ -99,15 +99,7 @@ public class UserPreferencesController extends AbstractController {
     public void actionPerformed(ActionEvent e) {
         String op = e.getActionCommand();
 
-        if (op.equals("BrowseScratch")) {
-            File f = browse(getModel().getScratchDirectory(), JFileChooser.DIRECTORIES_ONLY,
-                            "Choose scratch directory");
-
-            if (f != null) {
-                getView().updateScratchComboBox(f);
-                getModel().setScratchDirectory(f);
-            }
-        } else if (op.equals("BrowsePlayer")) {
+        if (op.equals("BrowsePlayer")) {
             VideoPlayoutMode m = getModel().getPlayoutMode();
             File             f = browse(new File(m.command), JFileChooser.FILES_AND_DIRECTORIES, "Choose video player");
 
@@ -120,13 +112,11 @@ public class UserPreferencesController extends AbstractController {
             getModel().setPlayoutMode(VideoPlayoutMode.OTHER);
         } else if (op.equals("PlayoutDefault")) {
             getModel().setPlayoutMode(VideoPlayoutMode.DEFAULT);
-        } else if (op.equals("ScratchDirComboBoxChanged")) {
-            File f = (File) ((JComboBox) e.getSource()).getSelectedItem();
-            getModel().setScratchDirectory(f);
-         } else if (op.equals("AskBeforeDelete")) {
+        } else if (op.equals("AskBeforeDelete")) {
             boolean state = ((JCheckBox) e.getSource()).isSelected();
+
             getModel().setAskBeforeDelete(state);
-         } else if (op.equals("Close")) {
+        } else if (op.equals("Close")) {
             getView().setVisible(false);
         } else {}
     }

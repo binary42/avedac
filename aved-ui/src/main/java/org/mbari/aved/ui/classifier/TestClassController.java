@@ -24,6 +24,7 @@ package org.mbari.aved.ui.classifier;
 
 import org.mbari.aved.classifier.ClassModel;
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
+import org.mbari.aved.classifier.ColorSpace;
 import org.mbari.aved.classifier.TrainingModel;
 import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.appframework.ModelEvent;
@@ -81,17 +82,18 @@ class TestClassController extends AbstractController implements ModelListener {
             JComboBox  box   = ((JComboBox) e.getSource());
             ClassModel model = (ClassModel) box.getSelectedItem();
 
-            if (model != null) {
-                getView().loadModel(model);
-                getView().populateTrainingLibraryList(model.getColorSpace());
-            }
-        } else if (actionCommand.equals("libraryNameComboBoxChanged")) {
+            getView().loadClassModel(model);
+        } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
+            JComboBox  box           = ((JComboBox) e.getSource());
+            ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
+    
+            getView().populateTrainingLibraryList(newColorSpace);
+            getView().populateClassList(newColorSpace);
+         } else if (actionCommand.equals("libraryNameComboBoxChanged")) {
             JComboBox     box   = ((JComboBox) e.getSource());
             TrainingModel model = (TrainingModel) box.getSelectedItem();
 
-            if (model != null) {
-                getView().loadModel(model);
-            }
+            getView().loadTrainingModel(model);
         } else if (actionCommand.equals("Stop")) {
             if ((worker != null) &&!worker.isDone()) {
                 worker.cancelWorker(true);
@@ -137,13 +139,31 @@ class TestClassController extends AbstractController implements ModelListener {
      * and  {@link org.mbari.aved.ui.classifier.ClassifierModel}
      */
     public void modelChanged(ModelEvent event) {
-        if (event instanceof ClassifierModel.ClassifierModelEvent) {
+        if ((event instanceof ClassifierModel.ClassifierModelEvent) && (getView().getClassModel() != null)) {
+            ColorSpace colorSpace = (ColorSpace) getView().getClassModel().getColorSpace();
+
             switch (event.getID()) {
 
             // When the database root directory changes, update the available
             // libraries, defaulting to those in the RGB color space.
             case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
+                getView().populateTrainingLibraryList(colorSpace);
+                getView().populateClassList(colorSpace);
+
+                break;
+
             case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
+                getView().populateClassList(colorSpace);
+
+                break;
+
+            case ClassifierModel.ClassifierModelEvent.TRAINING_MODELS_UPDATED :
+                if (getView().getClassModel() != null) {
+                    getView().populateTrainingLibraryList(colorSpace);
+                } else {
+                    getView().populateTrainingLibraryList(ColorSpace.RGB);
+                }
+
                 break;
             }
         }
@@ -208,14 +228,13 @@ class TestClassController extends AbstractController implements ModelListener {
                 float    minProbThreshold = 0.8f;
 
                 System.out.println("Running test class");
+                System.out.println("Testing " + classModel.getName() + " against training library:"
+                                   + trainingModel.getName() + " with minimum probability:" + minProbThreshold);
 
                 // Run the class tests
                 app.test_class(this.getCancel(), eventFilenames, classIndex, probability, classModel.getName(),
                                trainingModel.getName(), minProbThreshold,
-                               classModel.getDatabaseRootdirectory().toString(),
-                               classModel.getColorSpace());
-                System.out.println("Testing " + classModel.getName() + "against training library:"
-                                   + trainingModel.getName() + "with  minimum probability:" + minProbThreshold);
+                               classModel.getDatabaseRootdirectory().toString(), classModel.getColorSpace());
 
                 // Dump out some debuging info. TODO: remove this when done
                 // testing

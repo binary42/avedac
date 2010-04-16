@@ -71,8 +71,6 @@ public class PlayerController extends AbstractController implements ActionListen
     /** Defines the direction of playout */
     private enum Direction { Forward, Reverse }
 
-    ;
-
     /**
      * Defines the way to play - either keep playing continuously until the end,
      * or single step and stop
@@ -82,8 +80,6 @@ public class PlayerController extends AbstractController implements ActionListen
     /** Defines the state of the player */
     private enum State { Stop, Play }
 
-    ;
-    ;
     public PlayerController(EventObjectContainer event, ApplicationModel model) {
         setModel(model);
         setView(new PlayerView(event, model, this));
@@ -171,11 +167,10 @@ public class PlayerController extends AbstractController implements ActionListen
         if (eventListModel.isLastEvent(event)) {
             view.disableNextButton();
         } else {
-            view.enableNextButton();
-
-            // Disable the next button if this is the last event in the sequence
+            view.enableNextButton();  
         }
 
+        // Disable the prev button if this is the first event in the sequence
         if (eventListModel.isFirstEvent(event)) {
             view.disablePrevButton();
         } else {
@@ -184,7 +179,7 @@ public class PlayerController extends AbstractController implements ActionListen
     }
 
     /*
-     *  Stop the timer, sets the play icon and sets the internal state variable.
+     * Stop the timer, sets the play icon and sets the internal state variable.
      * Call this anytime the play sequence is stopped
      */
     private void stop() {
@@ -196,7 +191,7 @@ public class PlayerController extends AbstractController implements ActionListen
     }
 
     /*
-     *  Starts the timer, sets the pause icon and starts the timer
+     * Starts the timer, sets the pause icon and starts the timer
      * Call this anytime the play button is hit
      */
     private void play(Mode mode, Direction direction) {
@@ -216,7 +211,7 @@ public class PlayerController extends AbstractController implements ActionListen
     }
 
     /*
-     *  timer action listener. Updates the image sequence counter and implements stop logic
+     * timer action listener. Updates the image sequence counter and implements stop logic
      * (non-Javadoc)
      * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
      * If it's the last frame, restart the timer to get a long pause between loops

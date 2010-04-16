@@ -139,17 +139,17 @@ class VideoTranscodeWorker extends SwingWorker {
             transcodeProcess = new TranscodeProcess(clip);
             transcodeProcess.setPrintStream(processDisplay);
 
-            // Get the scratch directory and create it if it doesn't exist
-            File scratchDir = UserPreferences.getModel().getScratchDirectory();
+            // Get the temporary directory and create it if it doesn't exist
+            File tmpDir = new File("/tmp");
 
-            // Initialize the transcoder output directory to be the scratch directory
-            if (!scratchDir.exists()) {
-                scratchDir.mkdir();
+            // Initialize the transcoder output directory to be the temporary directory
+            if (!tmpDir.exists()) {
+                tmpDir.mkdir();
             }
 
-            // Now, set the transcode directory by default to the scratch directory
+            // Now, set the transcode directory by default to the temporary directory
             // appended with the source file file stem
-            String srcDir = scratchDir + File.separator + ParseUtils.removeFileExtension(clip.getName().toString())
+            String srcDir = tmpDir + File.separator + ParseUtils.removeFileExtension(clip.getName().toString())
                             + File.separator;
 
             // Update the model with the new transcode directory

@@ -19,7 +19,9 @@ To run all tests
 # mvn freehep-nar:nar-integration-test
 
 To recompile the JNI classes and native code
+
 # mvn process-classes
 
 To recompile just the test classes
-mvn test-compile 
+
+# mvn test-compile 

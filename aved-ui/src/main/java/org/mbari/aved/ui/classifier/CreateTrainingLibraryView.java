@@ -47,20 +47,20 @@ import javax.swing.JTextField;
 import javax.swing.ListModel;
 
 public class CreateTrainingLibraryView extends JFrameView {
-    private static final String ID_ADD_BUTTON = "add";    // javax.swing.JButton
 
     /*
      *  Component names in the CreateClassifierTraining form
      * If any of the component name are changed in the Abeille form designer, they
      * should be modified here too
      */
+    private static final String ID_ADD_BUTTON               = "add";               // javax.swing.JButton
     private static final String ID_AVAILBABLE_CLASSES_JLIST = "available";         // javax.swing.JLIST
-    private static final String ID_COLORSPACE_COMBOBOX      = "colorspace";        // ""
-    private static final String ID_INCLUDED_CLASSES_JLIST   = "include";           // ""
-    private static final String ID_NEW_LIBRARY_NAME_TEXT    = "newLibraryName";    // ""
-    private static final String ID_REMOVE_BUTTON            = "remove";            // ""
+    private static final String ID_COLORSPACE_COMBOBOX      = "colorspace";        // javax.swing.JComboBox
+    private static final String ID_INCLUDED_CLASSES_JLIST   = "include";           // javax.swing.JLIST
+    private static final String ID_NEW_LIBRARY_NAME_TEXT    = "newLibraryName";    // javax.swing.JText
+    private static final String ID_REMOVE_BUTTON            = "remove";            // javax.swing.JButton
     private static final String ID_RUN_BUTTON               = "run";               // javax.swing.JButton
-    private static final String ID_STOP_BUTTON              = "stop";              // ""
+    private static final String ID_STOP_BUTTON              = "stop";              // javax.swing.JButton
 
     /* Some frequently accessed variables */
     private final JList      availableList, selectedList;
@@ -121,18 +121,7 @@ public class CreateTrainingLibraryView extends JFrameView {
     }
 
     public void modelChanged(ModelEvent event) {
-        if (event instanceof ClassifierModel.ClassifierModelEvent) {
-            switch (event.getID()) {
-
-            // When the database root directory changes, update the available
-            // classes in the currently selected color space
-            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
-            case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
-                ColorSpace colorSpace = (ColorSpace) colorSpaceComboBox.getSelectedItem();
-                populateAvailableClassList(colorSpace);
-                break;
-            }
-        }
+        
     }
 
     /**

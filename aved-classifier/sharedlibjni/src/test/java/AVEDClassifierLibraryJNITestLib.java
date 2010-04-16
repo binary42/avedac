@@ -1,35 +1,80 @@
-/****************************************************************************/
-/* Copyright © 2005 MBARI.                                                  */
-/* MBARI Proprietary Information. All rights reserved.                      */
-/****************************************************************************/
+/*
+ * @(#)AVEDClassifierLibraryJNITestLib.java
+ * 
+ * Copyright 2010 MBARI
+ *
+ * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
+ * (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ * http://www.gnu.org/copyleft/lesser.html
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+//~--- non-JDK imports --------------------------------------------------------
+
+/** ************************************************************************ */
 import junit.framework.*;
-import org.mbari.aved.classifier.ClassifierLibraryJNI; 
+
+import org.mbari.aved.classifier.ClassModel;
+import org.mbari.aved.classifier.ClassifierLibraryJNI;
+import org.mbari.aved.classifier.TrainingModel;
+
+//~--- JDK imports ------------------------------------------------------------
+
 import java.io.*;
 
-
-public class AVEDClassifierLibraryJNITestLib extends TestCase
-{
+public class AVEDClassifierLibraryJNITestLib extends TestCase {
     public AVEDClassifierLibraryJNITestLib(String name) {
         super(name);
     }
+
     protected void setUp() throws Exception {
         super.setUp();
     }
+
     protected void tearDown() throws Exception {
         super.tearDown();
     }
-    
+
     public void testAVEDClassifierLibraryJNI() throws Exception {
-	int i, iclass;
-        String logfile = System.getProperty("user.home") + "/matlablog.txt";
-	ClassifierLibraryJNI app = new ClassifierLibraryJNI();
-        
-        System.out.println("initialize library");
-        app.initLib(logfile);
-        
-        System.out.println("close library");
-        app.closeLib();
-        
-        System.exit(0);
-    }    
+        String               dbRoot  = System.getProperty("user.home");
+        String               logfile = System.getProperty("user.home") + "/matlablog.txt";
+        ClassifierLibraryJNI app     = new ClassifierLibraryJNI();
+
+        try {
+            System.out.println("initialize library");
+            
+            app.initLib(logfile);
+            
+            System.out.println("Getting training classes");
+
+            TrainingModel tmodels[] = app.get_training_classes(dbRoot);
+
+            for (int i = 0; i < tmodels.length; i++) {
+                System.out.println(tmodels[i].toString());
+            }
+
+            System.out.println("Getting classes");
+
+            ClassModel cmodels[] = app.get_collected_classes(dbRoot);
+
+            for (int i = 0; i < cmodels.length; i++) {
+                System.out.println(cmodels[i].toString());
+            }
+
+            System.out.println("close library");
+            app.closeLib();
+            System.exit(0);
+        } catch (Exception e) {
+            System.out.println("Exception" + e);
+        }
+    }
 }

@@ -3,7 +3,7 @@
 # Author: D. Cline
 # Date: December 28, 2009 - Created
 #
-#exit on error; this will exit this bash script when any command exists with
+#exit on error; this will exit this bash script when any command exits with
 #a non-zero exit code
 set -e
 source aved-classifier/setup.sh

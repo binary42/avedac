@@ -25,7 +25,7 @@ package org.mbari.aved.ui;
 import java.util.Date;
 
 public class ApplicationInfo {
-    private static final String appName = "AVEDAC";
+    private static final String appName = "AVEDac";
 
     static public String getName() {
         return appName;

@@ -9,21 +9,36 @@
 % @param trainingalias name of the training library 
 % @param threshold the probability threshold between 0-1.0
 %        
-function [testfiles, finalclassindex, finalstoreprob] = test_class(kill, dbroot, testclassname, trainingalias, threshold)
+function [testfiles, finalclassindex, finalstoreprob] = test_class(kill, dbroot, testclassname, trainingalias, threshold, colorspace)
+
+GRAY = 1;
+RGB = 2;
+YCBCR = 3;
 
 %test for correct arguments
 if(size(testclassname,1) > 1)
     error('Error - argument %s invalid - can only test one class at a time', testclassname);    
 end
 
+%append the color space to the name to make it unique
+if (colorspace == RGB)
+    rootname = [testclassname '_rgb'];
+elseif (colorspace == GRAY)
+    rootname = [testclassname '_gray'];
+elseif (colorspace == YCBCR)
+    rootname = [testclassname '_ycbcr'];
+else
+    rootname = testclassname;
+end
+        
 fprintf(1,'TESTING STARTING...\n')     
 
 % the test class file - this should already be collected
-data = [testclassname '_data_collection_avljNL3_cl_pcsnew'];
+data = [rootname '_data_collection_avljNL3_cl_pcsnew'];
 testclassdata  = [dbroot '/features/class/' data '.mat'];
-names = [testclassname '_names_collection_avljNL3_cl_pcsnew'];
+names = [rootname '_names_collection_avljNL3_cl_pcsnew'];
 testclassfiles  = [dbroot '/features/class/' names '.mat']; 
-resol = [testclassname '_resol_collection_avljNL3_cl_pcsnew'];
+resol = [rootname '_resol_collection_avljNL3_cl_pcsnew'];
 testclassresol  = [dbroot '/features/class/' resol '.mat']; 
 
 % load and test class data
@@ -89,8 +104,8 @@ testfiles = tcf(indxtst,1);
 
 fprintf(1,'TESTING DONE...\n')     
 
-% save the results as the same name as the test class
-saveresultsname = testclassname;
+% save the results as the same name as the test class and color space appended
+saveresultsname = rootname;
 
 %modified - calculate the accuracy of the test and display the results
 %storage for results and for continued calculation of junk files

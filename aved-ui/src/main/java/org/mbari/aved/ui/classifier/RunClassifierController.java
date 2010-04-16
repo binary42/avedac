@@ -24,7 +24,10 @@ package org.mbari.aved.ui.classifier;
 
 import aved.model.EventObject;
 
+import com.jgoodies.binding.list.ArrayListModel;
+
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
+import org.mbari.aved.classifier.ColorSpace;
 import org.mbari.aved.classifier.TrainingModel;
 import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.appframework.ModelEvent;
@@ -85,6 +88,10 @@ public class RunClassifierController extends AbstractController implements Model
 
             // TODO: need check for valid dbroot directory here
             trainingModel.setDatabaseRoot(dbroot);
+
+            ColorSpace colorSpace = trainingModel.getColorSpace();
+
+            getView().selectColorSpace(colorSpace);
         } catch (Exception ex) {
             Logger.getLogger(RunClassifierController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -106,7 +113,7 @@ public class RunClassifierController extends AbstractController implements Model
 
         if (actionCommand.equals("Run")) {
             if (eventListModel.getSize() == 0) {
-                String                msg = new String("Please open a valid AVED xml file ");
+                String                msg = new String("Please open a valid XML file ");
                 NonModalMessageDialog dialog;
 
                 dialog = new NonModalMessageDialog(getView(), msg);
@@ -124,9 +131,22 @@ public class RunClassifierController extends AbstractController implements Model
                     Logger.getLogger(RunClassifierController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+        } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
+            JComboBox  box           = ((JComboBox) e.getSource());
+            ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem(); 
+            String          lastSelection = UserPreferences.getModel().getLastTrainingLibrarySelection();
+            
+            // Populate the libraries in the new color space
+            getView().populateLibraries(newColorSpace);  
+ 
+            // Set the library 
+            if(getView().selectLibrary(lastSelection) == false)
+                getView().clearClasses();
+            
         } else if (actionCommand.equals("Stop")) {
             if (worker != null) {
                 worker.cancelWorker(false);
+                worker.reset();
             }
         } else if (actionCommand.equals("availLibraryNameComboBoxChanged")) {
             JComboBox box = ((JComboBox) e.getSource());
@@ -143,7 +163,18 @@ public class RunClassifierController extends AbstractController implements Model
         }
     }
 
-    public void modelChanged(ModelEvent event) {}
+    public void modelChanged(ModelEvent event) {
+        if (event instanceof ClassifierModel.ClassifierModelEvent) {
+            switch (event.getID()) {
+
+            // When the database root directory change or the models are updated
+            // reset the color space
+            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
+            case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
+                break;
+            }
+        }
+    }
 
     private class RunClassifierWorker extends MatlabWorker {
         private final ProgressDisplay progressDisplay;
@@ -187,29 +218,24 @@ public class RunClassifierController extends AbstractController implements Model
 
                         // If found a valid frame number
                         if (frameNo >= 0) {
-                            try {
-                                progressDisplay.display("Creating " + "squared image of Object ID: "
-                                                        + event.getObjectId());
+                            progressDisplay.display("Creating " + "squared image of Object ID: " + event.getObjectId());
 
-                                int                 bestFrameNo = frameNo;
-                                EventImageCacheData data        = new EventImageCacheData(event);
+                            int                 bestFrameNo = frameNo;
+                            EventImageCacheData data        = new EventImageCacheData(event);
 
-                                // If the event has a class, then rename
-                                // the event with an appended name - replacing
-                                // all the white spaces with dashes
-                                if (event.getClassName().length() > 0) {
-                                    data.initialize(testDir, event.getClassName(), bestFrameNo);
-                                } else {
-                                    data.initialize(testDir, "", bestFrameNo);
-                                }
+                            // If the event has a class, then rename
+                            // the event with an appended name - replacing
+                            // all the white spaces with dashes
+                            if (event.getClassName().length() > 0) {
+                                data.initialize(testDir, event.getClassName(), bestFrameNo);
+                            } else {
+                                data.initialize(testDir, "", bestFrameNo);
+                            }
 
-                                EventObject object = event.getEventObject(bestFrameNo);
+                            EventObject object = event.getEventObject(bestFrameNo);
 
-                                if (object != null) {
-                                    EventImageCache.createSquaredImageOfEvent(data, object);
-                                }
-                            } catch (Exception ex) {
-                                Logger.getLogger(CollectTestImageWorker.class.getName()).log(Level.SEVERE, null, ex);
+                            if (object != null) {
+                                EventImageCache.createSquaredImageOfEvent(data, object);
                             }
                         }
                     }
@@ -219,17 +245,11 @@ public class RunClassifierController extends AbstractController implements Model
 
                 progressDisplay.display("Collecting test images ...");
 
-                // Run test image collection on the AVED data
+                // Run test image collection on the data
                 // TODO: only do this once, unless the data has changed
                 // because this takes a very long time to run for large
                 // data sets
                 app.collect_tests(this.getCancel(), testDir.getAbsolutePath(), dbRoot, trainingModel.getColorSpace());
-
-                if (isCancelled()) {
-                    reset();
-
-                    return this;
-                }
 
                 int      numEvents              = eventListModel.getSize();
                 int[]    majoritywinnerindex    = new int[numEvents];
@@ -247,12 +267,6 @@ public class RunClassifierController extends AbstractController implements Model
                 int      rows        = columns;
                 String[] columnNames = new String[columns];
                 int[][]  statistics  = new int[rows][columns];
-
-                if (isCancelled()) {
-                    reset();
-
-                    return this;
-                }
 
                 // Create hash map for look-up of the class index by name and
                 // vice-versa
@@ -293,30 +307,26 @@ public class RunClassifierController extends AbstractController implements Model
 
                         // If found a valid frame number
                         if (frameNo >= 0) {
-                            try {
-                                EventObject obj = event.getEventObject(frameNo);
+                            EventObject obj = event.getEventObject(frameNo);
 
-                                // Only populate the classes
-                                // that are know. Skip over all the unknown
-                                // results - these have an index equal to 1
-                                if ((majoritywinnerindex[i] > 1) && (obj != null)) {
-                                    Float p = obj.getPredictedClassProbability();
+                            // Only populate the classes
+                            // that are know. Skip over all the unknown
+                            // results - these have an index equal to 1
+                            if ((majoritywinnerindex[i] > 1) && (obj != null)) {
+                                Float p = obj.getPredictedClassProbability();
 
-                                    if (p == null) {
-                                        p = new Float(0.0f);
-                                    }
-
-                                    String np = mapbyid.get(new Integer(majoritywinnerindex[i] - 1));
-                                    Float  pp = new Float(probability[i]);
-
-                                    // Always choosing the
-                                    // strongest prediction
-                                    if (pp > p) {
-                                        obj.setPredictedClass(np, pp);
-                                    }
+                                if (p == null) {
+                                    p = new Float(0.0f);
                                 }
-                            } catch (Exception ex) {
-                                Logger.getLogger(CollectTestImageWorker.class.getName()).log(Level.SEVERE, null, ex);
+
+                                String np = mapbyid.get(new Integer(majoritywinnerindex[i] - 1));
+                                Float  pp = new Float(probability[i]);
+
+                                // Always choosing the
+                                // strongest prediction
+                                if (pp > p) {
+                                    obj.setPredictedClass(np, pp);
+                                }
                             }
                         }
                     }
@@ -372,6 +382,12 @@ public class RunClassifierController extends AbstractController implements Model
 
                 dialog = new NonModalMessageDialog(getView(), title + " classification finished");
                 dialog.setVisible(true);
+            } catch (RuntimeException ex) {
+                if (isCancelled()) {
+                    reset();
+
+                    return this;
+                }
             } catch (Exception ex) {
                 if (progressDisplayStream != null) {
                     progressDisplayStream.isDone = true;

@@ -61,7 +61,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
     /** True when a popup window is displayed */
     private Boolean                            hasPopup = false;
     private final MouseClickJListActionHandler mouseClickJListActionHandler;
-    private TrainingModel                      trainingLibrary;
+    private TrainingModel                      trainingModel;
     private CreateTrainingLibraryWorker        worker;
 
     /**
@@ -82,8 +82,8 @@ public class CreateTrainingLibraryController extends AbstractController implemen
             // Create a default library
             File dbroot = UserPreferences.getModel().getClassDatabaseDirectory();
 
-            trainingLibrary = new TrainingModel();
-            trainingLibrary.setDatabaseRoot(dbroot);
+            trainingModel = new TrainingModel();
+            trainingModel.setDatabaseRoot(dbroot);
         } catch (Exception ex) {
             Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -140,11 +140,11 @@ public class CreateTrainingLibraryController extends AbstractController implemen
             // iterate through each item, adding to the selected list
             for (int i = 0; i < item.length; i++) {
                 if (item[i].getClass().equals(ClassModel.class)) {
-                    trainingLibrary.addClassModel((ClassModel) item[i]);
+                    trainingModel.addClassModel((ClassModel) item[i]);
                 }
             }
 
-            getView().populateSelectedList(trainingLibrary);
+            getView().populateSelectedList(trainingModel);
         }
     }
 
@@ -161,10 +161,10 @@ public class CreateTrainingLibraryController extends AbstractController implemen
 
                 // remove from selected list - the user has
                 // decided not to select this
-                trainingLibrary.removeClassModel((ClassModel) item[i]);
+                trainingModel.removeClassModel((ClassModel) item[i]);
             }
 
-            getView().populateSelectedList(trainingLibrary);
+            getView().populateSelectedList(trainingModel);
         }
     }
 
@@ -176,9 +176,9 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
             JComboBox  box           = ((JComboBox) e.getSource());
             ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
-            ColorSpace oldColorSpace = trainingLibrary.getColorSpace();
+            ColorSpace oldColorSpace = trainingModel.getColorSpace();
 
-            trainingLibrary.setColorSpace(newColorSpace);
+            trainingModel.setColorSpace(newColorSpace);
             getView().populateAvailableClassList(newColorSpace);
 
             // If a different color space, clear the selected list
@@ -189,6 +189,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         } else if (actionCommand.equals("Stop")) {
             if (worker != null) {
                 worker.cancelWorker(false);
+                worker.reset();
             }
         } else if (actionCommand.equals("Run")) {
             String trainingClassName = getView().getTrainingClassName();
@@ -205,9 +206,9 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                 }
             }
 
-            trainingLibrary.setName(trainingClassName);
+            trainingModel.setName(trainingClassName);
 
-            if (trainingLibrary.getNumClasses() == 0) {
+            if (trainingModel.getNumClasses() == 0) {
                 String message = new String("Training class must have at least one class. "
                                             + "Please select at least one class.");
                 NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), message);
@@ -224,6 +225,8 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                 // If at least one class then create
                 worker = new CreateTrainingLibraryWorker();
                 worker.execute();
+                getView().setRunButton(false);
+                getView().setStopButton(true);
             } catch (Exception ex) {
                 Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex);
 
@@ -236,9 +239,9 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         } else if (actionCommand.equals("availLibraryNameComboBoxChanged")) {
             JComboBox box = ((JComboBox) e.getSource());
 
-            trainingLibrary = (TrainingModel) box.getSelectedItem();
-            getView().selectColorSpace(trainingLibrary.getColorSpace());
-            getView().populateSelectedList(trainingLibrary);
+            trainingModel = (TrainingModel) box.getSelectedItem();
+            getView().selectColorSpace(trainingModel.getColorSpace());
+            getView().populateSelectedList(trainingModel);
         }
     }
 
@@ -246,11 +249,16 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
 
-            // When the database root directory changeso the models are updated
-            // update the available libraries
+            // When the database root directory change or the models are updated
+            // reset the color space
             case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
             case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
-                getView().selectColorSpace(trainingLibrary.getColorSpace());
+                
+                    ColorSpace colorSpace = ColorSpace.RGB;
+                  if (trainingModel != null) 
+                     colorSpace = trainingModel.getColorSpace();
+                  
+                  getView().selectColorSpace(trainingModel.getColorSpace());
 
                 break;
             }
@@ -310,8 +318,8 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         private final ProgressDisplay progressDisplay;
 
         public CreateTrainingLibraryWorker() throws Exception {
-            super(trainingLibrary.getName());
-            this.progressDisplay = new ProgressDisplay(this, "Creating training library " + trainingLibrary.getName());
+            super(trainingModel.getName());
+            this.progressDisplay = new ProgressDisplay(this, "Creating training library " + trainingModel.getName());
         }
 
         @Override
@@ -328,10 +336,10 @@ public class CreateTrainingLibraryController extends AbstractController implemen
 
                 // Format a comma delimited list of class names for the classifier
                 String trainingClasses = new String("");
-                int    numClassModels  = trainingLibrary.getNumClasses();
+                int    numClassModels  = trainingModel.getNumClasses();
 
                 for (int i = 0; i < numClassModels; i++) {
-                    ClassModel m = trainingLibrary.getClassModel(i);
+                    ClassModel m = trainingModel.getClassModel(i);
 
                     if (i != 0) {
                         trainingClasses = trainingClasses + "," + m.getName();
@@ -340,19 +348,24 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                     }
                 }
 
-                app.train_classes(this.getCancel(), trainingClasses, trainingLibrary.getName(),
-                                  trainingLibrary.getDatabaseRootdirectory().toString(),
-                                  trainingLibrary.getColorSpace(), trainingLibrary.getDescription());
+                app.train_classes(this.getCancel(), trainingClasses, trainingModel.getName(),
+                                  trainingModel.getDatabaseRootdirectory().toString(),
+                                  trainingModel.getColorSpace(), trainingModel.getDescription());
                 progressDisplayStream.isDone = true;
                 progressDisplay.getView().dispose();
 
-                // Add to training trainingLibrary when successfully run
-                getModel().addTrainingModel(trainingLibrary);
+                // Add to training trainingModel when successfully run
+                getModel().addTrainingModel(trainingModel);
 
                 NonModalMessageDialog dialog;
 
-                dialog = new NonModalMessageDialog(getView(), trainingLibrary.getName() + " training library finished");
+                dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " training library finished");
                 dialog.setVisible(true);
+             } catch (RuntimeException ex) {
+                if (isCancelled()) {
+                    reset();            
+                    return this;
+                }            
             } catch (Exception ex) {
                 Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex);
 
@@ -362,11 +375,17 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                 dialog.setVisible(true);
                 setProgress(0);
             }
-
+            reset();
+            return this;
+        } 
+    
+        /**
+         * Reset the start/stop buttons and disables the progress display.
+         */
+        public void reset() {
             getView().setRunButton(true);
             getView().setStopButton(false);
-
-            return this;
+            progressDisplay.getView().setVisible(false);
         }
     }
 

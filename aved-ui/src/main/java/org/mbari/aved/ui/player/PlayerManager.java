@@ -51,7 +51,7 @@ import java.util.LinkedList;
 public class PlayerManager implements ModelListener {
     private static final PlayerManager INSTANCE = new PlayerManager();
 
-    /** Maximum number of view to have open */
+    /** Maximum number of view that can be open */
     private final static int MAX_VIEWS = 3;
 
     /** The list of event editors maintained by this manager. */

@@ -24,8 +24,7 @@
     </at>
     <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
    </super>
-   <at name="id">/Users/dcline/aved/ui/aved-ui/src/main/resources/org/mbari/aved/ui/forms/EventPlayer.xml</at>
-   <at name="path">EventPlayer.xml</at>
+   <at name="id">/Users/dcline/Desktop/aved/aved-ui/src/main/resources/org/mbari/aved/ui/forms/EventPlayer.xml</at>
    <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:DEFAULT:NONE</at>
    <at name="colspecs">FILL:PREF:GROW(1.0)</at>
    <at name="components">
@@ -54,7 +53,7 @@
           <at name="classname">com.jeta.forms.components.label.JETALabel</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
-            <at name="width">1024</at>
+            <at name="width">930</at>
             <at name="text">Event Player</at>
             <at name="height">43</at>
             <at name="icon">
@@ -163,7 +162,7 @@
          </at>
          <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
         </super>
-        <at name="id">embedded.7033992</at>
+        <at name="id">embedded.4691014</at>
         <at name="rowspecs">CENTER:DEFAULT:NONE,FILL:DEFAULT:NONE,CENTER:31DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5PX:NONE,CENTER:20DLU:GROW(1.0),CENTER:DEFAULT:GROW(1.0),FILL:5DLU:NONE,TOP:DEFAULT:NONE,TOP:DEFAULT:NONE</at>
         <at name="colspecs">FILL:5PX:NONE,FILL:DEFAULT:NONE,CENTER:DEFAULT:NONE,FILL:5PX:NONE</at>
         <at name="components">
@@ -227,7 +226,7 @@
                <at name="classname">com.jeta.forms.components.separator.TitledSeparator</at>
                <at name="properties">
                 <object classname="com.jeta.forms.store.support.PropertyMap">
-                 <at name="width">993</at>
+                 <at name="width">809</at>
                  <at name="text">Event Summary</at>
                  <at name="height">16</at>
                  <at name="border">
@@ -275,7 +274,7 @@
               </at>
               <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
              </super>
-             <at name="id">embedded.2108273</at>
+             <at name="id">embedded.7563891</at>
              <at name="rowspecs">CENTER:DEFAULT:NONE</at>
              <at name="colspecs">FILL:DEFAULT:NONE,FILL:DEFAULT:NONE,FILL:DEFAULT:NONE,FILL:DEFAULT:NONE,FILL:DEFAULT:NONE</at>
              <at name="components">
@@ -764,9 +763,9 @@
               </at>
               <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
              </super>
-             <at name="id">embedded.110273</at>
+             <at name="id">embedded.6489483</at>
              <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:4DLU:NONE,CENTER:DEFAULT:NONE,CENTER:4DLU:NONE,CENTER:DEFAULT:NONE,CENTER:4DLU:NONE,CENTER:DEFAULT:NONE</at>
-             <at name="colspecs">RIGHT:DEFAULT:NONE,FILL:5PX:NONE,FILL:60PX:NONE,FILL:5PX:NONE,RIGHT:PREF:NONE,FILL:5PX:NONE,FILL:60PX:NONE,FILL:5PX:NONE,RIGHT:105PX:NONE,FILL:5PX:NONE,FILL:100DLU:NONE,FILL:5PX:NONE,RIGHT:DEFAULT:NONE,FILL:5PX:NONE,FILL:100DLU:GROW(1.0)</at>
+             <at name="colspecs">RIGHT:DEFAULT:NONE,FILL:5PX:NONE,FILL:60PX:NONE,FILL:5PX:NONE,RIGHT:PREF:NONE,FILL:5PX:NONE,FILL:60PX:NONE,FILL:5PX:NONE,RIGHT:105PX:NONE,FILL:5PX:NONE,FILL:DEFAULT:NONE,FILL:5PX:NONE,RIGHT:DEFAULT:NONE,FILL:5PX:NONE,FILL:100DLU:GROW(1.0)</at>
              <at name="components">
               <object classname="java.util.LinkedList">
                <item >
@@ -887,7 +886,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -1016,7 +1015,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -1204,7 +1203,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -1272,7 +1271,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -1307,7 +1306,7 @@
                     <at name="classname">com.jeta.forms.components.label.JETALabel</at>
                     <at name="properties">
                      <object classname="com.jeta.forms.store.support.PropertyMap">
-                      <at name="width">196</at>
+                      <at name="width">12</at>
                       <at name="text">-</at>
                       <at name="height">15</at>
                       <at name="border">
@@ -1339,7 +1338,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -1407,7 +1406,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -1475,7 +1474,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -1718,7 +1717,7 @@
                         <at name="name">fill</at>
                        </object>
                       </at>
-                      <at name="name"></at>
+                      <at name="name"/>
                      </object>
                     </at>
                    </object>
@@ -1783,7 +1782,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -1852,7 +1851,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -1915,7 +1914,7 @@
                         <at name="name">fill</at>
                        </object>
                       </at>
-                      <at name="name"></at>
+                      <at name="name"/>
                      </object>
                     </at>
                    </object>
@@ -1975,7 +1974,7 @@
                         <at name="name">fill</at>
                        </object>
                       </at>
-                      <at name="name"></at>
+                      <at name="name"/>
                      </object>
                     </at>
                    </object>
@@ -2007,7 +2006,7 @@
                     <at name="classname">com.jeta.forms.components.label.JETALabel</at>
                     <at name="properties">
                      <object classname="com.jeta.forms.store.support.PropertyMap">
-                      <at name="width">196</at>
+                      <at name="width">12</at>
                       <at name="text">-</at>
                       <at name="height">15</at>
                       <at name="border">
@@ -2039,7 +2038,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -2102,7 +2101,7 @@
                         <at name="name">fill</at>
                        </object>
                       </at>
-                      <at name="name"></at>
+                      <at name="name"/>
                      </object>
                     </at>
                    </object>
@@ -2166,7 +2165,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -2229,7 +2228,7 @@
                         <at name="name">fill</at>
                        </object>
                       </at>
-                      <at name="name"></at>
+                      <at name="name"/>
                      </object>
                     </at>
                    </object>
@@ -2261,7 +2260,7 @@
                     <at name="classname">com.jeta.forms.components.label.JETALabel</at>
                     <at name="properties">
                      <object classname="com.jeta.forms.store.support.PropertyMap">
-                      <at name="width">196</at>
+                      <at name="width">12</at>
                       <at name="text">-</at>
                       <at name="height">15</at>
                       <at name="border">
@@ -2293,7 +2292,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -2356,7 +2355,7 @@
                         <at name="name">fill</at>
                        </object>
                       </at>
-                      <at name="name"></at>
+                      <at name="name"/>
                      </object>
                     </at>
                    </object>
@@ -2388,7 +2387,7 @@
                     <at name="classname">com.jeta.forms.components.label.JETALabel</at>
                     <at name="properties">
                      <object classname="com.jeta.forms.store.support.PropertyMap">
-                      <at name="width">196</at>
+                      <at name="width">12</at>
                       <at name="text">-</at>
                       <at name="height">15</at>
                       <at name="border">
@@ -2420,7 +2419,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -2481,7 +2480,7 @@
                    <at name="name">fill</at>
                   </object>
                  </at>
-                 <at name="name"></at>
+                 <at name="name"/>
                 </object>
                </at>
               </object>
@@ -2549,7 +2548,7 @@
               </at>
               <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
              </super>
-             <at name="id">embedded.6951893</at>
+             <at name="id">embedded.341988</at>
              <at name="rowspecs">CENTER:DEFAULT:NONE</at>
              <at name="colspecs">FILL:DEFAULT:NONE,FILL:DEFAULT:NONE,FILL:DEFAULT:NONE,FILL:DEFAULT:NONE</at>
              <at name="components">
@@ -2894,7 +2893,7 @@
               </at>
               <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
              </super>
-             <at name="id">embedded.6832236</at>
+             <at name="id">embedded.5951728</at>
              <at name="rowspecs">CENTER:DEFAULT:NONE</at>
              <at name="colspecs">FILL:DEFAULT:NONE,FILL:DEFAULT:NONE,FILL:5PX:NONE,FILL:DEFAULT:NONE,FILL:10PX:NONE,FILL:DEFAULT:NONE,FILL:DEFAULT:NONE,FILL:52PX:NONE</at>
              <at name="components">
@@ -2956,7 +2955,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -3084,7 +3083,7 @@
                       <at name="font">
                        <object classname="com.jeta.forms.store.properties.FontProperty">
                         <at name="family">SansSerif</at>
-                        <at name="style">3</at>
+                        <at name="style">1</at>
                         <at name="size">12</at>
                        </object>
                       </at>
@@ -3423,7 +3422,7 @@
          </at>
         </object>
        </at>
-       <at name="name"></at>
+       <at name="name"/>
       </object>
      </at>
     </object>

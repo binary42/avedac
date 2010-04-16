@@ -24,8 +24,7 @@
     </at>
     <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
    </super>
-   <at name="id">/Users/dcline/aved/ui/aved-ui/src/main/resources/org/mbari/aved/ui/forms/Main.xml</at>
-   <at name="path">Main.xml</at>
+   <at name="id">/Users/dcline/Desktop/aved/aved-ui/src/main/resources/org/mbari/aved/ui/forms/Main.xml</at>
    <at name="rowspecs">CENTER:DEFAULT:NONE</at>
    <at name="colspecs">FILL:PREF:GROW(1.0)</at>
    <at name="components">
@@ -47,7 +46,7 @@
          </at>
          <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
         </super>
-        <at name="id">embedded.7412828</at>
+        <at name="id">embedded.13171944</at>
         <at name="rowspecs">TOP:60PX:NONE,FILL:DEFAULT:NONE,FILL:DEFAULT:GROW(1.0)</at>
         <at name="colspecs">FILL:DEFAULT:GROW(1.0)</at>
         <at name="components">
@@ -85,7 +84,7 @@
                       <at name="value">
                        <object classname="com.jeta.forms.store.properties.TabProperty">
                         <at name="name">tab</at>
-                        <at name="title">Event table</at>
+                        <at name="title">Event Table</at>
                         <at name="icon">
                          <object classname="com.jeta.forms.store.properties.IconProperty">
                           <at name="embedded">false</at>
@@ -109,7 +108,7 @@
                            </at>
                            <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
                           </super>
-                          <at name="id">embedded.4184756</at>
+                          <at name="id">embedded.306923</at>
                           <at name="rowspecs">FILL:60PX:GROW(1.0)</at>
                           <at name="colspecs">FILL:DEFAULT:GROW(1.0)</at>
                           <at name="components">
@@ -201,7 +200,7 @@
                       <at name="value">
                        <object classname="com.jeta.forms.store.properties.TabProperty">
                         <at name="name">tab</at>
-                        <at name="title">Event thumbnails</at>
+                        <at name="title">Event Thumbnails</at>
                         <at name="icon">
                          <object classname="com.jeta.forms.store.properties.IconProperty">
                           <at name="embedded">false</at>
@@ -225,7 +224,7 @@
                            </at>
                            <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
                           </super>
-                          <at name="id">embedded.16301947</at>
+                          <at name="id">embedded.8662030</at>
                           <at name="rowspecs">CENTER:DEFAULT:NONE</at>
                           <at name="colspecs">FILL:979PX:NONE</at>
                           <at name="components">
@@ -319,6 +318,7 @@
                  </at>
                  <at name="width">1022</at>
                  <at name="height">152</at>
+                 <at name="toolTipText">Event Table or Thumbnail View</at>
                  <at name="tabCount">2</at>
                  <at name="background" object="color">255,255,255</at>
                  <at name="opaque">true</at>
@@ -368,7 +368,7 @@
               </at>
               <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
              </super>
-             <at name="id">embedded.13982155</at>
+             <at name="id">embedded.15497739</at>
              <at name="rowspecs">CENTER:DEFAULT:GROW(1.0)</at>
              <at name="colspecs">FILL:800PX:GROW(1.0)</at>
              <at name="components">

@@ -54,13 +54,13 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="width">270</at>
-            <at name="height">428</at>
+            <at name="height">309</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>
              </object>
             </at>
-            <at name="toolTipText">Double-click, or push the &gt;&gt; button to select from the available classes</at>
+            <at name="toolTipText">Double-click any available class to add to the library, or push the &gt;&gt; button</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
               <super classname="com.jeta.forms.store.properties.BorderProperty">
@@ -449,6 +449,7 @@
              </object>
             </at>
             <at name="actionCommand">colorSpaceComboBoxChanged</at>
+            <at name="toolTipText">Selects the color space this library will be created in</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
               <super classname="com.jeta.forms.store.properties.BorderProperty">
@@ -689,6 +690,7 @@
             <at name="width">255</at>
             <at name="rows">5</at>
             <at name="height">80</at>
+            <at name="toolTipText">Optional description of the library </at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
               <super classname="com.jeta.forms.store.properties.BorderProperty">
@@ -886,13 +888,13 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="width">300</at>
-            <at name="height">428</at>
+            <at name="height">309</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>
              </object>
             </at>
-            <at name="toolTipText">Double-click, or push the &lt;&lt; button to remove selected classes</at>
+            <at name="toolTipText">Double-click any class to remove from the library, or push the &lt;&lt; button</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
               <super classname="com.jeta.forms.store.properties.BorderProperty">

@@ -96,10 +96,10 @@ public class AVEDClassifierLibraryJNITestClass extends TestCase {
             String   testClassName    = "flat";
 
             System.out.println("Running test class");
-            app.test_class(killFile, eventFilenames, classIndex, storeProbability, testClassName, trainingAlias,
-                           minProbThreshold, dbRoot, ColorSpace.GRAY);
             System.out.println("Testing against training classes:" + trainingSet + "\t with  minimum probability:"
                                + minProbThreshold);
+            app.test_class(killFile, eventFilenames, classIndex, storeProbability, testClassName, trainingAlias,
+                           minProbThreshold, dbRoot, ColorSpace.GRAY);
 
             if ((classIndex != null) && (storeProbability != null)) {
                 for (int i = 0; i < numTestImages; i++) {

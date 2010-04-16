@@ -102,10 +102,8 @@ fi
 # MPICH2 requires an mpd.conf file with a password in it on the host starting the job.
 export MPD_CONF_FILE=$HOME/.mpd.conf
 echo "MPD_SECRETWORD=nanomia" > $MPD_CONF_FILE
+echo "MPD_USE_ROOT_MPD=yes" >> $MPD_CONF_FILE
 chmod 600 $MPD_CONF_FILE
-cmd="mpdboot --rsh=$P4_RSHCOMMAND --file=$machine_file --totalnum=$_condor_nprocs --mpd=$MPDIR/bin/mpd.py"
-echo "Executing $cmd"
-#$cmd
 
 echo "----MPI trace------------"
 mpdtrace
