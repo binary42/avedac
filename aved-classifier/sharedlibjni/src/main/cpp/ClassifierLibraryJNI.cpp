@@ -113,6 +113,7 @@ bool removeFile(JNIEnv *env, const char *filename) {
 //* is reponsible for freeing up the allocated mxArray when done with it.
 //**************************************************************************** 
 mxArray *colorSpaceToMxArray(JNIEnv * env, jobject jcolorSpace) { 
+  
     mxArray *colorSpace = NULL;
     jclass cls = env->GetObjectClass(jcolorSpace);
     jmethodID toStringId = env->GetMethodID(cls, "toString", "()Ljava/lang/String;");
@@ -125,15 +126,15 @@ mxArray *colorSpaceToMxArray(JNIEnv * env, jobject jcolorSpace) {
     ASSERT(colorSpaceString);
     
     if (!strcmp(colorSpaceString, "GRAY"))
-        color = mxCreateDoubleScalar((double) 1);
+        colorSpace = mxCreateDoubleScalar((double) 1);
     else if (!strcmp(colorSpaceString, "RGB"))
-        color = mxCreateDoubleScalar((double) 2);
+        colorSpace = mxCreateDoubleScalar((double) 2);
     else if (!strcmp(colorSpaceString, "YCBCR"))
-        color = mxCreateDoubleScalar((double) 3);
+        colorSpace = mxCreateDoubleScalar((double) 3);
     else
-        color = mxCreateDoubleScalar((double) 1);
+        colorSpace = mxCreateDoubleScalar((double) 1);
 
-    return color;
+    return colorSpace;
 }
 //****************************************************************************
 //* Converts a ColorSpace mxArray to its jfieldID selection
@@ -174,7 +175,7 @@ mxArray *ClassStringToMxArray(JNIEnv *env, jstring str) {
     char *token = NULL;
     char *ptr = (char *) env->GetStringUTFChars(str, 0);
     int numclasses = 0;
-    mxArray *mxTrainingAlias = NULL;
+    mxArray *mxTrn = NULL;
 
     /* Do some checking */
     if (ptr == NULL)
@@ -196,17 +197,17 @@ mxArray *ClassStringToMxArray(JNIEnv *env, jstring str) {
         return NULL;
 
     /* Create cell matrix 1 row wide x length of classes */
-    trn = mxCreateCellMatrix(1, numclasses);
+    mxTrn = mxCreateCellMatrix(1, numclasses);
 
     /* Now stuff training class strings into array*/
     int i = 0;
     ptr = (char *) env->GetStringUTFChars(str, 0);
     token = strtok(ptr, ",\t\n\r");
     for (i = 0; i < numclasses; i++) {
-        mxSetCell(trn, i, mxDuplicateArray(mxCreateString(token)));
+        mxSetCell(mxTrn, i, mxDuplicateArray(mxCreateString(token)));
         token = strtok(NULL, ",\t\n\r");
     }
-    return trn;
+    return mxTrn;
 } 
 //*************************************************************************** 
 // Initializes the matlab library.  Calls matlab application and library 
@@ -320,11 +321,11 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_train
     removeFile(env, killfile);
 
     mxArray *mxDbRoot = mxCreateString(matlabdbdir);
-    mxArray *t = mxCreateString(trainingalias);
-    mxArray *s = mxCreateString(description);
+    mxArray *mxTrainAlias = mxCreateString(trainingalias);
+    mxArray *mxDescription = mxCreateString(description);
     mxArray *mxKillFile= mxCreateString(killfile);
-    mxArray *c = ClassStringToMxArray(env, jclasses);
-    mxArray *colorSpace = NULL;
+    mxArray *mxClassArray = ClassStringToMxArray(env, jclasses);
+    mxArray *mxColorSpace = NULL;
     
      /* Get the color space */
     jclass cls = env->GetObjectClass(jcolorSpace);
@@ -333,21 +334,21 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_train
 
     const char *jcolorSpaceString = env->GetStringUTFChars((jstring) jjcolorSpace, NULL);
     if (!strcmp(jcolorSpaceString, "GRAY"))
-        color = mxCreateDoubleScalar((double) 1);
+        mxColorSpace = mxCreateDoubleScalar((double) 1);
     else if (!strcmp(jcolorSpaceString, "RGB"))
-        color = mxCreateDoubleScalar((double) 2);
+        mxColorSpace = mxCreateDoubleScalar((double) 2);
     else if (!strcmp(jcolorSpaceString, "YCBCR"))
-        color = mxCreateDoubleScalar((double) 3);
+        mxColorSpace = mxCreateDoubleScalar((double) 3);
     else
-        color = mxCreateDoubleScalar((double) 1);
+        mxColorSpace = mxCreateDoubleScalar((double) 1);
 
-    if (c == NULL) {
+    if (mxColorSpace == NULL) {
         ThrowByName(env, "java/lang/IllegalArgumentException", "Error creating training class array");
         return;
     }
 
     try {
-        if (mlfTrain_classes_ui(k, d, color, t, c, s) == false)
+        if (mlfTrain_classes_ui(mxKillFile, mxDbRoot, mxColorSpace, mxTrainAlias, mxClassArray, mxDescription) == false)
             ThrowByName(env, "java/lang/RuntimeException", "Train class failed");
 
     } catch (const mwException &e) {
@@ -357,12 +358,12 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_train
     }
 
     removeFile(env, killfile);
-    mxDestroyArray(d); 
-    mxDestroyArray(color); 
-    mxDestroyArray(k);
-    mxDestroyArray(t);
-    mxDestroyArray(s);
-    mxDestroyArray(c);
+    mxDestroyArray(mxDbRoot); 
+    mxDestroyArray(mxColorSpace); 
+    mxDestroyArray(mxKillFile);
+    mxDestroyArray(mxTrainAlias);
+    mxDestroyArray(mxDescription);
+    mxDestroyArray(mxClassArray);
 }
 
 /************************************************************************************/
@@ -395,14 +396,14 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_colle
 
     DPRINTF("Collecting test data from %s \n", testdir);
 
-    mxArray *t = mxCreateString(testdir);
+    mxArray *mxTestDir = mxCreateString(testdir);
     mxArray *mxDbRoot = mxCreateString(matlabdbdir);
     mxArray *mxKillFile=  mxCreateString(killfile);
-    mxArray *colorSpace = colorSpaceToMxArray(env,jcolorSpace);
+    mxArray *mxColorSpace = colorSpaceToMxArray(env,jcolorSpace);
    
     /* Run the collection*/
     try {
-        if (mlfCollect_tests(1, &mfile, k, t, d, color) == false)
+        if (mlfCollect_tests(1, &mfile, mxKillFile, mxTestDir, mxDbRoot, mxColorSpace) == false)
             ThrowByName(env, "java/lang/RuntimeException", "Collect class failed");
     } catch (const mwException &e) {
         ThrowByName(env, "java/lang/RuntimeException", e.what());
@@ -410,10 +411,10 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_colle
         ThrowByName(env, "java/lang/RuntimeException", "Unknown matlab exception");
     }
 
-    mxDestroyArray(t);
-    mxDestroyArray(d);
-    mxDestroyArray(k);
-    mxDestroyArray(color);
+    mxDestroyArray(mxTestDir);
+    mxDestroyArray(mxDbRoot);
+    mxDestroyArray(mxKillFile);
+    mxDestroyArray(mxColorSpace);
 }
 
 /************************************************************************************/
@@ -559,7 +560,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_run_1
     /* Call the native function that in turn calls the matlab code*/
     try {
         if (mlfRun_tests_ui(4, &mxEventIds, &mxMajorityClassIndex,
-                &mxProbabilityClassIndex, &storeprob, mxKillFile,
+                &mxProbabilityClassIndex, &mxStoreProb, mxKillFile,
                 mxDbRoot, mxColorSpace, mxTestClass, 
                 mxTrainingAlias, mxThreshold) == false)
             ThrowByName(env, "java/lang/RuntimeException", "Run test failed");
@@ -577,7 +578,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_run_1
     jsize len = env->GetArrayLength(jeventIdStringArray);
 
     // Get number of elements in the return storeprob array
-    int rlen = mxGetNumberOfElements(storeprob);
+    int rlen = mxGetNumberOfElements(mxStoreProb);
 
     // Do some check to make sure large enough arrays are specified
     if (len != rlen) {
@@ -618,7 +619,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_run_1
 
     for (int i = 0; i < rlen; i++) {
 
-        cellptr = mxGetCell(storeprob, i);
+        cellptr = mxGetCell(mxStoreProb, i);
         ps = (float) mxGetScalar(cellptr);
         cellptr = mxGetCell(mxMajorityClassIndex, i);
         pm = (int) int32_t(mxGetScalar(cellptr));
@@ -720,7 +721,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_test_
     
     DPRINTF("Testing class %s kill\n", testclass);
 
-    mxArray *eventfilenames = NULL;
+    mxArray *mxEventFilenames = NULL;
     mxArray *mxClassIndex = NULL;
     mxArray *mxStoreProb = NULL; 
     mxArray *mxDbRoot = mxCreateString(matlabdbdir);
@@ -732,8 +733,9 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_test_
     
     /* Call the native function that in turn calls the matlab code*/
     try {
-        if (mlfTest_class(3, &eventfilenames, &classindex,
-                &storeprob, k, d, tst, trn, threshold, mxColorSpace) == false)
+        if (mlfTest_class(3, &mxEventFilenames, &mxClassIndex,
+                &mxStoreProb, mxKillFile, mxDbRoot, mxTestClass, mxTrainingAlias,
+                mxThreshold, mxColorSpace) == false)
             ThrowByName(env, "java/lang/RuntimeException", "Test class failed");
     } catch (const mwException &e) { 
         ThrowByName(env, "java/lang/RuntimeException", e.what());
@@ -744,7 +746,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_test_
     }  
     
     /* Get number of elements in the return storeprob array */
-    int rlen = mxGetNumberOfElements(classindex); 
+    int rlen = mxGetNumberOfElements(mxClassIndex); 
     jsize len = env->GetArrayLength(jprobabilityArray);
     std::stringstream out; 
     
@@ -771,12 +773,12 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_test_
     char *buf;
 
     for (int i = 0; i < rlen; i++) {
-        cellptr = mxGetCell(storeprob, i);
+        cellptr = mxGetCell(mxStoreProb, i);
         ps = (float) mxGetScalar(cellptr);
-        cellptr = mxGetCell(classindex, i);
+        cellptr = mxGetCell(mxClassIndex, i);
         pi = (int) int32_t(mxGetScalar(cellptr));
 
-        cellptr = mxGetCell(eventfilenames, i);
+        cellptr = mxGetCell(mxEventFilenames, i);
 
         /* Find out how long the input string array is. */
         buflen = (mxGetM(cellptr) * mxGetN(cellptr)) + i + 1;
@@ -807,6 +809,8 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_test_
     mxDestroyArray(mxKillFile);
     mxDestroyArray(mxTrainingAlias);
     mxDestroyArray(mxThreshold);
+    mxDestroyArray(mxClassIndex);
+    mxDestroyArray(mxStoreProb);
 }
 //****************************************************************************
 // Converts a mxArray to a char pointer
@@ -997,7 +1001,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
                 env->SetObjectArrayElement(jClassModelArray, j++, jobj);
 
                 mxDestroyArray(mxStructurePtr);                
-                mxDestroyArray(mxClassname);                
+                mxDestroyArray(mxClassName);                
                 mxDestroyArray(mxDbRoot);                
                 mxDestroyArray(mxColorSpace);                
                 mxDestroyArray(mxRawDir);                
@@ -1175,7 +1179,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
                         jstring jcolorSpace = reinterpret_cast<jstring> (env->CallObjectMethod(jcolor, toStringId));                 
                         const char *colorSpaceString = env->GetStringUTFChars((jstring) jcolorSpace, NULL);
      
-                        jsize len = mxGetNumberOfElements(classes);
+                        jsize len = mxGetNumberOfElements(mxClasses);
                         for (int i = 0; i < len; i++) {
                             const mxArray* cellptr = mxGetCell(mxClasses, i);
 
@@ -1216,6 +1220,6 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
 /************************************************************************************/
 JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_get_1collected_1classes
 (JNIEnv * env, jobject obj, jstring jmatlabdb) {
-    return get_collected_mxClasses(env, obj, jmatlabdb);
+    return get_collected_classes(env, obj, jmatlabdb);
 }
 
