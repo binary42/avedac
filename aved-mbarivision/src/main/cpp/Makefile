@@ -1,5 +1,5 @@
 ##### Mbarivision Makefile
-PREFIX      := /usr/local/aved
+PREFIX      := /home/aved/aved
 SALIENCYROOT := /home/aved/aved/saliency
 XERCESCROOT  := /home/aved/aved/Xerces-C_2_7_0
 SRCDIR      := src/
