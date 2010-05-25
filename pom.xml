@@ -78,10 +78,12 @@
             </properties>
         </profile>
     </profiles>
-    <!--<scm>
+    <scm>
+        <!--<connection>scm:hg:${basedir}</connection>
+        <url>http://localhost:8000/aved</url>-->
+	<url>https://avedac.googlecode.com/hg/</url>
         <connection>scm:hg:${basedir}</connection>
-        <url>http://localhost:8000/aved</url>
-    </scm>-->
+    </scm>
     <reporting>
         <plugins>
             <plugin>
