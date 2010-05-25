@@ -200,6 +200,7 @@
                     <preparationGoals>clean install verify</preparationGoals>
                     <goals>clean install javadoc:javadoc assembly:assembly deploy</goals>
                     <arguments>-Prelease</arguments>
+                    <username>danellecline</username>
                 </configuration>
             </plugin>
             <plugin>
