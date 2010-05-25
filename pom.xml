@@ -94,16 +94,16 @@
         </plugins>
     </reporting>
     <distributionManagement>
-        <repository>
+        <!--<repository>
             <id>google</id>
             <name>External Repository</name>
             <url>hg:https://avedac.googlecode.com/hg/</url>
-        </repository>
-        <!--<repository>
+        </repository>-->
+        <repository>
             <id>internal</id>
             <name>Internal Release Repository</name>
             <url>dav:http://seaspray.shore.mbari.org:8082/archiva/repository/internal/</url>
-        </repository>-->
+        </repository>
         <snapshotRepository>
             <id>snapshots</id>
             <name>Internal Snapshot Repository</name>
