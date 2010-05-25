@@ -14,5 +14,5 @@
 \.*.flag$ 
 \.nar$
 \.hprof$
-\AVEDac$
-\matlablog$
+\AVEDac.$
+\matlablog$.$

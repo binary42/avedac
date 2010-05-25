@@ -13,13 +13,6 @@ Table of Contents
 
 1. System Requirements
 -----------------------------------------------------------------------------
-For information about the system requirements and installation steps
-see the wiki documentation.
-
-This is a overview of the requirements. However, it is highly recommended to see
-the wiki documentation for a more detailed guide to the requirements
-and installation steps. This readme.txt is not updated as frequently as
-the wiki pages.
 
 ****Important ****
 This not a a pure Java software package. This software includes C++, Matlab,
@@ -86,7 +79,7 @@ David and Lucile Packard Foundation.
 	3.3. Modify the pom.xml 
 
 	     Edit the pom.xml in the same directory as this README.txt
-	     Modify the following properties to suit your installation:
+	     Modify the following properties to match your installation:
 	      <installPath>${HOME}/aved</installPath>
 	      <xercesRoot>${HOME}/aved/Xerces-2_7_0</xercesRoot>
               <saliencyRoot>${HOME}/aved/saliency</saliencyRoot>
@@ -103,7 +96,8 @@ David and Lucile Packard Foundation.
 -----------------------------------------------------------------------------
 
 Currently aved-mbarivision and aved-pmbarivision will not build on MacOSX.
-To build everything else: 
+However, the graphical interface and classifier code will build fine on MacOSX.
+To build: 
 
    	4.1. Modify the environment variables
 
@@ -120,11 +114,11 @@ To build everything else:
 	      <installPath>${HOME}/aved</installPath>
               <matlabRoot>${MATLAB_ROOT}</matlabRoot>
 
-	     Comment out the aved-mbarivision/aved-pmbarivision modules
+	     Comment out the aved-mbarivision/aved-pmbarivision modules.
+             This will remove these modules from the build
 
 	     <!--<module>aved-mbarivision</module>-->
-	     <!--<module>aved-pmbarivision</module>-->
-
+	     <!--<module>aved-pmbarivision</module>--> 
 
 	4.3. Installation command  
 
@@ -140,7 +134,8 @@ To build everything else:
 		$ cd aved-ui
 		$ mvn package osxappbundle:bundle
 
-             The zipped package is located in src/aved-ui/target
+             The zipped package is located in src/aved-ui/target.
+             Double-click to unzip then run the MacOSX package
 
 5.  Developer Notes
 -----------------------------------------------------------------------------
@@ -152,15 +147,14 @@ To build everything else:
 
 	5.2. Creating a release
 
-	    5.2.2.  Increment the version (version displayed in the "About"
-    	    	    box in the graphical user interface)
+	    5.2.2.  Increment the version displayed in the "About"
+    	    	    box in the graphical user interface
 
                         $ source ./aved-classifier/setup
 			$ mvn generate-sources  -P version-increment
 
 	    5.2.3.  Create a release
 
-                        $ source ./aved-classifier/setup
 			$ ./release
  
 	5.3. Speeding up your build time
