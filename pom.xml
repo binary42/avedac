@@ -96,6 +96,11 @@
         </plugins>
     </reporting>
     <distributionManagement>
+        <repository>
+            <id>google</id>
+            <name>External Repository</name>
+            <url>hg:https://avedac.googlecode.com/hg/</url>
+        </repository>
         <!--<repository>
             <id>google</id>
             <name>External Repository</name>
@@ -229,7 +234,7 @@
     </build>
     <modules>
         <!--<module>aved-pmbarivision</module>-->
-        <module>aved-mbarivision</module>
+        <!--<module>aved-mbarivision</module>-->
         <!--<module>aved-classifier</module>
         <module>aved-mbarivision-api</module>
         <module>aved-ui</module>-->
