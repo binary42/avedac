@@ -10,4 +10,4 @@ source aved-classifier/setup
 echo "Check in the code"
 hg commit -m "final check-in before release"
 echo "Prepare the release"
-mvn -B -Dmaven.skip.test=true -Dresume=false install release:clean clean release:prepare release:perform
+mvn -B -Dmaven.skip.test=true -Dresume=false install release:clean clean release:prepare release:perform -DconnectionURL=scm:hg:https://avedac.googlecode.com/hg/

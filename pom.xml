@@ -78,10 +78,10 @@
             </properties>
         </profile>
     </profiles>
-    <scm>
+    <!--<scm>
         <connection>scm:hg:${basedir}</connection>
         <url>http://localhost:8000/aved</url>
-    </scm>
+    </scm>-->
     <reporting>
         <plugins>
             <plugin>
@@ -98,7 +98,7 @@
             <id>google</id>
             <name>External Repository</name>
             <url>hg:https://avedac.googlecode.com/hg/</url>
-        </repository>-->
+        </repository>
         <repository>
             <id>internal</id>
             <name>Internal Release Repository</name>
@@ -108,7 +108,7 @@
             <id>snapshots</id>
             <name>Internal Snapshot Repository</name>
             <url>dav:http://seaspray.shore.mbari.org:8082/archiva/repository/snapshots/</url>
-        </snapshotRepository>
+        </snapshotRepository>-->
     </distributionManagement>
     <repositories>
         <!--  Google code MBARI Maven Repository -->
