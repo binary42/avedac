@@ -126,42 +126,53 @@ public class ClassifierController extends AbstractController implements ModelLis
         /**
          * When the classifier training image directory changes, repopulate
          * the persistent list of classes. This requires storing the class information
-         * in the UserPreferences for now, until this information is actually put
+         * in a directory for now, until this information is actually put
          * in a real database
          */
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
             case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
-                try {
-                    ClassifierLibraryJNI library = Classifier.getLibrary();
+               try {
+                    //ClassifierLibraryJNI library = Classifier.getLibrary();
                     File                 dbDir   = UserPreferences.getModel().getClassDatabaseDirectory();
                     String               dbRoot  = dbDir.getAbsolutePath();
 
+                    // Create the collected class directory if it doesn't exist
+                    File featuresDir = new File(dbRoot + "/features/class");
+                    if (!featuresDir.exists()) {
+                       featuresDir.mkdir();
+                    }
+
                     // Get the collected classes in this root directory
-                    ClassModel[]    classes = library.get_collected_classes(dbRoot);
+                    /*ClassModel[]    classes = library.get_collected_classes(dbRoot);
                     ClassifierModel model   = getModel();
 
                     if (classes != null) {
                         for (int i = 0; i < classes.length; i++) {
                             model.addClassModel(classes[i]);
                         }
+                    } */
+
+                    // Create the training class directory if it doesn't exist
+                    File trainingDir = new File(dbRoot + "/training/class");
+                    if (!trainingDir.exists()) {
+                       trainingDir.mkdir();
                     }
 
                     // Get the training classes in this root directory
-                    TrainingModel[] training = library.get_training_classes(dbRoot);
+                    /*TrainingModel[] training = library.get_training_classes(dbRoot);
 
-                    if (classes != null) {
+                    if (training != null) {
                         for (int i = 0; i < training.length; i++) {
                             getModel().addTrainingModel(training[i]);
                         }
-                    }
+                    }*/
                 } catch (RuntimeException ex) {
                     Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-                    return;
-                } catch (Exception ex) {
+                     
+                 } catch (Exception ex) {
                     Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
                 break;
             }
         }

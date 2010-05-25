@@ -25,7 +25,7 @@
     <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
    </super>
    <at name="id">/Users/dcline/aved/ui/aved-ui/src/main/resources/org/mbari/aved/ui/forms/Summary.xml</at>
-   <at name="path">Summary.xml</at>
+   <at name="path">org/mbari/aved/forms/Summary.xml</at>
    <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:29PX:NONE,CENTER:29PX:NONE</at>
    <at name="colspecs">FILL:DEFAULT:NONE,FILL:PREF:NONE,FILL:4PX:NONE,FILL:225PX:GROW(1.0),FILL:4PX:NONE,FILL:PREF:NONE,FILL:4PX:NONE,FILL:125PX:NONE,FILL:4PX:NONE,FILL:DEFAULT:GROW(1.0),FILL:4PX:NONE,FILL:PREF:NONE</at>
    <at name="components">

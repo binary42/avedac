@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import com.jgoodies.binding.list.ArrayListModel;
 
 import org.mbari.aved.classifier.ClassModel;
@@ -42,22 +38,18 @@ import java.util.Iterator;
  * @author dcline
  */
 public class ClassifierModel extends AbstractModel {
-    public static final String DBROOT = "databaseRoot";
 
+    public static final String DBROOT = "databaseRoot";
     // a list of available models under this database root
-    private ArrayListModel classModelList             = new ArrayListModel();
-    private ArrayListModel trainingModelList          = new ArrayListModel();
-    private File           lastClassTrainingDirectory = new File("");
-    private File           dbrootDirectory            = new File("");
+    private ArrayListModel classModelList = new ArrayListModel();
+    private ArrayListModel trainingModelList = new ArrayListModel();
+    private File lastClassTrainingDirectory = new File("");
+    private File dbrootDirectory = new File("");
 
     /**
-     * Constructor. Initializes frequently accessed variables.
+     * Constructor.
      */
     public ClassifierModel() {
-        UserPreferencesModel m = UserPreferences.getModel();
-
-        lastClassTrainingDirectory = m.getClassTrainingImageDirectory();
-        dbrootDirectory            = m.getClassDatabaseDirectory();
     }
 
     /**
@@ -72,23 +64,24 @@ public class ClassifierModel extends AbstractModel {
 
     /**
      * Sets the class training image directory
+     * 
      * @param dir the training image directory
      */
-    public void setClassTrainingImageDirectory(File dir) {
-        lastClassTrainingDirectory = dir;
+    public void setClassTrainingImageDirectory(File directory) { 
         UserPreferences.getModel().setClassTrainingImageDirectory(lastClassTrainingDirectory);
         UserPreferences.getModel().clearDockingImagesDirectories();
-
-        ClassifierModelEvent e = new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_CLASS_DIR_UPDATED,
-                                     "setTrainingClassDirectory" + dir.toString());
-
-        notifyChanged(e);
+        if (changedName(lastClassTrainingDirectory, directory)) {
+            lastClassTrainingDirectory = directory;
+            ClassifierModelEvent e = new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_CLASS_DIR_UPDATED,
+                    "setTrainingClassDirectory" + directory.toString()); 
+            notifyChanged(e);
+        } 
     }
 
     /**
      * Get the list of already trained models. Returns an empty
      * ArrayListModel if no models exist, otherwise returns
-     * the available training models in the database root directory
+     * the available training models
      *
      * @return the list of already trained models
      */
@@ -101,10 +94,27 @@ public class ClassifierModel extends AbstractModel {
      * @param f the root directory to set
      */
     public void setDatabaseRoot(File directory) {
-        dbrootDirectory = directory;
         UserPreferences.getModel().setClassDatabaseDirectory(directory);
-        notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED,
-                dbrootDirectory.toString()));
+        if (changedName(dbrootDirectory, directory)) {
+            dbrootDirectory = directory;
+            notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED,
+                    dbrootDirectory.toString()));
+        }
+    }
+
+    /**
+     * Null safe check if the files have the same
+     * @returns True is the files are the same
+     */
+    private static Boolean changedName(File a, File b) {
+        String oldfile = ((a != null)
+                ? a.toString()
+                : new String(""));
+        String newfile = ((b != null)
+                ? b.toString()
+                : new String(""));
+
+        return !oldfile.equals(newfile);
     }
 
     /**
@@ -121,7 +131,7 @@ public class ClassifierModel extends AbstractModel {
      * @param model class model to add
      */
     public void addClassModel(ClassModel model) {
-        checkClassModel(model);  
+        checkClassModel(model);
         classModelList.add(model);
         notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASS_MODELS_UPDATED, model.getName()));
     }
@@ -131,7 +141,7 @@ public class ClassifierModel extends AbstractModel {
      * @param model training model to add
      */
     public void addTrainingModel(TrainingModel model) {
-        checkTrainingModel(model);  
+        checkTrainingModel(model);
         trainingModelList.add(model);
         notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODELS_UPDATED, model.getName()));
     }
@@ -147,7 +157,7 @@ public class ClassifierModel extends AbstractModel {
         while (i.hasNext()) {
             ClassModel model = i.next();
 
-            if (newModel.getName().equals(model.getName()) 
+            if (newModel.getName().equals(model.getName())
                     && newModel.getColorSpace().equals(model.getColorSpace())
                     && newModel.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
                     && newModel.getDescription().equals(model.getDescription())
@@ -173,12 +183,12 @@ public class ClassifierModel extends AbstractModel {
             if (m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())
                     && m.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
                     && m.getDescription().equals(model.getDescription())) {
-                trainingModelList.remove(model); 
+                trainingModelList.remove(model);
                 break;
             }
         }
-     }
-    
+    }
+
     /**
      * Checks if the class model exists and delete it if so
      * @param m the class model to check 
@@ -192,12 +202,11 @@ public class ClassifierModel extends AbstractModel {
             if (m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())
                     && m.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
                     && m.getDescription().equals(model.getDescription())) {
-                classModelList.remove(model); 
+                classModelList.remove(model);
                 break;
             }
         }
-     }
- 
+    }
 
     /**
      * Gets the class model with the given class name.
@@ -238,9 +247,9 @@ public class ClassifierModel extends AbstractModel {
          * Indicates that the class model has changed
          */
         public static final int CLASSIFIER_DBROOT_MODEL_CHANGED = 0;
-        public static final int CLASS_MODELS_UPDATED            = 2;
-        public static final int TRAINING_CLASS_DIR_UPDATED      = 1;
-        public static final int TRAINING_MODELS_UPDATED         = 3;
+        public static final int CLASS_MODELS_UPDATED = 2;
+        public static final int TRAINING_CLASS_DIR_UPDATED = 1;
+        public static final int TRAINING_MODELS_UPDATED = 3;
 
         /**
          * Constructor for this custom ModelEvent. Basically just like ModelEvent.

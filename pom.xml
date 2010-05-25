@@ -7,6 +7,77 @@
     <version>0.4.3-SNAPSHOT</version>
     <name>aved</name>
     <url>http://maven.apache.org</url>
+    <profiles>
+        <profile>
+            <id>Linux</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <os>
+                    <name>Linux</name>
+                    <arch>i386</arch>
+                </os>
+            </activation>
+            <properties>
+                <!-- The default install path for the mbarivision executable
+                This defaults to the subdir "aved" in the users home directory
+                because this is a safe place for first time installation.
+
+                For system-wide use change this to e.g. /usr/local and rerun
+                maven install (or the make install from cmd-line) as an
+                administrative user.-->
+                <installPath>${HOME}/aved</installPath>
+
+                <!-- The path to the Apache Xerces code. Change this
+                to the correct location if needed. -->
+                <xercesRoot>${HOME}/aved/Xerces-2_7_0</xercesRoot>
+
+                <!-- The path to the iLab Neuromorphic code. Change this
+                to the correct location if needed.-->
+                <saliencyRoot>${HOME}/aved/saliency</saliencyRoot>
+
+                <!-- The location of the Matlab install. The matlab license
+                should include both the image processing libraries and
+                the matlab runtime compiler. MATLAB_ROOT must be setup external to
+                maven as it is needed to setup the correct DYLD_LIBRARY_PATH
+                and XAPPLRESDIR environment variables. Since Maven does
+                no explicity set environment variables, this is configured
+                outside of this pom.xml but referenced here becuase it is
+                needed in the aved-classifier modules -->
+                <matlabRoot>${MATLAB_ROOT}</matlabRoot>
+
+            </properties>
+        </profile>
+        <profile>
+            <id>Mac</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <os>
+                    <name>MacOSX</name>
+                    <arch>i386</arch>
+                </os>
+            </activation>
+            <properties>
+                <!-- The default install path for the mbarivision executable
+                This defaults to the subdir "aved" in the users home directory
+                because this is a safe place for first time installation.
+
+                For system-wide use change this to /usr/local/aved and rerun
+                maven install (or the make install from cmd-line) as an
+                administrative user.-->
+                <installPath>${HOME}/aved</installPath>
+
+                <!-- The location of the Matlab install. The matlab license
+                should include both the image processing libraries and
+                the matlab runtime compiler. MATLAB_ROOT must be setup external to
+                maven as it is needed to setup the correct DYLD_LIBRARY_PATH
+                and XAPPLRESDIR environment variables. Since Maven does
+                no explicity set environment variables, this is configured
+                outside of this pom.xml but referenced here becuase it is
+                needed in the aved-classifier modules -->
+                <matlabRoot>${MATLAB_ROOT}</matlabRoot>
+            </properties>
+        </profile>
+    </profiles>
     <scm>
         <connection>scm:hg:${basedir}</connection>
         <url>http://localhost:8000/aved</url>
@@ -24,6 +95,11 @@
     </reporting>
     <distributionManagement>
         <repository>
+            <id>google</id>
+            <name>External Repository</name>
+            <url>hg:https://avedac.googlecode.com/hg/</url>
+        </repository>
+        <repository>
             <id>internal</id>
             <name>Internal Release Repository</name>
             <url>dav:http://seaspray.shore.mbari.org:8082/archiva/repository/internal/</url>
@@ -35,25 +111,25 @@
         </snapshotRepository>
     </distributionManagement>
     <repositories>
-        <!-- Use MBARI's Archiva for dependency management -->
+        <!--  Google code MBARI Maven Repository -->
         <repository>
-            <id>snapshots</id>
-            <name>Archiva Managed Snapshot Repository</name>
-            <url>http://seaspray.shore.mbari.org:8082/archiva/repository/snapshots/</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
+            <id>mbari-maven-repository</id>
+            <name>MBARI Maven Repository</name>
+            <url>http://mbari-maven-repository.googlecode.com/svn/repository/</url>
+        </repository>
+        <repository>
+            <id>codehaus</id>
+            <name>Codehaus Snapshot Repository</name>
+            <url>http://snapshots.repository.codehaus.org/</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
         </repository>
         <repository>
-            <id>internal</id>
-            <name>Archiva Managed Internal Repository</name>
-            <url>http://seaspray.shore.mbari.org:8082/archiva/repository/internal</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
+            <id>central</id>
+            <name>Maven Repository Switchboard</name>
+            <layout>default</layout>
+            <url>http://repo1.maven.org/maven2</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
@@ -66,49 +142,48 @@
                 <enabled>true</enabled>
             </releases>
             <snapshots>
-                <enabled>true/</enabled>
+                <enabled>true</enabled>
             </snapshots>
         </repository>
-        <repository>
-            <id>freehep-maven</id>
-            <name>Maven FreeHEP</name>
-            <url>http://java.freehep.org/maven2</url>
+         <repository>
+            <id>maven-snapshots</id>
+            <name>Dun's Maven Snapshot Repository</name>
+            <url>http://duns.github.com/maven-snapshots</url>
         </repository>
-    </repositories>
+    </repositories> 
     <pluginRepositories>
         <pluginRepository>
-            <id>freehep-maven</id>
-            <name>Maven FreeHEP</name>
-            <url>http://java.freehep.org/maven2</url>
+            <id>maven-snapshots</id>
+            <name>Dun's Maven Snapshot Repository</name>
+            <url>http://duns.github.com/maven-snapshots</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>central</id>
+            <name>Maven Plugin Repository</name>
+            <url>http://repo1.maven.org/maven2</url>
+            <layout>default</layout>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <updatePolicy>never</updatePolicy>
+            </releases>
         </pluginRepository>
     </pluginRepositories>
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.mbari.aved</groupId>
-                <artifactId>mbarivision</artifactId>
-                <version>0.4.1-SNAPSHOT</version>
+                <groupId>org.mbari.aved.mbarivision</groupId>
+                <artifactId>api</artifactId>
+                <version>0.4.3-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>org.mbari.aved</groupId>
                 <artifactId>ui</artifactId>
-                <version>0.4.1-SNAPSHOT</version>
+                <version>0.4.3-SNAPSHOT</version>
             </dependency>
         </dependencies>
-    </dependencyManagement>
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>2.0-beta-1</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+    </dependencyManagement> 
     <build>
         <plugins>
             <plugin>
@@ -123,6 +198,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3</version>
                 <configuration>
                     <source>1.5</source>
                     <target>1.5</target>
@@ -150,9 +226,10 @@
         </plugins>
     </build>
     <modules>
-        <module>aved-classifier</module>
+        <!--<module>aved-pmbarivision</module>-->
         <module>aved-mbarivision</module>
-        <module>aved-pmbarivision</module>
+        <module>aved-classifier</module>
+        <module>aved-mbarivision-api</module>
         <module>aved-ui</module>
     </modules>
 </project>

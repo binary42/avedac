@@ -95,7 +95,7 @@ public class ConceptTreePanel extends JPanel {
 
             Thread kbThread = new Thread() {
                 public void run() {
-                    System.out.println("Loading concept tree");
+                    /*System.out.println("Loading concept tree");
                     treePanel = new SearchableConceptTreePanel();
 
                     Concept rootConcept = null;
@@ -132,7 +132,7 @@ public class ConceptTreePanel extends JPanel {
                             System.out.println("finished");
                             isInitialized = true;
                         }
-                    });
+                    });*/
                 }
             };
 

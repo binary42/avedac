@@ -40,7 +40,7 @@ import java.util.logging.Logger;
 import java.util.prefs.*;
 
 /**
- * Singleton class that contains user preferences for the AVED application
+ * Singleton class that contains user preferences for the application
  *
  * @author  Danelle Cline
  */
@@ -113,7 +113,7 @@ public final class UserPreferencesModel extends AbstractModel {
         preferences = Preferences.userRoot().node("/org/mbari/aved/editor");
 
         // FOR DEBUGGING ONLY
-        // dump(preferences);
+        dump(preferences);
         VideoPlayoutMode.initialize();
 
         ArrayList<String> list = getNodeValues(TAG_LIST);
@@ -673,7 +673,7 @@ public final class UserPreferencesModel extends AbstractModel {
         String lcOSName = System.getProperty("os.name").toLowerCase();
 
         // If mac, Set Aqua (or future default Apple VM platform look-and-feel
-        if (lcOSName.startsWith("mac os x")) {
+        if (lcOSName.startsWith("mac os x") || lcOSName.startsWith("linux")) {
             return new File("/var/tmp");
         } else {
             if (System.getenv("PWD") != null) {

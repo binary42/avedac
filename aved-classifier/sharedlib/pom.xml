@@ -12,25 +12,55 @@
     <version>0.4.3-SNAPSHOT</version>
     <name>AVED classifier Matlab shared library</name>
     <url>http://www.mbari.org</url>
-    <repositories>
-        <repository>
-            <id>freehep-maven</id>
-            <name>Maven FreeHEP</name>
-            <url>http://java.freehep.org/maven2</url>
-        </repository>
-    </repositories>
+    <profiles>
+        <profile>
+            <id>Linux</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <os>
+                    <name>Linux</name>
+                    <arch>i386</arch>
+                </os>
+            </activation>
+            <properties>
+                <!-- The shared library file extension for this platform-->
+                <sharedExtension>so</sharedExtension>
+
+                <!-- The nar library directory -->
+                <narLibDir>nar/lib/i386-Linux-g++/shared</narLibDir>
+            </properties>
+        </profile>
+        <profile>
+            <id>Mac</id>
+            <activation>
+                <os>
+                    <name>MacOSX</name>
+                    <arch>i386</arch>
+                </os>
+            </activation>
+            <properties>
+                <!-- The shared library file extension for this platform-->
+                <sharedExtension>dylib</sharedExtension>
+
+                <!-- The nar library directory -->
+                <narLibDir>nar/lib/i386-MacOSX-g++/shared</narLibDir>
+            </properties>
+        </profile>
+    </profiles>
     <build>
         <plugins>
-            <plugin> 
-                  <!-- This uses the freehep-nar plugin to package up the matlab 
+            <plugin>
+                <!-- This uses the nar plugin to package up the matlab
                   generated library into a nar file. It ignores all c code
                   and is simply used for convenience to package up
-                  native code and attach it to a jar file -->
-                <groupId>org.freehep</groupId>
-                <artifactId>freehep-nar-plugin</artifactId> 
+                  native code and attach it to a jar file. This currently
+                  only works on Linux or MacOSX. Windows is not supported.-->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-nar-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
                     <classifiers>
+                        <classifier>i386-Linux-g++</classifier>
                         <classifier>i386-MacOSX-g++</classifier>
                     </classifiers>
                     <libraries>
@@ -39,16 +69,16 @@
                             <linkCPP>true</linkCPP>
                         </library>
                     </libraries>
-                    <!--exclude the files generated from the mcc matlab compiler -->
+                     <!--exclude the files generated from the mcc matlab compiler -->
                     <c>
                         <excludes>
                             <exclude>**/libAVEDClassifierMatlab_mcc_component_data.c</exclude>
                             <exclude>**/libAVEDClassifierMatlab.c</exclude>
                         </excludes>
-                    </c> 
+                    </c>
                 </configuration>
             </plugin>
-            <!-- Since the freehep-nar cannot handle matlab compilation this
+            <!-- Since the maven-nar plugin cannot handle matlab compilation this
             mojo is used to execute commands needed to compile the
             matlab modules into a shared library. It is also used to
             install the shared library to this system.-->
@@ -57,7 +87,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                         <!--Creates the nar directory for storing this shared 
+                        <!--Creates the nar directory for storing this shared
                          library. This is used to store the shared library in
                          the appropriate nar directory for inclusion in the
                          nar packaging phase. -->
@@ -75,7 +105,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <!-- Runs the matlab compiler to create a sha/red 
+                        <!-- Runs the matlab compiler to create a shared
                         library in the directory from exec-mcc-one above-->
                         <id>exec-mcc-two</id>
                         <phase>compile</phase>
@@ -85,7 +115,7 @@
                         <configuration>
                             <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                             <executable>${basedir}/src/main/native/matlab/mcc-wrapper</executable>
-                            <!-- The ${version} is left off from the -W argument 
+                            <!-- The ${version} is left off from the -W argument
                             because the format isn't supported in the mcc compiler.
                             Adding versioning is handled in the install phases -->
                             <arguments>
@@ -94,10 +124,13 @@
                             </arguments>
                         </configuration>
                     </execution>
-                     <execution>
-                           <!--copy the header files from the matlab compile
-                           to a directory that will be included the header 
-                           file in the nar noarch package -->
+                    <execution>
+                        <!--copy the header files from the matlab compile
+                           to a directory that will be included the header
+                           file in the nar noarch package. only do this if
+                           the header has changed size - otherwise this
+                           will cause the release build to fail because
+                           it generates a new file on every build.-->
                         <id>exec-mcc-install-header</id>
                         <phase>compile</phase>
                         <goals>
@@ -107,7 +140,7 @@
                             <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                             <executable>${basedir}/src/main/scripts/execute</executable>
                             <arguments>
-                                <cmdlineArguments>cp -f libsharedlib.h ${basedir}/src/main/include</cmdlineArguments>
+                                <cmdlineArguments> if [ $(stat -c%s "libsharedlib.h") -ne $(stat -c%s "${basedir}/src/main/include/libsharedlib.h") ] ; then cp libsharedlib.h ${basedir}/src/main/include</cmdlineArguments>
                             </arguments>
                         </configuration>
                     </execution>
@@ -137,7 +170,7 @@
                             <workingDirectory>${basedir}/target</workingDirectory>
                             <executable>${basedir}/src/main/scripts/execute</executable>
                             <arguments>
-                                <cmdlineArguments>install -d ${installPath}</cmdlineArguments>
+                                <cmdlineArguments>install -d ${installPath}/lib</cmdlineArguments>
                             </arguments>
                         </configuration>
                     </execution>
@@ -152,40 +185,23 @@
                             <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                             <executable>${basedir}/src/main/scripts/execute</executable>
                             <arguments>
-                                <cmdlineArguments>install lib${artifactId}-${version}.${sharedExtension} ${installPath}</cmdlineArguments>
+                                <cmdlineArguments>install lib${artifactId}-${version}.${sharedExtension} ${installPath}/lib</cmdlineArguments>
                             </arguments>
                         </configuration>
                     </execution>
                     <execution>
-                         <!-- Installs a symbolic link to the versioned library-->
+                        <!-- Installs a symbolic link to the versioned library-->
                         <id>exec-install-three</id>
                         <phase>install</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <workingDirectory>${installPath}</workingDirectory>
+                            <workingDirectory>${installPath}/lib</workingDirectory>
                             <executable>${basedir}/src/main/scripts/execute</executable>
                             <arguments>
                                 <!-- Adds a soft link to the shared library-->
                                 <cmdlineArguments>ln -sf lib${artifactId}-${version}.${sharedExtension} lib${artifactId}.${sharedExtension}</cmdlineArguments>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                           <!--copy the header files from the matlab compile
-                           to a directory that will be included the header 
-                           file in the nar noarch package -->
-                        <id>exec-install-four</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
-                            <executable>${basedir}/src/main/scripts/execute</executable>
-                            <arguments>
-                                <cmdlineArguments>rm -f ${basedir}/src/main/include/libsharedlib.h</cmdlineArguments>
                             </arguments>
                         </configuration>
                     </execution>

@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
 import org.mbari.aved.ui.ApplicationModel;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
@@ -45,13 +41,12 @@ import javax.swing.JFrame;
  * @author dcline
  */
 public class Classifier {
-    public static final boolean         IS_DEBUG_MODE = false;
-    private static boolean              isInitialized = false;
-    private static String               sync          = "sync";
-    private static InputStreamReader    isr;
+
+    private final static String sync = "sync";
+    private static InputStreamReader isr;
     private static ClassifierLibraryJNI jniLibrary;
-    private final ClassifierController  controller;
-    private final Preferences           settings;
+    private final ClassifierController controller;
+    private final Preferences settings;
 
     public Classifier(ApplicationModel model) {
         controller = new ClassifierController(model.getEventListModel(), model.getSummaryModel());
@@ -108,8 +103,8 @@ public class Classifier {
      *
      * @return the InputStreamReader
      */
-    static InputStreamReader getInputStreamReader() {
-        return isr;
+    static InputStreamReader getInputStreamReader() { 
+       return isr;
     }
 
     /**
@@ -123,25 +118,26 @@ public class Classifier {
      * @return a {@link org.mbari.aved.classifier.ClassifierLibraryJNI} singleton
      */
     public static ClassifierLibraryJNI getLibrary() throws Exception {
-        synchronized (sync) {
-            if (isInitialized == false) {
-                if (!IS_DEBUG_MODE) {
-                    jniLibrary = new ClassifierLibraryJNI();
+        synchronized (sync) // Initialize the library. This should only get called once.
+        {
+            if (jniLibrary == null) {
+                jniLibrary = new ClassifierLibraryJNI(); 
+
+                File dbDir = UserPreferences.getModel().getDefaultScratchDirectory();
+                String dbRoot = dbDir.getAbsolutePath();
+                File logFile = new File(dbRoot + "/matlablog.txt");
+
+                Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, "Matlab log file: " + logFile.toString());
+                String name = logFile.getAbsolutePath();
+                try {
+                    jniLibrary.initLib(name);
+                } catch (Exception e) {
+                    Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, e);
                 }
-
-                File   dbDir   = UserPreferences.getModel().getDefaultScratchDirectory();
-                String dbRoot  = dbDir.getAbsolutePath();
-                String logFile = dbRoot + "/matlablog.txt";
-
-                Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, "Matlab log file: " + logFile);
-
-                // Initialize the library. This should only get called once.
-                jniLibrary.initLib(logFile);
 
                 FileInputStream fis = new FileInputStream(logFile);
 
-                isr           = new InputStreamReader(fis);
-                isInitialized = true;
+                isr = new InputStreamReader(fis);
             }
         }
 
@@ -157,11 +153,11 @@ public class Classifier {
     public static void closeLibrary() {
         synchronized (sync) {
             try {
-                if (isInitialized) {
+                if (jniLibrary != null) {
                     getLibrary().closeLib();
+                    jniLibrary = null;
                 }
 
-                isInitialized = false;
             } catch (Exception ex) {
                 Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -175,19 +171,12 @@ public class Classifier {
      */
     public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
+
             public void run() {
                 try {
-                    String version = this.getClass().getPackage().getImplementationVersion();
-
-                    System.out.println("---->" + version);
-
-                    return;
-
-                    /*
-                     * Classifier c = new Classifier(new ApplicationModel());
-                     * c.getView().setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                     * c.getView().setVisible(true);
-                     */
+                    Classifier c = new Classifier(new ApplicationModel());
+                    c.getView().setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    c.getView().setVisible(true);
                 } catch (Exception ex) {
                     Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, ex);
                 }

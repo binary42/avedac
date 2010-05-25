@@ -37,9 +37,7 @@ import org.mbari.aved.ui.userpreferences.UserPreferences;
 import org.mbari.aved.ui.userpreferences.UserPreferencesModel;
 import org.mbari.aved.ui.utils.ImageUtils;
 import org.mbari.aved.ui.utils.ParseUtils;
-
-import sun.security.action.GetPropertyAction;
-
+ 
 //~--- JDK imports ------------------------------------------------------------
 
 import java.awt.event.ActionEvent;
@@ -238,7 +236,7 @@ class CreateClassController extends AbstractController implements ModelListener,
             switch (event.getID()) {
 
             // When the *-training class directory changes, update the available
-            // classe
+            // classes
             case ClassifierModel.ClassifierModelEvent.TRAINING_CLASS_DIR_UPDATED :
                 File dir       = UserPreferences.getModel().getLastOpenedClassTrainingDirectory();
                 File parentDir = getModel().getClassTrainingImageDirectory();

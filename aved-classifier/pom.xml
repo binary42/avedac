@@ -11,53 +11,19 @@
     <packaging>pom</packaging>
     <name>AVED classifier</name>
     <version>0.4.3-SNAPSHOT</version>
-    <description>AVED Classifier</description>
-    <repositories>
-        <repository>
-            <id>freehep-maven</id>
-            <name>Maven FreeHEP</name>
-            <url>http://java.freehep.org/maven2</url>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>freehep-maven</id>
-            <name>Maven FreeHEP</name>
-            <url>http://java.freehep.org/maven2</url>
-        </pluginRepository>
-    </pluginRepositories>   
-    <modules>        
-        <module>sharedlib</module> 
-  <!-- Shared Matlab library must come first as it is needed in the jni layer-->
+    <description>AVED Classifier</description> 
+    <modules>
+        <module>sharedlib</module>
+        <!-- Shared Matlab library must come first as it is needed in the jni layer-->
         <module>sharedlibjni</module>
-        <module>narmojo</module> 
+        <module>narmojo</module>
     </modules>
-      <profiles>
-        <profile>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-                <os>                  
-                    <name>MacOSX</name>
-                    <arch>i386</arch>
-                </os>
-            </activation>
-            <id>default</id>
-            <properties>             
-                <sharedExtension>dylib</sharedExtension>
-                <installPath>/Users/dcline/aved/lib</installPath>
-                <matlabRoot>${MATLAB_ROOT}</matlabRoot>
-                <jniIncludePath>/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers</jniIncludePath>                  
-                <narLibDir>nar/lib/i386-MacOSX-g++/shared</narLibDir>    
-            </properties>
-        </profile> 
-    </profiles>
     <dependencies>
-         <dependency>
-            <groupId>org.freehep</groupId>
-            <artifactId>freehep-nar-plugin</artifactId>
-            <version>2.0-alpha-10</version>
+        <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-nar-plugin</artifactId>
+            <version>2.1-SNAPSHOT</version>
             <type>maven-plugin</type>
         </dependency>
     </dependencies>
-        
 </project>

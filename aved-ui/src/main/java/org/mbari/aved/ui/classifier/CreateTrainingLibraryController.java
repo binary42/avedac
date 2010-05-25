@@ -254,11 +254,8 @@ public class CreateTrainingLibraryController extends AbstractController implemen
             case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
             case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
                 
-                    ColorSpace colorSpace = ColorSpace.RGB;
-                  if (trainingModel != null) 
-                     colorSpace = trainingModel.getColorSpace();
-                  
-                  getView().selectColorSpace(trainingModel.getColorSpace());
+                  if (trainingModel != null)
+                     getView().selectColorSpace(trainingModel.getColorSpace());
 
                 break;
             }

@@ -21,7 +21,12 @@
 package org.mbari.aved.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
-
+// Note - it is normal to get a "cannot find symbol"error in the 
+// NetBeans IDE here. Don't worry about it.
+// The nar-plugin generates a NarSystem class to assist with
+// loading the correct version.  This isn't generated until
+// build time in the target directory, so this import isn't resolved
+// until that time.
 import org.mbari.aved.classifier.NarSystem;
 
 /**
@@ -177,7 +182,8 @@ public class ClassifierLibraryJNI {
      *
      * @param matlabdbDirName the  name of the root directory of the
      * stored classifier matlab (.mat) data
-     * @return string array with training classes names.
+     * @return string array with training classes names, or null if no classes
+     * found
      */
     public native TrainingModel[] get_training_classes(String matlabdbDirName);
 
