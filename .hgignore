@@ -15,3 +15,4 @@
 \.nar$
 \.hprof$
 \.pom.xml~$
+\config.log$
