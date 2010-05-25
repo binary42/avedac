@@ -4,7 +4,7 @@
     <groupId>aved</groupId>
     <artifactId>aved</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.3</version>
+    <version>0.4.4-SNAPSHOT</version>
     <name>aved</name>
     <url>http://maven.apache.org</url>
     <profiles>
