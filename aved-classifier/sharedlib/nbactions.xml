@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+            <actionName>rebuild</actionName>
+            <goals>
+                <goal>clean</goal>
+                <goal>install</goal>
+            </goals>
+            <properties>
+                <Env.MATLAB_ROOT>/home/aved/matlab7.2</Env.MATLAB_ROOT>
+                <Env.XAPPLRESDIR>${Env.MATLAB_ROOT}/X11/app-defaults</Env.XAPPLRESDIR>
+                <Env.LD_LIBRARY_PATH>~/aved/lib:${Env.MATLAB_ROOT}/runtime:${Env.MATLAB_ROOT}/bin/glnx86:$MATLAB_ROOT/sys/os/glnx86:$JAVA_HOME/jre/lib/i386</Env.LD_LIBRARY_PATH>
+                
+            </properties>
+        </action>
+        <action>
+            <actionName>build</actionName>
+            <goals>
+                <goal>install</goal>
+            </goals>
+            <properties>
+                <Env.MATLAB_ROOT>/home/aved/matlab7.2</Env.MATLAB_ROOT>
+                <Env.XAPPLRESDIR>${Env.MATLAB_ROOT}/X11/app-defaults</Env.XAPPLRESDIR>
+                <Env.LD_LIBRARY_PATH>~/aved/lib:${Env.MATLAB_ROOT}/runtime:${Env.MATLAB_ROOT}/bin/glnx86:$MATLAB_ROOT/sys/os/glnx86:$JAVA_HOME/jre/lib/i386</Env.LD_LIBRARY_PATH>
+                
+            </properties>
+        </action>
+    </actions>
