@@ -192,7 +192,7 @@
                 <configuration>
                     <preparationGoals>clean install verify</preparationGoals>
                     <goals>clean install javadoc:javadoc assembly:assembly deploy</goals>
-                    <arguments>-Prelease"</arguments>
+                    <arguments>-Prelease</arguments>
                 </configuration>
             </plugin>
             <plugin>
@@ -228,8 +228,8 @@
     <modules>
         <!--<module>aved-pmbarivision</module>-->
         <module>aved-mbarivision</module>
-        <module>aved-classifier</module>
+        <!--<module>aved-classifier</module>
         <module>aved-mbarivision-api</module>
-        <module>aved-ui</module>
+        <module>aved-ui</module>-->
     </modules>
 </project>
