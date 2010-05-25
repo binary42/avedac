@@ -4,7 +4,7 @@
     <groupId>aved</groupId>
     <artifactId>aved</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.3</version>
+    <version>0.4.3-SNAPSHOT</version>
     <name>aved</name>
     <url>http://maven.apache.org</url>
     <profiles>
@@ -200,7 +200,6 @@
                     <preparationGoals>clean install verify</preparationGoals>
                     <goals>clean install javadoc:javadoc assembly:assembly deploy</goals>
                     <arguments>-Prelease</arguments>
-                    <username>danellecline</username>
                 </configuration>
             </plugin>
             <plugin>
