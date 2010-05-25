@@ -1,0 +1,17 @@
+# Copyright (c) MBARI 2009
+# Author: D. Cline
+# Date: December 28, 2009 - Created
+
+# Crude check for OS, if not Linux, assume MacOSX
+if [ `uname | grep Linux` ]; then
+  echo "Setting Linux environment variables"
+  export MATLAB_ROOT=/home/aved/matlab7.2
+  export JAVA_HOME=/usr/java/latest
+  export LD_LIBRARY_PATH=~/aved/lib:$MATLAB_ROOT/runtime:$MATLAB_ROOT/bin/glnx86:$MATLAB_ROOT/sys/os/glnx86:$JAVA_HOME/jre/lib/i386
+  export XAPPLRESDIR=$MATLAB_ROOT/X11/app-defaults
+else
+  echo "Setting MacOSX environment variables"
+  export MATLAB_ROOT=/Applications/MATLAB_R2009a.app
+  export DYLD_LIBRARY_PATH=~/aved/lib:$MATLAB_ROOT/runtime:$MATLAB_ROOT/bin/maci:$MATLAB_ROOT/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries
+  export XAPPLRESDIR=$MATLAB_ROOT/X11/app-defaults
+fi

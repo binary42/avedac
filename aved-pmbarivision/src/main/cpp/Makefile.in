@@ -1,0 +1,116 @@
+# pmbarivision Makefile
+PREFIX      := @prefix@
+SRCDIR      := src/
+OBJDIR		:= obj/
+BINDIR		:= bin/
+CXX         := @CXX@
+DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1 -DMPICH_IGNORE_CXX_SEEK
+CPPFLAGS    := @CPPFLAGS@ -I/usr/include/libxml2 -I$(SRCDIR) -I$(MBARIVISIONROOT)/src -I$(XERCESCROOT)/src -I$(SALIENCYROOT)/src -include $(SALIENCYROOT)/config.h
+LIBS		:= -lxerces-c -lz -lbz2 -lX11 -lpng -ljpeg -lXext -lpthread -lavcodec -lavformat -lxml2  -lSDL -lz -lm -lmpich -lmpe
+LDFLAGS     := @LDFLAGS@  -L/usr/X11R6/lib -L/usr/lib  -L$(MBARIVISIONROOT)/obj -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib
+DEPFILE		:= alldepends
+COMPILE1    := @echo 
+COMPILE2    := @
+COMPILE3    := 
+CDEPS		:= $(BINDIR)cdeps
+MPICXX      := @MPICXX@
+
+all: $(CDEPS) clean $(BINDIR)pmbarivision $(BINDIR)pvisionTCPmbari
+
+# Force the compilation of the Version file every time to date/time stamp the build
+$(OBJDIR)Version.o: force $(SRCDIR)Version.C
+force: ;
+
+##### Implicit rules
+$(BINDIR)%:
+	 $(COMPILE1) "Linking executable program" $@	 
+	 $(COMPILE2) $(MPICXX)  \
+	  -o $@ -O \
+  	  $(addprefix $(PWD)/,$(filter-out /%, $+)) \
+	  $(filter /%, $+)  \
+	  $(LDFLAGS)  $(LIBS)
+	  $(COMPILE3)	 
+
+# make an object file from a C++ source file
+$(OBJDIR)%.o: $(SRCDIR)%.C
+	@mkdir -p $(dir $@)
+	$(COMPILE1) "Compiling C++ file        " $<
+	$(COMPILE2) $(MPICXX) $(DEFS) $(CPPFLAGS) $(OPTFLAGS) \
+		-c $< \
+		-o $@
+	$(COMPILE3)	
+		
+##### Rule to build the dependency-computing program:
+$(CDEPS): cdeps.cc
+	@mkdir -p $(BINDIR)
+	$(COMPILE1) Compiling source dependencies calculator
+	$(COMPILE2) $(CXX) -O2 -Wall $^ -o $@ 
+
+
+#################################################################
+##### Rule to build the source file dependencies ####
+#### To add a new executable, add the line --execformat, 
+#### e.g. to add a new test file build from the source test.C
+#### --exeformat "$(SRCDIR)test.C : $(BINDIR)test
+#################################################################
+$(DEPFILE):$(CDEPS) 
+	$(COMPILE1) Computing source file dependencies
+	$(COMPILE2) $(CDEPS) \
+	   --srcdir "$(SRCDIR)" \
+	   --includedir "$(SRCDIR)" \
+	   --includedir "$(SALIENCYROOT)/src" \
+       --includedir "$(MBARIVISIONROOT)/src" \
+	   --includedir "$(XERCESCROOT)/src" \
+   	   --includedir "/opt/include" \
+   	   --objdir "$(OBJDIR)" \
+	   --objext ".o" \
+	   --literal .I \
+   	   --exeformat "$(SRCDIR)Pmbarivision.C : $(BINDIR)pmbarivision" \
+   	   --exeformat "$(SRCDIR)PvisionTCPmbari.C : $(BINDIR)pvisionTCPmbari" \
+	   --linkformat "$(SRCDIR) : $(OBJDIR)*.o" \
+	   --linkformat "$(SALIENCYROOT)/src/ : $(SALIENCYROOT)/build/obj/*.o" \
+   	   --linkformat "$(MBARIVISIONROOT)/src/ : $(MBARIVISIONROOT)/obj/*.o" \
+	   --output-link-deps \
+	   --output-compile-deps \
+	   --sources-variable SOURCES \
+	   --headers-variable HEADERS \
+           > $(@)
+
+
+##### Explicit rules
+# Grab the flags from the saliency build
+LDFLAGS +=`grep -m 1 LDFLAGS $(SALIENCYROOT)/Makefile | cut -f2 -d =`
+
+# add logging for the profile and clean up .o files before and after build
+profile: DEFS+=-DMPELOG 
+profile: LDFLAGS+=-"-mpelog" 
+profile: clean $(BINDIR)/pmbarivision cleanobjs
+					  
+.PHONY: clean allclean cleanobjs
+
+clean	:
+	@rm -f *.clog PI* *~ .gdb*
+	@( if [ -d $(BINDIR) ];then \
+		rm -rf $(BINDIR)*; \
+	fi )
+	@( if [ -d $(OBJDIR) ];then \
+		rm -rf $(OBJDIR)*; \
+	fi )
+
+cleanobjs : 
+	@( if [ -d $(OBJDIR) ];then \
+		rm -rf $(OBJDIR)*; \
+	fi )
+
+depclean:
+	@-rm -f $(DEPFILE) 
+
+allclean: clean depclean
+
+install: 
+	$(COMPILE1) "Installing programs" $(BINDIR)pmbarivision $(BINDIR)pvisionTCPmbari to $(PREFIX)/bin 
+	@mkdir -p $(PREFIX)/bin
+	@cp -f $(BINDIR)pmbarivision $(BINDIR)pvisionTCPmbari $(PREFIX)/bin
+	$(COMPILE1) "Done !"
+		
+-include $(DEPFILE)

@@ -1,0 +1,18 @@
+#/bin/bash
+#
+# Copyright (c) MBARI 2009
+# Author: D. Cline
+# Date: December 28, 2009 - Created
+#
+#exit on error; this will exit this bash script when any command exists with
+#a non-zero exit code
+set -e
+source ./setup
+# Crude check for OS, if not Linux, assume MacOSX
+if [ `uname | grep Linux` ]; then
+  echo "Running Linux build"
+  mvn install -Dp=Linux -Dmaven.test.skip=true
+else
+  echo "Running MacOSX build"
+  mvn install -Dp=Mac -Dmaven.test.skip=true
+fi
