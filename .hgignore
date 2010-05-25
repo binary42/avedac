@@ -14,3 +14,4 @@
 \.*.flag$ 
 \.nar$
 \.hprof$
+\.pom.xml~$
