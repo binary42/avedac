@@ -115,20 +115,19 @@ AC_SUBST(with_saliency)
 
 # Enable users to specify where Xercesc is installed.
 # Note the 2.7.0 version is required
-# The default is to have the librariesin a sub directory "aved"
-# in the users home directory
+# The default is to have the libraries in the users home directory
 AC_ARG_WITH([xercesc],
             [AC_HELP_STRING([--with-xercesc=DIR],
-                            [where the Xercesc is installed (e.g., $HOME/aved/Xerces-C_2_7_0 )
-            [default=$HOME/aved/Xerces-C_2_7_0]])],
+                            [where the Xercesc is installed (e.g., $HOME/Xerces-C_2_7_0 )
+            [default=$HOME/Xerces-C_2_7_0]])],
             ,
-            [with_xercesc=$HOME/aved/Xerces-C_2_7_0])
+            [with_xercesc=$HOME/Xerces-C_2_7_0])
  
-# Use the supplied (or default) Xercesc root directory to set
+# Use the supplied (or default) Xercesc directory to set
 # makefile variables
 if test -d "$with_xercesc" ; then
 
-   xercesc_incdir="$with_xercesc/src/xercesc"
+   xercesc_incdir="$with_xercesc/src"
    xercesc_libdir="$with_xercesc/lib"
 
    cppflags_save="$CPPFLAGS"
@@ -143,12 +142,12 @@ if test -d "$with_xercesc" ; then
 ], [ ],
                        [with_xercesc=$with_xercesc],
                        [AC_MSG_ERROR([Xercesc directory "$with_xercesc" missing or incorrect.
-                        Set the correct root path with --with-xercesc=DIR])
+                        Set the correct path with --with-xercesc=DIR])
                        ],
                        [-lxerces-c -lpthread])
    else
       AC_MSG_ERROR([Xercesc directory $with_xercesc missing or incorrect.
-                    Set the correct root path with --with-xercesc=DIR   ])
+                    Set the correct path with --with-xercesc=DIR   ])
    fi
 
 CPPFLAGS="$cppflags_save"

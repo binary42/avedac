@@ -3,9 +3,9 @@ PREFIX      := @prefix@
 SALIENCYROOT := @with_saliency@
 XERCESCROOT  := @with_xercesc@
 SRCDIR      := src/
-OBJDIR	    := obj/
-BINDIR	    := bin/
-LIBDIR      := lib/
+OBJDIR	    := target/build/obj/
+BINDIR	    := target/build/bin/
+LIBDIR      := target/build/lib/
 SCHEMADIR   := schema/
 CXX         := @CXX@
 CXXFLAGS    := @CXXFLAGS@ 
@@ -16,7 +16,7 @@ DEPFILE	    := alldepends
 COMPILE1    := @echo 
 COMPILE2    := @	
 COMPILE3    := 
-CDEPS		:= $(BINDIR)cdeps
+CDEPS	    := $(BINDIR)cdeps
 
 all: $(CDEPS) $(BINDIR)mbarivision
 

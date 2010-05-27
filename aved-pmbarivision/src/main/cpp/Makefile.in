@@ -1,18 +1,22 @@
 # pmbarivision Makefile
 PREFIX      := @prefix@
+MBARIVISIONROOT := @with_mbarivision@
+SALIENCYROOT:= @with_saliency@
+XERCESCROOT := @with_xercesc@
 SRCDIR      := src/
-OBJDIR		:= obj/
-BINDIR		:= bin/
+OBJDIR	    := target/build/obj/
+BINDIR	    := target/build/bin/
 CXX         := @CXX@
+CXXFLAGS    := @CXXFLAGS@ 
 DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1 -DMPICH_IGNORE_CXX_SEEK
-CPPFLAGS    := @CPPFLAGS@ -I/usr/include/libxml2 -I$(SRCDIR) -I$(MBARIVISIONROOT)/src -I$(XERCESCROOT)/src -I$(SALIENCYROOT)/src -include $(SALIENCYROOT)/config.h
-LIBS		:= -lxerces-c -lz -lbz2 -lX11 -lpng -ljpeg -lXext -lpthread -lavcodec -lavformat -lxml2  -lSDL -lz -lm -lmpich -lmpe
-LDFLAGS     := @LDFLAGS@  -L/usr/X11R6/lib -L/usr/lib  -L$(MBARIVISIONROOT)/obj -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib
-DEPFILE		:= alldepends
+CPPFLAGS    := @CPPFLAGS@ -I/usr/include/libxml2 -I$(SRCDIR) -I$(MBARIVISIONROOT)/src/main/cpp/src -I$(XERCESCROOT)/src -I$(SALIENCYROOT)/src -include $(SALIENCYROOT)/config.h
+LIBS        := -lxerces-c -lz -lbz2 -lX11 -lpng -ljpeg -lXext -lpthread -lavcodec -lavformat -lxml2  -lSDL -lz -lm -lmpich -lmpe
+LDFLAGS     := @LDFLAGS@  -L/usr/X11R6/lib -L/usr/lib  -L$(MBARIVISIONROOT)/target/build/obj -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib
+DEPFILE     := alldepends
 COMPILE1    := @echo 
 COMPILE2    := @
 COMPILE3    := 
-CDEPS		:= $(BINDIR)cdeps
+CDEPS       := $(BINDIR)cdeps
 MPICXX      := @MPICXX@
 
 all: $(CDEPS) clean $(BINDIR)pmbarivision $(BINDIR)pvisionTCPmbari
@@ -56,10 +60,11 @@ $(CDEPS): cdeps.cc
 $(DEPFILE):$(CDEPS) 
 	$(COMPILE1) Computing source file dependencies
 	$(COMPILE2) $(CDEPS) \
+	   --verbosity 0 \
 	   --srcdir "$(SRCDIR)" \
 	   --includedir "$(SRCDIR)" \
 	   --includedir "$(SALIENCYROOT)/src" \
-       --includedir "$(MBARIVISIONROOT)/src" \
+           --includedir "$(MBARIVISIONROOT)/src/main/cpp/src" \
 	   --includedir "$(XERCESCROOT)/src" \
    	   --includedir "/opt/include" \
    	   --objdir "$(OBJDIR)" \
@@ -69,12 +74,13 @@ $(DEPFILE):$(CDEPS)
    	   --exeformat "$(SRCDIR)PvisionTCPmbari.C : $(BINDIR)pvisionTCPmbari" \
 	   --linkformat "$(SRCDIR) : $(OBJDIR)*.o" \
 	   --linkformat "$(SALIENCYROOT)/src/ : $(SALIENCYROOT)/build/obj/*.o" \
-   	   --linkformat "$(MBARIVISIONROOT)/src/ : $(MBARIVISIONROOT)/obj/*.o" \
+   	   --linkformat "$(MBARIVISIONROOT)/src/main/cpp/src : $(MBARIVISIONROOT)/target/build/obj/*.o" \
 	   --output-link-deps \
 	   --output-compile-deps \
 	   --sources-variable SOURCES \
 	   --headers-variable HEADERS \
            > $(@)
+
 
 
 ##### Explicit rules

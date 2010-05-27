@@ -6,7 +6,7 @@
         <version>0.4.3-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.mbari.aved.mbarivision</groupId>
+    <groupId>org.mbari.aved.pbarivision</groupId>
     <artifactId>pmbarivision</artifactId>
     <name>AVED pmbarivision</name>
     <version>0.4.3-SNAPSHOT</version>

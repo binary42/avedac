@@ -271,8 +271,8 @@ PACKAGE_VERSION='dcline@mbari.org'
 PACKAGE_STRING='pmbarivision.C dcline@mbari.org'
 PACKAGE_BUGREPORT=''
 
-ac_default_prefix=/usr/local
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CXX CXXFLAGS ac_ct_CXX MPICXX LIBOBJS LTLIBOBJS'
+ac_default_prefix=/home/aved
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CXX CXXFLAGS ac_ct_CXX with_saliency with_xercesc with_mbarivision MPICC_PROG MPI_LIBS MPICXX LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -806,6 +806,18 @@ if test -n "$ac_init_help"; then
    esac
   cat <<\_ACEOF
 
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-saliency=DIR     where the saliency is installed (e.g.,
+                          $HOME/saliency ) [default=$HOME/saliency]
+  --with-xercesc=DIR      where the Xercesc is installed (e.g.,
+                          $HOME/Xerces-C_2_7_0 )
+                          [default=$HOME/Xerces-C_2_7_0]
+  --with-mbarivision=DIR  where the mbarivision is installed (e.g.,
+                          $HOME/avedac/aved-mbarivision )
+                          [default=$HOME/avedac/aved-mbarivision]
+
 Some influential environment variables:
   CC          C compiler command
   CFLAGS      C compiler flags
@@ -1266,42 +1278,22 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-# XERCESCROOT must be defined
-if test -r "$XERCESCROOT" ; then
-      echo "$as_me:$LINENO: checking for $XERCESCROOT directory" >&5
-echo $ECHO_N "checking for $XERCESCROOT directory... $ECHO_C" >&6
-      echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-else
-      { { echo "$as_me:$LINENO: error: XERCESCROOT missing or invalid directory. You need to set XERCESCROOT." >&5
-echo "$as_me: error: XERCESCROOT missing or invalid directory. You need to set XERCESCROOT." >&2;}
-   { (exit 1); exit 1; }; }
-fi
 
-# SALIENCYROOT must be defined
-if test -r "$SALIENCYROOT" ; then
-      echo "$as_me:$LINENO: checking for $SALIENCYROOT directory" >&5
-echo $ECHO_N "checking for $SALIENCYROOT directory... $ECHO_C" >&6
-      echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-else
-      { { echo "$as_me:$LINENO: error: SALIENCYROOT missing or invalid directory. You need to set SALIENCYROOT." >&5
-echo "$as_me: error: SALIENCYROOT missing or invalid directory. You need to set SALIENCYROOT." >&2;}
-   { (exit 1); exit 1; }; }
-fi
+##########################################################################
+### Some macro definitions
 
-# MBARIVISIONROOT must be defined
-if test -r "$MBARIVISIONROOT" ; then
-      echo "$as_me:$LINENO: checking for $MBARIVISIONROOT directory" >&5
-echo $ECHO_N "checking for $MBARIVISIONROOT directory... $ECHO_C" >&6
-      echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-else
-      { { echo "$as_me:$LINENO: error: MBARIVISIONROOT missing or invalid directory. You need to set MBARIVISIONROOT." >&5
-echo "$as_me: error: MBARIVISIONROOT missing or invalid directory. You need to set MBARIVISIONROOT." >&2;}
-   { (exit 1); exit 1; }; }
-fi
+
+
+
+
+
+
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -2227,11 +2219,11 @@ sed 's/^/| /' conftest.$ac_ext >&5
 
 fi
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 ac_ext=cc
@@ -2583,11 +2575,463 @@ if test -n "$ac_declaration"; then
   echo '#endif'             >>confdefs.h
 fi
 
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+# Enable users to specify where Saliency is installed.
+# TODO: Add saliency version check
+# The default is in the users home directory
+
+# Check whether --with-saliency or --without-saliency was given.
+if test "${with_saliency+set}" = set; then
+  withval="$with_saliency"
+
+else
+  with_saliency=$HOME/saliency
+fi;
+
+# Use the supplied (or default) saliency directory to set
+# Makefile variables
+if test -d "$with_saliency" ; then
+
+  saliency_incdir="-I$with_saliency/src"
+  saliency_libdir="-L$with_saliency/build/obj"
+
+  cppflags_save="$CPPFLAGS"
+  ldflags_save="$LDFLAGS"
+  CPPFLAGS="$CPPFLAGS $saliency_incdir"
+  LDFLAGS="$LDFLAGS $saliency_libdir"
+
+
+echo "$as_me:$LINENO: checking for headers in saliency" >&5
+echo $ECHO_N "checking for headers in saliency... $ECHO_C" >&6
+	 cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <Component/ModelManager.H>
+#include <Neuro/StdBrain.H>
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_cxx_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  haveheaders_saliency=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+haveheaders_saliency=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+	 LIBS=$libs_save
+	 if test "x$haveheaders_saliency" = xyes; then
+	    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+	    with_saliency=$with_saliency
+	 else
+	    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+	    { { echo "$as_me:$LINENO: error: iLab Neuromorphic Vision C++ Toolkit
+                        directory $with_saliency\" missing or incorrect.
+                        Set the correct path with --with-saliency=DIR
+                        For more information about getting the toolkit see http://ilab.usc.edu/toolkit/." >&5
+echo "$as_me: error: iLab Neuromorphic Vision C++ Toolkit
+                        directory $with_saliency\" missing or incorrect.
+                        Set the correct path with --with-saliency=DIR
+                        For more information about getting the toolkit see http://ilab.usc.edu/toolkit/." >&2;}
+   { (exit 1); exit 1; }; }
+
+	 fi
+   else
+      { { echo "$as_me:$LINENO: error: iLab Neuromorphic Vision C++ Toolkit
+                        directory $with_saliency\" missing or incorrect.
+                        Set the correct path with --with-saliency=DIR
+                        For more information about getting the toolkit see http://ilab.usc.edu/toolkit/." >&5
+echo "$as_me: error: iLab Neuromorphic Vision C++ Toolkit
+                        directory $with_saliency\" missing or incorrect.
+                        Set the correct path with --with-saliency=DIR
+                        For more information about getting the toolkit see http://ilab.usc.edu/toolkit/." >&2;}
+   { (exit 1); exit 1; }; }
+   fi
+
+CPPFLAGS="$cppflags_save"
+LDFLAGS="$ldflags_save"
+
+
+
+# Enable users to specify where Xercesc is installed.
+# Note the 2.7.0 version is required
+# The default is to have the librariesin a sub directory "aved"
+# in the users home directory
+
+# Check whether --with-xercesc or --without-xercesc was given.
+if test "${with_xercesc+set}" = set; then
+  withval="$with_xercesc"
+
+else
+  with_xercesc=$HOME/Xerces-C_2_7_0
+fi;
+
+# Use the supplied (or default) Xercesc directory to set
+# makefile variables
+if test -d "$with_xercesc" ; then
+
+   xercesc_incdir="$with_xercesc/src/xercesc"
+   xercesc_libdir="$with_xercesc/lib"
+
+   cppflags_save="$CPPFLAGS"
+   ldflags_save="$LDFLAGS"
+   CPPFLAGS="$CPPFLAGS -I$xercesc_incdir"
+   LDFLAGS="$LDFLAGS -L$xercesc_libdir"
+
+   echo "$as_me:$LINENO: checking for libxerces-c" >&5
+echo $ECHO_N "checking for libxerces-c... $ECHO_C" >&6
+	 libs_save=$LIBS
+	 LIBS="$LIBS -lxerces-c -lxerces-c -lpthread"
+	 cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <xercesc/util/OutOfMemoryException.hpp>
+#include <xercesc/framework/LocalFileFormatTarget.hpp>
+#include <xercesc/util/XMLDateTime.hpp>
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_cxx_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  havelib_xercesc=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+havelib_xercesc=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+	 LIBS=$libs_save
+	 if test "x$havelib_xercesc" = xyes; then
+	    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+	    with_xercesc=$with_xercesc
+	 else
+	    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+	    { { echo "$as_me:$LINENO: error: Xercesc directory \"$with_xercesc\" missing or incorrect.
+                        Set the correct path with --with-xercesc=DIR" >&5
+echo "$as_me: error: Xercesc directory \"$with_xercesc\" missing or incorrect.
+                        Set the correct path with --with-xercesc=DIR" >&2;}
+   { (exit 1); exit 1; }; }
+
+	 fi
+else
+      { { echo "$as_me:$LINENO: error: Xercesc directory $with_xercesc missing or incorrect.
+                    Set the correct path with --with-xercesc=DIR   " >&5
+echo "$as_me: error: Xercesc directory $with_xercesc missing or incorrect.
+                    Set the correct path with --with-xercesc=DIR   " >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+CPPFLAGS="$cppflags_save"
+LDFLAGS="$ldflags_save"
+
+
+
+# Enable users to specify where mbarivision is installed.
+# The default is to be in the subdirectory avedac in the Maven
+# submodule aved-mbarivision
+
+# Check whether --with-mbarivision or --without-mbarivision was given.
+if test "${with_mbarivision+set}" = set; then
+  withval="$with_mbarivision"
+
+else
+  with_mbarivision=$HOME/avedac/aved-mbarivision
+fi;
+
+
+# Use the supplied (or default) mbarivision directory to appropriately
+# set various build flags so that the compiler and linker can find the
+# necessary headers and libraries.
+if test -d "$with_mbarivision" ; then
+
+    mbarivision_incdir="-I$with_mbarivision/src/main/cpp/src -I$with_saliency/src"
+    mbarivision_libdir="-L$with_mbarivision/target/build/obj -L$with_saliency/build/obj"
+
+    cppflags_save="$CPPFLAGS"
+    ldflags_save="$LDFLAGS"
+    CPPFLAGS="$CPPFLAGS $mbarivision_incdir"
+    LDFLAGS="$LDFLAGS $mbarivision_libdir"
+
+   echo "$as_me:$LINENO: checking for headers in mbarivision" >&5
+echo $ECHO_N "checking for headers in mbarivision... $ECHO_C" >&6
+	 cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include "DetectionAndTracking/DetectionParameters.H"
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_cxx_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  haveheaders_mbarivision=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+haveheaders_mbarivision=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+	 LIBS=$libs_save
+	 if test "x$haveheaders_mbarivision" = xyes; then
+	    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+	    with_mbarivision=$with_mbarivision
+	 else
+	    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+	    { { echo "$as_me:$LINENO: error: Mbarivision directory \"$with_mbarivision\" missing or invalid.
+		       	 Set the correct path with --with-mbarivision=DIR." >&5
+echo "$as_me: error: Mbarivision directory \"$with_mbarivision\" missing or invalid.
+		       	 Set the correct path with --with-mbarivision=DIR." >&2;}
+   { (exit 1); exit 1; }; }
+
+	 fi
+
+else
+    { { echo "$as_me:$LINENO: error: Mbarivision directory \"$with_mbarivision\" missing or invalid.
+    	          Set the correct path with --with-mbarivision=DIR." >&5
+echo "$as_me: error: Mbarivision directory \"$with_mbarivision\" missing or invalid.
+    	          Set the correct path with --with-mbarivision=DIR." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+CPPFLAGS="$cppflags_save"
+LDFLAGS="$ldflags_save"
+
+
+
+
+# MPI libraries:
+MPI_LIBS=""
+for ac_prog in mpic++
+do
+  # Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_MPICC_PROG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $MPICC_PROG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_MPICC_PROG="$MPICC_PROG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_MPICC_PROG="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  ;;
+esac
+fi
+MPICC_PROG=$ac_cv_path_MPICC_PROG
+
+if test -n "$MPICC_PROG"; then
+  echo "$as_me:$LINENO: result: $MPICC_PROG" >&5
+echo "${ECHO_T}$MPICC_PROG" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+  test -n "$MPICC_PROG" && break
+done
+
+if test "x$MPICC_PROG" = "x"; then
+   for ac_prog in mpiCC
+do
+  # Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_MPICC_PROG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $MPICC_PROG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_MPICC_PROG="$MPICC_PROG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_MPICC_PROG="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  ;;
+esac
+fi
+MPICC_PROG=$ac_cv_path_MPICC_PROG
+
+if test -n "$MPICC_PROG"; then
+  echo "$as_me:$LINENO: result: $MPICC_PROG" >&5
+echo "${ECHO_T}$MPICC_PROG" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+  test -n "$MPICC_PROG" && break
+done
+
+fi
+
+if test "x$MPICC_PROG" = "x"; then
+   { { echo "$as_me:$LINENO: error: mpic++/mpiCC program missing; MPI programs won't be able to be built" >&5
+echo "$as_me: error: mpic++/mpiCC program missing; MPI programs won't be able to be built" >&2;}
+   { (exit 1); exit 1; }; }
+else
+   libs=`$MPICC_PROG -showme:link 2> /dev/null`
+   status=$?
+   if test $status -ne 0; then
+      libs=`$MPICC_PROG -show 2> /dev/null`
+      status=$?
+   fi
+   if test $status -eq 0; then
+      for arg in $libs; do
+          case $arg in
+             -l*)
+                MPI_LIBS="$MPI_LIBS $arg"
+                ;;
+             -L*)
+                LDFLAGS="$LDFLAGS $arg"
+                ;;
+          esac
+      done
+   fi
+   echo "$as_me:$LINENO: checking for MPI libraries" >&5
+echo $ECHO_N "checking for MPI libraries... $ECHO_C" >&6
+   echo "$as_me:$LINENO: result: $MPI_LIBS" >&5
+echo "${ECHO_T}$MPI_LIBS" >&6
+
+cat >>confdefs.h <<\_ACEOF
+#define INVT_HAVE_MPI 1
+_ACEOF
+
+fi
 
 
 # MPI compiler check
@@ -3293,6 +3737,11 @@ s,@OBJEXT@,$OBJEXT,;t t
 s,@CXX@,$CXX,;t t
 s,@CXXFLAGS@,$CXXFLAGS,;t t
 s,@ac_ct_CXX@,$ac_ct_CXX,;t t
+s,@with_saliency@,$with_saliency,;t t
+s,@with_xercesc@,$with_xercesc,;t t
+s,@with_mbarivision@,$with_mbarivision,;t t
+s,@MPICC_PROG@,$MPICC_PROG,;t t
+s,@MPI_LIBS@,$MPI_LIBS,;t t
 s,@MPICXX@,$MPICXX,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
@@ -3558,6 +4007,5 @@ if test "$no_create" != yes; then
   # would make configure fail if this is the last instruction.
   $ac_cs_success || { (exit 1); exit 1; }
 fi
-
 
 

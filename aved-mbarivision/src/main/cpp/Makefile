@@ -1,11 +1,11 @@
 ##### Mbarivision Makefile
-PREFIX      := /home/aved/aved
-SALIENCYROOT := /home/aved/aved/saliency
-XERCESCROOT  := /home/aved/aved/Xerces-C_2_7_0
+PREFIX      := /root/aved
+SALIENCYROOT := /root/aved/saliency
+XERCESCROOT  := /root/aved/Xerces-C_2_7_0
 SRCDIR      := src/
-OBJDIR	    := obj/
-BINDIR	    := bin/
-LIBDIR      := lib/
+OBJDIR	    := target/build/obj/
+BINDIR	    := target/build/bin/
+LIBDIR      := target/build/lib/
 SCHEMADIR   := schema/
 CXX         := g++
 CXXFLAGS    := -g -O2 
@@ -16,7 +16,7 @@ DEPFILE	    := alldepends
 COMPILE1    := @echo 
 COMPILE2    := @	
 COMPILE3    := 
-CDEPS		:= $(BINDIR)cdeps
+CDEPS	    := $(BINDIR)cdeps
 
 all: $(CDEPS) $(BINDIR)mbarivision
 
