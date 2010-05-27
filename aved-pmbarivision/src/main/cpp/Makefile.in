@@ -17,7 +17,7 @@ COMPILE1    := @echo
 COMPILE2    := @
 COMPILE3    := 
 CDEPS       := $(BINDIR)cdeps
-MPICXX      := @MPICXX@
+MPICXX      := @MPICC_PROG@
 
 all: $(CDEPS) clean $(BINDIR)pmbarivision $(BINDIR)pvisionTCPmbari
 
@@ -74,7 +74,8 @@ $(DEPFILE):$(CDEPS)
    	   --exeformat "$(SRCDIR)PvisionTCPmbari.C : $(BINDIR)pvisionTCPmbari" \
 	   --linkformat "$(SRCDIR) : $(OBJDIR)*.o" \
 	   --linkformat "$(SALIENCYROOT)/src/ : $(SALIENCYROOT)/build/obj/*.o" \
-   	   --linkformat "$(MBARIVISIONROOT)/src/main/cpp/src : $(MBARIVISIONROOT)/target/build/obj/*.o" \
+   	   --linkformat "$(MBARIVISIONROOT)/src/main/cpp/src/ : $(MBARIVISIONROOT)/target/build/obj/*.o" \
+   	   --linkformat "$(MBARIVISIONROOT)/src/main/cpp/src/ : $(MBARIVISIONROOT)/src/main/cpp/target/build/obj/*.o" \
 	   --output-link-deps \
 	   --output-compile-deps \
 	   --sources-variable SOURCES \
