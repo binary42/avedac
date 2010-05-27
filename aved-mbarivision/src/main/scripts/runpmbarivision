@@ -1,32 +1,61 @@
 #!/bin/bash
-# set -x
-# Name: runpmbarivision -w <worker_list>
+#
+# Name: runpmbarivision -w <worker_list> -a '<arguments to pass to pmbarivision>'
 #
 # This script executes the pmbarivision executable from any node in the beowulf cluster
-# using the mp2script. Workers to be used with this executable are defined in the
-# <worker_list> file
-#
-# Copyright (c) MBARI 2007
+# using the mp2script. pvisionTCPmbari workers to be used with this executable are 
+# defined in the <worker_list> file
+# 
+# Copyright (c) MBARI 2010
 # Author: D. Cline
-# Date: November 28, 2007
-#######################################################################################
-#exit on error; this will exit this bash script when any command exists with
-#a non-zero exit code
-#set -e
 #######################################################################################
 # init default variables
-E_NOFILE=66
+E_ERR=2
+E_NOPORTS=3
 debug=0 #debugging flag set to 1 to debug the pmbarivision binary
-worker_list=0
+worker_list=""
 num_procs=5 #only need 5 nodes for the pmbarivision MPI executable
-args=0
+args=""
 ############################################################################
 # Print usage
 print_usage()
 {
   echo "  "
-  echo -e "USAGE: runpmbarivision -w [worker output list -a "arguments to pass to pmbarivision" ]"
+  echo -e "USAGE: runpmbarivision -w workerfile  -a 'arguments to pass to pmbarivision' "
   echo "  "
+  echo -e "\033[1m -w \033[0m"
+  echo "      worker file containing the list of workers running pvisionTCPmbari "
+  echo "      that runpmbarivision will contact to execute the saliency computation"
+  echo "  "
+  echo "      this file must be formatted in the format:   node:port, e.g."
+  echo "  "
+  echo "      master.private.net:9726,node6.private.net:9726,node7.private.net:9726,"
+  echo "      node4.private.net:9726,node2.private.net:9726,node1.private.net:9726,"
+  echo "      node3.private.net:9726 "
+  echo "  "
+  echo -e "\033[1m -a \033[0m"
+  echo "      pass arguments to the pmbarivision executable. Be sure to enclose the "
+  echo "      arguments in quotes." 
+}
+###################################################################################
+# Beginning of runpmbarivision script
+###################################################################################
+checkexe()
+{
+# Find the executable 
+exe="`type -p $1`" 
+
+# If not found then we cannot use this script so bail out now
+if [ ! $exe ]; then
+   echo "Error: $1 not found"
+   exit 1
+fi
+
+# Change permissions if not set correctly by Condor transfer 
+if [ ! -x $exe ]; then
+   echo "Changing $exe to executable by user"
+   chmod u+x $exe
+fi
 }
 ############################################################################
 # Get port number
@@ -42,7 +71,7 @@ for i in `seq 1 10`
   do
   if ( set -o noclobber; echo "$$" > "$lockfile" ) 2>/dev/null;
       then
-      trap 'rm -f "$lockfile"; exit $?' INT TERM EXIT
+      trap 'rm -f "$lockfile"; exit $?' INT TERM 
      
       nextavail_port=`cat $portfile`
 
@@ -107,10 +136,10 @@ machine_file=`pwd`/pmbarivisionmachines
 
 if [ ! -f $host_file ]; then
     echo "File \"$host_file\" does not exist"
-    exit $E_NOFILE
+    exit $E_ERR
 fi
 
-# Only need 5 of the nodes for this 
+# Get the first $num_proces and put into  the machine file 
 head -n $num_procs $host_file > $machine_file
 
 # Check arguments
@@ -123,60 +152,73 @@ do
   esac
 done
 
-shift $((OPTIND-1))
-
-if [ [ $worker_list = 0  ] || [ $args = 0 ] ]
-then print_usage
-exit 1
+# If the worker list is missing then print usage and exit
+if [ ! -n "$worker_list"  ]; then
+    print_usage
+    exit $E_ERR
 fi
-
-# Defines the pvision workers - these are the workers that compute saliency
-# retry 10 times, and wait 3 second between retries in case the workers
-# are not running yet
-for i in `seq 1 10`
-  do
-  if [ ! -f $worker_list ]; then
-      echo "File \"$worker_list\" does not exist"
-      if [ "$i" = 4 ]; then 
-	  exit $E_NOFILE
-      fi
-  else
-      # Check if the mpi process is running
-      workerlist=`cat $worker_list`
-      pvisport=`cat $worker_list | cut -f2 -d ":" | cut -f1 -d ","`
-      tmp=`mpdlistjobs | grep pvisionTCPmbari$pvisport`
-      if [ "$tmp" == "" -a "$i" = 4 ]; then
-	  echo "Error - pvisionTCPmbari on $pvisport not running !!!"
-	  exit $E_NOFILE
-      else
-	  break
-      fi
-  fi
-  echo "Sleeping 3 seconds"
-  sleep 3
-done
-
-echo "Found $worker_list"
 
 # Define the MPI executable
-if [ $AVED_BIN ]; then
-    exec_file=$AVED_BIN/pmbarivision
+if [ ! $AVED_BIN ]; then
+    echo "Error - AVED_BIN environment variable not defined"
+    exit $E_ERR
 else
-    echo "Error - "$AVED_BIN" environment variable not defined"
-    exit 1
+    exec_file=$AVED_BIN/pmbarivision
 fi
 
-if [ ! $SCRATCH_DIR ]; then
-    echo "Error - "$SCRATCH_DIR" environment variable not defined"
-    exit 1
-fi
-
-# Define the MPI setup file and extract the port ranges for the pvisionmachine
+# Define the MPI setup file 
 mpisetup=/etc/aved/pmbarivision.mpi
 if [ ! -f $mpisetup ]; then
     echo "File \"$mpisetup\" does not exist"
-    exit $E_NOFILE
+    exit $E_ERR
 fi
+
+if [ ! $SCRATCH_DIR ]; then
+    echo "Error - SCRATCH_DIR environment variable not defined"
+    exit $E_ERR
+fi
+
+# Make sure runpvisionworkers is executable
+checkexe runpvisionworkers
+
+# Start up the pvision workers
+echo "Running runpvisionworkers -w "$worker_list""
+runpvisionworkers -w "$worker_list" & 
+pvis_pid=$!
+trap 'kill -9 $pvis_pid; exit $?' INT TERM EXIT
+echo "Sleeping 3 seconds waiting for workers to start"
+sleep 3
+pvisport=""
+
+# Check if the pvision workers are running 
+# retry 3 times, and wait 5 seconds between retries in case the workers
+# are not running yet
+for i in `seq 1 3`
+  do
+  
+  if [ ! -e "$worker_list" ]; then
+	if [ "$i" = 3 ]; then
+    	  echo "Error - cannot find $worker_list; this probably means the workers have failed"
+    	  exit $E_ERR
+    	  break
+	fi
+  else 
+    workerlist=`cat $worker_list`
+    pvisport=`cat $worker_list | cut -f2 -d ":" | cut -f1 -d ","`
+    echo "Looking for pvisionTCPmbari workers on port $pvisport" 
+# Check if the mpi job is running by looking up the job alias
+  tmp=`mpdlistjobs | grep pvisionTCPmbari$pvisport`
+  if [ "$tmp" ]; then
+     echo "Found pvisionTCPmbari workers on port $pvisport"
+     break
+  elif [ "$tmp" = "" -a "$i" = 3 ]; then
+     echo "Error - pvisionTCPmbari on $pvisport not running !!!"
+     exit $E_ERR
+  fi
+fi
+      echo "Retry $i after sleeping 5 seconds"
+      sleep 5  
+done
 
 portstart=`cat $mpisetup | grep "PMBARIVISION_PORT_START=" | cut -f2 -d "="`
 portend=`cat $mpisetup | grep "PMBARIVISION_PORT_END=" | cut -f2 -d "="`
@@ -195,21 +237,20 @@ if [ ! -e $portfile ]; then
     chmod a+rwx $portfile
 fi
 
+# Get the next available port
 getportnum $portfile $portstart $portend
    
 if [ $nextavail_port -eq -1 ]; then
     echo "Error - no ports available for processing.  Please try again in a few minutes"
-    exit 1
+    exit $E_NOPORTS
 fi
  
 # Append arguments for beowulf workers and disable floating point exceptions to 
 # make this version more tolerant to exceptions
-args="$args --ip-port=$nextavail_port --beowulf-slaves=$workerlist --use-fpe=false $@"
+args="$args --ip-port=$nextavail_port --beowulf-slaves=$workerlist --use-fpe=false"
       
 # Make sure mp2script is executable
-if [ ! -x mp2script ]; then
-    chmod u+x mp2script
-fi
+checkexe mp2script
 
 # Format and run command
 # If not running in debugger, then just run
@@ -217,15 +258,17 @@ if [ $debug = 0 ]; then
     echo "Running mp2script -h $machine_file -a pmbarivision$USER$nextavail_port -n $num_procs -e $exec_file -g "$args""
     mp2script -h $machine_file -a pmbarivision$USER$nextavail_port -n $num_procs -e $exec_file -g "$args"
 else
-    echo "Running mp2script -h $machine_file -a pmbarivision$USER$nextavail_port -n 5 -e $exec_file -g "$args""
-    mp2script -d -h $machine_file -a pmbarivision$USER$nextavail_port -n $num_procs -e $exec_file -g "$args" 
+    echo "Running mp2script -h $machine_file -a pmbarivision$USER$nextavail_port -n $num_procs -e $exec_file -g "$args""
+    mp2script -d -h $machine_file -a pmbarivision$USER$nextavail_port -n $num_procs -e $exec_file -g "$args"
 fi 
 
-# Kill pvisionworkers to free them up for someone else to use
+rc=$?
+trap - INT TERM EXIT
+
+# Kill pvisionTCPmbari workers in case they are still running 
 echo "Running  mpdkilljob -a pvisionTCPmbari$pvisport"
-mpdkilljob -a pvisionTCPmbari$pvisport 	
-rm -f $worker_list
+mpdkilljob -a pvisionTCPmbari$pvisport 
 
 echo "----------------------->runpmbarivision done - exit code: $? !!<-------------------"
-exit $?
+exit $rc
 

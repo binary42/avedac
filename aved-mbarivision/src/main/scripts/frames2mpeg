@@ -1,17 +1,15 @@
 #!/bin/bash
-#set -x
+#
 # Name: frames2mpeg
 # This script creates an MPEG-1 from sequence of pnm,ppm,or jpg frames
 #  
 # Usage:  frames2mpeg -i [input frames directory] -o [outfilename] [OPTIONS] 
 #
-# Copyright (c) MBARI 2003
-# Author: Danelle Cline, Karen A. Salamy
-# Date: July 11, 2003
+# Copyright (c) MBARI 2010
+# Authors: Danelle Cline, Karen A. Salamy
 #
-# In part, based on runavi script written by Karen Salamy.
-# modified to run mpeg_encode after running through transcode
-# software
+# exit on error - this will exit this bash script when any command exits with
+# a non-zero exit code
 set -e 
 ###################################################################################
 # Print usage
@@ -42,22 +40,24 @@ print_usage()
   echo "  "
   echo -e "\033[1m -m [input source metadata] \033[0m"
   echo "     input video source information is defined in the file input_source_metadata.xml"
-  echo "      (Example:  runmbarivision -i  testclip/20040513T001230 -o 20040513T001230.mpeg -m 20040513T001230.metadata.xml )"
+  echo "      (Example:  frames2mpeg -i  testclip/20040513T001230 -o 20040513T001230.mpeg -m 20040513T001230.metadata.xml )"
   echo "  "
   echo -e "\033[1m -r [output framerate] \033[0m"
   echo "      video frame rate to encode in the output mpeg-r 29.97. If not defined, defaults 29.97"
   echo "      can alternatively set the video frame rate using the metadata xml from the source these" 
   echo "      frames were extracted from (see the -m option) "
-  echo "      (Example:  runmbarivision -i  testclip/20040513T001230 -r 29.97 -o 20040513T001230.mpeg -m 20040513T001230.metadata.xml )"
+  echo "      (Example:  frames2mpeg -i  testclip/20040513T001230 -r 29.97 -o 20040513T001230.mpeg -m 20040513T001230.metadata.xml )"
   echo "  "
   echo -e "\033[1m -c \033[0m"
   echo "      Specify starting and ending frames to create mpeg from. "
   echo "  "
-  echo "       runmbarivision -c 0-30 -i 20040513T001230" 
+  echo "       frames2mpeg -c 0-30 -i 20040513T001230" 
   echo "(Example:  frames2mpeg -i  testclip/20040513T001230 -c 0-10 -o 20040513T001230.mpeg)"
   echo "  "
 }
 ###################################################################################
+# Initialize variables
+E_ERR=2
 input=""
 output=""
 user=`whoami`
@@ -68,6 +68,7 @@ frame_rate=29.97
 scratch=""
 startframe=0
 endframe=0
+export HOST=`hostname`
 
 # Check arguments
 while getopts i:o:f:r:m:c:sp option
@@ -79,7 +80,7 @@ do
    r)  frame_rate="$OPTARG";;
    m)  if [ ! -f "$OPTARG" ]; then
           echo "Error - cannot find file $OPTARG"
-	  exit 1
+	  exit $E_ERR
        fi
        frame_rate=`perl -S -w extract_source_framerate.pl -i=$OPTARG`;;
    s)  use_system_scratch=1;;
@@ -96,7 +97,7 @@ done
 # If the input and output files are empty print usage and exit
 if [ ! -n "$input" ] || [ !  -n "$output" ]; then
     print_usage
-    exit 1
+    exit $E_ERR
 fi
 
 # Add the path to the aved binaries if AVED_BIN is set
@@ -115,8 +116,8 @@ if [ $use_system_scratch = 1 ]; then
 	scratch=$SCRATCH_DIR
   	inputdir=$SCRATCH_DIR/$USER/$input
     else
-	echo "Error - \$SCRATCH_DIR environment variable is not defined"
-	exit 1
+	echo "Error \$SCRATCH_DIR and \$USER environment variable must be defined when using the -s option"
+	exit $E_ERR
     fi
 else
 # Get the current frames directory, excluding the symbolic link. This is 
@@ -130,7 +131,7 @@ if [ -d $inputdir ]; then
     echo "Found $inputdir"
 else
     echo "$inputdir does not exist"
-    exit 1
+    exit $E_ERR
 fi 
 
 # If the file seed is not specified, format the outputfilestem as the base input name followed by _
@@ -188,7 +189,7 @@ echo "startframe: $startframe endframe:$endframe filestem:$filestem fileext:$inp
 # Check if the first file exists
 if [ ! -f $filestem$startframe.$input_file_ext ]; then
     echo "Error - cannot find $filestem$startframe.$input_file_ext. Specify correct file stem using -f option"
-    exit 1
+    exit $E_ERR
 fi
 
 # Get image wxh size
@@ -235,7 +236,7 @@ node7 $user /home/aved/bin/mpeg_encode
 node8 $user /home/aved/bin/mpeg_encode 
 END_PARALLEL
 PARALLEL_PERFECT
-RSH rsh 
+RSH ssh 
 _ACEOF
 # Run mpeg_encode
 cmd="mpeg_encode -debug_machines -max_machines 8 $mpegparm_file"

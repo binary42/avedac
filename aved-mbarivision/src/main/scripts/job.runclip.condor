@@ -1,3 +1,23 @@
+##############################################################################
+# Condor job file to execute the runclip script
+#
+# This sets up the appropriate environment variables for executing runclip
+# on a computer enabled to run mbarivision
+# 
+# The job will create a mpeg clip of the results as well as a XML
+# file with the results.
+#
+# The job notifies the user upon its completion with an email. 
+# If this job runs longer than 4 hours it will be automatically 
+# terminated.
+#
+# This work would not have possible without the help of the Condor project
+# at the University of Wisconsin, Madison, USA.
+# For more information about the Condor software see http://www.cs.wisc.edu/condor/
+#
+# Copyright (c) MBARI 2010
+# Author: D. Cline
+#
 ############################################################################
 # Use vanilla universe
 ##############################################################################
@@ -14,7 +34,7 @@ $ENV(HOME)/aved/scripts/runmbarivision,\
 $ENV(HOME)/aved/scripts/extract_source_metadata.pl,\
 $ENV(HOME)/aved/scripts/frames2mpeg,\
 $ENV(HOME)/aved/scripts/clip2ppm,\
-$(inputfile),\
+$(input_file),\
 
 ##############################################################################
 # Set environment variables
@@ -32,7 +52,7 @@ Notification = Always
 ##############################################################################
 # Put a link to the data in the notification email
 ##############################################################################
-+ProcessedResultsURL = "$(processedresultsURL)"
++ProcessedResultsURL = "$(processed_results_url)"
 +EmailAttributes = "ProcessedResultsURL"
 
 ##############################################################################
@@ -41,7 +61,7 @@ Notification = Always
 # -m = use the video mask
 # -u = use the alternative inputURL base name
 ##############################################################################
-arguments = " -u $(inputURL) -g -i $(inputfile) " 
+arguments = " -u $(input_url) -g -i $(input_file) " 
 
 #############################################################################
 # Only run on machines enabled to run parallel mbarivision
@@ -51,9 +71,9 @@ requirements = (HAS_MBARIVISION =?= True) && (HAS_TRANSCODE =?= True) && \
 
 #############################################################################
 # Periodically check your job and then remove it if it has been running more 
-# than 3 hours
+# than 4 hours
 ############################################################################
-periodic_remove = (JobStatus == 2) && ((CurrentTime - EnteredCurrentStatus) > 48000)
+periodic_remove = (JobStatus == 2) && ((CurrentTime - EnteredCurrentStatus) > 14400)
 
 ##############################################################################
 # Log files for this job

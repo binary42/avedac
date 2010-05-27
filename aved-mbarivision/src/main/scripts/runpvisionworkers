@@ -1,5 +1,5 @@
 #!/bin/bash
-# set -x
+#
 # Name: runpvisionworkers -w <worker_list>
 #
 # This script executes the mp2script to launch the pvisionTCPmbari workers
@@ -10,19 +10,21 @@
 # systerm on the Beowulf cluster, such as /mnt/scratch.
 # 
 # This is intended to be used in conjunction with the runpmbarivision
-# script. Pass the same <worker_list> to the runpmbarivision 
+# bash script. Pass the same <worker_list> to the runpmbarivision 
 # <worker_list> executable
 # 
-# Copyright (c) MBARI 2007
+# Copyright (c) MBARI 2010
 # Author: D. Cline
-# Date: July 09, 2007
+#
 ############################################################################
+set -e
 # Init default variables
-E_NOFILE=66
+E_ERR=2
+E_NOPORTS=3
 SUCCESS=0
 FAILURE=-1
 debug=0 #debugging flag set to 1 to debug the pvisionTCPmbari binary
-worker_list=
+worker_list=""
 randomize_perl_script=randomize.pl
 num_pvis_workers=7
 port=-1
@@ -34,6 +36,26 @@ print_usage()
   echo -e "USAGE: runpvisionworkers -w [worker output list]"
   echo "  "
 }
+###################################################################################
+# Beginning of runpmbarivision script
+###################################################################################
+checkexe()
+{
+# Find the executable 
+exe="`type -p $1`"
+
+# If not found then we cannot use this script so bail out now
+if [ ! $exe ]; then
+   echo "Error: $1 not found"
+   exit 1
+fi
+
+# Change permissions if not set correctly by Condor transfer 
+if [ ! -x $exe ]; then
+   echo "Changing $exe to executable by user"
+   chmod u+x $exe
+fi
+}
 ############################################################################
 # Get port number
 getportnum()
@@ -43,13 +65,11 @@ lockfile=$1\.lock
 portstart=$2
 portend=$3
 nextavail_port=-1
-
 for i in `seq 1 10`
   do
   if ( set -o noclobber; echo "$$" > "$lockfile" ) 2>/dev/null;
       then
-      trap 'rm -f "$lockfile"; exit $?' INT TERM EXIT
-     
+      trap 'rm -f "$lockfile"; echo "runpvisionworkers TRAP"; exit $E_ERR' INT TERM EXIT 
       nextavail_port=`cat $portfile`
 
       # If port is out of range, then reset it
@@ -63,8 +83,19 @@ for i in `seq 1 10`
       for port in `seq $nextavail_port $portend`
 	do
         # Gather information about any jobs or processes potentially using this port
-	mpdjobs=`mpdlistjobs | grep $port`
-	netstatlocal=`netstat | grep '$port' | grep TIME_WAIT `
+	if [ `mpdcheck` ]; then
+   	jobs=`mpdlistjobs`
+	else
+	jobs=""
+	fi
+	if [ "$jobs" -a "$port" ]; then
+	mpdjobs=`echo $jobs | grep $port`
+	else
+	mpdjobs=""
+	fi
+	if [ "`netstat -t | grep "$port" | grep TIME_WAIT `" ]; then
+	netstatlocal=`netstat -t | grep "$port" | grep TIME_WAIT `
+	fi
 	pvisionjobs=`ps -eo "%p %a" | grep -e pvisionTCPmbari | grep -e $port | cut -f1 -s -d " "`  	  
 	
         # If port is being used by another job report it
@@ -85,12 +116,14 @@ for i in `seq 1 10`
         # Increment and write the next available port
 	    ((port += 1))
 	    echo "$port" > $portfile  
+            rm -f "$lockfile"
+            trap - INT TERM EXIT 
 	    break
 	fi
       done
 
       rm -f "$lockfile"
-      trap - INT TERM EXIT
+      trap - INT TERM EXIT 
       break
   else
       echo "Failed to acquire lockfile: $lockfile."
@@ -119,28 +152,35 @@ do
   esac
 done
 
-shift $((OPTIND-1))
-
-if [ "x$worker_list" = x  ]; then 
-print_usage
-exit 1
+# If the worker list is not defined print usage and exit
+if [ ! "$worker_list"  ]; then
+    print_usage
+    exit $E_ERR
 fi
 
 # Setup MPI 
 MPDIR=/opt/mpich2-1.1p1/bin
 export PATH=$MPDIR:.:$PATH
 
+# Check all the required environment variables
+if [ ! $SCRATCH_DIR ]; then
+    echo "Error \$SCRATCH_DIR not defined. Set this to the directory"
+    exit $E_ERR
+fi
+
+if [ ! $AVED_BIN ]; then
+    echo "Error \$AVED_BIN environment variable not defined. Set this to the directory pvisionTCPmbari executable is in."
+    exit $E_ERR
+fi
+
+# Add the condor scratch path to the path for running
+# executables
 if [ $_CONDOR_SCRATCH_DIR ]; then
     export PATH=$_CONDOR_SCRATCH_DIR:$PATH
 fi
 
 # Define the pvisionTCP executable
-if [ $AVED_BIN ]; then
-    exec_file=$AVED_BIN/pvisionTCPmbari
-else
-    echo "Error - "\$AVED_BIN" environment variable not defined. Define this to the location that the mbarivision/pmbarivision executables reside in."
-    exit 1
-fi
+exec_file=$AVED_BIN/pvisionTCPmbari
 
 # Define the machine file. Change this to point to the MPICH installation 
 # directory on your machine
@@ -149,7 +189,7 @@ machine_file=$MPDIR/etc/mpd.hosts
 
 if [ ! -f $machine_file ]; then
     echo "File \"$machine_file\" does not exist"
-    exit $E_NOFILE
+    exit $E_ERR
 fi
 
 echo "----MPI machines available------------"
@@ -159,16 +199,15 @@ sort -n +0 < $machine_file | awk '{print $1}'
 mpisetup=/etc/aved/pmbarivision.mpi
 if [ ! -f $mpisetup ]; then
     echo "File \"$mpisetup\" does not exist"
-    exit $E_NOFILE
+    exit $E_ERR
 fi
-
 # Extract the port ranges for the workers and check if they are valid digits
 portstart=`cat $mpisetup | grep "PVISIONWORKER_PORT_START=" | cut -f2 -d "="`
 portend=`cat $mpisetup | grep "PVISIONWORKER_PORT_END=" | cut -f2 -d "="`
 
 if ! isdigit "$portstart" || !  isdigit "$portend" ; then
     echo "Invalid ports defined: $portstart $portend correct this in the file: $mpisetup "
-    exit 2
+    exit $E_ERR
 fi
 
 # Define the port file that maintains the last used port
@@ -190,17 +229,12 @@ getportnum $portfile $portstart $portend
    
 if [ $nextavail_port -eq -1 ]; then
     echo "Error - all workers busy. No vision workers available for processing.  Please try again in a few minutes"
-    exit 1
+    exit $E_NOPORTS
 fi
 
 # Export the contact file for CONDOR to use
 CONDOR_CONTACT_FILE="`pwd`"\/pvisionworkermachines
 
-if [ ! -x $randomize_perl_script ]; then
-    echo "Changing permissions on $randomize_perl_script"
-    chmod u+x $randomize_perl_script
-fi
- 
 # Remove the first line of the machine file listing and preserve this from the randomize
 # *IMPORTANT* THIS ASSUMES THE FIRST LINE IN YOUR mpd.hosts file is the master node in your 
 # Beowulf cluster from where this script will be run
@@ -210,40 +244,41 @@ sed '1d' $machine_file > mpd.conf
 # heavy loading on particular machines because some workers do more work than others
 perl -S $randomize_perl_script mpd.conf > mpd.conf.tmp  
 
-# Reinsert the first line which should be the  master node
+# Reinsert the first line which should be the master node
 a=`head -n 1 $machine_file`
 sed -i '1i\'$a'' mpd.conf.tmp
 
 # Add an extra line to work with sed in next format.
 # This allows the last item in the list to parse out correctly 
 # in the next sed function that appends the port number to each host
+
 head -n $num_pvis_workers mpd.conf.tmp > $CONDOR_CONTACT_FILE
 echo "" >> $CONDOR_CONTACT_FILE
-rm mpd.conf.tmp mpd.conf
+rm mpd.conf*
 
 # Append :port to each host in the machine file
 workers=`sed -e:a -e'$!N;s/\n/:'$nextavail_port,/';ta' -e 'P;D' $CONDOR_CONTACT_FILE `
   
-# Now remove the emtpy line
+# Now remove the empty line
 sed -i '/^$/d' $CONDOR_CONTACT_FILE
 
 # Strip off the last comma (,) and put the worker list in a file
 list=${workers/%$nextavail_port,/$nextavail_port}  
 echo $list  > $worker_list      
   
-# Make sure the mp2script is executable
-if [ ! -x mp2script ]; then
-   chmod u+x mp2script
-fi
+# Make sure the mp2script is executable 
+checkexe mp2script 
+
+args="--logverb=Error --ip-port=$nextavail_port"
  
-# If not running in debugger, then just run
+# If not running in debugger, then just run 
 if [ $debug = 0 ]; then
-    echo "Running mp2script -a pvisionTCPmbari$nextavail_port -h $CONDOR_CONTACT_FILE  -e $exec_file -n $num_pvis_workers -c -g "--logverb=Error --ip-port=$nextavail_port" "
-    mp2script -a pvisionTCPmbari$nextavail_port -h $CONDOR_CONTACT_FILE  -n $num_pvis_workers -e $exec_file -c -g "--logverb=Error --ip-port=$nextavail_port"
+    echo "Running mp2script -a pvisionTCPmbari$nextavail_port -h $CONDOR_CONTACT_FILE  -e $exec_file -n $num_pvis_workers -c -g "$args""
+    mp2script -a pvisionTCPmbari$nextavail_port -h $CONDOR_CONTACT_FILE  -n $num_pvis_workers -e $exec_file -c -g "$args"
 else
-    echo "Running mp2script -d -a pvisionTCPmbari$nextavail_port -h $CONDOR_CONTACT_FILE  -e $exec_file -n num_pvis_workers -c -g "--ip-port=$nextavail_port" "
-    mp2script -d -a pvisionTCPmbari$nextavail_port -h $CONDOR_CONTACT_FILE -n $num_pvis_workers -e $exec_file -c -g "--ip-port=$nextavail_port"
-fi
+    echo "Running mp2script -d -a pvisionTCPmbari$nextavail_port -h $CONDOR_CONTACT_FILE  -e $exec_file -n num_pvis_workers -c -g "$args""
+    mp2script -d -a pvisionTCPmbari$nextavail_port -h $CONDOR_CONTACT_FILE -n $num_pvis_workers -e $exec_file -c $args
+fi 
 rc=$?
 rm -f $worker_list
 

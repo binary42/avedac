@@ -1,7 +1,26 @@
 #!/bin/bash
-#This script assumes you have installed mbarivision to /usr/local/aved/bin
-#If it is installed somewhere else, then change this script accordingly
-#or change your aved.sh/aved.csh.
+#
+# Name: install
+#
+# *Important* run this in the same directory as the scripts
+#
+# USAGE:  install
+#
+# This script installs the AVEDac user enviroment on
+# a single host. To setup the  environment on a Beowulf
+# cluster, run the installbeo script instead.
+#
+# This assumes mbarivision is installed in /usr/local/aved/bin
+#
+# Change this script accordingly, if it is installed in
+# another location, e.g. /usr/aved/bin, /opt/aved
+#
+# Copyright (c) MBARI 2010
+# Author: D. Cline
+#
+# exit on error - this will exit this bash script when
+# any command exits with a non-zero exit code
+set -e
  
 USERID=`id -u`
 if [ $USERID != 0 ]; then
@@ -9,11 +28,16 @@ if [ $USERID != 0 ]; then
 	exit 0
 fi
 
+if [ ! $AVED_BIN ]; then
+    echo "Error \$AVED_BIN environment variable not defined"
+    exit 1
+fi
+
 mkdir -p /usr/local/aved/scripts
 mkdir -p /usr/local/aved/bin
 cp -fp * /usr/local/aved/scripts
 
-# If a profile.d directory exists, install paths there 
+# Install paths in profile.d directory if it exists
 if [ -d /etc/profile.d ]; then 
 cat >/etc/profile.d/aved.sh <<_ACEOF 
 export AVED_BIN=/usr/local/aved/bin
@@ -26,7 +50,7 @@ setenv PATH=$PATH:/usr/local/aved/scripts:$AVED_BIN
 _ACEOF
 fi
 
-# If a profile file exists, install paths there
+# Install paths in profile file if it exists
 if [ -e /etc/profile ]; then
 cat >>/etc/profile <<_ACEOF
 export AVED_BIN=/usr/local/aved/bin

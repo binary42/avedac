@@ -1,5 +1,4 @@
 #!/bin/bash
-#set -x
 #
 # Name: runmbarivision
 # This script searches for PPM's in the input directory and runs mbarivision
@@ -10,10 +9,6 @@
 # Author: D. Cline
 # Date: March 23, 2007 - Created based on runclip script
 # 
-###################################################################################
-# Exit on error; thie will exit this script when any command exist with a non-zero
-# exit code
-set -e
 ###################################################################################
 # Print usage
 print_usage()
@@ -33,10 +28,10 @@ print_usage()
   echo "      (Example:  runmbarivision -s -i 20040513T001230 -m input_source_metadata.xml )"
   echo "  " 
   echo -e "\033[1m -a \033[0m"
-  echo "     use alternative script or executable to process - this alternative must understand the same arguments at mbarivision "
+  echo "     use alternative vision executable/script. This alternative must understand the same arguments at mbarivision "
   echo "     it can be a script, or a binary but is typically used to run the runpmbarivision script that launches pmbarivision "
-  echo "     instead of mbarivision"
-  echo "     (Example:  runmbarivision -a runpmbarivision -s -i testclip/20040513T001230 )"
+  echo "     instead of mbarivision. If more than one argument, place in quotes."
+  echo "     (Example:  runmbarivision -a 'runpmbarivision -w testclip/20040513T00123.workers' -s -i testclip/20040513T001230 )"
   echo "  "
   echo -e "\033[1m -b \033[0m"
   echo "      Specify frames to be processed. "
@@ -67,45 +62,43 @@ rmall() {
 # Beginning of rununmbarivision script
 ###################################################################################
 # Initialize variables
-input=0
+E_ERR=2
+input=""
 use_system_scratch=0
-splat="*"
 dash="-"
-delim="_"
-delimx="x"
 framefileext=".ppm" 
-visionexe="mbarivision"
-displayoptions=
-framegrab=0
+vision_exe="mbarivision"
 start_frame=0
 end_frame=0
-dpxframes=0
 use_metadata=0
-use_modeloptions=0
 mbarivision_options=
-worker_option=
+has_workers=0
+workers=
 
 # Check arguments
-while getopts a:i:m:l:b:e:w:s option 
+args=`getopt -o a:i:m:b:e:w: -- "$@" `
+if test $? != 0; then
+    print_usage
+    exit $E_ERR
+fi
+
+eval set -- "$args" 
+for i
 do
-  case $option in   
-   a)  visionexe="$OPTARG";;
-   i)  input="$OPTARG";;
-   m)  input_metadata="$OPTARG"
-       use_metadata=1;;
-   b)  start_frame=$OPTARG;;
-   e)  end_frame=$OPTARG;;
-   w)  # this option is used in runpmbarivision - just pass it through 
-       worker_option="-w ${OPTARG}";;
-   *)  echo "Unimplemented option chosen."
-       echo "  "
-       print_usage;;
+  case $i in   
+   -a)  shift;vision_exe="$1";shift;;
+   -w)  shift;has_workers=1;workers="$1";shift;;
+   -i)  shift;input="$1";shift;;
+   -m)  shift;input_metadata="$1"
+       use_metadata=1;shift;;
+   -b)  shift;start_frame=$1;shift;;
+   -e)  shift;end_frame=$1;shift;;  
   esac
 done
 
-if [ $input = 0  ]
-then print_usage
-exit 1
+if [ ! "$input"  ]
+    then print_usage
+    exit $E_ERR
 fi
 
 basefile=$(basename $input)
@@ -140,12 +133,6 @@ if [ $AVED_BIN ]; then
     export PATH=$PATH:$AVED_BIN
 fi
 
-visionexe_final="`type -p $visionexe`"
-if [ ! "$visionexe_final" ]; then
-    echo "Error: $visionexe not found in search path $PATH"
-    exit 0
-fi 
-
 # Initialize outputfile seed to the input file stem
 output_file_stem=$dir_name
 
@@ -176,12 +163,12 @@ input_file_stem=`perl -e '$_="'$h'";' -e '($b)=m/.([a-z._%+-]+)[0-9]+.'$input_fi
 
 if [ ! "$input_file_ext" ]; then
   echo "Error: cannot find the file extension for the input frames"
-  exit 1 
+  exit $E_ERR 
 fi
 
 if [ ! "$input_file_stem" ]; then
   echo "Error: cannot find the file stem for the input frames"
-  exit 1 
+  exit $E_ERR 
 fi
 
 # Next, if start/end frames not specified find starting and ending frames 
@@ -189,6 +176,7 @@ if [ $start_frame = 0 ] && [ $end_frame = 0 ]; then
     start_frame=`perl -e '$_="'$h'";' -e '($b)=m/.\/[a-zA-Z._%+-\/]+([0-9]+).'$input_file_ext'/g;' -e 'print "$b";'`
     end_frame=`perl -e '$_="'$t'";' -e '($b)=m/.\/[a-zA-Z._%+-\/]+([0-9]+).'$input_file_ext'/g;' -e 'print $b;'` 
 fi
+
 echo "head:$h tail:$t filestem:$input_file_stem fileext:$input_file_ext startframe:$start_frame endframe:$end_frame"
 
 # Move out of output directory
@@ -222,15 +210,18 @@ mbarivision_options="\
 --mbari-save-event-summary=$dir_name.summary \
 $mbarivision_options \
 "
-if [ $worker_option ]; then
- mbarivision_options="$worker_option -a '$mbarivision_options'"
+
+if [ $has_workers = 1 ]; then
+  cmd="$vision_exe -w $workers -a '$mbarivision_options'"
+else
+  cmd="$vision_exe $mbarivision_options "
 fi
 
 # Insert Vision Saliency commands and run.
 cat >mbarivis_command <<_ACEOF 
 #!/bin/bash
 set -e
-$visionexe_final $mbarivision_options
+$cmd
 exit 0
 _ACEOF
 
@@ -239,10 +230,12 @@ chmod ugo+x mbarivis_command
 echo "executing mbarivis_command"
 cat ./mbarivis_command 
 ./mbarivis_command 
+rc=$?
+echo "----------------->mbarivis_command done - return code $rc !!<--------------------------"	 
 
-# If there are any events created, copy them back to the originator
-# the event-centered clips are stored in the same directory as the output
-# so  move into the output directory to search for them and copy
+# If there are any events created, copy them back to the originator.
+# The event-centered clips are stored in the same directory as the output
+# so  move into the output directory, search for them, then copy
 # them back to the originator 
 pushd $output_dir;
 if [ `find ./ -maxdepth 1 -type f -name '*evt*.p?m' | wc -l` -gt 0 ]; then
@@ -256,5 +249,5 @@ fi
 popd;
 
 echo "Done with runmbarivision !"
-exit 0
+exit $rc
 

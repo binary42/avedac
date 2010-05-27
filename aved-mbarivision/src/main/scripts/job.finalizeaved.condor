@@ -1,4 +1,14 @@
 ##############################################################################
+# Condor job file to simply terminate the workflow with an echo'd argument
+#
+# This work would not have possible without the help of the Condor project
+# at the University of Wisconsin, Madison, USA.
+# For more information about the Condor software see http://www.cs.wisc.edu/condor/
+#
+# Copyright (c) MBARI 2010
+# Author: D. Cline
+#
+##############################################################################
 # Setup vanilla universe, this means this program is not compiled with the
 # condor wrapper, and cannot be checkpointed or migrated.
 ##################################m############################################

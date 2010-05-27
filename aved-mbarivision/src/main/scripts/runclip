@@ -1,5 +1,5 @@
 #!/bin/bash
-#set -x
+#
 # Name: runclip
 # This script transcodes an .AVI or .MOV into a sequence of frames. First
 # it transcodes frames into .PPM format, runs the frames into the Saliency 
@@ -37,7 +37,8 @@ print_usage()
   echo "OPTION"
   echo -e "\033[1m -a \033[0m"
   echo "      Use pmbarivision alternative exectuable file or script instead of default mbarivision"
-  echo "      (Example:  runclip -a runpmbarivision -i filename.avi)"
+  echo "      If this is a script with arguments, be sure to enclose the option arguments in quotes." 
+  echo "      (Example:  runclip -a "runpmbarivision -w /mnt/scratch/workers" -i filename.avi)"
   echo "  "
   echo -e "\033[1m -x \033[0m"
   echo "      Display output to X Window"
@@ -132,6 +133,7 @@ fi
 }
 ###################################################################################
 # Initialize variables
+E_ERR=2
 input=""
 scratch_env=0 #1 if a scratch environment variable was defined
 profile="" #default profile option
@@ -141,8 +143,10 @@ height=480
 displayx=0
 saveevents=0
 creatempeg=0
-visionexe="mbarivision"
+vision_exe="mbarivision"
 display_options=
+has_workers=0
+workers=""
 start_frame=0
 end_frame=0
 dpxframes=0
@@ -160,10 +164,10 @@ use_system_scratch=0
 use_parallel_mpeg=0
 
 # Check arguments
-args=`getopt -o Xxvpgb:e:i:a:f:s:m:u:t: -- "$@" `
+args=`getopt -o Xxvpgb:e:i:a:f:s:m:u:w:t: -- "$@" `
 if test $? != 0; then
     print_usage
-    exit
+    exit $E_ERR
 fi
 
 eval set -- "$args" 
@@ -171,7 +175,7 @@ for i
 do
   case $i in  
    -i)  shift;input="$1";shift;;   
-   -a)  shift;visionexe="$1";shift;;
+   -a)  shift;vision_exe="$1";shift;;
    -b)  shift;start_frame=$1;shift;;
    -e)  shift;end_frame=$1;shift;;
    -g)  shift;creatempeg=1
@@ -186,8 +190,8 @@ do
        echo "Using input URL $inputURL " ;;
    -s) shift;segmentAlgorithm=${1%-*};shift
        echo "Process with $segmentAlgorithm segmentation algorithm " ;;
-   -m) shift;part1tmp=${1%-*};shift
-       part2tmp=${1#*-}
+   -m) shift;part1tmp=${1%-*}
+       part2tmp=${1#*-};shift;
        mask=1  
        if [ $part1tmp = $part2tmp ]; then # Just 1 parameter so a file is in reference
    	   mask_path=$part1tmp
@@ -211,6 +215,7 @@ do
        echo "Display processed output to X Window";;
    -X)  shift;dpxframes=1
        echo "Processing DPX frames";;
+   -w) shift;has_workers=1;workers="$1";shift;;
   esac
 done
 
@@ -248,7 +253,7 @@ checkexe "runmbarivision"
 checkexe "extract_source_metadata.pl"
 checkexe "frames2mpeg"
 checkexe "clip2ppm"
-checkexe "$visionexe"
+checkexe "$vision_exe"
 
 if [ $input ]; then
     basefile=$(basename $input)
@@ -263,7 +268,7 @@ if [ $input ]; then
 	    echo "Found  $input"
 	else
 	    echo "Cannot find  $input"
-	    exit
+	    exit $E_ERR
 	fi   
 	# Get the absolute path of the input directory 
 	# Append the output directory with the input file stem
@@ -299,7 +304,7 @@ if [ $input ]; then
 	    echo "Found $input"
 	else
 	    echo "Cannot find $input"
-	    exit
+	    exit $E_ERR
 	fi 
 	D=$(dirname $input)
 	abspath="`cd $D && pwd `" 
@@ -308,7 +313,7 @@ if [ $input ]; then
     fi
 else
     print_usage
-    exit
+    exit $E_ERR
 fi
 
 echo "Using $output_dir as scratch space"
@@ -399,21 +404,26 @@ perl -w -S extract_source_metadata.pl -i="$abspath/$basefile" -o="$metadata" -u=
 # Format the options and put them in the environment variable
 options="$profile_options $display_options $model_options"
 export MBARIVISION_OPTIONS="$MBARIVISION_OPTIONS $options"
-export LAM_MPI_MBARIVISION_OPTIONS="$MBARIVISION_OPTIONS"
 
 # Format the command to execute runmbarivision
+# The order of these options is important
 if [ $start_frame = 0 ] && [ $end_frame = 0 ];then
-  cmd="runmbarivision -a $visionexe -i $output_dir" 
+  cmd="runmbarivision -m $basefile.metadata.xml -i $output_dir -a $vision_exe" 
 else
-  cmd="runmbarivision -a $visionexe -i $output_dir -b $start_frame -e $end_frame"
+  cmd="runmbarivision -m $basefile.metadata.xml -b $start_frame -e $end_frame -i $output_dir -a $vision_exe"
 fi
 
-# Add in metadata 
-cmd="$cmd -m $basefile.metadata.xml "
-
-# Run the command
+# Add in the pvision workers if requested
+if [ $has_workers = 1 ]; then
+  cmd="$cmd -w $workers"
+fi
 echo "Running $cmd"
 $cmd
+rc=$?
+
+if [ $rc = $E_ERR ]; then
+  exit $E_ERR
+fi
 
 # Create an mpeg if requested
 if [ $creatempeg = 1 ]; then

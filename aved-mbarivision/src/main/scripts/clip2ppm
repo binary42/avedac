@@ -1,14 +1,15 @@
 #!/bin/bash
-#set -x
-# Copyright (c) MBARI 2007
-# Author: D. Cline
-# Date: April 28, 2007 - Created
 #
-#exit on error; this will exit this bash script when any command exists with
-#a non-zero exit code
+# Name: clip2ppm
+# This script converts a video clip into individual ppm frames in preparation
+# for AVEDac processing.
+#
+# Copyright (c) MBARI 2010
+# Author: D. Cline
+#
+# exit on error - this will exit this bash script when any command exits with
+# a non-zero exit code
 set -e
-SUCCESS=0
-FAILURE=-1
 ###################################################################################
 # Print usage
 print_usage()
@@ -30,21 +31,33 @@ print_usage()
   echo "      (Example:  clip2ppm -s -t '-J smartdeinter=diffmode=2:highq=1:cubic=1,xsharpen=strength=25' -i filename.AVI -o mytest/output )"
   echo "  "
   echo -e "\033[1m -b \033[0m"
-  echo "     beginning frame. This is generally used with the ending frame option '-e'. For example
-  echo "     to transcode only the first 30 frames. However, this can also be used without the '-e' option.
+  echo "     beginning frame. This is generally used with the ending frame option '-e'. For example, "
+  echo "     to transcode only the first 30 frames:"
   echo "      (Example:  clip2ppm -b 0 -e 30 -i filename.AVI -o mytest/output )"
   echo "  "
+  echo "     However, this can also be used without the '-e' option. In this case, the ending frame defaults to the last frame of the clip."
+  echo "     For example, to transcode from the 100th frame to the end:"
+  echo "      (Example:  clip2ppm -b 100 -i filename.AVI -o mytest/output )"
+  echo "  "
   echo -e "\033[1m -e \033[0m"
-  echo "     ending frame. This is generally used with the beginning frame option '-b'. For example
-  echo "     to transcode only the first 30 frames. However, this can also be used without the '-b' option.
+  echo "     ending frame. This is generally used with the beginning frame option '-b'. "
+  echo "     For example, to transcode only the first 30 frames: " 
   echo "      (Example:  clip2ppm -b 0 -e 30 -i filename.AVI -o mytest/output )"
+  echo "  "
+  echo "     However, this can also be used without the '-b' option. In this case, the beginning frame defaults to 0."
+  echo "     For example, to transcode from the beginning to the 100th frame:"
+  echo "      (Example:  clip2ppm -e 100 -i filename.AVI -o mytest/output )"
   echo "  "
   echo "  "
 }
 frame_number=0
+
 ##################################################################################
-isdigit ()    # Tests whether *entire string* is numerical.
-{             # In other words, tests for integer variable.
+# Tests whether *entire string* is numerical.  In other words, tests for integer variable.
+# returns $SUCCESS if a numerical string; $FAILURE otherwise
+##################################################################################
+isdigit ()    
+{            
   [ $# -eq 1 ] || return $FAILURE
 
   case $1 in
@@ -102,6 +115,8 @@ timecode2counter()
     esac
 }
 ###################################################################################
+# Utility function to remove very long listings of files 
+###################################################################################
 rmall()
 {
    tmp=./tmp.$RANDOM
@@ -112,9 +127,11 @@ rmall()
 }
 ###################################################################################
 # Initialize variables
-input=0
-output=0
-use_condor_scratch=0
+E_ERR=2
+SUCCESS=0
+FAILURE=-1
+input=""
+output=""
 use_system_scratch=0
 has_timecode=0
 transcode_opts=""
@@ -128,7 +145,7 @@ end_frame=0
 args=`getopt -o t:i:o:e:b:s -- "$@" `
 if test $? != 0; then
     print_usage
-    exit
+    exit $E_ERR
 fi
 
 eval set -- "$args" 
@@ -148,9 +165,11 @@ do
   esac
 done
 
-if [ $input = 0 -o $output = 0 ]
-then print_usage
-exit 1
+
+# If the input and output files are empty print usage and exit
+if [ ! -n "$input" ] || [ !  -n "$output" ]; then
+    print_usage
+    exit $E_ERR
 fi
 
 # Add the path to the aved binaries if AVED_BIN is set
@@ -169,8 +188,8 @@ if [ $use_system_scratch = 1 ]; then
     if [ $SCRATCH_DIR -a $USER ]; then
 	outputdir=$SCRATCH_DIR/$USER/$output
     else
-	echo "Error \$SCRATCH_DIR or \$USER environment variable not defined and -s option chosen in clip2ppm script"
-	exit 1
+	echo "Error \$SCRATCH_DIR and \$USER environment variable must be defined when using the -s option"
+	exit $E_ERR
     fi
 else  
     outputdir=$output
@@ -206,7 +225,7 @@ pushd $outputdir
 # Initialize the file seed
 outputfileseed=f
 
-# Remove any files the file seed and extension
+# Remove any previous ppm files generated
 rmall "$outputfileseed*.ppm"
 
 # Check if this file has a ISO8601 timecode timestamp and extract
@@ -219,7 +238,7 @@ then
     has_timecode=1
 fi
 
-
+# Format the transcode option for start/end frames if defined
 if [ $start_frame -lt $end_frame ]; then
   transcode_opts=" -c $start_frame-$end_frame $transcode_opts "
 fi
@@ -251,7 +270,8 @@ case $input in
     echo "Executing $cmd"
     $cmd
     ;;
-    *.mov )  delimx="x"
+    *.mov )  
+    delimx="x"
     tmp=./tmp.$RANDOM
     if which oqtinfo &>/dev/null; then
 	oqtinfo -l $input > $tmp
@@ -294,6 +314,15 @@ case $input in
     cmd="transcode -q 0  -i $input -x mpeg2,null -y ppm,null -o $outputfileseed $extra_args $transcode_opts"
     echo "Executing $cmd"
     $cmd;;
+    *.wmv )
+    echo "Error unsupported format: wmv. Try using ffmpeg to convert to an avi first, for example" 
+    echo ""
+    echo "   fmpeg -i $input -r 29.97 -b 2799k -an -vtag DX50 -y $filestem.avi"
+    echo ""
+    echo "followed with:"
+    echo ""
+    echo "   clip2ppm -i $filestem.avi -o $output"
+    exit $E_ERR;; 
     * ) 
     cmd="transcode -q 0 -i $input -o $outputfileseed -y ppm,null $extra_args $transcode_opts" 
     echo "Executing $cmd"

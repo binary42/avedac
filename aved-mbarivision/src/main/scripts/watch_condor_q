@@ -1,5 +1,6 @@
 #!/bin/sh
+# Displays all running jobs with a 5 second delay in between
 while true; do
-	condor_q -dag
-	sleep 30
+	condor_q -dag -r
+	sleep 5
 done

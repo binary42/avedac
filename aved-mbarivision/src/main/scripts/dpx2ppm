@@ -1,17 +1,15 @@
 #!/bin/bash
-#set -x
 #
 # Name: dpx2ppm
 # This script converts a .DPX image file to a .PPM file format.
 #
 # Usage: dpx2ppm filename.dpx
 #
-# Copyright (c) MBARI 2005
-# Author: Danelle E. Clnie
-# Date: Octoboer 31, 2005
+# Copyright (c) MBARI 2010
+# Author: D. Cline
 #
-#exit on error; this will exit this bash script when any command exists with
-#a non-zero exit code
+# exit on error - this will exit this bash script when any command exits with
+# a non-zero exit code
 set -e 
 ###################################################################################
 # Print usage

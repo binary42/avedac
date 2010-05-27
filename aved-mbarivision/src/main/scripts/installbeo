@@ -1,15 +1,20 @@
 #!/bin/bash
 #
-# set -x
 # Name: installbeo
-# This script configures the beowulf for AVED parallel processing
-# Copyright (c) MBARI 2007
+#
+# This script configures the beowulf for parallel processing with
+# pmbarivision and pvisionTCPmbari.
+# 
+# Password-less ssh login is also required for running these binaries
+# with the MPI libraries
+#
+# Copyright (c) MBARI 2010
 # Author: D. Cline
-# Date: July 10, 2007
 #
-#
-#######################################################################################
-# Defines the pmbarivision file with machine names and port ranges for MPI execution
+# exit on error - this will exit this bash script when any command exits with
+# a non-zero exit code
+set -e
+
 # Check if root
 USERID=`id -u`
 if [ $USERID != 0 ]; then
@@ -30,7 +35,7 @@ cat >$file <<_ACEOF
 #######################################################################
 # Configuration file for AVED parallel version
 #######################################################################
-# Defines the ports to use for the parallel mbarivision
+# Defines the ports to use for the pmbarivision
 # The PMBARIVISION_PORT_START/END must be a different
 # range than the PVISIONWORKER_PORT_START/END
 #######################################################################
@@ -38,25 +43,20 @@ PMBARIVISION_PORT_START=$pmbarivis_portstart
 PMBARIVISION_PORT_END=$pmbarivis_portend
 
 #######################################################################
-# Defines the ports to use for the pvision workers
+# Defines the ports to use for the pvisionTCPmbari workers
 #######################################################################
 PVISIONWORKER_PORT_START=$pvisworker_portstart
 PVISIONWORKER_PORT_END=$pvisworker_portend
 _ACEOF
 
-# Create if needed and move into the installation directory
-if [ ! -d /etc/aved ]; then
-    mkdir /etc/aved
-fi
+# Create install directory and move into it
+mkdir -p /etc/aved
 pushd /etc/aved;
 
 # Move out of the installation directory
 popd;
 
-# Calculate port range overlap. I'm sure there is a more elegant way to do this, but this works fine
-overlap=`seq $pvisworker_portstart $pvisworker_portend | grep "9800\|9760"`
-
-# Test for correct port ranges and if there is an overlap in ports
+# Test for correct port definitions
 if [ $pvisworker_portstart -ge $pvisworker_portend ]; then
     echo "Invalid range for PVISIONWORKER_PORT_START $pmbarivis_portstart and PVISIONWORKER_PORT_END $pmbarivis_portend"
     exit 1
@@ -67,6 +67,10 @@ if [ $pmbarivis_portstart -ge $pmbarivis_portend ]; then
     exit 1
 fi
 
+# Calculate port range overlap between vision workers and pmbarivision
+# I'm sure there is a more elegant way to do this, but this works fine
+overlap=`seq $pvisworker_portstart $pvisworker_portend | grep "9800\|9760"`
+
 if [ "$overlap" != "" ]; then 
     echo "Error PMBARIVISION_PORT_START/END ranges must not overlap with PVISIONWORKER_PORT_START/END"
     echo "Port ranges overlap at: "
@@ -76,9 +80,5 @@ fi
 
 # Copy the configuration to all the cluster nodes
 cpush /etc/aved/  
-
-# Copy the mpich configuration to the machines files
-# Set this to the correct directory of your MPICH2 installation
-cpush /opt/mpich2-1.0/etc/mpd.hosts 
 
 exit 0

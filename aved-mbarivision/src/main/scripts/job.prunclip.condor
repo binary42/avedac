@@ -1,3 +1,23 @@
+##############################################################################
+# Condor job file to execute the runclip script
+#
+# This sets up the appropriate environment variables for executing runclip
+# on a Beowulf cluster enabled to run pmbarivision and pvisionTCPmbari.
+# 
+# The job will create a mpeg clip of the results as well as a XML
+# file with the results.
+#
+# The job notifies the user upon its completion with an email. 
+# If this job runs longer than 4 hours it will be automatically 
+# terminated.
+#
+# This work would not have possible without the help of the Condor project
+# at the University of Wisconsin, Madison, USA.
+# For more information about the Condor software see http://www.cs.wisc.edu/condor/
+#
+# Copyright (c) MBARI 2010
+# Author: D. Cline
+#
 ############################################################################
 # Use vanilla universe
 ##############################################################################
@@ -11,12 +31,14 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 transfer_input_files = \ 
 $ENV(HOME)/aved/scripts/mp2script,\
+$ENV(HOME)/aved/scripts/runpvisionworkers,\
 $ENV(HOME)/aved/scripts/runpmbarivision,\
 $ENV(HOME)/aved/scripts/runmbarivision,\
 $ENV(HOME)/aved/scripts/extract_source_metadata.pl,\
+$ENV(HOME)/aved/scripts/randomize.pl,\
 $ENV(HOME)/aved/scripts/frames2mpeg,\
 $ENV(HOME)/aved/scripts/clip2ppm,\
-$(inputfile),\
+$(input_file),\
 
 ##############################################################################
 # Set environment variables including scratch directory to execute in and 
@@ -34,7 +56,7 @@ Notification = Always
 ##############################################################################
 # Put a link to the data in the notification email
 ##############################################################################
-+ProcessedResultsURL = "$(processedresultsURL)"
++ProcessedResultsURL = "$(processed_results_url)"
 +EmailAttributes = "ProcessedResultsURL"
 
 ##############################################################################
@@ -44,17 +66,17 @@ Notification = Always
 # -m = use the video mask
 # -t = pass the arguments to the transcoder to adjust Gamma (-G 0.8)
 # -m = use the alternative inputURL base name
-# -e = use the alternative executable runpmbarivision with worker list
+# -a = use the alternative executable runpmbarivision 
+# -w = the pvision worker host list file
 # -c <startframe - endframe> = only process specified start/end frame range
 ##############################################################################
-arguments = " -u $(inputURL) -t " -G 0.80 " -g -e "runpmbarivision -w /mnt/scratch/$(workerlist)" -i $(inputfile)" 
+arguments = " -u $(input_url) -t ' -G 0.80 ' -g -a runpmbarivision -w $(pvision_worker_file) -i $(input_file)" 
 
 #############################################################################
 # Only run on machines enabled to run parallel mbarivision
 #############################################################################
 requirements = (HAS_PMBARIVISION =?= True) && (HAS_TRANSCODE =?= True) && \
-(OpSys == "LINUX") && (Machine == "beowulffish.shore.mbari.org")
-+WantParallelSchedulingGroups = True
+(OpSys == "LINUX")
 
 #############################################################################
 # Periodically check your job and then remove it if it has been running more 
