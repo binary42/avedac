@@ -49,7 +49,7 @@ $(input_file),\
 environment = "USER=$ENV(USER) SCRATCH_DIR=/mnt/scratch AVED_BIN=/home/aved/bin HOME=/home/$ENV(USER) MBARIVISION_OPTIONS='$ENV(MBARIVISION_OPTIONS)'" 
 
 #############################################################################
-# Never notify the user
+# Always notify the user. This will email the user when the job ends.
 #############################################################################
 Notification = Always
 
@@ -68,7 +68,7 @@ Notification = Always
 # -m = use the alternative inputURL base name
 # -a = use the alternative executable runpmbarivision 
 # -w = the pvision worker host list file
-# -c <startframe - endframe> = only process specified start/end frame range
+# -b startframe -e endframe = only process specified start/end frame range
 ##############################################################################
 arguments = " -u $(input_url) -t ' -G 0.80 ' -g -a runpmbarivision -w $(pvision_worker_file) -i $(input_file)" 
 

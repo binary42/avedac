@@ -198,7 +198,7 @@ for i in `seq 1 3`
   
   if [ ! -e "$worker_list" ]; then
 	if [ "$i" = 3 ]; then
-    	  echo "Error - cannot find $worker_list; this probably means the workers have failed"
+    	  echo "Error - cannot find $worker_list - this probably means the workers have failed"
     	  exit $E_ERR
     	  break
 	fi

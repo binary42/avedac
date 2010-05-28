@@ -25,7 +25,6 @@ SUCCESS=0
 FAILURE=-1
 debug=0 #debugging flag set to 1 to debug the pvisionTCPmbari binary
 worker_list=""
-randomize_perl_script=randomize.pl
 num_pvis_workers=7
 port=-1
 ############################################################################
@@ -239,10 +238,11 @@ CONDOR_CONTACT_FILE="`pwd`"\/pvisionworkermachines
 # *IMPORTANT* THIS ASSUMES THE FIRST LINE IN YOUR mpd.hosts file is the master node in your 
 # Beowulf cluster from where this script will be run
 sed '1d' $machine_file > mpd.conf
-
+ 
 # Randomly output the machine file to distribute workers randomly to avoid 
 # heavy loading on particular machines because some workers do more work than others
-perl -S $randomize_perl_script mpd.conf > mpd.conf.tmp  
+checkexe randomize.pl
+perl -S randomize.pl mpd.conf > mpd.conf.tmp  
 
 # Reinsert the first line which should be the master node
 a=`head -n 1 $machine_file`
