@@ -282,6 +282,10 @@ fi
 rc=$?
 rm -f $worker_list
 
+# Kill pvisionTCPmbari workers in case they are still running 
+echo "Running  mpdkilljob -a pvisionTCPmbari$nextavail_port"
+mpdkilljob -a pvisionTCPmbari$nextavail_port 
+
 echo "----------------->runpvisionworker done - return code $rc !!<--------------------------"
 exit $rc
   
