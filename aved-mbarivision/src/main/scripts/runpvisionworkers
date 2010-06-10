@@ -157,9 +157,13 @@ if [ ! "$worker_list"  ]; then
     exit $E_ERR
 fi
 
-# Setup MPI 
-MPDIR=/opt/mpich2-1.1p1/bin
-export PATH=$MPDIR:.:$PATH
+# Setup MPI
+if [ $MPDIR ]; then
+  export PATH=$MPDIR/bin:.:$PATH
+else 
+  MPDIR=/opt/mpich2-1.1p1/bin
+  export PATH=$MPDIR:.:$PATH
+fi
 
 # Check all the required environment variables
 if [ ! $SCRATCH_DIR ]; then
