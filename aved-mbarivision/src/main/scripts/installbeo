@@ -11,6 +11,9 @@
 # a non-zero exit code
 set -e
 
+./install
+cpush /etc/profile.d/aved.* /etc/profile.d/
+
 # Check if root
 USERID=`id -u`
 if [ $USERID != 0 ]; then
@@ -29,7 +32,7 @@ pmbarivis_portend=9800
 file=/etc/aved/pmbarivision.mpi
 cat >$file <<_ACEOF
 #######################################################################
-# Configuration file for AVED parallel version
+# Configuration file for AVED parallel code 
 #######################################################################
 # Defines the ports to use for the pmbarivision
 # The PMBARIVISION_PORT_START/END must be a different
