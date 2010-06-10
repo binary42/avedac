@@ -35,8 +35,10 @@ debug=0
 job_alias=$USER
 executable=/bin/echo
 final_args=
+if [ ! $MPDIR ]; then
 # Set this to the directory of your MPICH installation
 MPDIR=/opt/mpich2-1.1p1
+fi
 PATH=$MPDIR/bin:.:$PATH
 export PATH
 machine_file=""
@@ -58,7 +60,7 @@ do
 done
 
 if [ ! "$machine_file" ]; then
-    echo "Error -no machine file specified" 
+    echo "Error - no machine file specified" 
 fi
 
 _condor_procno=0
@@ -87,7 +89,7 @@ fi
 
 # The machines to use in this job
 echo "----MPI machines used in job alias $job_alias ------------"
-sort -n +0 < $machine_file | awk '{print $1}' 
+sort -n < $machine_file | awk '{print $1}' 
 
 # Override the number of processes if requested
 if [ $override_nprocs ]; then
