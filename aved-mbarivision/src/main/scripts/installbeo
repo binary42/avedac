@@ -2,12 +2,8 @@
 #
 # Name: installbeo
 #
-# This script configures the beowulf for parallel processing with
-# pmbarivision and pvisionTCPmbari.
+# This script configures an AVED-enabled beowulf for parallel processing 
 # 
-# Password-less ssh login is also required for running these binaries
-# with the MPI libraries
-#
 # Copyright (c) MBARI 2010
 # Author: D. Cline
 #
