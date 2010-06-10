@@ -10,10 +10,9 @@
 # a single host. To setup the  environment on a Beowulf
 # cluster, run the installbeo script instead.
 #
-# This assumes mbarivision is installed in /usr/local/aved/bin
-#
-# Change this script accordingly, if it is installed in
-# another location, e.g. /usr/aved/bin, /opt/aved
+# This scripts installs scripts to /usr/local/aved/bin
+# Change this script accordingly, if installation needed
+# in another location, e.g. /home/shared/aved
 #
 # Copyright (c) MBARI 2010
 # Author: D. Cline
@@ -33,28 +32,72 @@ if [ ! $AVED_BIN ]; then
     exit 1
 fi
 
-mkdir -p /usr/local/aved/scripts
-mkdir -p /usr/local/aved/bin
-cp -Rfp * /usr/local/aved/scripts
+install_dir=/usr/local/aved
+
+echo "Creating $install_dir/scripts"
+mkdir -p $install_dir/scripts
+
+echo "Copying scripts to $install_dir"
+cp -Rfp * $install_dir/scripts
 
 # Install paths in profile.d directory if it exists
-if [ -d /etc/profile.d ]; then 
+if [ -d /etc/profile.d ]; then
+
+# Make backup 
+if [ -e /etc/profile.d/aved.sh ]; then
+  dt=`date '+%m%d%y_%H:%M:%S' --reference=/etc/profile.d/aved.sh`
+  cp /etc/profile.d/aved.sh /etc/profile.d/aved.sh.$dt
+fi
+   
+echo "Creating /etc/profile.d/aved.sh" 
 cat >/etc/profile.d/aved.sh <<_ACEOF 
 export AVED_BIN=/usr/local/aved/bin
-export PATH=$PATH:/usr/local/aved/scripts:$AVED_BIN 
 _ACEOF
 
-cat >/etc/profile.d/aved.csh <<_ACEOF
-setenv AVED_BIN=/usr/local/aved/bin
-setenv PATH=$PATH:/usr/local/aved/scripts:$AVED_BIN
+if [ $MPDIR ]; then
+cat >>/etc/profile.d/aved.sh <<_ACEOF 
+export MPDIR=$MPDIR 
+export PATH=$PATH:/usr/local/aved/scripts:$AVED_BIN:$MPDIR/bin 
+_ACEOF
+else
+cat >>/etc/profile.d/aved.sh <<_ACEOF 
+export PATH=$PATH:/usr/local/aved/scripts:$AVED_BIN
 _ACEOF
 fi
 
-# Install paths in profile file if it exists
-if [ -e /etc/profile ]; then
-cat >>/etc/profile <<_ACEOF
-export AVED_BIN=/usr/local/aved/bin
-export PATH=$PATH:/usr/local/aved/scripts:$AVED_BIN
+if [ $SCRATCH_DIR ]; then
+cat >>/etc/profile.d/aved.sh <<_ACEOF 
+export SCRATCH_DIR=$SCRATCH_DIR
 _ACEOF
+fi
+
+# Make backup 
+if [ -e /etc/profile.d/aved.csh ]; then
+  dt=`date '+%m%d%y_%H:%M:%S' --reference=/etc/profile.d/aved.csh`
+  cp /etc/profile.d/aved.csh /etc/profile.d/aved.csh.$dt
+fi
+
+echo "Creating /etc/profile.d/aved.csh" 
+cat >/etc/profile.d/aved.csh <<_ACEOF
+set AVED_BIN = /usr/local/aved/bin
+_ACEOF
+
+if [ $MPDIR ]; then
+cat >>/etc/profile.d/aved.csh <<_ACEOF
+set MPDIR = $MPDIR 
+set PATH = ($PATH $install_dir/scripts $AVED_BIN $MPDIR/bin)
+_ACEOF
+else
+cat >>/etc/profile.d/aved.csh <<_ACEOF
+set PATH = ($PATH $install_dir/scripts $AVED_BIN)
+_ACEOF
+fi
+
+if [ $SCRATCH_DIR ]; then
+cat >>/etc/profile.d/aved.csh <<_ACEOF
+set SCRATCH_DIR = $SCRATCH_DIR
+_ACEOF
+fi
+
 fi
 
