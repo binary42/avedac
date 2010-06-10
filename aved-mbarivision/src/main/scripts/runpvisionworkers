@@ -161,8 +161,8 @@ fi
 if [ $MPDIR ]; then
   export PATH=$MPDIR/bin:.:$PATH
 else 
-  MPDIR=/opt/mpich2-1.1p1/bin
-  export PATH=$MPDIR:.:$PATH
+  MPDIR=/opt/mpich2-1.1p1
+  export PATH=$MPDIR/bin:.:$PATH
 fi
 
 # Check all the required environment variables
@@ -187,7 +187,6 @@ exec_file=$AVED_BIN/pvisionTCPmbari
 
 # Define the machine file. Change this to point to the MPICH installation 
 # directory on your machine
-MPDIR=/opt/mpich2-1.1p1
 machine_file=$MPDIR/etc/mpd.hosts 
 
 if [ ! -f $machine_file ]; then
@@ -196,7 +195,7 @@ if [ ! -f $machine_file ]; then
 fi
 
 echo "----MPI machines available------------"
-sort -n +0 < $machine_file | awk '{print $1}' 
+sort -n < $machine_file | awk '{print $1}' 
 
 # Define the mpi setup file that contains the port ranges
 mpisetup=/etc/aved/pmbarivision.mpi

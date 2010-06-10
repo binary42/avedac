@@ -134,7 +134,6 @@ fi
 
 # Define the machine file. Change this to point to the MPICH installation 
 # directory on your machine
-MPDIR=/opt/mpich2-1.1p1
 host_file=$MPDIR/etc/mpd.hosts 
 machine_file=`pwd`/pmbarivisionmachines
 
