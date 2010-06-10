@@ -51,17 +51,17 @@ fi
    
 echo "Creating /etc/profile.d/aved.sh" 
 cat >/etc/profile.d/aved.sh <<_ACEOF 
-export AVED_BIN=/usr/local/aved/bin
+export AVED_BIN=$install_dir/bin
 _ACEOF
 
 if [ $MPDIR ]; then
 cat >>/etc/profile.d/aved.sh <<_ACEOF 
 export MPDIR=$MPDIR 
-export PATH=$PATH:/usr/local/aved/scripts:$AVED_BIN:$MPDIR/bin 
+export PATH=$PATH:$install_dir/scripts:$AVED_BIN:$MPDIR/bin 
 _ACEOF
 else
 cat >>/etc/profile.d/aved.sh <<_ACEOF 
-export PATH=$PATH:/usr/local/aved/scripts:$AVED_BIN
+export PATH=$PATH:$install_dir/scripts:$AVED_BIN
 _ACEOF
 fi
 
@@ -79,17 +79,17 @@ fi
 
 echo "Creating /etc/profile.d/aved.csh" 
 cat >/etc/profile.d/aved.csh <<_ACEOF
-set AVED_BIN = /usr/local/aved/bin
+setenv AVED_BIN "$install_dir/bin"
 _ACEOF
 
 if [ $MPDIR ]; then
 cat >>/etc/profile.d/aved.csh <<_ACEOF
-set MPDIR = $MPDIR 
-set PATH = ($PATH $install_dir/scripts $AVED_BIN $MPDIR/bin)
+setenv MPDIR "${MPDIR}" 
+setenv PATH "${PATH}:$install_dir/scripts:$AVED_BIN:$MPDIR/bin"
 _ACEOF
 else
 cat >>/etc/profile.d/aved.csh <<_ACEOF
-set PATH = ($PATH $install_dir/scripts $AVED_BIN)
+setenv PATH "${PATH}:$install_dir/scripts:$AVED_BIN"
 _ACEOF
 fi
 
