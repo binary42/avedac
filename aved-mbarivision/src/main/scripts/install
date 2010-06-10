@@ -35,7 +35,7 @@ fi
 
 mkdir -p /usr/local/aved/scripts
 mkdir -p /usr/local/aved/bin
-cp -fp * /usr/local/aved/scripts
+cp -Rfp * /usr/local/aved/scripts
 
 # Install paths in profile.d directory if it exists
 if [ -d /etc/profile.d ]; then 
