@@ -226,20 +226,19 @@ BQSCALE		1
 REFERENCE_FRAME	ORIGINAL 
 FRAME_RATE      $frame_rate 
 PARALLEL 
-master $user /home/aved/bin/mpeg_encode 
-node1 $user /home/aved/bin/mpeg_encode 
-node2 $user /home/aved/bin/mpeg_encode 
-node3 $user /home/aved/bin/mpeg_encode 
-node4 $user /home/aved/bin/mpeg_encode 
-node5 $user /home/aved/bin/mpeg_encode 
-node6 $user /home/aved/bin/mpeg_encode 
-node7 $user /home/aved/bin/mpeg_encode 
+node2 $user $AVED_BIN/mpeg_encode 
+node3 $user $AVED_BIN/mpeg_encode 
+node4 $user $AVED_BIN/mpeg_encode 
+node5 $user $AVED_BIN/mpeg_encode 
+node6 $user $AVED_BIN/mpeg_encode 
+node7 $user $AVED_BIN/mpeg_encode 
+node8 $user $AVED_BIN/mpeg_encode 
 END_PARALLEL
 PARALLEL_PERFECT
 RSH ssh 
 _ACEOF
 # Run mpeg_encode
-cmd="mpeg_encode -debug_machines -max_machines 8 $mpegparm_file"
+cmd="mpeg_encode -debug_machines -max_machines 7 $mpegparm_file"
 echo "Running $cmd"
 $cmd
 else
