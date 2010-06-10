@@ -7,9 +7,6 @@
 # Copyright (c) MBARI 2010
 # Author: D. Cline
 #
-# exit on error - this will exit this bash script when any command exits with
-# a non-zero exit code
-set -e
 ###################################################################################
 # Print usage
 print_usage()
@@ -267,6 +264,7 @@ case $input in
 	cmd="transcode -q 0 -i $input -o $outputfileseed -y ppm,null $extra_args $transcode_opts"
 	;;
     esac
+    trap 'echo "clip2ppm TRAP"; exit 0' INT TERM EXIT
     echo "Executing $cmd"
     $cmd
     ;;
