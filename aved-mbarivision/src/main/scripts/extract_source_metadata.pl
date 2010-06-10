@@ -59,7 +59,6 @@
 #
 ######################################################################
 use strict;
-use XML::Xerces;
 use Getopt::Long;
 use vars qw();
 use File::Copy;
