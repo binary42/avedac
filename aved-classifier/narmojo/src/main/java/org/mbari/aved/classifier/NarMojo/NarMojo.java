@@ -1,6 +1,6 @@
 /*
  * @(#)NarMojo.java
- * 
+ *
  * Copyright 2010 MBARI
  *
  * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
@@ -15,9 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
+
 package org.mbari.aved.classifier.NarMojo;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
@@ -32,10 +36,10 @@ import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
 import org.codehaus.plexus.util.FileUtils;
 
-import org.apache.maven.plugin.nar.AbstractNarMojo;
-import org.apache.maven.plugin.nar.Linker;
-import org.apache.maven.plugin.nar.NarManager;
-import org.apache.maven.plugin.nar.NarUtil;
+import org.freehep.maven.nar.AbstractNarMojo;
+import org.freehep.maven.nar.Linker;
+import org.freehep.maven.nar.NarManager;
+import org.freehep.maven.nar.NarUtil;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -69,6 +73,7 @@ public class NarMojo extends AbstractMojo {
      * @required
      */
     private String architecture;
+
     /**
      * To look up Archiver/UnArchiver implementations
      *
@@ -76,14 +81,23 @@ public class NarMojo extends AbstractMojo {
      * @required
      */
     private ArchiverManager archiverManager;
+
     /**
      * @parameter expression="${localRepository}"
      * @required
      * @readonly
      */
     private ArtifactRepository localRepository;
-    private Log log;
+    private Log                log;
+
+    /**
+     * Level of logging messages, 0 is minimum.
+     *
+     * @parameter expression="${logLevel}" default-value="0"
+     */
+    private int        logLevel;
     private NarManager narManager;
+
     /**
      * The Operating System for picking up swig. Some choices are: "Windows",
      * "Linux", "MacOSX", "SunOS", ... Defaults to a derived value from
@@ -92,6 +106,7 @@ public class NarMojo extends AbstractMojo {
      * @parameter expression=""
      */
     private String os;
+
     /**
      * @parameter expression="${project}"
      * @required
@@ -105,9 +120,9 @@ public class NarMojo extends AbstractMojo {
         // FIXME, should have some function in NarUtil
         Linker linker = new Linker("g++");
 
-        narManager = new NarManager(getLog(), localRepository, project, architecture, os, linker);
+        narManager = new NarManager(getLog(), logLevel, localRepository, project, architecture, os, linker);
 
-        String aol = architecture + "-" + os + "-g++";
+        String aol        = architecture + "-" + os + "-g++";
         String classifier = aol;
 
         System.out.println("Classifier: " + classifier);
@@ -117,10 +132,10 @@ public class NarMojo extends AbstractMojo {
         // List libs = narManager.getAttachedNarDependencies(narArtifacts, aol, "jni");
 
         System.out.println("Unpacking libraries");
-        this.unpackAttachedNars(narArtifacts, narManager, archiverManager, os);
+        this.unpackAttachedNars(narArtifacts, narManager, archiverManager, classifier, os);
     }
 
-    private void unpackNar(ArchiverManager manager, File file, File location) throws MojoExecutionException, IOException {
+    private void unpackNar(ArchiverManager manager, File file, File location) throws MojoExecutionException {
         try {
             UnArchiver unArchiver;
 
@@ -128,6 +143,8 @@ public class NarMojo extends AbstractMojo {
             unArchiver.setSourceFile(file);
             unArchiver.setDestDirectory(location);
             unArchiver.extract();
+        } catch (IOException e) {
+            throw new MojoExecutionException("Error unpacking file: " + file + " to: " + location, e);
         } catch (NoSuchArchiverException e) {
             throw new MojoExecutionException("Error unpacking file: " + file + " to: " + location, e);
         } catch (ArchiverException e) {
@@ -136,19 +153,19 @@ public class NarMojo extends AbstractMojo {
     }
 
     public void unpackAttachedNars(List /* <NarArtifacts> */ narArtifacts, NarManager narManager,
-            ArchiverManager manager, String os)
+                                   ArchiverManager manager, String classifier, String os)
             throws MojoExecutionException, MojoFailureException {
 
         // FIXME, kludge to get to download the -noarch, based on classifier
-        List dependencies = narManager.getAttachedNarDependencies(narArtifacts, os);
+        List dependencies = narManager.getAttachedNarDependencies(narArtifacts, classifier, os);
 
-        for (Iterator i = dependencies.iterator(); i.hasNext();) {
-            Artifact dependency = (Artifact) i.next();
-            File file = narManager.getNarFile(dependency);
-            File narLocation = new File(project.getBasedir().toString() + "/target");
-            File flagFile = new File(narLocation,
-                    FileUtils.basename(file.getPath(), "." + AbstractNarMojo.NAR_EXTENSION)
-                    + ".flag");
+        for (Iterator i = dependencies.iterator(); i.hasNext(); ) {
+            Artifact dependency  = (Artifact) i.next();
+            File     file        = narManager.getNarFile(dependency);
+            File     narLocation = new File(project.getBasedir().toString() + "/target/nar");
+            File     flagFile    = new File(narLocation,
+                                            FileUtils.basename(file.getPath(), "." + AbstractNarMojo.NAR_EXTENSION)
+                                            + ".flag");
 
             System.out.println("Unpack " + file + " to" + narLocation);
 
@@ -168,11 +185,9 @@ public class NarMojo extends AbstractMojo {
                     unpackNar(manager, file, narLocation);
                     NarUtil.makeExecutable(new File(narLocation, "bin/"), log);
                     FileUtils.fileDelete(flagFile.getPath());
-                    FileUtils.fileWrite(flagFile.getPath(), ""); 
-                } catch (MojoExecutionException e) {
-                    throw e;
+                    FileUtils.fileWrite(flagFile.getPath(), "");
                 } catch (IOException e) {
-                    log.warn("Cannot create flag file: " + flagFile.getPath() + e.getMessage());
+                    log.warn("Cannot create flag file: " + flagFile.getPath());
                 }
             }
         }

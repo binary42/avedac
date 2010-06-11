@@ -11,8 +11,8 @@ source ./setup
 # Crude check for OS, if not Linux, assume MacOSX
 if [ `uname | grep Linux` ]; then
   echo "Running Linux build"
-  mvn install -Dp=Linux -Dmaven.test.skip=true
+  mvn install -PLinux -Dmaven.test.skip=true
 else
   echo "Running MacOSX build"
-  mvn install -Dp=Mac -Dmaven.test.skip=true
+  mvn install -PMac -Dmaven.test.skip=true
 fi

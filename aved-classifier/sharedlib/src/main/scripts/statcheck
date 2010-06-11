@@ -1,0 +1,42 @@
+#/bin/bash
+#
+# Copyright (c) MBARI 2010
+# Author: D. Cline
+# Date: June 8, 2010 - Created
+#
+#exit on error; this will exit this bash script when any command exists with
+#a non-zero exit code
+set -e
+
+eval set -- "$@"
+for i
+do
+  case $i in
+   -i)  shift;input="$1";shift;;
+   -o)  shift;output="$1";shift;;
+   -d)  shift;dest="$1";shift;;
+ esac
+done 
+
+# Crude check for OS, if not Linux, assume MacOSX
+# stat commands are different for these operating sysems
+if [ `uname | grep Linux` ]; then
+  eval $(stat -c %s "$input")
+  filea=$st_size
+  eval $(stat -c %s "$output")
+  fileb=$st_size
+  if [ $fila -ne $fileb ]; then
+    echo "Copying $input to $dest"
+    cp $input $dest 
+  fi
+else
+#MacOSX
+  eval $(stat -s "$input")
+  filea=$st_size
+  eval $(stat -s "$output")
+  fileb=$st_size
+  if [ $filea -ne $fileb ]; then
+    echo "Copying $input to $dest"
+    cp $input $dest
+  fi
+fi

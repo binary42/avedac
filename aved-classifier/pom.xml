@@ -13,11 +13,27 @@
     <version>0.4.3-SNAPSHOT</version>
     <description>AVED Classifier</description> 
     <modules>
-        <module>sharedlib</module>
-        <!-- Shared Matlab library must come first as it is needed in the jni layer-->
-        <module>sharedlibjni</module>
+        <!-- Mojo to unpack libraries into target directories -->
         <module>narmojo</module>
+        <!-- Shared Matlab library must come first as it is needed in the jni layer-->
+        <module>sharedlib</module>
+        <!-- Final JNI layer -->
+        <module>sharedlibjni</module>
     </modules>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>freehep-maven</id>
+            <name>Maven FreeHEP</name>
+            <url>http://java.freehep.org/maven2</url>
+        </pluginRepository>
+    </pluginRepositories>
+     <repositories>
+        <repository>
+            <id>freehep-maven</id>
+            <name>Maven FreeHEP</name>
+            <url>http://java.freehep.org/maven2</url>
+        </repository>
+    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.apache.maven.plugins</groupId>

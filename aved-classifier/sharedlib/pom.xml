@@ -16,7 +16,7 @@
         <profile>
             <id>Linux</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
                 <os>
                     <name>Linux</name>
                     <arch>i386</arch>
@@ -33,6 +33,7 @@
         <profile>
             <id>Mac</id>
             <activation>
+                <activeByDefault>false</activeByDefault>
                 <os>
                     <name>MacOSX</name>
                     <arch>i386</arch>
@@ -55,8 +56,8 @@
                   and is simply used for convenience to package up
                   native code and attach it to a jar file. This currently
                   only works on Linux or MacOSX. Windows is not supported.-->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-nar-plugin</artifactId>
+                <groupId>org.freehep</groupId>
+                <artifactId>freehep-nar-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
                     <classifiers>
@@ -69,11 +70,12 @@
                             <linkCPP>true</linkCPP>
                         </library>
                     </libraries>
-                     <!--exclude the files generated from the mcc matlab compiler -->
+                    <!--exclude the files generated from the mcc matlab compiler -->
                     <c>
                         <excludes>
                             <exclude>**/libAVEDClassifierMatlab_mcc_component_data.c</exclude>
                             <exclude>**/libAVEDClassifierMatlab.c</exclude>
+                            <exclude>**/*.m</exclude>
                         </excludes>
                     </c>
                 </configuration>
@@ -97,7 +99,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <workingDirectory>${basedir}/target</workingDirectory>
+                            <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                             <executable>${basedir}/src/main/scripts/execute</executable>
                             <arguments>
                                 <cmdlineArguments>mkdir -p ${basedir}/target/${narLibDir}</cmdlineArguments>
@@ -107,7 +109,7 @@
                     <execution>
                         <!-- Runs the matlab compiler to create a shared
                         library in the directory from exec-mcc-one above-->
-                        <id>exec-mcc-two</id>
+                        <id>exec-mcc-three</id>
                         <phase>compile</phase>
                         <goals>
                             <goal>exec</goal>
@@ -131,7 +133,23 @@
                            the header has changed size - otherwise this
                            will cause the release build to fail because
                            it generates a new file on every build.-->
-                        <id>exec-mcc-install-header</id>
+                        <id>exec-mcc-install-noarch-header</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
+                            <executable>${basedir}/src/main/scripts/statcheck</executable>
+                            <arguments>
+                                <cmdlineArguments>-i libsharedlib.h -o ${basedir}/src/main/include/libsharedlib.h -d ${basedir}/src/main/include
+                                </cmdlineArguments>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Moves the library to versioned one in nar directory-->
+                        <id>exec-version-library</id>
                         <phase>compile</phase>
                         <goals>
                             <goal>exec</goal>
@@ -140,22 +158,7 @@
                             <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                             <executable>${basedir}/src/main/scripts/execute</executable>
                             <arguments>
-                                <cmdlineArguments> if [ $(stat -c%s "libsharedlib.h") -ne $(stat -c%s "${basedir}/src/main/include/libsharedlib.h") ] ; then cp libsharedlib.h ${basedir}/src/main/include</cmdlineArguments>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <!-- Copies the library to one with the version-->
-                        <id>exec-version-library</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
-                            <executable>${basedir}/src/main/native/matlab/mcc-wrapper</executable>
-                            <arguments>
-                                <cmdlineArguments>cp -f lib${artifactId}.${sharedExtension} lib${artifactId}-${version}.${sharedExtension}</cmdlineArguments>
+                                <cmdlineArguments>cp lib${artifactId}.${sharedExtension} lib${artifactId}-${version}.${sharedExtension}</cmdlineArguments>
                             </arguments>
                         </configuration>
                     </execution>

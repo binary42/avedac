@@ -21,7 +21,7 @@
 package org.mbari.aved.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
-// Note - it is normal to get a "cannot find symbol"error in the 
+// Note - it is normal to get a "cannot find symbol"error in the
 // NetBeans IDE here. Don't worry about it.
 // The nar-plugin generates a NarSystem class to assist with
 // loading the correct version.  This isn't generated until
