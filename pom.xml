@@ -11,14 +11,14 @@
         <profile>
             <id>Linux</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
                 <os>
                     <name>Linux</name>
                     <arch>i386</arch>
                 </os>
             </activation>
             <properties>
-                <!-- The default install path for the mbarivision executable
+                <!-- The default install path for the executables and libraries
                 This defaults to the subdir "aved" in the users home directory
                 because this is a safe place for first time installation.
 
@@ -57,7 +57,7 @@
                 </os>
             </activation>
             <properties>
-                <!-- The default install path for the mbarivision executable
+                <!-- The default install path for the executables and libraries
                 This defaults to the subdir "aved" in the users home directory
                 because this is a safe place for first time installation.
 
@@ -233,10 +233,10 @@
         </plugins>
     </build>
     <modules>
-        <module>aved-pmbarivision</module>
-        <module>aved-mbarivision</module>
-        <!--<module>aved-classifier</module>
+        <!--<module>aved-pmbarivision</module>
+        <module>aved-mbarivision</module>-->
+        <module>aved-classifier</module>
         <module>aved-mbarivision-api</module>
-        <module>aved-ui</module>-->
+        <module>aved-ui</module>
     </modules>
 </project>
