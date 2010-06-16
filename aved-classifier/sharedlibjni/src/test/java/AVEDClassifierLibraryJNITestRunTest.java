@@ -86,8 +86,13 @@ public class AVEDClassifierLibraryJNITestRunTest extends TestCase {
 
         try {
             
-            URL squaredFlatImageUrl = getClass().getResource("2526_Training_Classes/flat");          
+            URL squaredFlatImageUrl = getClass().getResource("2526_Training_Classes/flat");
+	    if(squaredFlatImageUrl == null)
+		System.out.println("Null");          
+        System.out.println(squaredFlatImageUrl.toString());
             URL squaredRathImageUrl = getClass().getResource("2526_Training_Classes/rath");  
+	    if(squaredRathImageUrl == null)
+        System.out.println(squaredRathImageUrl.toString());
             
             String killFile = dbRoot + "runtest";
             

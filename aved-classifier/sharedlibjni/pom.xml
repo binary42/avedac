@@ -35,10 +35,8 @@
             <build>
                 <defaultGoal>install</defaultGoal>
                 <plugins>
-                    <!--
-                Skip the surefire test goal because we are using the nar one that
-                sets up the java path correctly.
-                 -->
+                    <!-- Skip the surefire test goal because we are using the nar one that
+                    sets up the java path correctly.-->
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
@@ -81,7 +79,7 @@
                                 <configuration>
                                     <workingDirectory>${basedir}/target/nar/lib/i386-MacOSX-g++/jni</workingDirectory>
                                     <executable>${basedir}/src/main/scripts/execute</executable>
-                                    <arguments> 
+                                    <arguments>
                                         <cmdlineArguments>install_name_tool -change ${project.parent.basedir}/sharedlibjni/target/nar/lib/i386-MacOSX-g++/shared/libsharedlib-${version}.dylib @loader_path/libsharedlib-${version}.dylib lib${artifactId}-${version}.jnilib</cmdlineArguments>
                                     </arguments>
                                 </configuration>
@@ -90,8 +88,8 @@
                     </plugin>
                     <plugin>
                         <!-- Creates the JNI layer for MacOSX environments.
-                This depends on defined properties in the parent pom like
-                ${installPath}, ${matlabRoot}, etc.-->
+                        This depends on defined properties in the parent pom like
+                        ${installPath}, ${matlabRoot}, etc.-->
                         <groupId>org.freehep</groupId>
                         <artifactId>freehep-nar-plugin</artifactId>
                         <extensions>true</extensions>
@@ -121,7 +119,7 @@
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
                                     <systemIncludePath>${matlabRoot}/extern/include</systemIncludePath>
                                     <systemIncludePath>${matlabRoot}/extern/include/cpp</systemIncludePath>
-                                    <systemIncludePath>/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers</systemIncludePath> 
+                                    <systemIncludePath>/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers</systemIncludePath>
                                 </systemIncludePaths>
                             </cpp>
                             <linker>
@@ -166,20 +164,7 @@
             <build>
                 <defaultGoal>install</defaultGoal>
                 <plugins>
-                    <!--
-                     Skip the surefire test goal because we are using the nar one that
-                     sets up the java path correctly.
-                      -->
                     <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <!-- Creates the JNI layer for  Linux environments
-                This depends on defined properties in the parent pom like
-                ${installPath}, ${matlabRoot}, etc.-->
                         <groupId>org.freehep</groupId>
                         <artifactId>freehep-nar-plugin</artifactId>
                         <extensions>true</extensions>
@@ -218,6 +203,14 @@
                                     </lib>
                                 </libs>
                             </linker>
+                        </configuration>
+                    </plugin>
+                    <!--Skip the surefire test goal because we are using the nar one that
+                     sets up the java path correctly.-->
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
                         </configuration>
                     </plugin>
                 </plugins>

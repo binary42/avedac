@@ -250,12 +250,15 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
         printf("nodisplay set : %d\n", mclIsNoDisplaySet());
     
     } catch (const mwException &e) {
+        printf("Foobar 1\n");
         ThrowByName(env, "java/lang/RuntimeException", e.what());
         return;
     } catch (...) {
+        printf("Foobar 2\n");
         ThrowByName(env, "java/lang/RuntimeException", "Unknown matlab exception");
         return;
     }
+        printf("Foobar 3\n");
 }
 
 //*************************************************************************** 
@@ -1221,17 +1224,6 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
             } 
         }
     }
-
-    // Clean up the allocated memory
-    /*for (i = 0; i < fcount; i++) {
-        DPRINTF("---->DEBUG %s\n", filelist[i]->d_name);
-      free(filelist[i]);
-    }
-
-    /*if (fcount > 0) {
-        DPRINTF("---->DEBUG <--\n");
-       //free(filelist);
-    }*/
 
     return jtrainingModelArray;
 }

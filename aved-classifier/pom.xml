@@ -34,12 +34,4 @@
             <url>http://java.freehep.org/maven2</url>
         </repository>
     </repositories>
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-nar-plugin</artifactId>
-            <version>2.1-SNAPSHOT</version>
-            <type>maven-plugin</type>
-        </dependency>
-    </dependencies>
 </project>

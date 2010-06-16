@@ -1,11 +1,12 @@
 /*
  * MATLAB Compiler: 4.10 (R2009a)
- * Date: Thu Jun 10 16:44:04 2010
+ * Date: Mon Jun 14 18:50:10 2010
  * Arguments: "-B" "macro_default" "-v" "-W" "lib:libsharedlib" "-T" "link:lib"
- * "-I" "/Users/dcline/avedac/aved-classifier/sharedlib/src/main/native/matlab"
  * "-I"
- * "/Users/dcline/avedac/aved-classifier/sharedlib/src/main/native/matlab/netlab
- * " "-g" "-G" "run_tests_ui" "collect_ui" "collect_tests" "collect_class"
+ * "/home/aved/aved/avedac/aved-classifier/sharedlib/src/main/native/matlab"
+ * "-I"
+ * "/home/aved/aved/avedac/aved-classifier/sharedlib/src/main/native/matlab/netl
+ * ab" "-g" "-G" "run_tests_ui" "collect_ui" "collect_tests" "collect_class"
  * "assign_class" "test_class" "train_classes_ui" 
  */
 

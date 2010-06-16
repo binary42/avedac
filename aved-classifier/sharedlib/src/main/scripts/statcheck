@@ -23,7 +23,7 @@ done
 if [ `uname | grep Linux` ]; then
   filea=$(stat -c %s "$input")
   fileb=$(stat -c %s "$output")
-  if [ $fila != $fileb ]; then
+  if [ "$fila" -ne "$fileb" ]; then
     echo "Copying $input to $dest"
     cp $input $dest 
   fi

@@ -11,6 +11,7 @@
 		<Env.JAVA_HOME>/usr/java/latest</Env.JAVA_HOME>
                 <Env.LD_LIBRARY_PATH>/Users/dcline/aved/lib:/home/aved/matlab7.2/runtime:/home/aved/matlab7.2/bin/glnx86:/home/aved/matlab7.2/sys/os/glnx86:/usr/java/latest/jre/lib/i386</Env.LD_LIBRARY_PATH>
 		<Env.XAPPLRESDIR>/home/aved/matlab7.2/X11/app-defaults</Env.XAPPLRESDIR>
+		<Env.MATLAB_JAVA> MATLAB_JAVA=/usr/java/jdk1.6.0_20/jre</Env.MATLAB_JAVA>
             </properties>
         </action>
         <action>
@@ -23,6 +24,7 @@
 		<Env.JAVA_HOME>/usr/java/latest</Env.JAVA_HOME>
                 <Env.LD_LIBRARY_PATH>/Users/dcline/aved/lib:/home/aved/matlab7.2/runtime:/home/aved/matlab7.2/bin/glnx86:/home/aved/matlab7.2/sys/os/glnx86:/usr/java/latest/jre/lib/i386</Env.LD_LIBRARY_PATH>
 		<Env.XAPPLRESDIR>/home/aved/matlab7.2/X11/app-defaults</Env.XAPPLRESDIR>
+		<Env.MATLAB_JAVA> MATLAB_JAVA=/usr/java/jdk1.6.0_20/jre</Env.MATLAB_JAVA>
             </properties>
         </action>
         <action>
@@ -35,6 +37,7 @@
 		<Env.JAVA_HOME>/usr/java/latest</Env.JAVA_HOME>
                 <Env.LD_LIBRARY_PATH>/Users/dcline/aved/lib:/home/aved/matlab7.2/runtime:/home/aved/matlab7.2/bin/glnx86:/home/aved/matlab7.2/sys/os/glnx86:/usr/java/latest/jre/lib/i386</Env.LD_LIBRARY_PATH>
 		<Env.XAPPLRESDIR>/home/aved/matlab7.2/X11/app-defaults</Env.XAPPLRESDIR>
+		<Env.MATLAB_JAVA> MATLAB_JAVA=/usr/java/jdk1.6.0_20/jre</Env.MATLAB_JAVA>
             </properties>
         </action>
     </actions>

@@ -1,7 +1,7 @@
-# Copyright (c) MBARI 2009
+# !/bin/bash
 # Author: D. Cline
+# Copyright (c) MBARI 2009
 # Date: December 28, 2009 - Created
-
 # Crude check for OS, if not Linux, assume MacOSX
 if [ `uname | grep Linux` ]; then
   echo "Setting Linux environment variables"
@@ -9,6 +9,7 @@ if [ `uname | grep Linux` ]; then
   export JAVA_HOME=/usr/java/latest
   export LD_LIBRARY_PATH=~/aved/lib:$MATLAB_ROOT/runtime:$MATLAB_ROOT/bin/glnx86:$MATLAB_ROOT/sys/os/glnx86:$JAVA_HOME/jre/lib/i386
   export XAPPLRESDIR=$MATLAB_ROOT/X11/app-defaults
+  export MATLAB_JAVA=/usr/java/jdk1.6.0_20/jre
 else
   echo "Setting MacOSX environment variables"
   export MATLAB_ROOT=/Applications/MATLAB_R2009a.app
