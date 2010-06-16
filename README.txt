@@ -68,15 +68,16 @@ David and Lucile Packard Foundation.
 3.  Installation on Linux
 -----------------------------------------------------------------------------
 
-	3.2. Modify the environment variables
+	3.1. Modify the environment variables
 
 	     Edit aved-classifier/setup
  	     Modify the following properties to match your installation, e.g.:
 	     
 	     export MATLAB_ROOT=/home/aved/matlab7.2
              export JAVA_HOME=/usr/java/latest
+	     export MATLAB_JAVA=/usr/java/jdk1.6.0_20/jre
 
-	3.3. Modify the pom.xml 
+	3.2. Modify the pom.xml 
 
 	     Edit the pom.xml in the same directory as this README.txt
 	     Modify the following properties to match your installation:
@@ -85,7 +86,7 @@ David and Lucile Packard Foundation.
               <saliencyRoot>${HOME}/aved/saliency</saliencyRoot>
               <matlabRoot>${MATLAB_ROOT}</matlabRoot>
 
-	3.4. Installation command  
+	3.3. Installation command  
 
 	     Run build from a command-line, e.g.
 
