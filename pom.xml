@@ -25,15 +25,15 @@
                 For system-wide use change this to e.g. /usr/local and rerun
                 maven install (or the make install from cmd-line) as an
                 administrative user.-->
-                <installPath>${HOME}/aved</installPath>
+                <installPath>${env.HOME}/aved</installPath>
 
                 <!-- The path to the Apache Xerces code. Change this
                 to the correct location if needed. -->
-                <xercesRoot>${HOME}/aved/Xerces-2_7_0</xercesRoot>
+                <xercesRoot>${env.HOME}/aved/Xerces-2_7_0</xercesRoot>
 
                 <!-- The path to the iLab Neuromorphic code. Change this
                 to the correct location if needed.-->
-                <saliencyRoot>${HOME}/aved/saliency</saliencyRoot>
+                <saliencyRoot>${env.HOME}/aved/saliency</saliencyRoot>
 
                 <!-- The location of the Matlab install. The matlab license
                 should include both the image processing libraries and
@@ -43,9 +43,16 @@
                 no explicity set environment variables, this is configured
                 outside of this pom.xml but referenced here becuase it is
                 needed in the aved-classifier modules -->
-                <matlabRoot>${MATLAB_ROOT}</matlabRoot>
-
+                <matlabRoot>${env.MATLAB_ROOT}</matlabRoot>
             </properties>
+
+            <modules>
+                <!--<module>aved-pmbarivision</module>
+                <module>aved-mbarivision</module>-->
+                <module>aved-classifier</module>
+                <module>aved-mbarivision-api</module>
+                <module>aved-ui</module>
+            </modules>
         </profile>
         <profile>
             <id>Mac</id>
@@ -64,7 +71,7 @@
                 For system-wide use change this to /usr/local/aved and rerun
                 maven install (or the make install from cmd-line) as an
                 administrative user.-->
-                <installPath>${HOME}/aved</installPath>
+                <installPath>${env.HOME}/aved</installPath>
 
                 <!-- The location of the Matlab install. The matlab license
                 should include both the image processing libraries and
@@ -74,13 +81,17 @@
                 no explicity set environment variables, this is configured
                 outside of this pom.xml but referenced here becuase it is
                 needed in the aved-classifier modules -->
-                <matlabRoot>${MATLAB_ROOT}</matlabRoot>
+                <matlabRoot>${env.MATLAB_ROOT}</matlabRoot>
             </properties>
+            <modules>
+                <module>aved-mbarivision-api</module>
+                <module>aved-ui</module>
+            </modules>
         </profile>
     </profiles>
-    <scm> 
-	<connection>scm:hg:https://avedac.googlecode.com/hg/</connection>
-	<developerConnection>scm:hg:https://avedac.googlecode.com/hg/</developerConnection>
+    <scm>
+        <connection>scm:hg:https://avedac.googlecode.com/hg/</connection>
+        <developerConnection>scm:hg:https://avedac.googlecode.com/hg/</developerConnection>
         <!--<connection>scm:hg:${basedir}</connection>
         <url>http://localhost:8000/aved</url>-->
     </scm>
@@ -101,21 +112,6 @@
             <name>External Repository</name>
             <url>hg:https://avedac.googlecode.com/hg/</url>
         </repository>
-        <!--<repository>
-            <id>google</id>
-            <name>External Repository</name>
-            <url>hg:https://avedac.googlecode.com/hg/</url>
-        </repository>
-        <repository>
-            <id>internal</id>
-            <name>Internal Release Repository</name>
-            <url>dav:http://seaspray.shore.mbari.org:8082/archiva/repository/internal/</url>
-        </repository>
-        <snapshotRepository>
-            <id>snapshots</id>
-            <name>Internal Snapshot Repository</name>
-            <url>dav:http://seaspray.shore.mbari.org:8082/archiva/repository/snapshots/</url>
-        </snapshotRepository>-->
     </distributionManagement>
     <repositories>
         <!--  Google code MBARI Maven Repository -->
@@ -152,7 +148,7 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
-    </repositories> 
+    </repositories>
     <pluginRepositories>
         <pluginRepository>
             <id>central</id>
@@ -180,7 +176,7 @@
                 <version>0.4.3-SNAPSHOT</version>
             </dependency>
         </dependencies>
-    </dependencyManagement> 
+    </dependencyManagement>
     <build>
         <plugins>
             <plugin>
@@ -221,11 +217,4 @@
             </plugin>
         </plugins>
     </build>
-    <modules>
-        <!--<module>aved-pmbarivision</module>
-        <module>aved-mbarivision</module>-->
-        <module>aved-classifier</module>
-        <module>aved-mbarivision-api</module>
-        <module>aved-ui</module>
-    </modules>
 </project>

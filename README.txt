@@ -15,7 +15,7 @@ Table of Contents
 -----------------------------------------------------------------------------
 
 ****Important ****
-This not a a pure Java software package. This software includes C++, Matlab,
+This not a pure Java software package. This software includes C++, Matlab,
 and Java code.  It currently only works on Linux/Fedora, however
 certain components will also build on MacOSx. To build the entire package,
 you need:
@@ -36,7 +36,7 @@ you need:
 
         The Toolkit is required to build the aved-mbarivision module and
 	it is free, but you will need to ask for it.
- 	See http://ilab.usc.edu/toolkit/downloads.shtml for more information:	
+ 	See http://ilab.usc.edu/toolkit/downloads.shtml for more information.
 
     1.3. The Java Advanced Imaging Binary version 1.1.3 for Linux/MacOSX
 	from here:
@@ -59,7 +59,7 @@ you need:
 This software is used to automate detection and tracking of animals
 in underwater video. It was developed in collaboration between the Monterey
 Bay Aquarium Research Institute (MBARI), The California Institute of Technology.
-(CALTECH), and The University of Southern California (USC).
+(CalTech), and The University of Southern California (USC).
 
 This work would not be possible without the generous support of the
 David and Lucile Packard Foundation.
@@ -81,10 +81,10 @@ David and Lucile Packard Foundation.
 
 	     Edit the pom.xml in the same directory as this README.txt
 	     Modify the following properties to match your installation:
+
 	      <installPath>${HOME}/aved</installPath>
 	      <xercesRoot>${HOME}/aved/Xerces-2_7_0</xercesRoot>
-              <saliencyRoot>${HOME}/aved/saliency</saliencyRoot>
-              <matlabRoot>${MATLAB_ROOT}</matlabRoot>
+              <saliencyRoot>${HOME}/aved/saliency</saliencyRoot> 
 
 	3.3. Installation command  
 
@@ -103,7 +103,7 @@ To build:
    	4.1. Modify the environment variables
 
 	     Edit aved-classifier/setup
- 	     Modify the following properties to suit your installation:
+ 	     Modify the following property to suit your installation:
 	     
 	     export MATLAB_ROOT=/Applications/MATLAB_R2009a.app
 
@@ -112,15 +112,9 @@ To build:
 
 	     Edit the pom.xml in the same directory this README.txt is in
 	     Modify the following properties to suit your installation:
-	      <installPath>${HOME}/aved</installPath>
-              <matlabRoot>${MATLAB_ROOT}</matlabRoot>
 
-	     Comment out the aved-mbarivision/aved-pmbarivision modules.
-             This will remove these modules from the build
-
-	     <!--<module>aved-mbarivision</module>-->
-	     <!--<module>aved-pmbarivision</module>--> 
-
+	      <installPath>${HOME}/aved</installPath> 
+ 
 	4.3. Installation command  
 
 	     Run build from a command-line, e.g.
@@ -149,7 +143,7 @@ To build:
 	5.2. Creating a release
 
 	    5.2.2.  Increment the version displayed in the "About"
-    	    	    box in the graphical user interface
+    	    	    box in the aved-ui graphical user interface
 
                         $ source ./aved-classifier/setup
 			$ mvn generate-sources  -P version-increment

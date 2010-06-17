@@ -15,19 +15,6 @@
     <version>0.4.3-SNAPSHOT</version>
     <url>http://maven.apache.org</url>
 
-    <properties>
-        <netbeans.hint.useExternalMaven>true</netbeans.hint.useExternalMaven>
-    </properties>
-
-    <build>
-        <defaultGoal>integration-test</defaultGoal>
-        <plugins>
-            <plugin>
-                <artifactId>maven-nar-plugin</artifactId>
-                <extensions>true</extensions>
-            </plugin>
-        </plugins>
-    </build>
     <profiles>
         <profile>
             <id>version-increment</id>
