@@ -7,4 +7,10 @@
 #a non-zero exit code
 set -e
 source aved-classifier/setup
-mvn reactor:make -Dmake.folders=aved-ui 
+if [ `uname | grep Linux` ]; then
+  echo "Building for Linux" 
+  mvn install -PLinux
+else
+  echo "Building for MacOSX" 
+  mvn install -PMac 
+fi
