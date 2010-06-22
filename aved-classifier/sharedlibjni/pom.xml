@@ -146,12 +146,6 @@
                 </os>
             </activation>
             <dependencies>
-                <dependency>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
-                    <version>3.8.2</version>
-                    <scope>test</scope>
-                </dependency>
                 <!-- This includes the matlab shared library -->
                 <dependency>
                     <groupId>org.mbari.aved.classifier</groupId>
@@ -218,6 +212,12 @@
         </profile>
     </profiles>
     <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.2</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.mbari.aved.classifier</groupId>
             <artifactId>sharedlib</artifactId>

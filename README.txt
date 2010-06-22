@@ -44,7 +44,7 @@ you need:
 	https://jai.dev.java.net/binary-builds.html
 
 
-    1.4.  A Matlab installation on your machine that includes a license for:
+    1.4. A Matlab installation on your machine that includes a license for:
 
         a.  The Matlab Image Processing Toolkit version: 4.10 (R2009a)
         b.  The Matlab Compiler version: 4.10 (R2009a)
@@ -52,6 +52,10 @@ you need:
 
         Matlab is required to build the aved-classifier module
 	which is used in the graphical interface module aved-ui.
+
+    1.5  The current Java Imaging I/O  API
+
+        Download from https://jai.dev.java.net/binary-builds.html#Release_builds
 
 
 2.  About this Software
