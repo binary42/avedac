@@ -76,7 +76,36 @@
                     <arch>i386</arch>
                 </os>
             </activation>
-        </profile> 
+            <build>
+                <plugins>
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-jar-plugin</artifactId>
+  <configuration>
+     <archive>
+       <manifest>
+                            <mainClass>org.mbari.aved.ui.Application</mainClass>
+       </manifest>
+     </archive>
+  </configuration>
+</plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-shade-plugin</artifactId>
+                        <version>1.2</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>shade</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>Mac</id>
             <activation>
@@ -126,11 +155,11 @@
                                         <include>MCRInstaller.dmg</include>
                                     </includes>
                                 </fileSet>
-                                <fileSet> 
+                                <fileSet>
                                     <directory>${basedir}/target/nar/lib/i386-MacOSX-g++/jni/</directory>
                                     <includes>
                                         <include>*.jnilib</include>
-                                    </includes> 
+                                    </includes>
                                 </fileSet>
                                 <fileSet>
                                     <directory>${basedir}/target/nar/lib/i386-MacOSX-g++/shared</directory>
@@ -170,7 +199,7 @@
         <dependency>
             <groupId>org.mbari.aved.classifier</groupId>
             <artifactId>sharedlibjni</artifactId>
-            <version>0.4.3-SNAPSHOT</version> 
+            <version>0.4.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
