@@ -529,8 +529,12 @@ public class TranscodeProcess extends Thread {
                 // Get transcode path 
                 transcodecmd = getCmdLoc("transcode");
 
-                // only show progress every 100 frames
-                transcodecmd = transcodecmd + " --progress_rate 100 --threads 10 ";
+                // only show progress every 100 frames on Mac
+                if (lcOSName.startsWith("mac")) {
+                   transcodecmd = transcodecmd + " --progress_rate 100 --threads 10 ";
+                } else {
+                   transcodecmd = transcodecmd + " -q 1 -u 20,10 ";
+                }
 
                 outAvedVideo.setFileExt("ppm");
                 outAvedVideo.setFileStem("f");
@@ -576,7 +580,7 @@ public class TranscodeProcess extends Thread {
                     // if have a ISO timecode formatted file, need to calculate the correct framenumber
                     // this only works for the patched version of transcode on our
                     // Linux server
-                    if (hasISOtimecode && lcOSName.startsWith("linux")) {
+                    /*if (hasISOtimecode && lcOSName.startsWith("linux")) {
                         //find the floating number between the -f <rate> command sequence,
                         //by finding the indexes between the two delimeters, and 
                         //parsing the resuulting substring into a float
@@ -590,7 +594,7 @@ public class TranscodeProcess extends Thread {
                             int framenumber = Utils.timecode2counter(rate, timecode);
                             extraargs = new String("-f " + rate + " " + "-start_timecode " + framenumber);
                         }
-                    }
+                    }*/
                 }
                 String codec = new String("Unknown");
                 // If have the avidump command, use it to find the codec to better

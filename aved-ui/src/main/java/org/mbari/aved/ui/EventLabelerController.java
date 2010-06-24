@@ -79,23 +79,23 @@ class EventLabelerController extends AbstractController implements ModelListener
         } else if (actionCommand.equals("classComboBoxChanged")) {
             JComboBox cb  = (JComboBox) e.getSource();
             Object    obj = cb.getSelectedItem();
-
-            className = obj.toString();
+            if(obj != null)
+                className = obj.toString();
         } else if (actionCommand.equals("speciesComboBoxChanged")) {
             JComboBox cb  = (JComboBox) e.getSource();
             Object    obj = cb.getSelectedItem();
-
-            speciesName = obj.toString();
+            if(obj != null)
+                speciesName = obj.toString();
         } else if (actionCommand.equals("tagComboBoxChanged")) {
             JComboBox cb  = (JComboBox) e.getSource();
             Object    obj = cb.getSelectedItem();
-
-            tag = obj.toString();
+            if(obj != null)
+                tag = obj.toString();
         } else if (actionCommand.equals("idComboBoxChanged")) {
             JComboBox cb  = (JComboBox) e.getSource();
             Object    obj = cb.getSelectedItem();
-
-            id = obj.toString();
+            if(obj != null)
+                id = obj.toString();
         }
     }
 

@@ -181,9 +181,9 @@ public class Application {
                         try {
 
                             //URL name = getClass().getResource("/2344_00_32_40_25.events.xml");
-                            URL name = getClass().getResource("/20060808T000000_4912_32_103.events.xml");
+                            //URL name = getClass().getResource("/20060808T000000_4912_32_103.events.xml");
                             // URL name = new URL("file:/Volumes/nanomiaRAID-1/JAMSTEC/20080604T063139Z_tests/20080604T063139Z-test1/20080604T063139Z-test1.events.xml");
-                            app.getController().importProcessedResults(new File(name.getFile()));
+                            //app.getController().importProcessedResults(new File(name.getFile()));
                         } catch (Exception e) {
 
                             // TODO Auto-generated catch block
