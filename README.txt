@@ -20,7 +20,7 @@ and Java code.  It currently only works on Linux/Fedora, however
 certain components will also build on MacOSx. To build the entire package,
 you need:
 
-    1.1  JDK 
+    1.1  JDK 6 
 	Download from http://java.sun.com/javase/downloads/ 
 
     1.2. The software project management and comprehension tool Maven.
