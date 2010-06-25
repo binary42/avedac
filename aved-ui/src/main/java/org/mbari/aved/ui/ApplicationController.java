@@ -910,8 +910,7 @@ public class ApplicationController extends AbstractController implements ModelLi
 
                                         if (url != null) {
                                             File file = null;
-                                            File tmpDir = new File("/tmp");
-
+					    File tmpDir = UserPreferences.getModel().getLastScratchDirectory();
                                             // Initialize the transcoder output directory to be the temporary directory
                                             if (!tmpDir.exists()) {
                                                 tmpDir.mkdir();

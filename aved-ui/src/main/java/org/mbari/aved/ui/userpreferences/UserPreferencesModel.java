@@ -66,7 +66,8 @@ public final class UserPreferencesModel extends AbstractModel {
     private static final String LAST_VIDEO_IMPORT_DIR               = "LAST_VIDEO_IMPORT_DIR";
 
     private static final String PREDICTED_CLASS_NAME_LIST = "SPECIES_NAME_LIST";
-    
+    private static final String SCRATCH_DIR 		  = "SCRATCH_DIR";
+ 
     private static final String TAG_LIST                  = "TAG_LIST";
     private static final String VIDEO_BATCH_INPUT_DIR     = "VIDEO_BATCH_INPUT_DIR";
     private static final String VIDEO_MASK_DIR            = "VIDEO_MASK_DIR";
@@ -85,6 +86,7 @@ public final class UserPreferencesModel extends AbstractModel {
     
     public static int           VIDEO_PLAYOUT_CHANGED     = 0;     
     public static int           ASK_BEFORE_DELETE_CHANGED = 1;
+    public static int 		SCRATCH_DIR_CHANGED 	  = 2;
 
     /** TODO: rename this to something meaningful number of docking directories */
     private int dockingDirsCnt = 0;
@@ -687,6 +689,16 @@ public final class UserPreferencesModel extends AbstractModel {
     }
 
     /**
+ *      * Returns the scratch directory and if not available returns in the following search order:
+ *           * if exists, the SCRATCH_DIR environment variable, or
+ *                * if exists /tmp
+ *                     * or "./" if all else fails
+ *                          */
+    public File getLastScratchDirectory() {
+        return new File(preferences.get(SCRATCH_DIR, getDefaultScratchDirectory().getName()));
+    }
+
+    /**
      * Returns the directory the last training images where imported from,
      * and if not available returns PWD environment variable
      */
@@ -760,6 +772,13 @@ public final class UserPreferencesModel extends AbstractModel {
      */
     public File getLastExportedXMLDirectory() {
         return new File(preferences.get(XML_EXPORT_DIR, getDefaultDirectoryString()));
+    }
+
+/** Sets the directory Excel data was successfully exported to */
+    public void setScratchDirectory(File f) {
+        put(SCRATCH_DIR, f.getAbsolutePath());
+        ModelEvent e = new ModelEvent(this, SCRATCH_DIR_CHANGED, f.getAbsolutePath());
+        notifyChanged(e);
     }
 
     /** Sets the directory results were successfully imported from */

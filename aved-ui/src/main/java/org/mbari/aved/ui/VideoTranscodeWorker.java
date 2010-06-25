@@ -140,8 +140,8 @@ class VideoTranscodeWorker extends SwingWorker {
             transcodeProcess.setPrintStream(processDisplay);
 
             // Get the temporary directory and create it if it doesn't exist
-            File tmpDir = new File("/tmp");
-
+	    File tmpDir = UserPreferences.getModel().getLastScratchDirectory();
+:
             // Initialize the transcoder output directory to be the temporary directory
             if (!tmpDir.exists()) {
                 tmpDir.mkdir();

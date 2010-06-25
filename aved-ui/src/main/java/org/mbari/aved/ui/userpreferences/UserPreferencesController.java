@@ -35,6 +35,7 @@ import java.io.File;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
@@ -117,6 +118,20 @@ public class UserPreferencesController extends AbstractController {
             getModel().setAskBeforeDelete(state);
         } else if (op.equals("Close")) {
             getView().setVisible(false);
+        } else if (op.equals("BrowseScratchDir")) {
+             File       scratch =  getModel().getLastScratchDirectory();
+             File       f = browse(scratch, JFileChooser.FILES_AND_DIRECTORIES, "Choose scratch directory");
+
+            if (f != null) {
+                getModel().setScratchDirectory(f); 
+            }
+        }  else if (op.equals("ScratchDirComboBoxChanged")) {
+            JComboBox box    = ((JComboBox) e.getSource());
+            File      newDir = (File) box.getSelectedItem();
+
+            if (newDir != null) {
+                getModel().setScratchDirectory(newDir);
+            }
         } else {}
     }
 }
