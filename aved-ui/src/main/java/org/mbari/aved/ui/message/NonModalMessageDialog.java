@@ -46,12 +46,12 @@ public class NonModalMessageDialog extends JDialog implements ActionListener {
     public NonModalMessageDialog(JFrame frame, String message) {
         super(frame, "Message", false /* non modal */);
 
-        FormPanel myForm = new FormPanel("org/mbari/aved/ui/forms/MessageOkay.xml");
+        FormPanel form = new FormPanel("org/mbari/aved/ui/forms/MessageOkay.xml");
 
-        this.setContentPane(myForm);
+        this.setContentPane(form);
 
-        JTextComponent text   = myForm.getTextComponent("message");
-        final JButton  button = (JButton) myForm.getButton("okay");
+        JTextComponent text   = form.getTextComponent("message");
+        final JButton  button = (JButton) form.getButton("okay");
 
         text.setText(message);
         button.addActionListener(this);

@@ -533,7 +533,7 @@ public class TranscodeProcess extends Thread {
                 if (lcOSName.startsWith("mac")) {
                    transcodecmd = transcodecmd + " --progress_rate 100 --threads 10 ";
                 } else {
-                   transcodecmd = transcodecmd + " -q 1 -u 20,10 ";
+                   transcodecmd = transcodecmd + " -q 0 -u 20,10 ";
                 }
 
                 outAvedVideo.setFileExt("ppm");
@@ -583,7 +583,7 @@ public class TranscodeProcess extends Thread {
                     /*if (hasISOtimecode && lcOSName.startsWith("linux")) {
                         //find the floating number between the -f <rate> command sequence,
                         //by finding the indexes between the two delimeters, and 
-                        //parsing the resuulting substring into a float
+                        //parsing the resulting substring into a float
                         //e.g. frame rate: -f 29.970 [25.0]
                         int i = s.lastIndexOf("-f");
                         int j = s.indexOf("[", i);

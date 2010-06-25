@@ -94,13 +94,22 @@ public class DockingContainer extends JPanel {
         DockingPreferences.setFlatDesktopStyle();
         DockingPreferences.setShadowDesktopStyle();
 
-        if (!checkForPpmReader()) {
+        if (!checkForJpgReader()) {
             JOptionPane
                 .showMessageDialog(
                     this, "You are missing the Java Advanced Imaging Library needed to "
                     + "view .ppm images.\nPlease go to "
+                    + "https://jai.dev.java.net/binary-builds.html\nand download "
+                    + "and install the appropriate package for your platform\n(version 1.1.3 or better)", "Missing Require Libraries", JOptionPane
+                        .ERROR_MESSAGE);
+        }
+        if (!checkForPpmReader()) {
+            JOptionPane
+                .showMessageDialog(
+                    this, "You are missing the Java Advanced Imaging Image I/O Tools Library needed to "
+                    + "view .ppm images.\nPlease go to "
                     + "https://jai-imageio.dev.java.net/binary-builds.html\nand download "
-                    + "and install the appropriate package for your platform\n(version 1.0_01 or better)", "Missing Require Libraries", JOptionPane
+                    + "and install the appropriate package for your platform\n(version 1.1_01 or better)", "Missing Require Libraries", JOptionPane
                         .ERROR_MESSAGE);
         }
 
@@ -145,7 +154,20 @@ public class DockingContainer extends JPanel {
 
         return false;
     }
+    
+    private boolean checkForJpgReader() {
+        ImageIO.scanForPlugins();
 
+        String[] formats = ImageIO.getReaderFormatNames();
+
+        for (int i = 0; i < formats.length; i++) {
+            if (formats[i].equalsIgnoreCase("jpg")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
     private class ButtonPanel extends JPanel implements Dockable {
         private final JFileChooser             chooser = new JFileChooser();
         private final DockKey                  dockKey;
