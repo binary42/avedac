@@ -20,7 +20,10 @@ and Java code.  It currently only works on Linux/Fedora, however
 certain components will also build on MacOSx. To build the entire package,
 you need:
 
-    1.1. The software project management and comprehension tool Maven.
+    1.1  JDK 
+	Download from http://java.sun.com/javase/downloads/ 
+
+    1.2. The software project management and comprehension tool Maven.
         Maven is based on the concept of a project object model (POM).
         If you look in each of the major subdirectories in this software
         you will see a pom.xml file, and in each of these files is a description
@@ -28,8 +31,13 @@ you need:
         c++ build, or otherwise.
 
         Download Maven from http://maven.apache.org/download.html
+	version 2.2.1
 
-    1.2. The iLab Neuromorphic Vision C++ Toolkit developed
+	Maven is a Java tool, so you must have Java installed in order to
+	proceed. More precisely, you need a Java Development Kit (JDK), the Java
+	Runtime Environment (JRE) is not sufficient.
+
+    1.3. The iLab Neuromorphic Vision C++ Toolkit developed
         by the University of Southern California (USC) and the iLab at USC.
         See http://iLab.usc.edu for information about this project and
         the wiki page about the version required for this project.
@@ -38,18 +46,18 @@ you need:
 	it is free, but you will need to ask for it.
  	See http://ilab.usc.edu/toolkit/downloads.shtml for more information.
 
-    1.3. The Java Advanced Imaging Binary version 1.1.3 for Linux/MacOSX
+    1.4. The Java Advanced Imaging Binary version 1.1.3 for Linux/MacOSX
 	from here:
 	
 	https://jai.dev.java.net/binary-builds.html
 
-    1.4. The The Java Advanced Imaging Image I/O Tools for Linux/MacOSX
+    1.5. The The Java Advanced Imaging Image I/O Tools for Linux/MacOSX
          from here:
 
 	https://jai-imagio.dev.java.net/binary-builds.html
 
 
-    1.5. A Matlab installation on your machine that includes a license for:
+    1.6. A Matlab installation on your machine that includes a license for:
 
         a.  The Matlab Image Processing Toolkit version: 4.10 (R2009a)
         b.  The Matlab Compiler version: 4.10 (R2009a)
