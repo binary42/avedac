@@ -236,7 +236,7 @@ public class Application {
                             }
 
                             if (!checkForPpmReader()) {
-                                String message = new String("You are missing the Java Advanced Imaging Image I/O Tools Library needed to " + "view .ppm images. Please install the package for your platform here\n" + "https://jai-imageio.dev.java.net/binary-builds.html\nand download (version 1.0_01 or better)");
+                                String message = new String("You are missing the Java Advanced Imaging Image I/O Tools Library needed to " + "view .ppm images, or you are no running the correct version of java (jdk). Please install the package for your platform here\n" + "https://jai-imageio.dev.java.net/binary-builds.html\nand download (version 1.0_01 or better)");
                                 NonModalMessageDialog dialog = new NonModalMessageDialog(view, message);
                                 dialog.setVisible(true);
                                 dialog.answer();

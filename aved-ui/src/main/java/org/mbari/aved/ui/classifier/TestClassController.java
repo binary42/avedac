@@ -86,9 +86,11 @@ class TestClassController extends AbstractController implements ModelListener {
         } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
             JComboBox  box           = ((JComboBox) e.getSource());
             ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
-    
-            getView().populateTrainingLibraryList(newColorSpace);
-            getView().populateClassList(newColorSpace);
+   
+	    if(newColorSpace != null ) { 
+              getView().populateTrainingLibraryList(newColorSpace);
+              getView().populateClassList(newColorSpace);
+            }
          } else if (actionCommand.equals("libraryNameComboBoxChanged")) {
             JComboBox     box   = ((JComboBox) e.getSource());
             TrainingModel model = (TrainingModel) box.getSelectedItem();
