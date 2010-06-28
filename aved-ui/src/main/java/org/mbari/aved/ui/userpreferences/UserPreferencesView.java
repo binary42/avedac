@@ -28,9 +28,10 @@ import org.mbari.aved.ui.appframework.ModelEvent;
 import org.mbari.aved.ui.userpreferences.UserPreferencesModel.VideoPlayoutMode;
 
 //~--- JDK imports ------------------------------------------------------------
-
+import java.io.File;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
@@ -42,9 +43,8 @@ public class UserPreferencesView extends JFrameView {
      * should be modified here too
      */
     public static final String ID_ASK_BEFORE_DELETE       = "askbeforedelete";    // javax.swing.JCheckBox
-  public static final String ID_BROWSE_BUTTON_PLAYER = "browseplayer";
+    public static final String ID_BROWSE_BUTTON_PLAYER = "browseplayer";
     public static final String ID_BROWSE_SCRATCH_DIR = "browsescratchdir";
- public static final String ID_BROWSE_BUTTON_PLAYER    = "browseplayer"; 
     public static final String ID_CLOSE_BUTTON            = "close";
     public static final String ID_PLAYER_DEFAULT_RADIO    = "playervlc";          // javax.swing.JRadioButton
     public static final String ID_PLAYER_OTHER_RADIO      = "playerother";        // javax.swing.JRadioButton

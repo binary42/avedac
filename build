@@ -6,7 +6,7 @@
 #exit on error; this will exit this bash script when any command exists with
 #a non-zero exit code
 set -e
-source aved-classifier/setup
+./aved-classifier/setup
 if [ `uname | grep Linux` ]; then
   echo "Building for Linux" 
   mvn install -PLinux
