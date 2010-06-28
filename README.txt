@@ -54,7 +54,7 @@ you need:
     1.5. The The Java Advanced Imaging Image I/O Tools for Linux/MacOSX
          from here:
 
-	https://jai-imagio.dev.java.net/binary-builds.html
+	https://jai-imageio.dev.java.net/binary-builds.html
 
 
     1.6. A Matlab installation on your machine that includes a license for:
