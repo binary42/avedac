@@ -112,7 +112,7 @@ public class ApplicationController extends AbstractController implements ModelLi
         getView().replaceTablePanel(tableController.getTable());
         getView().setVisible(true);
         getView().pack();
-
+        
         MainMenu menu = new MainMenu(getModel());
 
         getView().setJMenuBar(menu.buildJJMenuBar());
@@ -909,7 +909,7 @@ public class ApplicationController extends AbstractController implements ModelLi
 
                                         if (url != null) {
                                             File file = null;
-					    File tmpDir = UserPreferences.getModel().getLastScratchDirectory();
+                                            File tmpDir = UserPreferences.getModel().getLastScratchDirectory();
                                             // Initialize the transcoder output directory to be the temporary directory
                                             if (!tmpDir.exists()) {
                                                 tmpDir.mkdir();

@@ -102,6 +102,7 @@ public class Application {
         String lcOSName = System.getProperty("os.name").toLowerCase();
 
         // If mac, Set Aqua (or future default Apple VM platform look-and-feel
+        // and set menu bar display
         if (lcOSName.startsWith("mac os x")) {
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -114,6 +115,9 @@ public class Application {
             } catch (UnsupportedLookAndFeelException ex) {
                 Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
             }
+            // needed on mac os x to display menus in the mac convention
+            System.setProperty("apple.laf.useScreenMenuBar", "true");
+
         } else {
 
             // Otherwise, set the look and feel to a metal look
