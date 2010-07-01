@@ -15,17 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.utils;
 
 //~--- JDK imports ------------------------------------------------------------
-
-import com.sun.image.codec.jpeg.JPEGCodec;
-import com.sun.image.codec.jpeg.JPEGEncodeParam;
-import com.sun.image.codec.jpeg.JPEGImageEncoder;
-
 import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Graphics2D;
@@ -39,26 +31,30 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 
+import java.util.Iterator;
+import javax.imageio.*;
+import javax.imageio.stream.*;
+
 public class ImageUtils {
 
     /** Busy and wait cursor */
-    public final static Cursor busyCursor    = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
+    public final static Cursor busyCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
     public final static Cursor defaultCursor = Cursor.getDefaultCursor();
-    public final static String dpx           = "dpx";
-    public final static String jpg           = "jpg";
-    public final static String mov           = "mov";
-    public final static String mpeg          = "mpeg";
-    public final static String png           = "png";
-    public final static String pnm           = "pnm";
-    public final static String ppm           = "ppm";
+    public final static String dpx = "dpx";
+    public final static String jpg = "jpg";
+    public final static String mov = "mov";
+    public final static String mpeg = "mpeg";
+    public final static String png = "png";
+    public final static String pnm = "pnm";
+    public final static String ppm = "ppm";
 
     /*
      * Get the extension of a file.
      */
     public static String getExtension(File f) {
         String ext = null;
-        String s   = f.getName();
-        int    i   = s.lastIndexOf('.');
+        String s = f.getName();
+        int i = s.lastIndexOf('.');
 
         if ((i > 0) && (i < s.length() - 1)) {
             ext = s.substring(i + 1).toLowerCase();
@@ -77,15 +73,15 @@ public class ImageUtils {
      * a jpeg images
      */
     public static void squareJpegThumbnail(String imgInFilePath, String imgOutFilePath) throws Exception {
-        Image        image        = Toolkit.getDefaultToolkit().getImage(imgInFilePath);
+        Image image = Toolkit.getDefaultToolkit().getImage(imgInFilePath);
         MediaTracker mediaTracker = new MediaTracker(new Container());
 
         mediaTracker.addImage(image, 0);
         mediaTracker.waitForID(0);
 
-        int imageWidth  = image.getWidth(null);
+        int imageWidth = image.getWidth(null);
         int imageHeight = image.getHeight(null);
-        int maxLength   = 0;
+        int maxLength = 0;
 
         // square the image with the largest dimension
         // if the image is already square then copy it
@@ -96,20 +92,24 @@ public class ImageUtils {
         }
 
         BufferedImage thumbImage = new BufferedImage(maxLength, maxLength, BufferedImage.TYPE_INT_RGB);
-        Graphics2D    graphics2D = thumbImage.createGraphics();
+        Graphics2D graphics2D = thumbImage.createGraphics();
 
         graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         graphics2D.drawImage(image, 0, 0, maxLength, maxLength, null);
 
-        BufferedOutputStream out     = new BufferedOutputStream(new FileOutputStream(imgOutFilePath));
-        JPEGImageEncoder     encoder = JPEGCodec.createJPEGEncoder(out);
-        JPEGEncodeParam      param   = encoder.getDefaultJPEGEncodeParam(thumbImage);
-        int                  quality = 100;
+        Iterator iter = ImageIO.getImageWritersByFormatName("jpeg");
+        ImageWriter writer = (ImageWriter) iter.next();
+        ImageWriteParam iwp = writer.getDefaultWriteParam();
+        iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+        iwp.setCompressionQuality(1);   // an integer between 0 and 1
+        // 1 specifies minimum compression and maximum quality
 
-        param.setQuality((float) quality / 100.0f, false);
-        encoder.setJPEGEncodeParam(param);
-        encoder.encode(thumbImage);
-        out.flush();
-        out.close();
+        File file = new File(imgOutFilePath);
+        FileImageOutputStream output = new FileImageOutputStream(file);
+        writer.setOutput(output);
+        IIOImage iiimage = new IIOImage(thumbImage, null, null);
+        writer.write(null, iiimage, iwp);
+        writer.dispose();
+
     }
 }

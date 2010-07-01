@@ -24,7 +24,6 @@ import edu.stanford.ejalbert.exception.UnsupportedOperatingSystemException;
 
 import org.apache.commons.io.IOUtils;
 
-import org.mbari.aved.classifier.ClassifierLibraryJNI;
 import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.appframework.ModelEvent;
 import org.mbari.aved.ui.appframework.ModelListener;

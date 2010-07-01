@@ -83,6 +83,7 @@ public class DisplayThumbnail extends DisplayJAI {
         this.scale          = scale;
         visibleRegionWidth  = width;
         visibleRegionHeight = height;
+        
         set(image);
 
         // We'd like to listen to mouse movements within this rather
