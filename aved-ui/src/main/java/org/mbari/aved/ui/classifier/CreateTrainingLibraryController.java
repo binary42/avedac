@@ -22,7 +22,6 @@ package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.jdesktop.swingworker.SwingWorker;
 
 import org.mbari.aved.classifier.ClassModel;
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
@@ -31,7 +30,6 @@ import org.mbari.aved.classifier.TrainingModel;
 import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.appframework.ModelEvent;
 import org.mbari.aved.ui.appframework.ModelListener;
-import org.mbari.aved.ui.classifier.ClassifierModel;
 import org.mbari.aved.ui.message.NonModalMessageDialog;
 import org.mbari.aved.ui.progress.ProgressDisplay;
 import org.mbari.aved.ui.progress.ProgressDisplayStream;

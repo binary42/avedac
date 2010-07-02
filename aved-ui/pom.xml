@@ -130,7 +130,7 @@
                     <!-- This plugin packages up the artifact in a jar that includes
                     its dependencies and to "shade" or the packages of  some of the
                     dependencies-->
-                       <plugin>
+                    <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-shade-plugin</artifactId>
                         <version>1.2</version>
@@ -162,7 +162,7 @@
                                     <goal>single</goal>
                                 </goals>
                                 <configuration>
-                                    <appendAssemblyId>true</appendAssemblyId> 
+                                    <appendAssemblyId>true</appendAssemblyId>
                                     <descriptors>
                                         <descriptor>assembly/linux-assembly.xml</descriptor>
                                     </descriptors>
@@ -184,9 +184,26 @@
                     <arch>i386</arch>
                 </os>
             </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.mbari.aved.classifier</groupId>
+                    <artifactId>sharedlibjni</artifactId>
+                    <version>0.4.3-SNAPSHOT</version>
+                    <type>nar</type>
+                    <classifier>i386-MacOSX-g++-jni</classifier>
+                </dependency>
+                <!-- This includes the matlab shared library -->
+                <dependency>
+                    <groupId>org.mbari.aved.classifier</groupId>
+                    <artifactId>sharedlib</artifactId>
+                    <version>0.4.3-SNAPSHOT</version>
+                    <type>nar</type>
+                    <classifier>i386-MacOSX-g++-shared</classifier>
+                </dependency>
+            </dependencies>
             <build>
                 <plugins>
-                    <!--This plugin will unpack and include the necessarily libraries for
+                 <!--This plugin will unpack and include the necessarily libraries for
             deploying this on a separate machine-->
                     <plugin>
                         <groupId>org.mbari.aved.classifier</groupId>
@@ -254,7 +271,7 @@
             </build>
         </profile>
     </profiles>
-    <dependencies> 
+    <dependencies>
         <dependency>
             <groupId>javax.media</groupId>
             <artifactId>jai_core</artifactId>
@@ -273,13 +290,7 @@
             <groupId>org.mbari.aved.classifier</groupId>
             <artifactId>sharedlibjni</artifactId>
             <version>0.4.3-SNAPSHOT</version>
-            <type>nar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.mbari.aved.classifier</groupId>
-            <artifactId>sharedlibjni</artifactId>
-            <version>0.4.3-SNAPSHOT</version>
-        </dependency>
+        </dependency> 
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

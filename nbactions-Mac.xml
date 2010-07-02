@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <actions>
+	<action>
+            <actionName>run</actionName>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+            </goals>
+            <properties>
+                <exec.classpathScope>runtime</exec.classpathScope>
+                <exec.args>-Dcom.sun.media.jai.disableMediaLib=true -classpath %classpath ${packageClassName}</exec.args>
+                <exec.executable>java</exec.executable>
+            </properties>
+        </action>
+
         <action>
             <actionName>rebuild</actionName>
             <goals>
@@ -8,7 +21,7 @@
             </goals>
             <properties>
                 <Env.MATLAB_ROOT>/Applications/MATLAB_R2009a.app</Env.MATLAB_ROOT>
-                <Env.DYLD_LIBRARY_PATH>/Users/dcline/aved/lib:/Applications/MATLAB_R2009a.app/runtime:/Applications/MATLAB_R2009a.app/bin/maci:/Applications/MATLAB_R2009a.app/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
+                <Env.DYLD_LIBRARY_PATH>/Applications/MATLAB_R2009a.app/runtime:/Applications/MATLAB_R2009a.app/bin/maci:/Applications/MATLAB_R2009a.app/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
 		<Env.XAPPLRESDIR>/Applications/MATLAB_R2009a.app/X11/app-defaults</Env.XAPPLRESDIR>
             </properties>
         </action>
@@ -18,7 +31,7 @@
                 <goal>install</goal>
             </goals>
             <properties>
-                <Env.DYLD_LIBRARY_PATH>/Users/dcline/aved/lib:/Applications/MATLAB_R2009a.app/runtime:/Applications/MATLAB_R2009a.app/bin/maci:/Applications/MATLAB_R2009a.app/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
+                <Env.DYLD_LIBRARY_PATH>/Applications/MATLAB_R2009a.app/runtime:/Applications/MATLAB_R2009a.app/bin/maci:/Applications/MATLAB_R2009a.app/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
                 <Env.MATLAB_ROOT>/Applications/MATLAB_R2009a.app</Env.MATLAB_ROOT>
 		<Env.XAPPLRESDIR>/Applications/MATLAB_R2009a.app/X11/app-defaults</Env.XAPPLRESDIR>
             </properties>
@@ -29,7 +42,7 @@
                 <goal>test</goal>
             </goals>
             <properties>
-                <Env.DYLD_LIBRARY_PATH>/Users/dcline/aved/lib:/Applications/MATLAB_R2009a.app/runtime:/Applications/MATLAB_R2009a.app/bin/maci:/Applications/MATLAB_R2009a.app/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
+                <Env.DYLD_LIBRARY_PATH>/Applications/MATLAB_R2009a.app/runtime:/Applications/MATLAB_R2009a.app/bin/maci:/Applications/MATLAB_R2009a.app/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
                 <Env.MATLAB_ROOT>/Applications/MATLAB_R2009a.app</Env.MATLAB_ROOT>
 		<Env.XAPPLRESDIR>/Applications/MATLAB_R2009a.app/X11/app-defaults</Env.XAPPLRESDIR>
             </properties>

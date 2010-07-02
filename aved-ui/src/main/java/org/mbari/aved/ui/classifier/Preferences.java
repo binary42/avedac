@@ -22,7 +22,6 @@ package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.mbari.aved.ui.classifier.ClassifierModel;
 
 //~--- JDK imports ------------------------------------------------------------
 

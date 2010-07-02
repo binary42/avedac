@@ -39,6 +39,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.plaf.metal.DefaultMetalTheme;
 import javax.swing.plaf.metal.MetalLookAndFeel;
+import org.mbari.aved.ui.classifier.Classifier;
 import org.mbari.aved.ui.message.NonModalMessageDialog;
 
 public class Application {
@@ -102,7 +103,6 @@ public class Application {
         String lcOSName = System.getProperty("os.name").toLowerCase();
 
         // If mac, Set Aqua (or future default Apple VM platform look-and-feel
-        // and set menu bar display
         if (lcOSName.startsWith("mac os x")) {
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -114,10 +114,7 @@ public class Application {
                 Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
             } catch (UnsupportedLookAndFeelException ex) {
                 Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            // needed on mac os x to display menus in the mac convention
-            System.setProperty("apple.laf.useScreenMenuBar", "true");
-
+            }  
         } else {
 
             // Otherwise, set the look and feel to a metal look
@@ -229,7 +226,9 @@ public class Application {
                                 dialog.setVisible(true);
                                 dialog.answer();
                                 System.exit(-1);
-                            } 
+                            }
+
+                           Classifier.getLibrary();
                         } catch (Exception e) {
 
                             // TODO Auto-generated catch block

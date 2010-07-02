@@ -25,7 +25,6 @@ import org.mbari.aved.classifier.TrainingModel;
 import org.mbari.aved.ui.appframework.AbstractModel;
 import org.mbari.aved.ui.appframework.ModelEvent;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
-import org.mbari.aved.ui.userpreferences.UserPreferencesModel;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -68,10 +67,11 @@ public class ClassifierModel extends AbstractModel {
      * @param dir the training image directory
      */
     public void setClassTrainingImageDirectory(File directory) { 
-        UserPreferences.getModel().setClassTrainingImageDirectory(lastClassTrainingDirectory);
+      
         UserPreferences.getModel().clearDockingImagesDirectories();
         if (changedName(lastClassTrainingDirectory, directory)) {
             lastClassTrainingDirectory = directory;
+            UserPreferences.getModel().setClassTrainingImageDirectory(directory);
             ClassifierModelEvent e = new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_CLASS_DIR_UPDATED,
                     "setTrainingClassDirectory" + directory.toString()); 
             notifyChanged(e);
@@ -94,9 +94,10 @@ public class ClassifierModel extends AbstractModel {
      * @param f the root directory to set
      */
     public void setDatabaseRoot(File directory) {
-        UserPreferences.getModel().setClassDatabaseDirectory(directory);
+       
         if (changedName(dbrootDirectory, directory)) {
             dbrootDirectory = directory;
+            UserPreferences.getModel().setClassDatabaseDirectory(directory);
             notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED,
                     dbrootDirectory.toString()));
         }

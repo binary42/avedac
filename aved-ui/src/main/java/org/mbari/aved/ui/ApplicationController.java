@@ -112,7 +112,14 @@ public class ApplicationController extends AbstractController implements ModelLi
         getView().replaceTablePanel(tableController.getTable());
         getView().setVisible(true);
         getView().pack();
-        
+
+        String s = System.getProperty("os.name").toLowerCase();
+
+        if (s.indexOf("linux") != -1) {
+            // needed on mac os x to display menus in the mac convention
+            System.setProperty("apple.laf.useScreenMenuBar", "true");
+        }
+
         MainMenu menu = new MainMenu(getModel());
 
         getView().setJMenuBar(menu.buildJJMenuBar());

@@ -43,25 +43,6 @@
                             <skip>true</skip>
                         </configuration>
                     </plugin>
-                    <!--This plugin will unpack and include the necessarily libraries for
-                    deploying this on a separate machine-->
-                    <plugin>
-                        <groupId>org.mbari.aved.classifier</groupId>
-                        <artifactId>NarMojo</artifactId>
-                        <version>0.4.3-SNAPSHOT</version>
-                        <configuration>
-                            <name>MacOSX</name>
-                            <arch>i386</arch>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <phase>compile</phase>
-                                <goals>
-                                    <goal>unpack</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
@@ -69,7 +50,7 @@
                             <execution>
                                 <!-- Change the dependency in the created library to use
                         the loader path instead for the shared Matlab library.
-                        You nee the Xcode developer tools to run this command.
+                        You need the Xcode developer tools to run this command.
                         TODO: Check for proper Xcode version and existence-->
                                 <id>exec-process-classes</id>
                                 <phase>process-classes</phase>
@@ -79,8 +60,8 @@
                                 <configuration>
                                     <workingDirectory>${basedir}/target/nar/lib/i386-MacOSX-g++/jni</workingDirectory>
                                     <executable>${basedir}/src/main/scripts/execute</executable>
-                                    <arguments>
-                                        <cmdlineArguments>install_name_tool -change ${project.parent.basedir}/sharedlibjni/target/nar/lib/i386-MacOSX-g++/shared/libsharedlib-${version}.dylib @loader_path/libsharedlib-${version}.dylib lib${artifactId}-${version}.jnilib</cmdlineArguments>
+                                    <arguments> 
+                                        <cmdlineArguments>install_name_tool -change libavedsharedlib.dylib @loader_path/libavedsharedlib.dylib lib${artifactId}-${version}.jnilib</cmdlineArguments>
                                     </arguments>
                                 </configuration>
                             </execution>

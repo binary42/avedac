@@ -15,20 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import aved.model.EventObject;
 
 import org.jdesktop.swingworker.SwingWorker;
 
 import org.mbari.aved.classifier.ClassModel;
-import org.mbari.aved.classifier.ClassifierLibraryJNI;
-import org.mbari.aved.classifier.TrainingModel;
 import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.appframework.ModelEvent;
 import org.mbari.aved.ui.appframework.ModelListener;
@@ -53,24 +47,27 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.mbari.aved.classifier.ClassifierLibraryJNI;
+import org.mbari.aved.classifier.TrainingModel;
 
 /**
  *
  * @author dcline
  */
 public class ClassifierController extends AbstractController implements ModelListener, WindowListener {
-    private final CreateClass           createClass;
+
+    private final CreateClass createClass;
     private final CreateTrainingLibrary createTrainingLib;
-    private final EventListModel        eventListModel;
-    private final RunClassifier         runClassifier;
-    private final TestClass             testClass;
+    private final EventListModel eventListModel;
+    private final RunClassifier runClassifier;
+    private final TestClass testClass;
 
     public ClassifierController(EventListModel list, SummaryModel summaryModel) {
         eventListModel = list;
 
         // Create common model for all controllers/views to use
         ClassifierModel model = new ClassifierModel();
-        ClassifierView  view  = new ClassifierView(model, this);
+        ClassifierView view = new ClassifierView(model, this);
 
         // Need to create the model and view before creating the controllers
         setView(view);
@@ -82,11 +79,13 @@ public class ClassifierController extends AbstractController implements ModelLis
 
         // Register as listener to the model
         model.addModelListener(this);
-        
+ 
+        loadModels();
+
         createTrainingLib = new CreateTrainingLibrary(model);
-        createClass       = new CreateClass(model, list);
-        testClass         = new TestClass(model);
-        runClassifier     = new RunClassifier(model, list, summaryModel);
+        createClass = new CreateClass(model, list);
+        testClass = new TestClass(model);
+        runClassifier = new RunClassifier(model, list, summaryModel);
 
         // Replace the views
         view.setTrainingPanel(createTrainingLib.getView().getForm());
@@ -96,10 +95,14 @@ public class ClassifierController extends AbstractController implements ModelLis
 
         // TODO: make this a function of screen size
         view.pack();
-        
+
         // Initialize the database directory from the user-defined preferences
-        File dir = UserPreferences.getModel().getClassDatabaseDirectory();         
-        model.setDatabaseRoot(dir);
+        File dbDir = UserPreferences.getModel().getClassDatabaseDirectory();
+        model.setDatabaseRoot(dbDir);
+         
+        // Initialize the training image directory
+        File trainingDir = UserPreferences.getModel().getClassTrainingImageDirectory();
+        model.setClassTrainingImageDirectory(trainingDir);
     }
 
     @Override
@@ -117,6 +120,53 @@ public class ClassifierController extends AbstractController implements ModelLis
     }
 
     /**
+     * Loads the available models
+     */
+    private void loadModels() {
+        try {
+            ClassifierLibraryJNI library = Classifier.getLibrary();
+            File dbDir = UserPreferences.getModel().getClassDatabaseDirectory();
+            String dbRoot = dbDir.getAbsolutePath();
+
+            // Create the collected class directory if it doesn't exist
+            File featuresDir = new File(dbRoot + "/features/class");
+            if (!featuresDir.exists()) {
+                featuresDir.mkdir();
+            }
+
+            // Get the collected classes in this root directory
+            ClassModel[] classes = library.get_collected_classes(dbRoot);
+            ClassifierModel model = getModel();
+
+            if (classes != null) {
+                for (int i = 0; i < classes.length; i++) {
+                    model.addClassModel(classes[i]);
+                }
+            }
+
+            // Create the training class directory if it doesn't exist
+            File trainingDir = new File(dbRoot + "/training/class");
+            if (!trainingDir.exists()) {
+                trainingDir.mkdir();
+            }
+
+            // Get the training classes in this root directory
+            TrainingModel[] training = library.get_training_classes(dbRoot);
+
+            if (training != null) {
+                for (int i = 0; i < training.length; i++) {
+                    getModel().addTrainingModel(training[i]);
+                }
+            }
+        } catch (RuntimeException ex) {
+            Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+
+        } catch (Exception ex) {
+            Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
      * Model listener. Reacts to changes in the
      * {@link org.mbari.aved.ui.classifier.model}
      * and  {@link org.mbari.aved.ui.model.EventListModel}
@@ -131,53 +181,11 @@ public class ClassifierController extends AbstractController implements ModelLis
          */
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
-            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
-               try {
-                    //ClassifierLibraryJNI library = Classifier.getLibrary();
-                    File                 dbDir   = UserPreferences.getModel().getClassDatabaseDirectory();
-                    String               dbRoot  = dbDir.getAbsolutePath();
-
-                    // Create the collected class directory if it doesn't exist
-                    File featuresDir = new File(dbRoot + "/features/class");
-                    if (!featuresDir.exists()) {
-                       featuresDir.mkdir();
-                    }
-
-                    // Get the collected classes in this root directory
-                    /*ClassModel[]    classes = library.get_collected_classes(dbRoot);
-                    ClassifierModel model   = getModel();
-
-                    if (classes != null) {
-                        for (int i = 0; i < classes.length; i++) {
-                            model.addClassModel(classes[i]);
-                        }
-                    } */
-
-                    // Create the training class directory if it doesn't exist
-                    File trainingDir = new File(dbRoot + "/training/class");
-                    if (!trainingDir.exists()) {
-                       trainingDir.mkdir();
-                    }
-
-                    // Get the training classes in this root directory
-                    /*TrainingModel[] training = library.get_training_classes(dbRoot);
-
-                    if (training != null) {
-                        for (int i = 0; i < training.length; i++) {
-                            getModel().addTrainingModel(training[i]);
-                        }
-                    }*/
-                } catch (RuntimeException ex) {
-                    Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-                     
-                 } catch (Exception ex) {
-                    Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                break;
+                case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED:
+                    loadModels();
+                    break;
             }
-        }
-
-        /**
+        } /**
          * when entries are changed, check if this belongs to a class and whether
          * the user is creating a training classes, and if so add it to the
          * appropriate training class
@@ -186,61 +194,62 @@ public class ClassifierController extends AbstractController implements ModelLis
             EventListModel.EventListModelEvent e = (EventListModel.EventListModelEvent) event;
 
             switch (e.getID()) {
-            case EventListModelEvent.MULTIPLE_ENTRIES_CHANGED :
-                ArrayList<Integer> a    = e.getModelIndexes();
-                Iterator<Integer>  iter = a.iterator();
+                case EventListModelEvent.MULTIPLE_ENTRIES_CHANGED:
+                    ArrayList<Integer> a = e.getModelIndexes();
+                    Iterator<Integer> iter = a.iterator();
 
-                while (iter.hasNext()) {
-                    File                 f   = UserPreferences.getModel().getClassTrainingImageDirectory();
-                    EventObjectContainer eoc = eventListModel.getElementAt(iter.next());
+                    while (iter.hasNext()) {
+                        File f = UserPreferences.getModel().getClassTrainingImageDirectory();
+                        EventObjectContainer eoc = eventListModel.getElementAt(iter.next());
 
-                    // TODO: add check for user pref to add all classes to training set
-                    if ((eoc != null) && (eoc.getClassName().length() > 0)) {
-                        try {
-                            String className = eoc.getClassName();
-                            File   dir       = new File(f + "/" + className + "//");
+                        // TODO: add check for user pref to add all classes to training set
+                        if ((eoc != null) && (eoc.getClassName().length() > 0)) {
+                            try {
+                                String className = eoc.getClassName();
+                                File dir = new File(f + "/" + className + "//");
 
-                            if (!dir.exists()) {
-                                if (f.canWrite()) {
-                                    dir.mkdir();
+                                if (!dir.exists()) {
+                                    if (f.canWrite()) {
+                                        dir.mkdir();
+                                    } else {
+
+                                        // TODO: display error message to user here
+                                        return;
+                                    }
+                                }
+
+                                // create a new model with some reasonable
+                                // defaults
+                                ClassModel newModel = new ClassModel();
+
+                                newModel.setRawImageDirectory(dir);
+                                newModel.setName(className);
+                                newModel.setVarsClassName(eoc.getClassName());
+                                newModel.setDescription(eoc.getClassName());
+
+                                if (!getModel().checkClassExists(newModel)) {
+                                    getModel().addClassModel(newModel);
                                 } else {
 
-                                    // TODO: display error message to user here
-                                    return;
+                                    // get the existing model and add an image to it
+                                    ClassModel model = getModel().getClassModel(className);
+                                    AddClassImageWorker thread = new AddClassImageWorker(model, eoc);
+
+                                    thread.execute();
                                 }
+                            } catch (Exception ex) {
+                                Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
                             }
-
-                            // create a new model with some reasonable
-                            // defaults
-                            ClassModel newModel = new ClassModel();
-
-                            newModel.setRawImageDirectory(dir);
-                            newModel.setName(className);
-                            newModel.setVarsClassName(eoc.getClassName());
-                            newModel.setDescription(eoc.getClassName());
-
-                            if (!getModel().checkClassExists(newModel)) {
-                                getModel().addClassModel(newModel);
-                            } else {
-
-                                // get the existing model and add an image to it
-                                ClassModel          model  = getModel().getClassModel(className);
-                                AddClassImageWorker thread = new AddClassImageWorker(model, eoc);
-
-                                thread.execute();
-                            }
-                        } catch (Exception ex) {
-                            Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-                }
-            default :
-                break;
+                default:
+                    break;
             }
         }
     }
 
-    public void windowOpened(WindowEvent e) {}
+    public void windowOpened(WindowEvent e) {
+    }
 
     public void windowClosing(WindowEvent e) {
         try {
@@ -250,23 +259,29 @@ public class ClassifierController extends AbstractController implements ModelLis
         }
     }
 
-    public void windowClosed(WindowEvent e) {}
+    public void windowClosed(WindowEvent e) {
+    }
 
-    public void windowIconified(WindowEvent e) {}
+    public void windowIconified(WindowEvent e) {
+    }
 
-    public void windowDeiconified(WindowEvent e) {}
+    public void windowDeiconified(WindowEvent e) {
+    }
 
-    public void windowActivated(WindowEvent e) {}
+    public void windowActivated(WindowEvent e) {
+    }
 
-    public void windowDeactivated(WindowEvent e) {}
+    public void windowDeactivated(WindowEvent e) {
+    }
 
     public class AddClassImageWorker extends SwingWorker {
-        private final ClassModel           classModel;
+
+        private final ClassModel classModel;
         private final EventObjectContainer event;
-        private ProgressDisplay            progressDisplay;
+        private ProgressDisplay progressDisplay;
 
         public AddClassImageWorker(ClassModel classModel, EventObjectContainer event) {
-            this.event      = event;
+            this.event = event;
             this.classModel = classModel;
 
             if (progressDisplay != null) {
@@ -281,7 +296,7 @@ public class ClassifierController extends AbstractController implements ModelLis
             boolean addImages = UserPreferences.getModel().getAddTrainingImages();
 
             if (addImages) {
-                File dir      = UserPreferences.getModel().getClassTrainingImageDirectory();
+                File dir = UserPreferences.getModel().getClassTrainingImageDirectory();
                 File classDir = new File(dir + "/" + classModel.getName());
 
                 // Add this class to the docking image directories
@@ -292,8 +307,8 @@ public class ClassifierController extends AbstractController implements ModelLis
                     // If found a valid frame number
                     if (frameNo >= 0) {
                         try {
-                            int                 bestFrameNo = frameNo;
-                            EventImageCacheData data        = new EventImageCacheData(event);
+                            int bestFrameNo = frameNo;
+                            EventImageCacheData data = new EventImageCacheData(event);
 
                             data.initialize(bestFrameNo);
 

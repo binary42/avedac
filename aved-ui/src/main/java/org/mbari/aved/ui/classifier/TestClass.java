@@ -25,7 +25,6 @@ package org.mbari.aved.ui.classifier;
 import org.mbari.aved.classifier.ClassModel;
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
 import org.mbari.aved.classifier.TrainingModel;
-import org.mbari.aved.ui.classifier.ClassifierModel;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
 
 //~--- JDK imports ------------------------------------------------------------

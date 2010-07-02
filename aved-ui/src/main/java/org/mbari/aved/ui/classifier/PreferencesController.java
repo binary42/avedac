@@ -89,6 +89,7 @@ public class PreferencesController extends AbstractController {
 
             if (newDir != null) {
                 getView().updateTrainingComboBox(new File(newDir.getAbsolutePath()));
+                getModel().setClassTrainingImageDirectory(newDir);
             }
         } else if (op.equals("BrowseDbroot")) {
             File newDir = browse(getModel().getDatabaseRoot(), JFileChooser.DIRECTORIES_ONLY,

@@ -103,16 +103,7 @@ public class DockingContainer extends JPanel {
                     + "and install the appropriate package for your platform\n(version 1.1.3 or better)", "Missing Require Libraries", JOptionPane
                         .ERROR_MESSAGE);
         }
-        if (!checkForPpmReader()) {
-            JOptionPane
-                .showMessageDialog(
-                    this, "You are missing the Java Advanced Imaging Image I/O Tools Library needed to "
-                    + "view .ppm images.\nPlease go to "
-                    + "https://jai-imageio.dev.java.net/binary-builds.html\nand download "
-                    + "and install the appropriate package for your platform\n(version 1.1_01 or better)", "Missing Require Libraries", JOptionPane
-                        .ERROR_MESSAGE);
-        }
-
+  
         viewManager.addQuickKeyMappings(this);
         ImageLabel.dockingContainer = this;
 
@@ -140,21 +131,7 @@ public class DockingContainer extends JPanel {
     boolean quickCopy(ImageLabel aThis, int currentQuickKey) {
         return viewManager.quickCopy(aThis, currentQuickKey);
     }
-
-    private boolean checkForPpmReader() {
-        ImageIO.scanForPlugins();
-
-        String[] formats = ImageIO.getReaderFormatNames();
-
-        for (int i = 0; i < formats.length; i++) {
-            if (formats[i].equalsIgnoreCase("pnm")) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-    
+ 
     private boolean checkForJpgReader() {
         ImageIO.scanForPlugins();
 

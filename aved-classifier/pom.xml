@@ -19,19 +19,5 @@
         <module>sharedlib</module>
         <!-- Final JNI layer -->
         <module>sharedlibjni</module>
-    </modules>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>freehep-maven</id>
-            <name>Maven FreeHEP</name>
-            <url>http://java.freehep.org/maven2</url>
-        </pluginRepository>
-    </pluginRepositories>
-     <repositories>
-        <repository>
-            <id>freehep-maven</id>
-            <name>Maven FreeHEP</name>
-            <url>http://java.freehep.org/maven2</url>
-        </repository>
-    </repositories>
+    </modules>  
 </project>

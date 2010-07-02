@@ -45,7 +45,7 @@
 
                 <!-- The nar library directory -->
                 <narLibDir>nar/lib/i386-MacOSX-g++/shared</narLibDir>
-            </properties>
+            </properties> 
         </profile>
     </profiles>
     <build>
@@ -121,7 +121,7 @@
                             because the format isn't supported in the mcc compiler.
                             Adding versioning is handled in the install phases -->
                             <arguments>
-                                <cmdlineArguments>${matlabRoot}/bin/mcc -v -W lib:lib${artifactId} -T link:lib -I ${basedir}/src/main/native/matlab -I ${basedir}/src/main/native/matlab/netlab -g run_tests_ui collect_ui collect_tests collect_class assign_class test_class train_classes_ui
+                                <cmdlineArguments>${matlabRoot}/bin/mcc -v -W lib:libaved${artifactId} -T link:lib -I ${basedir}/src/main/native/matlab -I ${basedir}/src/main/native/matlab/netlab -g run_tests_ui collect_ui collect_tests collect_class assign_class test_class train_classes_ui
                                 </cmdlineArguments>
                             </arguments>
                         </configuration>
@@ -142,7 +142,7 @@
                             <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                             <executable>${basedir}/src/main/scripts/statcheck</executable>
                             <arguments>
-                                <cmdlineArguments>-i libsharedlib.h -o ${basedir}/src/main/include/libsharedlib.h -d ${basedir}/src/main/include
+                                <cmdlineArguments>-i libaved${artifactId}.h -o ${basedir}/src/main/include/libavedsharedlib.h -d ${basedir}/src/main/include
                                 </cmdlineArguments>
                             </arguments>
                         </configuration>
@@ -158,53 +158,7 @@
                             <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                             <executable>${basedir}/src/main/scripts/execute</executable>
                             <arguments>
-                                <cmdlineArguments>cp lib${artifactId}.${sharedExtension} lib${artifactId}-${version}.${sharedExtension}</cmdlineArguments>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <!-- Creates the library directory an all parent directories if needed-->
-                        <id>exec-install-one</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <workingDirectory>${basedir}/target</workingDirectory>
-                            <executable>${basedir}/src/main/scripts/execute</executable>
-                            <arguments>
-                                <cmdlineArguments>install -d ${installPath}/lib</cmdlineArguments>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <!-- Installs the library -->
-                        <id>exec-install-two</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
-                            <executable>${basedir}/src/main/scripts/execute</executable>
-                            <arguments>
-                                <cmdlineArguments>install lib${artifactId}-${version}.${sharedExtension} ${installPath}/lib</cmdlineArguments>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <!-- Installs a symbolic link to the versioned library-->
-                        <id>exec-install-three</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <workingDirectory>${installPath}/lib</workingDirectory>
-                            <executable>${basedir}/src/main/scripts/execute</executable>
-                            <arguments>
-                                <!-- Adds a soft link to the shared library-->
-                                <cmdlineArguments>ln -sf lib${artifactId}-${version}.${sharedExtension} lib${artifactId}.${sharedExtension}</cmdlineArguments>
+                                <cmdlineArguments>cp libaved${artifactId}.${sharedExtension} lib${artifactId}-${version}.${sharedExtension}</cmdlineArguments>
                             </arguments>
                         </configuration>
                     </execution>

@@ -29,7 +29,7 @@
 #include "org_mbari_aved_classifier_ClassifierLibraryJNI.h" 
 
 // Matlab shared library header files
-#include "libsharedlib.h"
+#include "libavedsharedlib.h"
 #include "matrix.h" 
 
 // Debug flag to print out verbose messages. 
@@ -239,7 +239,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
             return;
         }
         // Initialize the library of MATLAB functions
-        if (!libsharedlibInitialize()) {
+        if (!libavedsharedlibInitialize()) {
              ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the Classifier MATLAB library properly");  
             return;
         }
@@ -249,16 +249,13 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
         printf("Logfile name : %s\n", mclGetLogFileName());
         printf("nodisplay set : %d\n", mclIsNoDisplaySet());
     
-    } catch (const mwException &e) {
-        printf("Foobar 1\n");
+    } catch (const mwException &e) { 
         ThrowByName(env, "java/lang/RuntimeException", e.what());
         return;
     } catch (...) {
-        printf("Foobar 2\n");
         ThrowByName(env, "java/lang/RuntimeException", "Unknown matlab exception");
         return;
     }
-        printf("Foobar 3\n");
 }
 
 //*************************************************************************** 
@@ -269,7 +266,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_close
 (JNIEnv *env, jobject obj) {
     try {
 
-        libsharedlibTerminate();
+        libavedsharedlibTerminate();
         if (!mclTerminateApplication()) {
             DPRINTF("could not terminate the library properly\n");
             return;
@@ -838,8 +835,7 @@ char *getString(mxArray *data) {
 //************************************************************************************
 
 jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb) {
-
-    return 0;
+ 
     const char *matlabdbdir = env->GetStringUTFChars(jmatlabdb, 0);  
     // Do some checking
     if (matlabdbdir == NULL) {
@@ -1026,9 +1022,10 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
 }
 
 /************************************************************************************/
-JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_get_1training_1classes(JNIEnv * env, jobject obj, jstring jmatlabdb) {
-
-    return 0;
+JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_get_1training_1classes
+(JNIEnv * env, jobject obj,
+    jstring jmatlabdb) {
+ 
     const char *matlabdbdir = env->GetStringUTFChars(jmatlabdb, 0);
     
     // Do some checking
@@ -1073,11 +1070,12 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
   
     DPRINTF("found %d matches\n", numfound);
     if (numfound) {
- 
+
         // Get the collected classes
-        jobjectArray jcollectedClasses = get_collected_classes(env, obj, jmatlabdb); 
+        jobjectArray jcollectedClasses = get_collected_classes(env, obj, jmatlabdb);
+      
         if(jcollectedClasses == 0) {
-            ThrowByName(env, "java/lang/RuntimeException", "cannot find classes to populate training library");
+            ThrowByName(env, "java/lang/RuntimeException", "cannot find classes to populate training library"); 
             return 0;  
         }
         jclass jtrainingModel = env->FindClass("org/mbari/aved/classifier/TrainingModel");
@@ -1093,7 +1091,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
         jmethodID jsetDescription = env->GetMethodID(jtrainingModel, "setDescription", "(Ljava/lang/String;)V");
         jmethodID jsetDatabaseRoot = env->GetMethodID(jtrainingModel, "setDatabaseRoot", "(Ljava/io/File;)V");
 
-        // Find the color space class 
+        // Find the color space class
         jclass jcolorClass = env->FindClass("org/mbari/aved/classifier/ColorSpace");
 
         for (i = 0; i < fcount; i++) {
@@ -1230,7 +1228,8 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
 
 /************************************************************************************/
 JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_get_1collected_1classes
-(JNIEnv * env, jobject obj, jstring jmatlabdb) {
+(JNIEnv * env, jobject obj,
+    jstring jmatlabdb) {
     return get_collected_classes(env, obj, jmatlabdb);
 }
-
+ 
