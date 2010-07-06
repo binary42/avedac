@@ -227,27 +227,31 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
 
     // TODO: check if the parent directory the log file is stored to
     // actually exists
-    const char* options[4];
+    const char* options[5];
     options[0] = "-logfile";
     options[1] = matlablog;
     options[2] = "-nojvm";
     options[3] = "-nodisplay";
+    options[4] = "-singleCompThread";
 
-    try { 
-        if (!mclInitializeApplication(options, 4)) {
+    try {
+        DPRINTF("Initializing mcl\n");
+        if (!mclInitializeApplication(options, 5)) {
             ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the MCR properly"); 
             return;
         }
+        DPRINTF("Initializing library\n");
         // Initialize the library of MATLAB functions
         if (!libavedsharedlibInitialize()) {
              ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the Classifier MATLAB library properly");  
             return;
         }
 
-        printf("MCR initialized : %d\n", mclIsMCRInitialized());
-        printf("JVM initialized : %d\n", mclIsJVMEnabled());
-        printf("Logfile name : %s\n", mclGetLogFileName());
-        printf("nodisplay set : %d\n", mclIsNoDisplaySet());
+        DPRINTF("Library initialized\n");
+        DPRINTF("MCR initialized : %d\n", mclIsMCRInitialized());
+        DPRINTF("JVM initialized : %d\n", mclIsJVMEnabled());
+        DPRINTF("Logfile name : %s\n", mclGetLogFileName());
+        DPRINTF("nodisplay set : %d\n", mclIsNoDisplaySet());
     
     } catch (const mwException &e) { 
         ThrowByName(env, "java/lang/RuntimeException", e.what());
@@ -835,7 +839,7 @@ char *getString(mxArray *data) {
 //************************************************************************************
 
 jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb) {
- 
+    
     const char *matlabdbdir = env->GetStringUTFChars(jmatlabdb, 0);  
     // Do some checking
     if (matlabdbdir == NULL) {
@@ -852,7 +856,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
     const char *featuresDir = features.c_str();
     const char *filematch = "_metadata_collection_avljNL3_cl_pcsnew.mat";
     string tmpstr, tmpstr2;
-    struct dirent **filelist = {0};
+    struct dirent **filelist, **list;
     int fcount = -1, numfound = 0;
     int i = 0, j = 0;
     string::size_type pos;
@@ -860,16 +864,13 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
     
     // Check if a valid directory
     if (!exists(features)) {
-        //tmpstr = string("Directory ") + features + string(" does not exist");
-        //ThrowByName(env, "java/lang/RuntimeException", tmpstr.c_str());
+        tmpstr = string("Directory ") + features + string(" does not exist");
+        ThrowByName(env, "java/lang/RuntimeException", tmpstr.c_str());
         return 0;
     }
-
-    // Throw exception when no classes found  
+ 
     fcount = scandir(featuresDir, &filelist, 0, alphasort);
     if (fcount < 0) {
-        //tmpstr = string("No classes found in directory ") + features;
-        //ThrowByName(env, "java/lang/RuntimeException", tmpstr.c_str());
         return 0;
     }
 
@@ -1005,19 +1006,14 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
                 mxDestroyArray(mxSquareDir);
 		mxDestroyArray(mxDescription);
                 mxDestroyArray(mxVarsClassName);
-            }// end  if (pos != string::npos)
+            }// end}//  if (pos != string::npos)
         }// end for (i = 0; i < fcount; i++) 
     } 
 
     // Clean up the allocated memory
-    /*for (i = 0; i < fcount; i++) {
-      free(filelist[i]);
-    }*/
-
-    /*if (fcount > 0) {
-       free(filelist);
-    }*/
-
+     // Clean up the allocated memory
+     if (fcount) { printf("Entries are:"); for (i=0, list=filelist; i<fcount; i++) { printf(" %s\n", (*list)->d_name); free(*list); list++; } free(filelist); }
+ 
     return jClassModelArray;
 }
 
@@ -1039,7 +1035,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
     const char *featuresDir = features.c_str();
     const char *filematch = "_metadata.mat";
     string tmpstr, tmpstr2;
-    struct dirent **filelist = {0};
+    struct dirent **filelist, **list;
     int fcount = -1, numfound = 0;
     int i = 0, j = 0;
     string::size_type pos;
@@ -1055,11 +1051,11 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
     // Throw exception when no classes found - TODO: it's  probably better to 
     // simply return an empty array here
     fcount = scandir(featuresDir, &filelist, 0, alphasort);
-    
+  
     if (fcount < 0) {
         //tmpstr = string("No training classes found in directory ") + features;
         //ThrowByName(env, "java/lang/RuntimeException", tmpstr.c_str());
-        return 0;
+         return 0;
     }
 
     DPRINTF("Scanning %d files in %s for files matching %s\n", fcount, featuresDir, filematch);
@@ -1108,7 +1104,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
                 DPRINTF("Opening %s\n", file);
                 MATFile *pmat = matOpen(file, "r");
                 if (pmat == NULL) {
-                    printf("Error opening file %s\n", file);
+                    DPRINTF("Error opening file %s\n", file);
                     exit(-1);
                 }
 
@@ -1124,7 +1120,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
                 mxArray *mxClasses = mxGetField(mxStructurePtr, 0, "classes");
 
                 if (matClose(pmat) != 0) {
-                    printf("Error closing file %s\n", file);
+                    DPRINTF("Error closing file %s\n", file);
                     exit(-1);
                 }
 
@@ -1218,12 +1214,20 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
                         }
                     }
 
-                }
-            } 
-        }
-    }
+                }//end if (jcollectedClasses != 0)
+                mxDestroyArray(mxClassAlias);
+                mxDestroyArray(mxDbRoot);
+                mxDestroyArray(mxDescription);
+                mxDestroyArray(mxColorSpace);
+                mxDestroyArray(mxClasses); 
+            } //end if (pos != string::npos) 
+        }// end for (i = 0; i < fcount; i++)
+    }//end if (numfound) 
 
-    return jtrainingModelArray;
+     // Clean up the allocated memory
+     if (fcount) { printf("Entries are:"); for (i=0, list=filelist; i<fcount; i++) { printf(" %s\n", (*list)->d_name); free(*list); list++; } free(filelist); printf("\n"); }
+
+     return jtrainingModelArray;
 }
 
 /************************************************************************************/
