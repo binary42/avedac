@@ -42,13 +42,11 @@ import java.util.logging.Logger;
 public class ProgressDisplayStream extends SwingWorker {
     public Boolean            isDone = false;
     private BufferedReader    br;
-    private ProgressDisplay   display;
-    private InputStreamReader isr;
+    private ProgressDisplay   display; 
 
     public ProgressDisplayStream(ProgressDisplay display, InputStreamReader isr) {
         br           = new BufferedReader(isr);
         this.display = display;
-        this.isr     = isr;
     }
 
     @Override

@@ -23,6 +23,7 @@ package org.mbari.aved.ui.classifier;
 //~--- non-JDK imports --------------------------------------------------------
 
 import com.jeta.forms.components.panel.FormPanel;
+import java.awt.Dimension;
 
 import org.mbari.aved.ui.appframework.JFrameView;
 import org.mbari.aved.ui.appframework.ModelEvent;
@@ -45,7 +46,11 @@ public class ClassifierView extends JFrameView {
 
     ClassifierView(ClassifierModel model, ClassifierController controller) {
         super("org/mbari/aved/ui/forms/Classifier.xml", model, controller);
-        this.setResizable(false);
+
+        // TODO: make this a function of screen size
+        Dimension size = new Dimension(900, 480);
+        this.setMinimumSize(size);
+        this.setResizable(true);
     }
 
     public void modelChanged(ModelEvent event) {}

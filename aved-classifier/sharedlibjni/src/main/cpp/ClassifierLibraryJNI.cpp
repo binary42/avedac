@@ -34,7 +34,7 @@
 
 // Debug flag to print out verbose messages. 
 // Comment out when everything is working
-int debug = 1;
+int debug = 0;
  
 #define DPRINTF if(debug) printf
 
@@ -227,16 +227,15 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
 
     // TODO: check if the parent directory the log file is stored to
     // actually exists
-    const char* options[5];
+    const char* options[4];
     options[0] = "-logfile";
     options[1] = matlablog;
     options[2] = "-nojvm";
     options[3] = "-nodisplay";
-    options[4] = "-singleCompThread";
 
     try {
         DPRINTF("Initializing mcl\n");
-        if (!mclInitializeApplication(options, 5)) {
+        if (!mclInitializeApplication(options, 4)) {
             ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the MCR properly"); 
             return;
         }
@@ -252,7 +251,8 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
         DPRINTF("JVM initialized : %d\n", mclIsJVMEnabled());
         DPRINTF("Logfile name : %s\n", mclGetLogFileName());
         DPRINTF("nodisplay set : %d\n", mclIsNoDisplaySet());
-    
+
+        fflush(stdout);
     } catch (const mwException &e) { 
         ThrowByName(env, "java/lang/RuntimeException", e.what());
         return;
@@ -839,7 +839,7 @@ char *getString(mxArray *data) {
 //************************************************************************************
 
 jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb) {
-    
+   
     const char *matlabdbdir = env->GetStringUTFChars(jmatlabdb, 0);  
     // Do some checking
     if (matlabdbdir == NULL) {
@@ -902,7 +902,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
                 && jsetColorSpace && jsetName && jsetVarsClassName
                 && jsetDescription && jsetDatabaseRoot);
 
-        // Find the color space class 
+        // Find the color space class
         jclass jcolorClass = env->FindClass("org/mbari/aved/classifier/ColorSpace");
 
         for (i = 0; i < fcount; i++) {
@@ -910,7 +910,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
             pos = tmpstr.find(filematch);
 
             if (pos != string::npos) {
-                // Remove filematch part of file name for display for simplification   
+                // Remove filematch part of file name for display for simplification
                 DPRINTF("Found: %s%s\n", tmpstr.substr(0, pos).c_str(), filematch);
                 tmpstr2 = string(featuresDir) + "/" + tmpstr.substr(0, pos).c_str() + string(filematch);
 
@@ -919,11 +919,11 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
                 DPRINTF("Opening %s\n", file);
                 MATFile *pmat = matOpen(file, "r");
                 if (pmat == NULL) {
-                    string s = string("Error opening ") + string(file);                    
+                    string s = string("Error opening ") + string(file);
                     ThrowByName(env, "java/lang/IllegalArgumentException", s.c_str());
                     return 0;
                 }
- 
+
                 // Get the matlab class_metadata structure
                 mxArray *mxStructurePtr = matGetVariable(pmat, "class_metadata");
                 assert(mxStructurePtr);
@@ -939,12 +939,12 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
 
                 DPRINTF("Closing %s\n", file);
                 if (matClose(pmat) != 0) {
-                    string s = string("Error closing ") + string(file);    
+                    string s = string("Error closing ") + string(file);
                     ThrowByName(env, "java/lang/IllegalArgumentException", s.c_str());
                     return 0;
                 }
 
-                // Create new ClassModel object                
+                // Create new ClassModel object
                 jobject jobj = env->NewObject(jClassModel, jClassModelInit);
 
                 // get File class
@@ -953,7 +953,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
                 // get File constructor method id
                 jmethodID jmethod = env->GetMethodID(jnewFile, "<init>", "(Ljava/lang/String;)V");
 
-             
+
                 // Call all methods to initialize the object
                 if (mxDbRoot != 0) {
                     // create new java String from the matlab array
@@ -962,7 +962,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
                     jobject jdbroot = env->NewObject(jnewFile, jmethod, jnewString);
                     env->CallObjectMethod(jobj, jsetDatabaseRoot, jdbroot);
                 }
-                
+
                 if (mxRawDir != 0) {
                     // create new java String from the matlab array
                     jstring jnewString = env->NewStringUTF(getString(mxRawDir));
@@ -970,45 +970,45 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
                     jobject jrawDir = env->NewObject(jnewFile, jmethod, jnewString);
                     env->CallObjectMethod(jobj, jsetRawImageDirectory, jrawDir);
                 }
-                
+
                 if (mxSquareDir != 0) {
                     // create new java String from the matlab array
-                    jstring jnewString = env->NewStringUTF(getString(mxSquareDir));                    
-                
+                    jstring jnewString = env->NewStringUTF(getString(mxSquareDir));
+
                     // create the File object and initialize with the string
-                    jobject jsquareDir = env->NewObject(jnewFile, jmethod, jnewString);                    
+                    jobject jsquareDir = env->NewObject(jnewFile, jmethod, jnewString);
                     env->CallObjectMethod(jobj, jsetSquareImageDirectory, jsquareDir);
-                }                
-                    
+                }
+
                 if (mxClassName != 0)
                     env->CallObjectMethod(jobj, jsetName, env->NewStringUTF(getString(mxClassName)));
-                
+
                 if (mxVarsClassName != 0)
                     env->CallObjectMethod(jobj, jsetVarsClassName, env->NewStringUTF(getString(mxVarsClassName)));
-              
+
                 if (mxDescription != 0)
                     env->CallObjectMethod(jobj, jsetDescription, env->NewStringUTF(getString(mxDescription)));
-                             
-                
+
+
                 // Create a new ColorSpace object
                 jobject jcolorObject = env->GetStaticObjectField(jcolorClass, mxArrayToColorSpace(env, mxColorSpace));
-              
+
                 // Set the ColorSpace  enum
                 env->CallObjectMethod(jobj, jsetColorSpace, jcolorObject);
-            
+
                 // Add the ClassModel into the array
                 env->SetObjectArrayElement(jClassModelArray, j++, jobj);
 
-                mxDestroyArray(mxClassName);                
-                mxDestroyArray(mxDbRoot);                
-                mxDestroyArray(mxColorSpace);                
-                mxDestroyArray(mxRawDir);                
+                mxDestroyArray(mxClassName);
+                mxDestroyArray(mxDbRoot);
+                mxDestroyArray(mxColorSpace);
+                mxDestroyArray(mxRawDir);
                 mxDestroyArray(mxSquareDir);
 		mxDestroyArray(mxDescription);
                 mxDestroyArray(mxVarsClassName);
             }// end}//  if (pos != string::npos)
-        }// end for (i = 0; i < fcount; i++) 
-    } 
+        }// end for (i = 0; i < fcount; i++)
+    }
 
     // Clean up the allocated memory
      // Clean up the allocated memory

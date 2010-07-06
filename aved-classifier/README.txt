@@ -4,11 +4,9 @@ Table of Contents
 
 2. System Requirements
 
-3. Installation on Linux
+3. Installation on Linux or MacOSX
 
-4. Installation on MacOSX
-
-5. Developer Notes
+4. Developer Notes
 
 
 1. Overview
@@ -60,71 +58,18 @@ To build the this module, you need:
 	which is used in the graphical interface module aved-ui.
 
 
-3.  Installation on Linux
+3.  Installation on Linux or Mac
 -----------------------------------------------------------------------------
 
 To compile this, you need Matlab, the Matlab Image Processing Toolbox,
-and the Matlab compiler.
-
-        3.1. Modify the environment variables
-
-	     Edit aved-classifier/setup
- 	     Modify the following properties to match your installation, e.g.:
-
-	     export MATLAB_ROOT=/home/aved/matlab7.2
-             export JAVA_HOME=/usr/java/latest
-	     export MATLAB_JAVA=/usr/java/jdk1.6.0_20/jre
-
-	3.2. (optional) Modify the pom.xml
-
-             The default installation directory is defined in the parent pom.xml
-             This defaults to your home directory, but can be changed. To change,
-	     edit the pom.xml in the same directory as this README.txt
-	     Modify the following properties to match your installation:
-
-	      <installPath>${HOME}/aved</installPath>
-
-	3.3. Installation command
-
-	     Run build from a command-line, e.g.
-
-	     	$ ./build
+and the Matlab compiler. See the README.txt in the root folder for 
+instructions. 
 
 
-
-4.  Installation on Mac
+4.  Developer Notes
 -----------------------------------------------------------------------------
 
-To compile this, you need Matlab, the Matlab Image Processing Toolbox,
-and the Matlab compiler.
-
-        4.1. Modify the environment variables in the same directory as this README.txt
-
-	     Edit setup
- 	     Modify the following properties to match your installation, e.g.:
-
-	     export MATLAB_ROOT=/Applications/MATLAB_R2009a.app
-
-	4.2. (optional) Modify the pom.xml
-
-             The default installation directory is defined in the parent pom.xml
-             This defaults to your home directory, but can be changed. To change,
-	     edit the pom.xml in the same directory as this README.txt
-	     Modify the following properties to match your installation:
-
-	      <installPath>${HOME}/aved</installPath>
-
-	4.3. Installation command
-
-	     Run build from a command-line, e.g.
-
-	     	$ ./build
-
-
-5.  Developer Notes
------------------------------------------------------------------------------
-
-    5.1 Setup the correct environment for command-line build
+    4.1 Setup the correct environment for command-line build
 
         If you are getting a message similar to the following :
 
@@ -134,7 +79,7 @@ and the Matlab compiler.
         Your environment variables are not set correctly.
         The environment variables needed are in the file called setup.
 
-    5.2 Determining MATLAB_ROOT location
+    4.2 Determining MATLAB_ROOT location
 
         If you have installed Matlab in a non-standard location, you
         need to change the environment variables MATLAB_ROOT, where
@@ -145,7 +90,7 @@ and the Matlab compiler.
 
         On Mac OS X, MATLAB_ROOT is typically /Applications/MATLAB_R2009a.app
 
-    5.3 Missing cdefs.h file
+    4.3 Missing cdefs.h file
 
         The cdefs.h file is missing in Mac OS X 10.5.8 and causes the build
         to fail, so it copy it to the SDK directory first:
@@ -153,14 +98,14 @@ and the Matlab compiler.
 	>> sudo cp /usr/include/sys/cdefs.h /Developer/SDKs/MacOSX10.5.sdk/usr/include/sys/cdefs.h
 
 
-    5.4 DYLD_LIBRARY_PATH/LD_LIBRARY_PATH path order when running compiled Matlab on Linux
+    4.4 DYLD_LIBRARY_PATH/LD_LIBRARY_PATH path order when running compiled Matlab on Linux
 
         To run deployed components on Linux, the $MCR_ROOT/runtime
         directory must appear on your DYLD_LIBRARY_PATH/LD_LIBRARY_PATH
         *before* $MATLAB_ROOT/bin/maci, and XAPPLRESDIR should point
         $MCR_ROOT/X11/app-defaults.
 
-    5.5 NetBeans 6.8 or later
+    4.5 NetBeans 6.8 or later
 
         This code can be compiled on NetBeans 6.8 or higher.
 
@@ -181,19 +126,19 @@ and the Matlab compiler.
             IMPORTANT NOTE:
             A separate nbactions file is needed for each Maven module,
             so you will need to propagate the nbactions-Mac/Linux.xml
-            to every modules directory it's needed.
+            to *every* module directory it's needed in.
 
-5.6  Modifications to the Matlab library
+   4.6  Modifications to the Matlab library
 
         If you make any changes to the Matlab .m files, to rebuild only the
         matlab shared library from command-line
 
 	>> cd sharedlib
-	>> source ../setup;mvn install
+	>> mvn install
 
         IMPORTANT NOTE:
         Most changes in the Matlab functions will also require modifications
         and rebuilding of the matlabsharedlib/jni modules.
 
 	>> cd sharedlibjni
-	>> source ../setup; mvn install
+	>> mvn install

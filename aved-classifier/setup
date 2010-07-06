@@ -8,26 +8,33 @@ if [ ! "$MATLAB_ROOT" ]; then
     echo "Error - set MATLAB_ROOT enviroment variable"
     exit -1
 fi
-
+if [ ! "$MCR_ROOT" ]; then
+    echo "Error - set MCR_ROOT enviroment variable"
+    exit -1
+fi
 if [ `uname | grep Linux` ]; then
 if [ ! "$JAVA_HOME" ]; then
     echo "Error - set JAVA_HOME environment variable"
     exit -1
 fi
-  export XAPPLRESDIR=$MATLAB_ROOT/X11/app-defaults
-  export MATLAB_JAVA=$MATLAB_ROOT/jre
-
+  echo "export XAPPLRESDIR=$MCR_ROOT/X11/app-defaults" >> ~/.bashrc
+  echo "export MATLAB_JAVA=$JAVA_HOME/jre" >> ~/.bashrc
+ 
   a=`uname -a | grep 64`
   if [ ! "$a" ] ;then 
     echo "Setting 32-bit Linux environment variables"
-    export LD_LIBRARY_PATH=$MATLAB_ROOT/runtime:$MATLAB_ROOT/bin/glnx86:$MATLAB_ROOT/sys/os/glnx86:$JAVA_ROOT/jre/lib/i386
-    mvn install -PLinux -Dmaven.test.skip=true
+    echo "export LD_LIBRARY_PATH=$MCR_ROOT/runtime/glnx86:$MCR_ROOT/sys/os/glnx86:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/native_threads:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/server:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386" >> ~/.bashrc
   else 
     echo "Setting 64-bit Linux environment variables"
-    export LD_LIBRARY_PATH=$MATLAB_ROOT/runtime:$MATLAB_ROOT/bin/glnxa64:$MATLAB_ROOT/sys/os/glnxa64:$JAVA_HOME/jre/lib/i386
+    echo "export LD_LIBRARY_PATH=$MATLAB_ROOT/runtime/glnxa86:$MATLAB_ROOT/bin/glnxa64:$MATLAB_ROOT/sys/os/glnxa64:$JAVA_HOME/jre/lib/i386" >> ~/.bashrc
   fi 
 else
   echo "Setting MacOSX environment variables"
-  export DYLD_LIBRARY_PATH=$MATLAB_ROOT/runtime:$MATLAB_ROOT/bin/maci:$MATLAB_ROOT/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries
-  export XAPPLRESDIR=$MATLAB_ROOT/X11/app-defaults
+  echo "export DYLD_LIBRARY_PATH=$MATLAB_ROOT/runtime:$MATLAB_ROOT/bin/maci:$MATLAB_ROOT/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries" >> ~/.bashrc 
+  echo "export XAPPLRESDIR=$MATLAB_ROOT/X11/app-defaults" >> ~/.bashrc
 fi
+
+echo "environment variables are now set in your ~/.bashrc file:"
+echo "You may need to modify these if you change your matlab installation"
+echo "upgrade matlab, or change the location of the Matlab Compiler Runtime path"
+source ~/.bashrc

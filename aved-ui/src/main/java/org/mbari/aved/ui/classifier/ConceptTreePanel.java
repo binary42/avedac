@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
 
@@ -41,15 +37,17 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 
 /**
  *
  * @author dcline
  */
 public class ConceptTreePanel extends JPanel {
-    private boolean                    isInitialized = false;
-    private ConceptTreeReadOnly        conceptTree;
-    private MouseListener              listener;
+
+    private boolean isInitialized = false;
+    private ConceptTreeReadOnly conceptTree;
+    private MouseListener listener;
     private SearchableConceptTreePanel treePanel;
 
     /**
@@ -71,10 +69,9 @@ public class ConceptTreePanel extends JPanel {
         if (!isInitialized) {
             JPanel panel = new JPanel();
 
-            // panel.setSize(400,600);
-            CellConstraints cc             = new CellConstraints();
-            JPanel          temporaryPanel = new JPanel(new FormLayout("fill:pref:grow", "fill:pref:grow"));
-            final JTextArea patience       = new JTextArea();
+            CellConstraints cc = new CellConstraints();
+            JPanel temporaryPanel = new JPanel(new FormLayout("fill:m:grow", "fill:d:noGrow"));
+            final JTextArea patience = new JTextArea();
 
             patience.setEditable(false);
             patience.setWrapStyleWord(true);
@@ -83,7 +80,7 @@ public class ConceptTreePanel extends JPanel {
             temporaryPanel.add(patience, cc.xy(1, 1));
 
             final JScrollPane scrollPane = new JScrollPane(temporaryPanel);
-            JSplitPane        splitPane  = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel, scrollPane);
+            JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel, scrollPane);
 
             splitPane.setDividerLocation(.8);
             splitPane.setDividerSize(1);
@@ -93,9 +90,11 @@ public class ConceptTreePanel extends JPanel {
             this.setFocusable(true);
             this.repaint();
 
-            Thread kbThread = new Thread() {
-                public void run() {
-                    /*System.out.println("Loading concept tree");
+            SwingWorker kbThread = new SwingWorker() {
+
+                @Override
+                protected Object doInBackground() throws Exception {
+                    System.out.println("Loading concept tree");
                     treePanel = new SearchableConceptTreePanel();
 
                     Concept rootConcept = null;
@@ -106,14 +105,15 @@ public class ConceptTreePanel extends JPanel {
 
                         // e1.printStackTrace();
                         SwingUtilities.invokeLater(new Runnable() {
+
+                            @Override
                             public void run() {
                                 patience.setText("Error loading knowledge base.");
                                 patience.repaint();
                             }
                         });
-                        isInitialized = true;
-
-                        return;
+                        isInitialized = false;
+                        return 0;
                     }
 
                     conceptTree = new ConceptTreeReadOnly(rootConcept);
@@ -125,6 +125,7 @@ public class ConceptTreePanel extends JPanel {
                     treePanel.setJTree(conceptTree);
                     System.out.println("replacing wait panel");
                     SwingUtilities.invokeLater(new Runnable() {
+
                         public void run() {
                             scrollPane.getViewport().removeAll();
                             scrollPane.getViewport().add(treePanel);
@@ -132,11 +133,12 @@ public class ConceptTreePanel extends JPanel {
                             System.out.println("finished");
                             isInitialized = true;
                         }
-                    });*/
+                    });
+                    return 0;
                 }
             };
 
-            kbThread.start();
+            kbThread.execute();
         }
     }
 

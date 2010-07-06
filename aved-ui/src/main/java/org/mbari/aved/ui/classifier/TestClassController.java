@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import org.mbari.aved.classifier.ClassModel;
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
 import org.mbari.aved.classifier.ColorSpace;
@@ -49,6 +45,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 
 class TestClassController extends AbstractController implements ModelListener {
+
     private RunTestClassWorker worker;
 
     TestClassController(ClassifierModel model) {
@@ -78,59 +75,61 @@ class TestClassController extends AbstractController implements ModelListener {
     public void actionPerformed(ActionEvent e) {
         String actionCommand = e.getActionCommand();
 
-        if (actionCommand.equals("classNameComboBoxChanged")) {
-            JComboBox  box   = ((JComboBox) e.getSource());
-            ClassModel model = (ClassModel) box.getSelectedItem();
+        if (getView() != null) {
+            if (actionCommand.equals("classNameComboBoxChanged")) {
+                JComboBox box = ((JComboBox) e.getSource());
+                ClassModel model = (ClassModel) box.getSelectedItem();
 
-            getView().loadClassModel(model);
-        } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
-            JComboBox  box           = ((JComboBox) e.getSource());
-            ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
-   
-	    if(newColorSpace != null ) { 
-             getView().populateTrainingLibraryList(newColorSpace);
-             getView().populateClassList(newColorSpace);
-            }
-         } else if (actionCommand.equals("libraryNameComboBoxChanged")) {
-            JComboBox     box   = ((JComboBox) e.getSource());
-            TrainingModel model = (TrainingModel) box.getSelectedItem();
+                getView().loadClassModel(model);
+            } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
+                JComboBox box = ((JComboBox) e.getSource());
+                ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
 
-            getView().loadTrainingModel(model);
-        } else if (actionCommand.equals("Stop")) {
-            if ((worker != null) &&!worker.isDone()) {
-                worker.cancelWorker(true);
-            }
-        } else if (actionCommand.equals("Run")) {
-            try {
-                ClassModel    classModel    = getView().getClassModel();
-                TrainingModel trainingModel = getView().getTrainingModel();
-
-                if (classModel == null) {
-                    String                message = new String("Please select a class to test");
-                    NonModalMessageDialog dialog  = new NonModalMessageDialog((JFrame) this.getView(), message);
-
-                    dialog.setVisible(true);
-
-                    if (dialog.answer()) {
-                        return;
-                    }
+                if (newColorSpace != null) {
+                    getView().populateTrainingLibraryList(newColorSpace);
+                    getView().populateClassList(newColorSpace);
                 }
+            } else if (actionCommand.equals("libraryNameComboBoxChanged")) {
+                JComboBox box = ((JComboBox) e.getSource());
+                TrainingModel model = (TrainingModel) box.getSelectedItem();
 
-                if (trainingModel == null) {
-                    String                message = new String("Please select a test library");
-                    NonModalMessageDialog dialog  = new NonModalMessageDialog((JFrame) this.getView(), message);
-
-                    dialog.setVisible(true);
-
-                    if (dialog.answer()) {
-                        return;
-                    }
+                getView().loadTrainingModel(model);
+            } else if (actionCommand.equals("Stop")) {
+                if ((worker != null) && !worker.isDone()) {
+                    worker.cancelWorker(true);
                 }
+            } else if (actionCommand.equals("Run")) {
+                try {
+                    ClassModel classModel = getView().getClassModel();
+                    TrainingModel trainingModel = getView().getTrainingModel();
 
-                worker = new RunTestClassWorker(classModel, trainingModel);
-                worker.execute();
-            } catch (Exception ex) {
-                Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
+                    if (classModel == null) {
+                        String message = new String("Please select a class to test");
+                        NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), message);
+
+                        dialog.setVisible(true);
+
+                        if (dialog.answer()) {
+                            return;
+                        }
+                    }
+
+                    if (trainingModel == null) {
+                        String message = new String("Please select a test library");
+                        NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), message);
+
+                        dialog.setVisible(true);
+
+                        if (dialog.answer()) {
+                            return;
+                        }
+                    }
+
+                    worker = new RunTestClassWorker(classModel, trainingModel);
+                    worker.execute();
+                } catch (Exception ex) {
+                    Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
     }
@@ -140,70 +139,72 @@ class TestClassController extends AbstractController implements ModelListener {
      * {@link org.mbari.aved.ui.classifier.model}
      * and  {@link org.mbari.aved.ui.classifier.ClassifierModel}
      */
+    @Override
     public void modelChanged(ModelEvent event) {
-        if ((event instanceof ClassifierModel.ClassifierModelEvent) && (getView().getClassModel() != null)) {
-            ColorSpace colorSpace = (ColorSpace) getView().getClassModel().getColorSpace();
+        if (event instanceof ClassifierModel.ClassifierModelEvent) {
+            ColorSpace colorSpace = (ColorSpace) getView().getClassColorSpace();
 
             switch (event.getID()) {
 
-            // When the database root directory changes, update the available
-            // libraries, defaulting to those in the RGB color space.
-            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
-                getView().populateTrainingLibraryList(colorSpace);
-                getView().populateClassList(colorSpace);
-
-                break;
-
-            case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
-                getView().populateClassList(colorSpace);
-
-                break;
-
-            case ClassifierModel.ClassifierModelEvent.TRAINING_MODELS_UPDATED :
-                if (getView().getClassModel() != null) {
+                // When the database root directory changes, update the available 
+                case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED:
                     getView().populateTrainingLibraryList(colorSpace);
-                } else {
-                    getView().populateTrainingLibraryList(ColorSpace.RGB);
-                }
+                    getView().populateClassList(colorSpace);
 
-                break;
+                    break;
+
+                case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED:
+                    getView().populateClassList(colorSpace);
+
+                    break;
+
+                case ClassifierModel.ClassifierModelEvent.TRAINING_MODELS_UPDATED:
+                    if (getView().getClassModel() != null) {
+                        getView().populateTrainingLibraryList(colorSpace);
+                    } else {
+                        getView().populateTrainingLibraryList(ColorSpace.RGB);
+                    }
+
+                    break;
             }
         }
     }
 
     private class RunTestClassWorker extends MatlabWorker {
-        private final ClassModel      classModel;
+
+        private final ClassModel classModel;
         private final ProgressDisplay progressDisplay;
-        private final TrainingModel   trainingModel;
+        private final TrainingModel trainingModel;
 
         public RunTestClassWorker(ClassModel classModel, TrainingModel trainingModel) throws Exception {
             super(classModel.getName());
-            this.classModel      = classModel;
-            this.trainingModel   = trainingModel;
+            this.classModel = classModel;
+            this.trainingModel = trainingModel;
             this.progressDisplay = new ProgressDisplay(this, "Testing class " + classModel.getName());
         }
 
-        @Override @SuppressWarnings("empty-statement")
+        @Override
+        @SuppressWarnings("empty-statement")
         protected Object doInBackground() throws Exception {
             progressDisplay.display("Testing class ...");
 
             // Get a input stream on the matlab log file to display in
             // the progress display window
             try {
-                ClassifierLibraryJNI  app = Classifier.getLibrary();
+                ClassifierLibraryJNI  library = new ClassifierLibraryJNI();
                 InputStreamReader     isr = Classifier.getInputStreamReader();
                 ProgressDisplayStream progressDisplayStream;
 
                 progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
                 progressDisplayStream.execute();
 
-                // Count the number of unique events in this mocel to use
+                // Count the number of unique events in this model to use
                 // to allocate the arrays to pass to the Matlab function
                 ArrayList<String> fileName = classModel.getRawImageFileListing();
 
                 if (fileName.size() == 0) {
                     NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
-                                                       "Error - cannot find the images for this class");
+                            "Error - cannot find the images for this class");
 
                     dialog.setVisible(true);
                     progressDisplay.getView().dispose();
@@ -213,10 +214,11 @@ class TestClassController extends AbstractController implements ModelListener {
 
                 int numEvents;
 
-                // Round up a 10% sample size; this is what is sampled
+                // Round up a 10% file size; this is what is sampled
                 // for class testing. This is hardcoded in the Matlab code
                 // so don't change this without changing the Matlab code
-                // and recompiling
+                // and recompiling. If less than 10 files in the class to
+                // test then use all of them
                 if (fileName.size() > 10) {
                     numEvents = (int) (0.10 * (fileName.size()) + 0.5);
                 } else {
@@ -224,26 +226,26 @@ class TestClassController extends AbstractController implements ModelListener {
                 }
 
                 // Allocate the arrays for storing the results
-                int[]    classIndex       = new int[numEvents];
-                float[]  probability      = new float[numEvents];
-                String[] eventFilenames   = new String[numEvents];
-                float    minProbThreshold = 0.8f;
+                int[] classIndex = new int[numEvents];
+                float[] probability = new float[numEvents];
+                String[] eventFilenames = new String[numEvents];
+                float minProbThreshold = 0.8f;
 
                 System.out.println("Running test class");
                 System.out.println("Testing " + classModel.getName() + " against training library:"
-                                   + trainingModel.getName() + " with minimum probability:" + minProbThreshold);
+                        + trainingModel.getName() + " with minimum probability:" + minProbThreshold);
 
                 // Run the class tests
-                app.test_class(this.getCancel(), eventFilenames, classIndex, probability, classModel.getName(),
-                               trainingModel.getName(), minProbThreshold,
-                               classModel.getDatabaseRootdirectory().toString(), classModel.getColorSpace());
+                library.test_class(this.getCancel(), eventFilenames, classIndex, probability, classModel.getName(),
+                        trainingModel.getName(), minProbThreshold,
+                        classModel.getDatabaseRootdirectory().toString(), classModel.getColorSpace());
 
                 // Dump out some debuging info. TODO: remove this when done
                 // testing
                 if ((classIndex != null) && (probability != null)) {
                     for (int i = 0; i < numEvents; i++) {
                         System.out.println("filename:" + eventFilenames[i] + "\tclassindex:" + classIndex[i]
-                                           + "\tprobability in class:" + probability[i]);
+                                + "\tprobability in class:" + probability[i]);
                     }
                 }
 
@@ -252,11 +254,11 @@ class TestClassController extends AbstractController implements ModelListener {
                 progressDisplay.getView().dispose();
 
                 // Add one column for the Unknown class
-                int      columns    = trainingModel.getNumClasses() + 1;
-                int      rows       = columns;
+                int columns = trainingModel.getNumClasses() + 1;
+                int rows = columns;
                 String[] columnName = new String[columns];
-                int[][]  statistic  = new int[rows][columns];
-                int      sum[]      = new int[trainingModel.getNumClasses() + 1];
+                int[][] statistic = new int[rows][columns];
+                int sum[] = new int[trainingModel.getNumClasses() + 1];
 
                 // Format the column name and sums for display in a JTable
                 for (int j = 0; j < columns; j++) {
@@ -300,11 +302,12 @@ class TestClassController extends AbstractController implements ModelListener {
                 }
 
                 // Put the statistic and column names in a TableModel
-                TableModel      tableModel = new TableModel(columnName, statistic, sum);
+                TableModel tableModel = new TableModel(columnName, statistic, sum);
                 TableController controller = new TableController(getModel(), tableModel,
-                                                 "testclass" + classModel.getName());
+                        "testclass" + classModel.getName());
 
-                controller.getView().setTitle(classModel.getName());;
+                controller.getView().setTitle(classModel.getName());
+                ;
                 controller.getView().setDescription("Confusion Matrix for " + classModel.getName()
                         + ", Probability Threshold: " + minProbThreshold);
                 controller.getView().pack();

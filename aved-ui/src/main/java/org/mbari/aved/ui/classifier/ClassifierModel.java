@@ -66,16 +66,16 @@ public class ClassifierModel extends AbstractModel {
      * 
      * @param dir the training image directory
      */
-    public void setClassTrainingImageDirectory(File directory) { 
-      
+    public void setClassTrainingImageDirectory(File directory) {
+
         UserPreferences.getModel().clearDockingImagesDirectories();
         if (changedName(lastClassTrainingDirectory, directory)) {
             lastClassTrainingDirectory = directory;
             UserPreferences.getModel().setClassTrainingImageDirectory(directory);
             ClassifierModelEvent e = new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_CLASS_DIR_UPDATED,
-                    "setTrainingClassDirectory" + directory.toString()); 
+                    "setTrainingClassDirectory" + directory.toString());
             notifyChanged(e);
-        } 
+        }
     }
 
     /**
@@ -94,7 +94,7 @@ public class ClassifierModel extends AbstractModel {
      * @param f the root directory to set
      */
     public void setDatabaseRoot(File directory) {
-       
+
         if (changedName(dbrootDirectory, directory)) {
             dbrootDirectory = directory;
             UserPreferences.getModel().setClassDatabaseDirectory(directory);
@@ -128,6 +128,20 @@ public class ClassifierModel extends AbstractModel {
     }
 
     /**
+     * Adds an array of class model to the list
+     * @param models class models to add
+     */
+    public void addClassModels(ClassModel model[]) { 
+        for(int i=0; i < model.length; i++) {
+            ClassModel c = model[i];
+            checkClassModel(c);
+            classModelList.add(c);
+        }
+
+        notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASS_MODELS_UPDATED, "all"));
+    }
+
+    /**
      * Adds a class model to the list
      * @param model class model to add
      */
@@ -145,6 +159,19 @@ public class ClassifierModel extends AbstractModel {
         checkTrainingModel(model);
         trainingModelList.add(model);
         notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODELS_UPDATED, model.getName()));
+    }
+
+     /**
+     * Adds training models to the list
+     * @param model training models to add
+     */
+    void addTrainingModels(TrainingModel[] training) {
+         for(int i=0; i < training.length; i++) {
+            TrainingModel t = training[i];
+            checkTrainingModel(t);
+            trainingModelList.add(t);
+        } 
+        notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODELS_UPDATED, "all"));
     }
 
     /**

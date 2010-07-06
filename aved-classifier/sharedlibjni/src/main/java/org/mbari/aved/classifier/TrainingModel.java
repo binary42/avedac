@@ -212,16 +212,16 @@ public class TrainingModel {
      * @return the description
      */
     public String description() {
-        String s = "======TRAINING CLASS=====\n" + "Class name: " + name + "\n" + "Description: " + description + "\n"
+        String s = "\n======TRAINING CLASS=====\n" + "Class name: " + name + "\n" + "Description: " + description + "\n"
                    + "Color space: " + color + "\n" + "dbroot: " + dbrootDirectory.getName() + "\n";
 
-        s = s + "======CLASS MODELS INCLUDED IN THIS TRAINING CLASS=====\n";
+        s = s + "\n======CLASS MODELS INCLUDED IN THIS TRAINING CLASS=====\n";
 
         for (int i = 0; i < classModels.size(); i++) {
             s = s + classModels.get(i).toString();
         }
 
-        s = s + "======END=====\n";
+        s = s + "\n======END=====\n";
 
         return s;
     }

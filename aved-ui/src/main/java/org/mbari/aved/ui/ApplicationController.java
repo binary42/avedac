@@ -27,7 +27,6 @@ import org.apache.commons.io.IOUtils;
 import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.appframework.ModelEvent;
 import org.mbari.aved.ui.appframework.ModelListener;
-import org.mbari.aved.ui.classifier.Classifier;
 import org.mbari.aved.ui.message.ModalYesNoDialog;
 import org.mbari.aved.ui.message.NonModalMessageDialog;
 import org.mbari.aved.ui.message.NonModalYesNoDialog;
@@ -90,7 +89,7 @@ public class ApplicationController extends AbstractController implements ModelLi
     /** Controls the thumbnail view */
     private ThumbnailController thumbnailController;
     /** Worker to handle transcoding video files */
-    private VideoTranscodeWorker transcodeWorker;
+    private VideoTranscodeWorker transcodeWorker; 
 
     public ApplicationController() throws Exception {
         setModel(new ApplicationModel());
@@ -110,7 +109,6 @@ public class ApplicationController extends AbstractController implements ModelLi
         // Replace the tabbed panels with the customized ones
         getView().replaceThumbnailPanel(((ThumbnailView) thumbnailController.getView()).getForm());
         getView().replaceTablePanel(tableController.getTable());
-        getView().setVisible(true);
         getView().pack();
 
         String s = System.getProperty("os.name").toLowerCase();
@@ -136,10 +134,7 @@ public class ApplicationController extends AbstractController implements ModelLi
             // otherwise will simply print stack traces
             launcher = new BrowserLauncher();
             launcher.setNewWindowPolicy(true);
-
-            // Try to get an instance of the Classifier library. If this fails
-            // a RuntimeException will be thrown and displayed
-            //Classifier.getLibrary();
+ 
         } catch (RuntimeException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
 
@@ -152,6 +147,8 @@ public class ApplicationController extends AbstractController implements ModelLi
         } catch (UnsupportedOperatingSystemException e1) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, e1);
         }
+
+        getView().setVisible(true);
     }
 
     /**
@@ -1169,7 +1166,6 @@ public class ApplicationController extends AbstractController implements ModelLi
 
             if (dialog.answer() == true) {
                 try {
-                    Classifier.closeLibrary();
                     getView().setBusyCursor();
                     reset();
                     System.exit(0);
@@ -1178,8 +1174,7 @@ public class ApplicationController extends AbstractController implements ModelLi
                 }
             }
         } else {
-            try {
-                Classifier.closeLibrary();
+            try { 
                 getView().setBusyCursor();
                 reset();
                 System.exit(0);

@@ -93,6 +93,7 @@ class CreateClassController extends AbstractController implements ModelListener,
      * @param actionCommand A semantic event which indicates that a
      * component-defined action occurred.
      */
+    @Override
     public void actionPerformed(ActionEvent e) {
         String actionCommand = e.getActionCommand();
         UserPreferencesModel prefs = UserPreferences.getModel();
@@ -230,6 +231,7 @@ class CreateClassController extends AbstractController implements ModelListener,
      * {@link org.mbari.aved.ui.classifier.model}
      * and  {@link org.mbari.aved.ui.model.EventListModel}
      */
+    @Override
     public void modelChanged(ModelEvent event) {
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
@@ -245,6 +247,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                         // This filter only returns directories
                         FileFilter fileFilter = new FileFilter() {
 
+                            @Override
                             public boolean accept(File file) {
                                 return file.isDirectory();
                             }

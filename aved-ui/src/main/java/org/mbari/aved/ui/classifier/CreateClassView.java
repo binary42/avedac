@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import com.jeta.forms.components.image.ImageComponent;
 import com.jeta.forms.gui.form.FormAccessor;
 
@@ -47,6 +43,7 @@ import java.io.File;
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.logging.Level;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
@@ -57,13 +54,17 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
 
+import java.util.logging.Level;
+import java.util.logging.Logger; 
+
 public class CreateClassView extends JFrameView {
-    private static final String ID_BROWSE_BUTTON              = "browse";
+
+    private static final String ID_BROWSE_BUTTON = "browse";
     private static final String ID_CLASS_DESCRIPTION_TEXTAREA = "classdescription";    // ""
-    private static final String ID_CLASS_NAME_TEXTFIELD       = "classname";           // javax.swing.JTextArea
-    private static final String ID_CLASS_NAME_VARS_TEXTFIELD  = "classsnamevars";      // ""
-    private static final String ID_COLORSPACE_COMBOBOX        = "colorspace";          // ""
-    private static final String ID_IMAGE_COMPONENT            = "classimage";
+    private static final String ID_CLASS_NAME_TEXTFIELD = "classname";           // javax.swing.JTextArea
+    private static final String ID_CLASS_NAME_VARS_TEXTFIELD = "classsnamevars";      // ""
+    private static final String ID_COLORSPACE_COMBOBOX = "colorspace";          // ""
+    private static final String ID_IMAGE_COMPONENT = "classimage";
 
     /*
      * Component names in the CreateClassView form If any of the component name
@@ -71,36 +72,36 @@ public class CreateClassView extends JFrameView {
      * too
      */
     private static final String ID_IMAGE_DIRECTORY_COMBOBOX = "imagedirectory";    // javax.swing.JCombobBox
-    private static final String ID_KNOWLEDGE_BASE_PANEL     = "knowledgebase";
-    private static final String ID_NUM_CLASS_IMAGES_LABEL   = "numclassimages";    // javax.swing.JLabel
-    private static final String ID_RUN_BUTTON               = "run";               // javax.swing.JButton
-    private static final String ID_STOP_BUTTON              = "stop";              // ""
-    private final JTextArea     classDescriptionTextArea;
-    private ImageComponent      classImageComponent;
-    private final JTextField    classNameTextField;
-    private final JTextField    classNameVarsTextField;
-    private ConceptTreePanel    conceptTreePanel;
-    private final JComboBox     dirComboBox, colorSpaceComboBox;
-    private final JPanel        knowledgeBasePanel;
-    private final JLabel        numImagesLabel;
+    private static final String ID_KNOWLEDGE_BASE_PANEL = "knowledgebase";
+    private static final String ID_NUM_CLASS_IMAGES_LABEL = "numclassimages";    // javax.swing.JLabel
+    private static final String ID_RUN_BUTTON = "run";               // javax.swing.JButton
+    private static final String ID_STOP_BUTTON = "stop";              // ""
+    private final JTextArea classDescriptionTextArea;
+    private ImageComponent classImageComponent;
+    private final JTextField classNameTextField;
+    private final JTextField classNameVarsTextField;
+    private ConceptTreePanel conceptTreePanel;
+    private final JComboBox dirComboBox, colorSpaceComboBox;
+    private final JPanel knowledgeBasePanel;
+    private final JLabel numImagesLabel;
 
     CreateClassView(ClassifierModel model, CreateClassController controller) {
         super("org/mbari/aved/ui/forms/ClassifierCreateClass.xml", model, controller);
 
         // loadModel frequently accessed components
-        numImagesLabel           = getForm().getLabel(ID_NUM_CLASS_IMAGES_LABEL);
-        dirComboBox              = getForm().getComboBox(ID_IMAGE_DIRECTORY_COMBOBOX);
-        colorSpaceComboBox       = getForm().getComboBox(ID_COLORSPACE_COMBOBOX);
-        classNameTextField       = getForm().getTextField(ID_CLASS_NAME_TEXTFIELD);
-        classNameVarsTextField   = getForm().getTextField(ID_CLASS_NAME_VARS_TEXTFIELD);
+        numImagesLabel = getForm().getLabel(ID_NUM_CLASS_IMAGES_LABEL);
+        dirComboBox = getForm().getComboBox(ID_IMAGE_DIRECTORY_COMBOBOX);
+        colorSpaceComboBox = getForm().getComboBox(ID_COLORSPACE_COMBOBOX);
+        classNameTextField = getForm().getTextField(ID_CLASS_NAME_TEXTFIELD);
+        classNameVarsTextField = getForm().getTextField(ID_CLASS_NAME_VARS_TEXTFIELD);
         classDescriptionTextArea = (JTextArea) getForm().getTextComponent(ID_CLASS_DESCRIPTION_TEXTAREA);
-        knowledgeBasePanel       = getForm().getPanel(ID_KNOWLEDGE_BASE_PANEL);
-        classImageComponent      = (ImageComponent) getForm().getComponentByName(ID_IMAGE_COMPONENT);
+        knowledgeBasePanel = getForm().getPanel(ID_KNOWLEDGE_BASE_PANEL);
+        classImageComponent = (ImageComponent) getForm().getComponentByName(ID_IMAGE_COMPONENT);
 
         // / most of the tool tips are handled by the Abeille designer, but this
         // is a dynamic compoment so set it here
         knowledgeBasePanel.setToolTipText("VARS knowledge base. Double-click "
-                                          + "on any element to copy into the class name field.");
+                + "on any element to copy into the class name field.");
 
         ActionHandler actionHandler = getActionHandler();
 
@@ -117,9 +118,9 @@ public class CreateClassView extends JFrameView {
         list.add(ColorSpace.RGB);
         list.add(ColorSpace.YCBCR);
 
-        ListModel       listModel          = new ArrayListModel(list);
-        ValueModel      selectedItemHolder = new ValueHolder();
-        SelectionInList selectionInList    = new SelectionInList(listModel, selectedItemHolder);
+        ListModel listModel = new ArrayListModel(list);
+        ValueModel selectedItemHolder = new ValueHolder();
+        SelectionInList selectionInList = new SelectionInList(listModel, selectedItemHolder);
 
         colorSpaceComboBox.setModel(new ComboBoxAdapter(selectionInList));
 
@@ -239,7 +240,8 @@ public class CreateClassView extends JFrameView {
         return (ClassifierModel) super.getModel();
     }
 
-    public void modelChanged(ModelEvent event) {}
+    public void modelChanged(ModelEvent event) {
+    }
 
     /**
      * Sets the data model that the image directory <code>JComboBox</code>
@@ -261,21 +263,26 @@ public class CreateClassView extends JFrameView {
         classNameVarsTextField.setText(model.getVarsClassName());
         classDescriptionTextArea.setText(model.getDescription());
 
-        ArrayList<String> fileList  = model.getRawImageFileListing();
-        Integer           numImages = Integer.valueOf(fileList.size());
+        try {
+            ArrayList<String> fileList = model.getRawImageFileListing();
+            Integer numImages = Integer.valueOf(fileList.size());
 
-        numImagesLabel.setText(numImages.toString());
+            numImagesLabel.setText(numImages.toString());
 
-        if (fileList.size() > 0) {
-            File exampleImage = new File(model.getRawImageDirectory() + "/" + fileList.get(0));
+            if (fileList.size() > 0) {
+                File exampleImage = new File(model.getRawImageDirectory() + "/" + fileList.get(0));
 
-            initializeImageComponent(exampleImage);
-        } else {
+                initializeImageComponent(exampleImage);
+            } else {
 
-            // Insert a default icon
-            URL url = Application.class.getResource("/org/mbari/aved/ui/images/missingframeexception.jpg");
+                // Insert a default icon
+                URL url = Application.class.getResource("/org/mbari/aved/ui/images/missingframeexception.jpg");
 
-            initializeImageComponent(new File(url.getFile()));
+                initializeImageComponent(new File(url.getFile()));
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(CreateClassView.class.getName()).log(Level.SEVERE, null, ex);
+
         }
 
         // TODO: if knowledgeBasePanel is loaded, scroll down

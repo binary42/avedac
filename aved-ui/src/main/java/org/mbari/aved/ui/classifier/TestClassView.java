@@ -127,6 +127,13 @@ public class TestClassView extends JFrameView {
         initializeImageComponent(new File(url.getFile()), ColorSpace.RGB);
     }
 
+    /**
+     * Get the @{link org.mbari.aved.classifier.ColorSpace}  color space for testing
+     * @return the selected color space
+     */
+    ColorSpace getClassColorSpace() {
+        return (ColorSpace) classColorComboBox.getSelectedItem();
+    }
 
     /**
      * Get the @{link org.mbari.aved.classifier.ClassModel} class model to test
@@ -153,6 +160,7 @@ public class TestClassView extends JFrameView {
         return (ClassifierModel) super.getModel();
     }
 
+    @Override
     public void modelChanged(ModelEvent event) {}
 
     /**

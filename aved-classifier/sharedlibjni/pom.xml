@@ -60,7 +60,7 @@
                                 <configuration>
                                     <workingDirectory>${basedir}/target/nar/lib/i386-MacOSX-g++/jni</workingDirectory>
                                     <executable>${basedir}/src/main/scripts/execute</executable>
-                                    <arguments> 
+                                    <arguments>
                                         <cmdlineArguments>install_name_tool -change libavedsharedlib.dylib @loader_path/libavedsharedlib.dylib lib${artifactId}-${version}.jnilib</cmdlineArguments>
                                     </arguments>
                                 </configuration>
@@ -70,7 +70,7 @@
                     <plugin>
                         <!-- Creates the JNI layer for MacOSX environments.
                         This depends on defined properties in the parent pom like
-                        ${installPath}, ${matlabRoot}, etc.-->
+                        ${installPath}, ${mcrRoot}, etc.-->
                         <groupId>org.freehep</groupId>
                         <artifactId>freehep-nar-plugin</artifactId>
                         <extensions>true</extensions>
@@ -98,15 +98,20 @@
                                 <systemIncludePaths>
                                     <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
-                                    <systemIncludePath>${matlabRoot}/extern/include</systemIncludePath>
-                                    <systemIncludePath>${matlabRoot}/extern/include/cpp</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/runtime/glnx86</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/sys/os/glnx86</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnx86/jre/lib/i386/native_threads</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnx86/jre/lib/i386/server</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnx86/jre/lib/i386</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/extern/include</systemIncludePath>
                                     <systemIncludePath>/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers</systemIncludePath>
+                                </systemIncludePaths>
                                 </systemIncludePaths>
                             </cpp>
                             <linker>
                                 <libs>
                                     <lib>
-                                        <directory>${matlabRoot}/bin/maci</directory>
+                                        <directory>${mcrRoot}/bin/maci</directory>
                                         <name>mwmclmcrrt</name>
                                         <type>shared</type>
                                     </lib>
@@ -160,19 +165,24 @@
                                     <define>GLNX86</define>
                                 </defines>
                                 <options>
-                                    <option>-fno-common</option>
+                                    <option>-pthread</option>
+                                    <option>-fPIC</option>
                                 </options>
                                 <systemIncludePaths>
                                     <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
-                                    <systemIncludePath>${matlabRoot}/extern/include</systemIncludePath>
-                                    <systemIncludePath>${matlabRoot}/extern/include/cpp</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/runtime/glnx86</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/sys/os/glnx86</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnx86/jre/lib/i386/native_threads</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnx86/jre/lib/i386/server</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnx86/jre/lib/i386</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/extern/include</systemIncludePath>
                                 </systemIncludePaths>
                             </cpp>
                             <linker>
                                 <libs>
                                     <lib>
-                                        <directory>${matlabRoot}/bin/glnx86</directory>
+                                        <directory>${mcrRoot}/runtime/glnx86</directory>
                                         <name>mwmclmcrrt</name>
                                         <type>shared</type>
                                     </lib>

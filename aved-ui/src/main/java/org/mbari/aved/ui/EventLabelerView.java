@@ -148,7 +148,7 @@ public class EventLabelerView extends JFrameView {
         conceptTreePanel = new ConceptTreePanel(listener);
 
         // Only build the conceptTreePanel when the window is opened
-        // conceptTreePanel.buildPanel();
+        conceptTreePanel.buildPanel();
         conceptTreeFrame = new JFrame(ApplicationInfo.getName() + " - " + "VARS Knowledge Base Lookup");
         conceptTreeFrame.setContentPane(conceptTreePanel);
         conceptTreeFrame.setFocusable(true);

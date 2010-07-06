@@ -23,7 +23,6 @@ import org.mbari.aved.ui.ApplicationModel;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
 
 //~--- JDK imports ------------------------------------------------------------
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
@@ -42,18 +41,18 @@ import javax.swing.JFrame;
  */
 public class Classifier {
 
-    private final static String sync = "sync";
     private static InputStreamReader isr;
-    private static ClassifierLibraryJNI jniLibrary;
+    private static ClassifierLibraryJNI jniLibrary; 
     private final ClassifierController controller;
     private final Preferences settings;
+    private static boolean isInitialized = false;
 
     public Classifier(ApplicationModel model) {
         controller = new ClassifierController(model.getEventListModel(), model.getSummaryModel());
 
         ClassifierModel m = controller.getModel();
 
-        settings = new Preferences(m);
+        settings = new Preferences(m); 
     }
 
     public JFrame getClassifierSetingsView() {
@@ -103,8 +102,8 @@ public class Classifier {
      *
      * @return the InputStreamReader
      */
-    static InputStreamReader getInputStreamReader() { 
-       return isr;
+    static InputStreamReader getInputStreamReader() {
+        return isr;
     }
 
     /**
@@ -117,31 +116,33 @@ public class Classifier {
      *
      * @return a {@link org.mbari.aved.classifier.ClassifierLibraryJNI} singleton
      */
-    public static ClassifierLibraryJNI getLibrary() throws Exception {
-        synchronized (sync) // Initialize the library. This should only get called once.
-        {
-            if (jniLibrary == null) {
-                jniLibrary = new ClassifierLibraryJNI(); 
+    public static synchronized ClassifierLibraryJNI getLibrary() throws Exception {
+        if (isInitialized == false && jniLibrary == null) {
+            jniLibrary = new ClassifierLibraryJNI();
 
-                File dbDir = UserPreferences.getModel().getDefaultScratchDirectory();
-                String dbRoot = dbDir.getAbsolutePath();
-                File logFile = new File(dbRoot + "/matlablog.txt");
+            File dbDir = UserPreferences.getModel().getDefaultScratchDirectory();
+            String dbRoot = dbDir.getAbsolutePath();
+            File logFile = new File(dbRoot + "/matlablog.txt");
+            String name = new String(logFile.getAbsolutePath());
+            Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, "Matlab log file: " + name);
 
-                Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, "Matlab log file: " + logFile.toString());
-                String name = logFile.getAbsolutePath();
-                try {
-                    jniLibrary.initLib(name);
-                } catch (Exception e) {
-                    Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, e);
-                }
-
-                FileInputStream fis = new FileInputStream(logFile);
-
-                isr = new InputStreamReader(fis);
+            try {
+                jniLibrary.initLib(name);
+            } catch (Exception e) {
+                Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, e);
             }
+
+            FileInputStream fis = new FileInputStream(logFile);
+            isr = new InputStreamReader(fis);
+            isInitialized = true;
+
         }
 
-        return jniLibrary;
+        if (isInitialized && jniLibrary != null) { 
+            return jniLibrary;
+        }
+
+        return null;
     }
 
     /**
@@ -150,17 +151,15 @@ public class Classifier {
      *
      * @see     getLibrary()
      */
-    public static void closeLibrary() {
-        synchronized (sync) {
-            try {
-                if (jniLibrary != null) {
-                    getLibrary().closeLib();
-                    jniLibrary = null;
-                }
-
-            } catch (Exception ex) {
-                Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, ex);
+    public static synchronized void closeLibrary() {
+        try {
+            if (jniLibrary != null) { 
+                getLibrary().closeLib();
+                jniLibrary = null;
             }
+
+        } catch (Exception ex) {
+            Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

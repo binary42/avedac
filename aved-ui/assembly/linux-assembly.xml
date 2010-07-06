@@ -13,6 +13,32 @@
     <includeBaseDirectory>false</includeBaseDirectory>
     
     <fileSets>
+<fileSet>
+                                    <directory>${basedir}/target/nar/lib/i386-Linux-g++/jni/</directory>
+            <outputDirectory>/lib</outputDirectory>
+                                    <includes>
+                                        <include>*.so</include>
+                                    </includes>
+                                </fileSet>
+                                <fileSet>
+                                    <directory>${basedir}/target/nar/lib/i386-Linux-g++/shared</directory>
+            <outputDirectory>/lib</outputDirectory>
+                                    <includes>
+                                        <include>*.qtf</include>
+                                        <include>*.so</include>
+                                        <include>*.h</include>
+                                        <include>readme.*</include>
+                                    </includes>
+                                </fileSet>
+
+        <fileSet>
+            <directory>${basedir}/src/main/app-resources</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>javahelp-2.0.02.jar</include>
+                <include>linux/MCRInstaller.bin</include>
+            </includes>
+        </fileSet>
         <fileSet>
             <directory>${basedir}/src/main/app-resources</directory>
             <outputDirectory>/</outputDirectory>

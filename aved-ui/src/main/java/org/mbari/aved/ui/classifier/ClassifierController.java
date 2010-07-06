@@ -19,6 +19,7 @@ package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
 import aved.model.EventObject;
+import java.awt.Dimension;
 
 import org.jdesktop.swingworker.SwingWorker;
 
@@ -47,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.SwingUtilities;
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
 import org.mbari.aved.classifier.TrainingModel;
 
@@ -79,9 +81,7 @@ public class ClassifierController extends AbstractController implements ModelLis
 
         // Register as listener to the model
         model.addModelListener(this);
- 
-        loadModels();
-
+  
         createTrainingLib = new CreateTrainingLibrary(model);
         createClass = new CreateClass(model, list);
         testClass = new TestClass(model);
@@ -92,14 +92,12 @@ public class ClassifierController extends AbstractController implements ModelLis
         view.setCreateClassPanel(createClass.getView().getForm());
         view.setTestClassPanel(testClass.getView().getForm());
         view.setRunPanel(runClassifier.getView().getForm());
-
-        // TODO: make this a function of screen size
         view.pack();
 
         // Initialize the database directory from the user-defined preferences
         File dbDir = UserPreferences.getModel().getClassDatabaseDirectory();
         model.setDatabaseRoot(dbDir);
-         
+
         // Initialize the training image directory
         File trainingDir = UserPreferences.getModel().getClassTrainingImageDirectory();
         model.setClassTrainingImageDirectory(trainingDir);
@@ -123,47 +121,8 @@ public class ClassifierController extends AbstractController implements ModelLis
      * Loads the available models
      */
     private void loadModels() {
-        try {
-            ClassifierLibraryJNI library = Classifier.getLibrary();
-            File dbDir = UserPreferences.getModel().getClassDatabaseDirectory();
-            String dbRoot = dbDir.getAbsolutePath();
-
-            // Create the collected class directory if it doesn't exist
-            File featuresDir = new File(dbRoot + "/features/class");
-            if (!featuresDir.exists()) {
-                featuresDir.mkdir();
-            }
-
-            // Get the collected classes in this root directory
-            ClassModel[] classes = library.get_collected_classes(dbRoot);
-            ClassifierModel model = getModel();
-
-            if (classes != null) {
-                for (int i = 0; i < classes.length; i++) {
-                    model.addClassModel(classes[i]);
-                }
-            }
-
-            // Create the training class directory if it doesn't exist
-            File trainingDir = new File(dbRoot + "/training/class");
-            if (!trainingDir.exists()) {
-                trainingDir.mkdir();
-            }
-
-            // Get the training classes in this root directory
-            TrainingModel[] training = library.get_training_classes(dbRoot);
-
-            if (training != null) {
-                for (int i = 0; i < training.length; i++) {
-                    getModel().addTrainingModel(training[i]);
-                }
-            }
-        } catch (RuntimeException ex) {
-            Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-
-        } catch (Exception ex) {
-            Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-        }
+         LoadModelWorker thread = new LoadModelWorker(getModel());
+         thread.execute();
     }
 
     /**

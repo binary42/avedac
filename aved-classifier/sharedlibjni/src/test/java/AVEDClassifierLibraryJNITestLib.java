@@ -59,7 +59,8 @@ public class AVEDClassifierLibraryJNITestLib extends TestCase {
             TrainingModel tmodels[] = app.get_training_classes(dbRoot);
 
             for (int i = 0; i < tmodels.length; i++) {
-                System.out.println("Found training class---->" + tmodels[i].toString());
+                System.out.println("Found training class: " + tmodels[i].toString());
+                System.out.println("Description: " + tmodels[i].description());
             }
 
             System.out.println("Getting collected classes");
@@ -67,7 +68,8 @@ public class AVEDClassifierLibraryJNITestLib extends TestCase {
             ClassModel cmodels[] = app.get_collected_classes(dbRoot);
 
             for (int i = 0; i < cmodels.length; i++) {
-                System.out.println("Found class---->" + cmodels[i].toString());
+                System.out.println("Found class: " + cmodels[i].toString());
+                System.out.println("Description: " + cmodels[i].description());
             }
 
             System.out.println("close library");

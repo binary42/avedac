@@ -101,7 +101,7 @@ public class CreateTrainingLibraryView extends JFrameView {
 
         // Set default size and.getName()
         setTitle(ApplicationInfo.getName() + "-" + "Create training library");
-        this.pack();
+        //this.pack();
     }
 
     /**

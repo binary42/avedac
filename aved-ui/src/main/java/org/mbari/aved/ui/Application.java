@@ -39,14 +39,12 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.plaf.metal.DefaultMetalTheme;
 import javax.swing.plaf.metal.MetalLookAndFeel;
-import org.mbari.aved.ui.classifier.Classifier;
 import org.mbari.aved.ui.message.NonModalMessageDialog;
 
 public class Application {
-
+    public static final ErrorLog errLog = ErrorLog.getInstance();
     private static final Application    INSTANCE = new Application();
     public static ApplicationLookandFeelSettings lookAndFeelSettings = ApplicationLookandFeelSettings.createDefault();
-    public static final ErrorLog errLog = ErrorLog.getInstance();
     private static ApplicationController controller;
 
     public Application() {
@@ -208,10 +206,11 @@ public class Application {
 
                     public void run() {
                         try {
+
                             //URL name = getClass().getResource("/2344_00_32_40_25.events.xml");
                             //URL name = getClass().getResource("/20060808T000000_4912_32_103.events.xml");
                             // URL name = new URL("file:/Volumes/nanomiaRAID-1/JAMSTEC/20080604T063139Z_tests/20080604T063139Z-test1/20080604T063139Z-test1.events.xml");
-                            //app.getController().importProcessedResults(new File(name.getFile())); 
+                            //app.getController().importProcessedResults(new File(name.getFile()));
 
                             /* Jpeg readers should exist for most platforms through the javax.imageio package.
                              This is put here just in case this is run on Linux with a pre-packaged
@@ -228,7 +227,7 @@ public class Application {
                                 System.exit(-1);
                             }
 
-                           Classifier.getLibrary();
+  
                         } catch (Exception e) {
 
                             // TODO Auto-generated catch block
@@ -240,7 +239,6 @@ public class Application {
                 change.start();
             }
         });
-        view.setVisible(true);
     }
 
     /**

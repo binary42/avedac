@@ -41,6 +41,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Event;
 import java.awt.Font;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
@@ -108,7 +109,8 @@ public class MainMenu implements ModelListener {
     /** Help menu items */
     public static String HELP_ABOUT = "About " + ApplicationInfo.getName();
     private static JFrame imageOrganizer;
-    private final Classifier classifier;
+    private static Classifier classifier;
+    private final ApplicationModel model;
     private JMenuItem closeEventsItem;
     private JMenuItem createClassItem;
     private JMenuItem createTrainingLibraryItem;
@@ -118,7 +120,6 @@ public class MainMenu implements ModelListener {
     private JMenuItem exitItem;
     private JMenuItem exportExcelEventsItems;
     private JMenuItem helpContentsMenuItem;
-    private final ApplicationModel model;
     private JMenuItem openClassifierPreferenceItem;
     private JMenuItem openEventsItem;
     private JMenuItem organizeClassImagesMenuItem;
@@ -131,13 +132,15 @@ public class MainMenu implements ModelListener {
     public MainMenu(ApplicationModel model) {
         this.model = model;
         model.addModelListener(this);
-        classifier = new Classifier(model);
     }
 
     /**
      * Displays the Classifier  class creation interface
      */
     void displayCreateClass() {
+        if (classifier == null) {
+            classifier = new Classifier(model);
+        }
         classifier.selectCreateClassTabbedView();
         display(classifier.getView());
     }
@@ -146,6 +149,10 @@ public class MainMenu implements ModelListener {
      * Displays the Classifier test class interface
      */
     void displayTestClass() {
+
+        if (classifier == null) {
+            classifier = new Classifier(model);
+        }
         classifier.selectTestClassTabbedView();
         display(classifier.getView());
     }
@@ -154,6 +161,10 @@ public class MainMenu implements ModelListener {
      * Displays the Classifier training library interface
      */
     private void displayTrainingLibrary() {
+
+        if (classifier == null) {
+            classifier = new Classifier(model);
+        }
         classifier.selectTrainingPanelTabbedView();
         display(classifier.getView());
     }
@@ -162,6 +173,10 @@ public class MainMenu implements ModelListener {
      * Displays the Classifier run interface
      */
     private void displayRunClassifier() {
+
+        if (classifier == null) {
+            classifier = new Classifier(model);
+        }
         classifier.selectRunPanelTabbedView();
         display(classifier.getView());
     }
@@ -170,7 +185,48 @@ public class MainMenu implements ModelListener {
      * Displays the Classifier setup interface
      */
     private void displayClassifierSettings() {
+
+        if (classifier == null) {
+            classifier = new Classifier(model);
+        }
         display(classifier.getClassifierSetingsView());
+    }
+
+    private void displayMessages() {
+        display(MessagePrintStream.getView());
+    }
+
+    private void displayPreferences() {
+        UserPreferences.getInstance().getView().setVisible(true);
+    }
+
+    private void displaySettings() {
+        display(detectionSettings.getView());
+    }
+
+    /**
+     * This must be public to be registed with the OSXAdapter
+     */
+    public void showAboutBox() {
+        new ApplicationInfoView().setVisible(true);
+    }
+
+    /**
+     * This must be public to be registed with the OSXAdapter
+     */
+    public void exitApp() {
+        try {
+            if (Classifier.getLibrary() != null) {
+                Classifier.getLibrary().closeLib();
+            }
+            Application.getController().reset();
+            System.exit(0);
+        } catch (Exception ex) {
+            Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        System.exit(0);
+
     }
 
     /**
@@ -230,18 +286,6 @@ public class MainMenu implements ModelListener {
         }
     }
 
-    void displayMessages() {
-        display(MessagePrintStream.getView());
-    }
-
-    void displayPreferences() {
-        UserPreferences.getInstance().getView().setVisible(true);
-    }
-
-    void displaySettings() {
-        display(detectionSettings.getView());
-    }
-
     /**
      * Sets the mneumonic based on ths OS
      * @param item
@@ -250,9 +294,8 @@ public class MainMenu implements ModelListener {
     private void setMenuItemMneumonic(JMenuItem item, int mnemonic) {
         String s = System.getProperty("os.name").toLowerCase();
 
-        if ((s.indexOf("linux") != -1) || (s.indexOf("windows") != -1)) {
-            item.setAccelerator(KeyStroke.getKeyStroke(mnemonic,
-                    (java.awt.event.InputEvent.CTRL_MASK | (Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()))));
+        if ((s.indexOf("linux") != -1)) {
+            item.setAccelerator(KeyStroke.getKeyStroke(mnemonic, Event.CTRL_MASK));
         } else if (s.indexOf("mac") != -1) {
             item.setAccelerator(KeyStroke.getKeyStroke(mnemonic,
                     (java.awt.event.InputEvent.META_MASK | (Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()))));
@@ -319,7 +362,7 @@ public class MainMenu implements ModelListener {
 
         /*
          *  Add the mneumonic control x and Exit option in the File menu
-         * if running  linux of windows
+         * if running  linux or windows
          */
         if ((s.indexOf("linux") != -1) || (s.indexOf("windows") != -1)) {
             setMenuItemMneumonic(exitItem, KeyEvent.VK_X);
@@ -511,37 +554,14 @@ public class MainMenu implements ModelListener {
         UserPreferences.getInstance().getView().setVisible(true);
     }
 
-
-    /**
-     * This must be public to be registed with the OSXAdapter
-     */
-    public void showAboutBox() {
-        new ApplicationInfoView().setVisible(true);
-    }
-
-    /**
-     * This must be public to be registed with the OSXAdapter
-     */
-    public void exitApp() {
-        try {
-            Classifier.getLibrary().closeLib();
-            Application.getController().reset();
-            System.exit(0);
-        } catch (Exception ex) {
-            Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        System.exit(0);
-
-    }
-
     private void display(JFrame v) {
         Application.getView().display(v);
     }
 
     private void openEvent(String path) {
-       // TODO: Add function to ask user close events, then re-open new event
+        // TODO: Add function to ask user close events, then re-open new event
     }
+
     private void openEvents() {
 
         // TODO: if events are currently open and modified,
@@ -602,6 +622,8 @@ public class MainMenu implements ModelListener {
                                 Application.getController().reset();
                             } else if (actionCommand.equals(MainMenu.OPEN_EVENTS)) {
                                 openEvents();
+                            } else if (actionCommand.equals(MainMenu.HELP_ABOUT)) {
+                                showAboutBox();
                             } else if (obj.equals(saveEventsMenuItem)) {
                                 SwingUtilities.invokeLater(new Runnable() {
 

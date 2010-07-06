@@ -80,25 +80,23 @@ David and Lucile Packard Foundation.
 3.  Installation on Linux
 -----------------------------------------------------------------------------
 
-	3.1. Modify the environment variables
-
-	     Edit aved-classifier/setup
- 	     Modify the following properties to match your installation, e.g.:
+	3.1. Set the environment following variables to match your installation
 	     
 	     export MATLAB_ROOT=/home/aved/matlab7.2
              export JAVA_HOME=/usr/java/latest
-	     export MATLAB_JAVA=/usr/java/jdk1.6.0_20/jre
+	     export MCR_ROOT=/opt/MATLAB/MATLAB_Compiler_Runtime/v710
+	     export SALIENCY_ROOT=/home/aved/saliency
+	     export XERCESC_ROOT=/home/aved/Xercesc-2_7_0
 
-	3.2. Modify the pom.xml 
+	3.2. Run the setup script. This will install the necessary environment
+	     variables to your ~/.bashrc 
 
-	     Edit the pom.xml in the same directory as this README.txt
-	     Modify the following properties to match your installation:
+	3.3. (optional) Modify the pom.xml to change the install path 
 
-	      <installPath>${HOME}/aved</installPath>
-	      <xercesRoot>${HOME}/aved/Xerces-2_7_0</xercesRoot>
-              <saliencyRoot>${HOME}/aved/saliency</saliencyRoot> 
+	     Edit the pom.xml in the same directory this README.txt is in
+	     Modify the following properties to suit your installation:
 
-	3.3. Installation command  
+	3.4. Installation command  
 
 	     Run build from a command-line, e.g.
 
@@ -118,9 +116,12 @@ To build:
  	     Modify the following property to suit your installation:
 	     
 	     export MATLAB_ROOT=/Applications/MATLAB_R2009a.app
+	     export MCR_ROOT=/Applications/MATLAB/MATLAB_Compiler_Runtime/v710
 
+	4.2. Run the setup script. This will install the necessary environment
+	     variables to your ~/Info.plist
 
-	4.2. Modify the pom.xml 
+	4.3. (optional) Modify the pom.xml to change the install path 
 
 	     Edit the pom.xml in the same directory this README.txt is in
 	     Modify the following properties to suit your installation:
@@ -149,7 +150,6 @@ To build:
 
 	5.1. Test before releasing (optional)
 
-                $ source ./aved-classifier/setup
 		$ mvn clean release:prepare -B -D dryRun=true
 
 	5.2. Creating a release
@@ -157,7 +157,6 @@ To build:
 	    5.2.2.  Increment the version displayed in the "About"
     	    	    box in the aved-ui graphical user interface
 
-                        $ source ./aved-classifier/setup
 			$ mvn generate-sources  -P version-increment
 
 	    5.2.3.  Create a release
