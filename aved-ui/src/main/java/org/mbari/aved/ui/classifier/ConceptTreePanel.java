@@ -37,7 +37,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
+ 
+import org.jdesktop.swingworker.SwingWorker;
 
 /**
  *
@@ -106,8 +107,7 @@ public class ConceptTreePanel extends JPanel {
                         // e1.printStackTrace();
                         SwingUtilities.invokeLater(new Runnable() {
 
-                            @Override
-                            public void run() {
+                             public void run() {
                                 patience.setText("Error loading knowledge base.");
                                 patience.repaint();
                             }

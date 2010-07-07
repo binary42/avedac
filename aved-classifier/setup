@@ -2,7 +2,6 @@
 # Author: D. Cline
 # Copyright (c) MBARI 2009
 # Date: December 28, 2009 - Created
-# Crude check for OS, if not Linux, assume MacOSX
 #
 if [ ! "$MATLAB_ROOT" ]; then
     echo "Error - set MATLAB_ROOT enviroment variable"
@@ -19,22 +18,28 @@ if [ ! "$JAVA_HOME" ]; then
 fi
   echo "export XAPPLRESDIR=$MCR_ROOT/X11/app-defaults" >> ~/.bashrc
   echo "export MATLAB_JAVA=$JAVA_HOME/jre" >> ~/.bashrc
+  echo "export MCR_ROOT=$MCR_ROOT" >> ~/.bashrc
+  echo "export MATLAB_ROOT=$MATLAB_ROOT" >> ~/.bashrc
+  echo "export JAVA_HOME=$JAVA_HOME" >> ~/.bashrc
  
   a=`uname -a | grep 64`
   if [ ! "$a" ] ;then 
     echo "Setting 32-bit Linux environment variables"
-    echo "export LD_LIBRARY_PATH=$MCR_ROOT/runtime/glnx86:$MCR_ROOT/sys/os/glnx86:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/native_threads:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/server:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386" >> ~/.bashrc
+    echo "export LD_LIBRARY_PATH=$MCR_ROOT/runtime/glnx86:$MCR_ROOT/bin/glnx86:$MCR_ROOT/sys/os/glnx86:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/native_threads:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/server:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386" >> ~/.bashrc
   else 
     echo "Setting 64-bit Linux environment variables"
     echo "export LD_LIBRARY_PATH=$MATLAB_ROOT/runtime/glnxa86:$MATLAB_ROOT/bin/glnxa64:$MATLAB_ROOT/sys/os/glnxa64:$JAVA_HOME/jre/lib/i386" >> ~/.bashrc
   fi 
+  source ~/.bashrc
 else
   echo "Setting MacOSX environment variables"
-  echo "export DYLD_LIBRARY_PATH=$MATLAB_ROOT/runtime:$MATLAB_ROOT/bin/maci:$MATLAB_ROOT/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries" >> ~/.bashrc 
-  echo "export XAPPLRESDIR=$MATLAB_ROOT/X11/app-defaults" >> ~/.bashrc
+  echo "export DYLD_LIBRARY_PATH=$MCR_ROOT/runtime/maci:$MCR_ROOT/bin/glnx86:$MCR_ROOT/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries" >> ~/.bash_profile
+  echo "export XAPPLRESDIR=$MCR_ROOT/X11/app-defaults" >> ~/.bash_profile
+  echo "export MCR_ROOT=$MCR_ROOT" >> ~/.bash_profile
+  echo "export MATLAB_ROOT=$MATLAB_ROOT" >> ~/.bash_profile
+  source ~/.bash_profile
 fi
 
-echo "environment variables are now set in your ~/.bashrc file:"
+echo "Required environment variables are now set in your ~/.bashrc or ~/.bash_profile file."
 echo "You may need to modify these if you change your matlab installation"
 echo "upgrade matlab, or change the location of the Matlab Compiler Runtime path"
-source ~/.bashrc

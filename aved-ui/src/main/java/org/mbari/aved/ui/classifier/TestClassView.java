@@ -160,8 +160,7 @@ public class TestClassView extends JFrameView {
         return (ClassifierModel) super.getModel();
     }
 
-    @Override
-    public void modelChanged(ModelEvent event) {}
+     public void modelChanged(ModelEvent event) {}
 
     /**
      * Loads {@link org.mbari.aved.classifier.TrainingModel}

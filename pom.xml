@@ -24,21 +24,19 @@
 
                 For system-wide use change this to e.g. /usr/local and rerun
                 maven install (or the make install from cmd-line) as an
-                administrative user.-->
+                administrative user with e.g. the sudo command.-->
                 <installPath>${env.HOME}/aved</installPath>
 
-                <!-- The path to the Apache Xerces code. Change this
-                to the correct location if needed. -->
-                <xercesRoot>${env.HOME}/aved/Xerces-2_7_0</xercesRoot>
+                <!-- The path to the Apache Xerces code  -->
+                <xercesRoot>${env.XERCESC_ROOT}</xercesRoot>
 
-                <!-- The path to the iLab Neuromorphic code. Change this
-                to the correct location if needed.-->
-                <saliencyRoot>${env.HOME}/aved/saliency</saliencyRoot>
+                <!-- The path to the iLab Neuromorphic code -->
+                <saliencyRoot>${env.SALIENCY_ROOT}</saliencyRoot>
 
                 <!-- The location of the Matlab install. The matlab license
                 should include both the image processing libraries and
                 the matlab runtime compiler. MATLAB_ROOT must be setup external to
-                maven as it is needed to setup the correct DYLD_LIBRARY_PATH
+                maven as it is needed to setup the correct LD_LIBRARY_PATH
                 and XAPPLRESDIR environment variables. Since Maven does
                 no explicity set environment variables, this is configured
                 outside of this pom.xml but referenced here because it is
@@ -48,7 +46,7 @@
 		<!-- The location of the Matlab install. The matlab license
                 should include both the image processing libraries and
                 the matlab runtime compiler. MATLAB_ROOT must be setup external to
-                maven as it is needed to setup the correct DYLD_LIBRARY_PATH
+                maven as it is needed to setup the correct LD_LIBRARY_PATH
                 and XAPPLRESDIR environment variables. Since Maven does
                 no explicity set environment variables, this is configured
                 outside of this pom.xml but referenced here because it is
@@ -89,7 +87,17 @@
                 maven as it is needed to setup the correct DYLD_LIBRARY_PATH
                 and XAPPLRESDIR environment variables. Since Maven does
                 no explicity set environment variables, this is configured
-                outside of this pom.xml but referenced here becuase it is
+                outside of this pom.xml but referenced here because it is
+                needed in the aved-classifier modules -->
+                <mcrRoot>${env.MCR_ROOT}</mcrRoot>
+
+		<!-- The location of the Matlab install. The matlab license
+                should include both the image processing libraries and
+                the matlab runtime compiler. MATLAB_ROOT must be setup external to
+                maven as it is needed to setup the correct DYLD_LIBRARY_PATH
+                and XAPPLRESDIR environment variables. Since Maven does
+                no explicity set environment variables, this is configured
+                outside of this pom.xml but referenced here because it is
                 needed in the aved-classifier modules -->
                 <matlabRoot>${env.MATLAB_ROOT}</matlabRoot>
             </properties>
@@ -102,9 +110,7 @@
     </profiles>
     <scm>
         <connection>scm:hg:https://avedac.googlecode.com/hg/</connection>
-        <developerConnection>scm:hg:https://avedac.googlecode.com/hg/</developerConnection>
-        <!--<connection>scm:hg:${basedir}</connection>
-        <url>http://localhost:8000/aved</url>-->
+        <developerConnection>scm:hg:https://avedac.googlecode.com/hg/</developerConnection> 
     </scm>
     <reporting>
         <plugins>
@@ -209,10 +215,10 @@
                     <arguments>-Prelease</arguments>
                 </configuration>
             </plugin>
-            <plugin>
+                <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
+                 <configuration>
                     <source>1.5</source>
                     <target>1.5</target>
                 </configuration>
@@ -238,3 +244,4 @@
         </plugins>
     </build>
 </project>
+

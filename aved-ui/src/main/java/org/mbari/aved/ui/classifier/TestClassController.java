@@ -139,8 +139,7 @@ class TestClassController extends AbstractController implements ModelListener {
      * {@link org.mbari.aved.ui.classifier.model}
      * and  {@link org.mbari.aved.ui.classifier.ClassifierModel}
      */
-    @Override
-    public void modelChanged(ModelEvent event) {
+     public void modelChanged(ModelEvent event) {
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             ColorSpace colorSpace = (ColorSpace) getView().getClassColorSpace();
 

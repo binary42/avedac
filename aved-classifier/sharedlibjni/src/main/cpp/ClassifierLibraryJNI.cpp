@@ -239,7 +239,9 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
             ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the MCR properly"); 
             return;
         }
+        fflush(stdout);
         DPRINTF("Initializing library\n");
+          fflush(stdout);
         // Initialize the library of MATLAB functions
         if (!libavedsharedlibInitialize()) {
              ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the Classifier MATLAB library properly");  
@@ -247,6 +249,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
         }
 
         DPRINTF("Library initialized\n");
+          fflush(stdout);
         DPRINTF("MCR initialized : %d\n", mclIsMCRInitialized());
         DPRINTF("JVM initialized : %d\n", mclIsJVMEnabled());
         DPRINTF("Logfile name : %s\n", mclGetLogFileName());

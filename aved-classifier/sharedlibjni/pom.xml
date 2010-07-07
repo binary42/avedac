@@ -11,7 +11,7 @@
     <packaging>nar</packaging>
     <version>0.4.3-SNAPSHOT</version>
     <name>AVED classifier JNI library</name>
-    <url>http://www.mbari.org</url>
+    <url>http://www.mbari.org</url> 
     <profiles>
         <profile>
             <id>Mac</id>
@@ -67,10 +67,10 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <plugin>
-                        <!-- Creates the JNI layer for MacOSX environments.
-                        This depends on defined properties in the parent pom like
+                     <!-- Creates the JNI layer for MacOSX environments.
+                        This requires properties in the parent pom like
                         ${installPath}, ${mcrRoot}, etc.-->
+                    <plugin>
                         <groupId>org.freehep</groupId>
                         <artifactId>freehep-nar-plugin</artifactId>
                         <extensions>true</extensions>
@@ -83,35 +83,20 @@
                                 </library>
                             </libraries>
                             <cpp>
-                                <exceptions>true</exceptions>
-                                <defines>
-                                    <define>UNIX</define>
-                                    <define>X11</define>
-                                    <define>NDEBUG</define>
-                                    <define>MACI</define>
-                                </defines>
-                                <options>
-                                    <option>-fno-common</option>
-                                    <option>-no-cpp-precomp</option>
-                                    <option>-mmacosx-version-min=10.5</option>
-                                </options>
+                                <exceptions>true</exceptions> 
                                 <systemIncludePaths>
                                     <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
-                                    <systemIncludePath>${mcrRoot}/runtime/glnx86</systemIncludePath>
-                                    <systemIncludePath>${mcrRoot}/sys/os/glnx86</systemIncludePath>
-                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnx86/jre/lib/i386/native_threads</systemIncludePath>
-                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnx86/jre/lib/i386/server</systemIncludePath>
-                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnx86/jre/lib/i386</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/runtime/maci</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/sys/os/maci</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/extern/include</systemIncludePath>
                                     <systemIncludePath>/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers</systemIncludePath>
-                                </systemIncludePaths>
                                 </systemIncludePaths>
                             </cpp>
                             <linker>
                                 <libs>
                                     <lib>
-                                        <directory>${mcrRoot}/bin/maci</directory>
+                                        <directory>${mcrRoot}/runtime/maci</directory>
                                         <name>mwmclmcrrt</name>
                                         <type>shared</type>
                                     </lib>
@@ -144,6 +129,9 @@
             <build>
                 <defaultGoal>install</defaultGoal>
                 <plugins>
+                        <!-- Creates the JNI layer for Linux environments.
+                        This requires properties in the parent pom like
+                        ${installPath}, ${mcrRoot}, etc.-->
                     <plugin>
                         <groupId>org.freehep</groupId>
                         <artifactId>freehep-nar-plugin</artifactId>
@@ -157,16 +145,9 @@
                                 </library>
                             </libraries>
                             <cpp>
-                                <exceptions>true</exceptions>
-                                <defines>
-                                    <define>UNIX</define>
-                                    <define>X11</define>
-                                    <define>NDEBUG</define>
-                                    <define>GLNX86</define>
-                                </defines>
+                                <exceptions>true</exceptions> 
                                 <options>
-                                    <option>-pthread</option>
-                                    <option>-fPIC</option>
+                                    <option>-pthread</option> 
                                 </options>
                                 <systemIncludePaths>
                                     <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
@@ -233,3 +214,4 @@
         </dependency>
     </dependencies>
 </project>
+
