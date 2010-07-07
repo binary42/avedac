@@ -14,14 +14,14 @@
     
     <fileSets>
 <fileSet>
-                                    <directory>${basedir}/target/nar/lib/i386-Linux-g++/jni/</directory>
+                                    <directory>${basedir}/target/nar/lib/amd64-Linux-g++/jni/</directory>
             <outputDirectory>/lib</outputDirectory>
                                     <includes>
                                         <include>*.so</include>
                                     </includes>
                                 </fileSet>
                                 <fileSet>
-                                    <directory>${basedir}/target/nar/lib/i386-Linux-g++/shared</directory>
+                                    <directory>${basedir}/target/nar/lib/amd64-Linux-g++/shared</directory>
             <outputDirectory>/lib</outputDirectory>
                                     <includes>
                                         <include>*.qtf</include>
@@ -36,15 +36,6 @@
             <outputDirectory>/</outputDirectory>
             <includes>
                 <include>javahelp-2.0.02.jar</include>
-                <include>linux/MCRInstaller.bin</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${basedir}/src/main/app-resources</directory>
-            <outputDirectory>/</outputDirectory>
-            <includes>
-                <include>javahelp-2.0.02.jar</include>
-                <include>linux/MCRInstaller.bin</include>
             </includes>
         </fileSet>
         <fileSet>
