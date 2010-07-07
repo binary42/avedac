@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <actions>
-	<action>
+        <action>
+            <actionName>debug</actionName>
+            <goals>
+                <goal>process-sources</goal>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+            </goals>
+            <properties>
+                <exec.classpathScope>${classPathScope}</exec.classpathScope>
+                <jpda.listen>true</jpda.listen>
+                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -Xms512M -Xmx1024M -d32 -Djava.library.path=${project.build.directory}/nar/lib/i386-MacOSX-g++/jni  -Dcom.sun.media.jai.disableMediaLib=true -classpath %classpath ${packageClassName}</exec.args>
+                <Env.XAPPLRESDIR>/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/X11/app-defaults</Env.XAPPLRESDIR>
+                <Env.DYLD_LIBRARY_PATH>/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/runtime/maci:/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/bin/maci:/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries:/Users/dcline/.m2/repository/org/mbari/aved/classifier/sharedlib/0.4.3-SNAPSHOT/nar/lib/i386-MacOSX-g++/shared</Env.DYLD_LIBRARY_PATH>
+                <exec.executable>java</exec.executable>
+            </properties>
+        </action>
+        <action>
             <actionName>run</actionName>
             <goals>
                 <goal>process-classes</goal>
@@ -8,43 +24,36 @@
             </goals>
             <properties>
                 <exec.classpathScope>runtime</exec.classpathScope>
-                <exec.args>-Dcom.sun.media.jai.disableMediaLib=true -classpath %classpath ${packageClassName}</exec.args>
+                <exec.args>-Xms512M -Xmx1024M -d32 -Dcom.sun.media.jai.disableMediaLib=true -classpath %classpath ${packageClassName}</exec.args>
                 <exec.executable>java</exec.executable>
             </properties>
         </action>
-
         <action>
-            <actionName>rebuild</actionName>
+            <actionName>profile</actionName>
             <goals>
-                <goal>clean</goal>
-                <goal>install</goal>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
             </goals>
             <properties>
-                <Env.MATLAB_ROOT>/Applications/MATLAB_R2009a.app</Env.MATLAB_ROOT>
-                <Env.DYLD_LIBRARY_PATH>/Applications/MATLAB_R2009a.app/runtime:/Applications/MATLAB_R2009a.app/bin/maci:/Applications/MATLAB_R2009a.app/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
-		<Env.XAPPLRESDIR>/Applications/MATLAB_R2009a.app/X11/app-defaults</Env.XAPPLRESDIR>
+                <exec.args>${profiler.args} -Xms512M -Xmx1024M -d32 -Dcom.sun.media.jai.disableMediaLib=true -classpath %classpath ${packageClassName}</exec.args>
+                <profiler.action>profile</profiler.action>
+                <exec.executable>${profiler.java}</exec.executable>
             </properties>
         </action>
         <action>
-            <actionName>build</actionName>
+            <actionName>debug.single.main</actionName>
             <goals>
-                <goal>install</goal>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
             </goals>
             <properties>
-                <Env.DYLD_LIBRARY_PATH>/Applications/MATLAB_R2009a.app/runtime:/Applications/MATLAB_R2009a.app/bin/maci:/Applications/MATLAB_R2009a.app/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
-                <Env.MATLAB_ROOT>/Applications/MATLAB_R2009a.app</Env.MATLAB_ROOT>
-		<Env.XAPPLRESDIR>/Applications/MATLAB_R2009a.app/X11/app-defaults</Env.XAPPLRESDIR>
-            </properties>
-        </action>
-        <action>
-            <actionName>test</actionName>
-            <goals>
-                <goal>test</goal>
-            </goals>
-            <properties>
-                <Env.DYLD_LIBRARY_PATH>/Applications/MATLAB_R2009a.app/runtime:/Applications/MATLAB_R2009a.app/bin/maci:/Applications/MATLAB_R2009a.app/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
-                <Env.MATLAB_ROOT>/Applications/MATLAB_R2009a.app</Env.MATLAB_ROOT>
-		<Env.XAPPLRESDIR>/Applications/MATLAB_R2009a.app/X11/app-defaults</Env.XAPPLRESDIR>
+                <exec.classpathScope>${classPathScope}</exec.classpathScope>
+                <jpda.listen>true</jpda.listen>
+                <exec.args>-Xms512M -Xmx1024M -d32 -Djava.library.path=${project.build.directory}/nar/lib/i386-MacOSX-g++/jni  -Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath ${packageClassName}</exec.args>
+                <Env.XAPPLRESDIR>/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/X11/app-defaults</Env.XAPPLRESDIR>
+                <jpda.stopclass>${packageClassName}</jpda.stopclass>
+                <Env.DYLD_LIBRARY_PATH>/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/runtime/maci:/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/bin/maci:/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries:/Users/dcline/.m2/repository/org/mbari/aved/classifier/sharedlib/0.4.3-SNAPSHOT/nar/lib/i386-MacOSX-g++/shared</Env.DYLD_LIBRARY_PATH>
+                <exec.executable>java</exec.executable>
             </properties>
         </action>
     </actions>
