@@ -239,9 +239,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
             ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the MCR properly"); 
             return;
         }
-        fflush(stdout);
         DPRINTF("Initializing library\n");
-          fflush(stdout);
         // Initialize the library of MATLAB functions
         if (!libavedsharedlibInitialize()) {
              ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the Classifier MATLAB library properly");  
@@ -249,13 +247,11 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
         }
 
         DPRINTF("Library initialized\n");
-          fflush(stdout);
         DPRINTF("MCR initialized : %d\n", mclIsMCRInitialized());
         DPRINTF("JVM initialized : %d\n", mclIsJVMEnabled());
         DPRINTF("Logfile name : %s\n", mclGetLogFileName());
         DPRINTF("nodisplay set : %d\n", mclIsNoDisplaySet());
-
-        fflush(stdout);
+ 
     } catch (const mwException &e) { 
         ThrowByName(env, "java/lang/RuntimeException", e.what());
         return;
@@ -953,7 +949,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
                 // get File class
                 jclass jnewFile = env->FindClass("java/io/File");
 
-                // get File constructor method id
+                // Get File constructor method id
                 jmethodID jmethod = env->GetMethodID(jnewFile, "<init>", "(Ljava/lang/String;)V");
 
 
@@ -1012,10 +1008,17 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
             }// end}//  if (pos != string::npos)
         }// end for (i = 0; i < fcount; i++)
     }
-
-    // Clean up the allocated memory
+    
      // Clean up the allocated memory
-     if (fcount) { printf("Entries are:"); for (i=0, list=filelist; i<fcount; i++) { printf(" %s\n", (*list)->d_name); free(*list); list++; } free(filelist); }
+     if (fcount) { 
+         DPRINF("Entries are:");
+         for (i=0, list=filelist; i<fcount; i++) {
+             DPRINF(" %s\n", (*list)->d_name);
+             free(*list);
+             list++;
+         }
+         free(filelist);
+     }
  
     return jClassModelArray;
 }
@@ -1127,7 +1130,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
                     exit(-1);
                 }
 
-                // Create a new ClassModel object                
+                // Create a new ClassModel object
                 jobject jobj = env->NewObject(jtrainingModel, jtrainingModelInit);
 
                 // get File class
@@ -1227,9 +1230,17 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
         }// end for (i = 0; i < fcount; i++)
     }//end if (numfound) 
 
-     // Clean up the allocated memory
-     if (fcount) { printf("Entries are:"); for (i=0, list=filelist; i<fcount; i++) { printf(" %s\n", (*list)->d_name); free(*list); list++; } free(filelist); printf("\n"); }
-
+      // Clean up the allocated memory
+     if (fcount) {
+         DPRINF("Entries are:");
+         for (i=0, list=filelist; i<fcount; i++) {
+             DPRINF(" %s\n", (*list)->d_name);
+             free(*list);
+             list++;
+         }
+         free(filelist);
+     }
+  
      return jtrainingModelArray;
 }
 

@@ -57,7 +57,7 @@ public class LoadModelWorker extends SwingWorker {
             // Create the collected class directory if it doesn't exist
             File featuresDir = new File(dbRoot + "/features/class");
             if (!featuresDir.exists()) {
-                featuresDir.mkdir();
+                featuresDir.mkdirs();
             }
 
             // Get the collected classes in this root directory
@@ -70,7 +70,7 @@ public class LoadModelWorker extends SwingWorker {
             // Create the training class directory if it doesn't exist
             File trainingDir = new File(dbRoot + "/training/class");
             if (!trainingDir.exists()) {
-                trainingDir.mkdir();
+                trainingDir.mkdirs();
             }
 
             // Get the training classes in this root directory
