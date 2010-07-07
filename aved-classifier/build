@@ -7,11 +7,10 @@
 #exit on error; this will exit this bash script when any command exists with
 #a non-zero exit code
 set -e
-
+uname=`uname`
 # Crude check for OS, if not Linux, assume MacOSX
-if [ `uname | grep Linux` ]; then
-  a=`uname -a | grep 64`
-  if [ ! "$a" ] ;then
+if [ `echo $uname | grep Linux` ]; then
+  if [ ! "`echo $uname | grep 64`" ] ;then
      echo "Running Linux 32-bit build"
      mvn install -PLinux32 -Dmaven.test.skip=true 
   else

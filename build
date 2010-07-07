@@ -1,4 +1,5 @@
-#/bin/bash
+# !/bin/bash
+#
 # Copyright (c) MBARI 2009
 # Author: D. Cline
 # Date: December 28, 2009 - Created
@@ -6,11 +7,17 @@
 #exit on error; this will exit this bash script when any command exists with
 #a non-zero exit code
 set -e
-./aved-classifier/setup
-if [ `uname | grep Linux` ]; then
-  echo "Building for Linux" 
-  mvn install -PLinux
+uname=`uname`
+# Crude check for OS, if not Linux, assume MacOSX
+if [ `echo $uname | grep Linux` ]; then
+  if [ ! "`echo $uname | grep 64`" ] ;then
+     echo "Running Linux 32-bit build"
+     mvn install -PLinux32 -Dmaven.test.skip=true 
+  else
+     echo "Running Linux 64-bit build"
+     mvn install -PLinux64 -Dmaven.test.skip=true 
+  fi
 else
-  echo "Building for MacOSX" 
-  mvn install -PMac 
+  echo "Running MacOSX build"
+  mvn install -PMac -Dmaven.test.skip=true
 fi
