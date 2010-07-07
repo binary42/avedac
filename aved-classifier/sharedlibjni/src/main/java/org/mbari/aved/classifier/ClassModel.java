@@ -67,6 +67,20 @@ public class ClassModel {
     void ClassModel() {}
   
     /**
+     * Returns a copy of the class model
+     */
+    public ClassModel copy() {
+        ClassModel m = new ClassModel();
+        m.className = this.getName();
+        m.description = this.getDescription();
+        m.varsClassName = this.getVarsClassName();
+        m.squaredImageDirectory = this.getSquareImageDirectory();
+        m.rawImageDirectory = this.getRawImageDirectory();
+        m.fileList = (ArrayList<String>) this.fileList.clone();
+        m.dbrootDirectory = this.getDatabaseRootdirectory();
+        return m;
+    }
+    /**
      * Get the raw image directory. This is the directory the images
      * are stored in before conversion to square images for classification
      * @return the image directory

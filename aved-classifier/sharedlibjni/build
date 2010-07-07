@@ -15,7 +15,7 @@ if [ `echo $uname | grep Linux` ]; then
     mvn install -PLinux32 -Dmaven.test.skip=true
   else
     echo "Running Linux 64-bit build"
-    mvn -e -X install -PLinux64 -Dmaven.test.skip=true
+    mvn install -PLinux64 -Dmaven.test.skip=true
   fi
 else
   echo "Running MacOSX build"

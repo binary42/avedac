@@ -31,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JFrame;
+import org.mbari.aved.classifier.ClassModel;
 
 /**
  * The AVED Classifier. This handles creating the components needed
@@ -52,7 +53,7 @@ public class Classifier {
 
         ClassifierModel m = controller.getModel();
 
-        settings = new Preferences(m); 
+        settings = new Preferences(m);
     }
 
     public JFrame getClassifierSetingsView() {

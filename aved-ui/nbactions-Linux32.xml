@@ -19,13 +19,16 @@
         <action>
             <actionName>run</actionName>
             <goals>
+                <goal>process-sources</goal>
                 <goal>process-classes</goal>
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
             </goals>
             <properties>
                 <exec.classpathScope>runtime</exec.classpathScope>
-                <exec.args>-Xms512M -Xmx1024M -d32 -Dcom.sun.media.jai.disableMediaLib=true -classpath %classpath ${packageClassName}</exec.args>
+                <Env.XAPPLRESDIR>/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/X11/app-defaults</Env.XAPPLRESDIR>
+                <exec.args>-Xms512M -Xmx1024M -d32 -Djava.library.path=${project.build.directory}/nar/lib/i386-Linux-g++/jni   -Dcom.sun.media.jai.disableMediaLib=true -classpath %classpath ${packageClassName}</exec.args>
                 <exec.executable>java</exec.executable>
+                <Env.LD_LIBRARY_PATH>/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/runtime/glnx86:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/bin/glnx86:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/sys/os/glnx86:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/sys/java/jre/glnx86/jre/lib/i386/native_threads:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/sys/java/jre/glnx86/jre/lib/i386/server:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/sys/java/jre/glnx86/jre/lib/i386:/home/aved/.m2/repository/org/mbari/aved/classifier/sharedlib/0.4.3-SNAPSHOT/nar/lib/i386-Linux-g++/shared</Env.LD_LIBRARY_PATH>
             </properties>
         </action>
         <action>
@@ -43,6 +46,7 @@
         <action>
             <actionName>debug.single.main</actionName>
             <goals>
+                <goal>process-sources</goal>
                 <goal>process-classes</goal>
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
             </goals>
@@ -52,6 +56,21 @@
                 <exec.args>-Xms512M -Xmx1024M -d32 -Djava.library.path=${project.build.directory}/nar/lib/i386-Linux-g++/jni  -Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath ${packageClassName}</exec.args>
                 <Env.XAPPLRESDIR>/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/X11/app-defaults</Env.XAPPLRESDIR>
                 <jpda.stopclass>${packageClassName}</jpda.stopclass>
+                <Env.LD_LIBRARY_PATH>/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/runtime/glnx86:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/bin/glnx86:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/sys/os/glnx86:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/sys/java/jre/glnx86/jre/lib/i386/native_threads:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/sys/java/jre/glnx86/jre/lib/i386/server:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/sys/java/jre/glnx86/jre/lib/i386:/home/aved/.m2/repository/org/mbari/aved/classifier/sharedlib/0.4.3-SNAPSHOT/nar/lib/i386-Linux-g++/shared</Env.LD_LIBRARY_PATH>
+                <exec.executable>java</exec.executable>
+            </properties>
+        </action>
+        <action>
+            <actionName>run.single.main</actionName>
+            <goals>
+                <goal>process-sources</goal>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+            </goals>
+            <properties>
+                <Env.XAPPLRESDIR>/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/X11/app-defaults</Env.XAPPLRESDIR>
+                <exec.classpathScope>${classPathScope}</exec.classpathScope>
+                <exec.args>-Xms512M -Xmx1024M -d32 -Djava.library.path=${project.build.directory}/nar/lib/i386-Linux-g++/jni  -classpath %classpath ${packageClassName}</exec.args>
                 <Env.LD_LIBRARY_PATH>/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/runtime/glnx86:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/bin/glnx86:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/sys/os/glnx86:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/sys/java/jre/glnx86/jre/lib/i386/native_threads:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/sys/java/jre/glnx86/jre/lib/i386/server:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/sys/java/jre/glnx86/jre/lib/i386:/home/aved/.m2/repository/org/mbari/aved/classifier/sharedlib/0.4.3-SNAPSHOT/nar/lib/i386-Linux-g++/shared</Env.LD_LIBRARY_PATH>
                 <exec.executable>java</exec.executable>
             </properties>

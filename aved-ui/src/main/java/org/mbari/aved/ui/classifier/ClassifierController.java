@@ -63,6 +63,7 @@ public class ClassifierController extends AbstractController implements ModelLis
     private final EventListModel eventListModel;
     private final RunClassifier runClassifier;
     private final TestClass testClass;
+    private final LoadModelWorker thread;
 
     public ClassifierController(EventListModel list, SummaryModel summaryModel) {
         eventListModel = list;
@@ -81,7 +82,9 @@ public class ClassifierController extends AbstractController implements ModelLis
 
         // Register as listener to the model
         model.addModelListener(this);
-  
+
+        thread = new LoadModelWorker(getModel());
+
         createTrainingLib = new CreateTrainingLibrary(model);
         createClass = new CreateClass(model, list);
         testClass = new TestClass(model);
@@ -101,6 +104,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         // Initialize the training image directory
         File trainingDir = UserPreferences.getModel().getClassTrainingImageDirectory();
         model.setClassTrainingImageDirectory(trainingDir);
+
     }
 
     @Override
@@ -121,7 +125,6 @@ public class ClassifierController extends AbstractController implements ModelLis
      * Loads the available models
      */
     private void loadModels() {
-        LoadModelWorker thread = new LoadModelWorker(getModel());
         thread.execute();
     }
 

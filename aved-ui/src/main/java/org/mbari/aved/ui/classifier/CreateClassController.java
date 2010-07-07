@@ -56,6 +56,7 @@ import java.util.logging.Logger;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 
 class CreateClassController extends AbstractController implements ModelListener, MouseListener, WindowListener {
 
@@ -74,7 +75,7 @@ class CreateClassController extends AbstractController implements ModelListener,
         // Create the concept tree
         getView().createConceptTree(this);
 
-        File parentDir = getModel().getClassTrainingImageDirectory();
+        //File parentDir = getModel().getClassTrainingImageDirectory();
     }
 
     @Override
@@ -82,9 +83,30 @@ class CreateClassController extends AbstractController implements ModelListener,
         return (ClassifierModel) super.getModel();
     }
 
-    @Override
     public CreateClassView getView() {
         return (CreateClassView) super.getView();
+    }
+
+    private void browseForClassImageDir() {
+        System.out.println("2");
+        UserPreferencesModel prefs = UserPreferences.getModel();
+        // Set the filechooser with the last imported directory
+        JFileChooser chooser = new JFileChooser();
+        System.out.println("3");
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+       
+        //chooser.setCurrentDirectory(UserPreferences.getModel().getLastOpenedClassTrainingDirectory());
+        chooser.setSelectedFile(UserPreferences.getModel().getLastOpenedClassTrainingDirectory());
+        chooser.setDialogTitle("Choose class directory");
+
+        if (chooser.showDialog((CreateClassView) getView(), "Save") == JFileChooser.APPROVE_OPTION) {
+            File f = chooser.getSelectedFile();
+            System.out.println("4");
+
+            prefs.setLastOpenedClassTrainingDirectory(f);
+            getView().addImageDirectory(f);
+            getView().selectImageDirectory(f);
+        }
     }
 
     /**
@@ -95,25 +117,15 @@ class CreateClassController extends AbstractController implements ModelListener,
      */
     public void actionPerformed(ActionEvent e) {
         String actionCommand = e.getActionCommand();
-        UserPreferencesModel prefs = UserPreferences.getModel();
 
-        if (actionCommand.equals("Browse")) {
+        if (actionCommand.equals("Browse")) { 
+            Thread change = new Thread(new Runnable() {
 
-            // Set the filechooser with the last imported directory
-            JFileChooser chooser = new JFileChooser();
-            File defaultDir = prefs.getLastOpenedClassTrainingDirectory();
-
-            chooser.setCurrentDirectory(defaultDir);
-            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            chooser.setDialogTitle("Choose directory to import");
-
-            if (chooser.showOpenDialog(getView()) == JFileChooser.APPROVE_OPTION) {
-                File f = chooser.getSelectedFile();
-
-                prefs.setLastOpenedClassTrainingDirectory(f);
-                getView().addImageDirectory(f);
-                getView().selectImageDirectory(f);
-            }
+                public void run() {
+                    browseForClassImageDir();
+                }
+            });
+            change.start();
         } else if (actionCommand.equals("imageDirComboBoxChanged")) {
             try {
                 JComboBox box = (JComboBox) e.getSource();
@@ -449,8 +461,10 @@ class CreateClassController extends AbstractController implements ModelListener,
                         newClassModel.getColorSpace());
 
                 // Add the model only after successfully created
-                if(getModel() != null)
-                     getModel().addClassModel(newClassModel);
+                if (getModel() != null) {
+                    getModel().addClassModel(newClassModel);
+
+                }
                 progressDisplayStream.isDone = true;
                 progressDisplay.getView().dispose();
 
