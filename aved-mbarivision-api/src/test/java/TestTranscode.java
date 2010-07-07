@@ -73,6 +73,7 @@ public class TestTranscode extends TestCase {
             TranscodeProcess transcoder = new TranscodeProcess(movie);
             transcoder.setPrintStream(System.out);
             transcoder.setOutTemporaryStorage("/tmp");
+	    transcoder.setTranscodeCommand("transcode -q 0 -c 0-10 ");
             transcoder.run();
             try {
 

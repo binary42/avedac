@@ -44,7 +44,7 @@
                 <sharedExtension>so</sharedExtension>
 
                 <!-- The nar library directory -->
-                <narLibDir>nar/lib/amd-Linux-g++/shared</narLibDir>
+                <narLibDir>nar/lib/amd64-Linux-g++/shared</narLibDir>
             </properties>
         </profile>
         <profile>

@@ -227,18 +227,18 @@
                                 <systemIncludePaths>
                                     <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
-                                    <systemIncludePath>${mcrRoot}/runtime/glnx86</systemIncludePath>
-                                    <systemIncludePath>${mcrRoot}/sys/os/glnx86</systemIncludePath>
-                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnx86/jre/lib/amd64/native_threads</systemIncludePath>
-                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnx86/jre/lib/amd64/server</systemIncludePath>
-                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnx86/jre/lib/amd64</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/runtime/glnxa64</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/sys/os/glnxa64</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnxa64/jre/lib/amd64/native_threads</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnxa64/jre/lib/amd64/server</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/sys/java/jre/glnxa64/jre/lib/amd64</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/extern/include</systemIncludePath>
                                 </systemIncludePaths>
                             </cpp>
                             <linker>
                                 <libs>
                                     <lib>
-                                        <directory>${mcrRoot}/runtime/glnx86</directory>
+                                        <directory>${mcrRoot}/runtime/glnxa64</directory>
                                         <name>mwmclmcrrt</name>
                                         <type>shared</type>
                                     </lib>

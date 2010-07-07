@@ -12,8 +12,10 @@ set -e
 if [ `uname | grep Linux` ]; then
   a=`uname -a | grep 64`
   if [ ! "$a" ] ;then
+     echo "Running Linux 32-bit build"
      mvn install -PLinux32 -Dmaven.test.skip=true 
   else
+     echo "Running Linux 64-bit build"
      mvn install -PLinux64 -Dmaven.test.skip=true 
   fi
 else

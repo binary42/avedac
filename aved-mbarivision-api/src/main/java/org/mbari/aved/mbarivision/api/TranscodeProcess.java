@@ -533,7 +533,7 @@ public class TranscodeProcess extends Thread {
                 if (lcOSName.startsWith("mac")) {
                    transcodecmd = transcodecmd + " --progress_rate 100 --threads 10 ";
                 } else {
-                   transcodecmd = transcodecmd + " -q 0 -u 20,10 ";
+                   transcodecmd = transcodecmd + " -q 0  ";
                 }
 
                 outAvedVideo.setFileExt("ppm");

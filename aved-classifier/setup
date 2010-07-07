@@ -28,7 +28,7 @@ fi
     echo "export LD_LIBRARY_PATH=$MCR_ROOT/runtime/glnx86:$MCR_ROOT/bin/glnx86:$MCR_ROOT/sys/os/glnx86:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/native_threads:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/server:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386" >> ~/.bashrc
   else 
     echo "Setting 64-bit Linux environment variables"
-    echo "export LD_LIBRARY_PATH=$MATLAB_ROOT/runtime/glnxa86:$MATLAB_ROOT/bin/glnxa64:$MATLAB_ROOT/sys/os/glnxa64:$JAVA_HOME/jre/lib/i386" >> ~/.bashrc
+    echo "export LD_LIBRARY_PATH=$MATLAB_ROOT/runtime/glnxa64:$MATLAB_ROOT/bin/glnxa64:$MATLAB_ROOT/sys/os/glnxa64:$JAVA_HOME/jre/lib/i386" >> ~/.bashrc
   fi 
   source ~/.bashrc
 else
