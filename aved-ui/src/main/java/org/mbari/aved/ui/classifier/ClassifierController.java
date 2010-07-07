@@ -121,8 +121,8 @@ public class ClassifierController extends AbstractController implements ModelLis
      * Loads the available models
      */
     private void loadModels() {
-         //LoadModelWorker thread = new LoadModelWorker(getModel());
-         //thread.execute();
+        LoadModelWorker thread = new LoadModelWorker(getModel());
+        thread.execute();
     }
 
     /**

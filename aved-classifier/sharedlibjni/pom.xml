@@ -82,12 +82,12 @@
                                     <linkCPP>true</linkCPP>
                                 </library>
                             </libraries>
-                            <cpp>
-                                <exceptions>true</exceptions> 
+                            <cpp> 
                                 <systemIncludePaths>
                                     <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/runtime/maci</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/bin/glnx86</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/sys/os/maci</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/extern/include</systemIncludePath>
                                     <systemIncludePath>/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers</systemIncludePath>

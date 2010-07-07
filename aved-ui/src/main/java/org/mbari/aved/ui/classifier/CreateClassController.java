@@ -64,7 +64,7 @@ class CreateClassController extends AbstractController implements ModelListener,
 
     CreateClassController(ClassifierModel model, EventListModel eventListModel) {
         setModel(model);
-        setView(new CreateClassView(model, this)); 
+        setView(new CreateClassView(model, this));
         classModel = new ClassModel();
 
         // Register as listener to the models
@@ -74,7 +74,7 @@ class CreateClassController extends AbstractController implements ModelListener,
         // Create the concept tree
         getView().createConceptTree(this);
 
-         File parentDir = getModel().getClassTrainingImageDirectory();
+        File parentDir = getModel().getClassTrainingImageDirectory();
     }
 
     @Override
@@ -93,7 +93,7 @@ class CreateClassController extends AbstractController implements ModelListener,
      * @param actionCommand A semantic event which indicates that a
      * component-defined action occurred.
      */
-     public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent e) {
         String actionCommand = e.getActionCommand();
         UserPreferencesModel prefs = UserPreferences.getModel();
 
@@ -230,7 +230,7 @@ class CreateClassController extends AbstractController implements ModelListener,
      * {@link org.mbari.aved.ui.classifier.model}
      * and  {@link org.mbari.aved.ui.model.EventListModel}
      */
-     public void modelChanged(ModelEvent event) {
+    public void modelChanged(ModelEvent event) {
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
 
@@ -245,7 +245,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                         // This filter only returns directories
                         FileFilter fileFilter = new FileFilter() {
 
-                             public boolean accept(File file) {
+                            public boolean accept(File file) {
                                 return file.isDirectory();
                             }
                         };
@@ -449,7 +449,8 @@ class CreateClassController extends AbstractController implements ModelListener,
                         newClassModel.getColorSpace());
 
                 // Add the model only after successfully created
-                getModel().addClassModel(newClassModel);
+                if(getModel() != null)
+                     getModel().addClassModel(newClassModel);
                 progressDisplayStream.isDone = true;
                 progressDisplay.getView().dispose();
 

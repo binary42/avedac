@@ -91,7 +91,7 @@ public class ConceptTreePanel extends JPanel {
             this.setFocusable(true);
             this.repaint();
 
-            SwingWorker kbThread = new SwingWorker() {
+            /*SwingWorker kbThread = new SwingWorker() {
 
                 @Override
                 protected Object doInBackground() throws Exception {
@@ -138,7 +138,7 @@ public class ConceptTreePanel extends JPanel {
                 }
             };
 
-            kbThread.execute();
+            kbThread.execute();*/
         }
     }
 
