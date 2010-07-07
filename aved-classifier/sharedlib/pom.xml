@@ -14,7 +14,7 @@
     <url>http://www.mbari.org</url>
     <profiles>
         <profile>
-            <id>Linux</id>
+            <id>Linux32</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
                 <os>
@@ -28,6 +28,23 @@
 
                 <!-- The nar library directory -->
                 <narLibDir>nar/lib/i386-Linux-g++/shared</narLibDir>
+            </properties>
+        </profile>
+         <profile>
+            <id>Linux64</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <os>
+                    <name>Linux</name>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <!-- The shared library file extension for this platform-->
+                <sharedExtension>so</sharedExtension>
+
+                <!-- The nar library directory -->
+                <narLibDir>nar/lib/amd-Linux-g++/shared</narLibDir>
             </properties>
         </profile>
         <profile>
@@ -63,6 +80,7 @@
                     <classifiers>
                         <classifier>i386-Linux-g++</classifier>
                         <classifier>i386-MacOSX-g++</classifier>
+                        <classifier>amd64-MacOSX-g++</classifier>
                     </classifiers>
                     <libraries>
                         <library>

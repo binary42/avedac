@@ -81,10 +81,10 @@ public class LoadModelWorker extends SwingWorker {
             }
  
         } catch (RuntimeException ex) {
-            Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(LoadModelWorker.class.getName()).log(Level.SEVERE, null, ex);
 
         } catch (Exception ex) {
-            Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(LoadModelWorker.class.getName()).log(Level.SEVERE, null, ex);
         } 
          return this;
     }

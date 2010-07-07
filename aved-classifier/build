@@ -10,7 +10,12 @@ set -e
 
 # Crude check for OS, if not Linux, assume MacOSX
 if [ `uname | grep Linux` ]; then
-  mvn install -PLinux -Dmaven.test.skip=true
+  a=`uname -a | grep 64`
+  if [ ! "$a" ] ;then
+     mvn install -PLinux32 -Dmaven.test.skip=true 
+  else
+     mvn install -PLinux64 -Dmaven.test.skip=true 
+  fi
 else
   echo "Running MacOSX build"
   mvn install -PMac -Dmaven.test.skip=true
