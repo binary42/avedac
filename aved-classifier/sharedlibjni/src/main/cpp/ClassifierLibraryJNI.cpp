@@ -34,7 +34,7 @@
 
 // Debug flag to print out verbose messages. 
 // Comment out when everything is working
-int debug = 0;
+int debug = 1;
  
 #define DPRINTF if(debug) printf
 
@@ -191,7 +191,7 @@ mxArray *ClassStringToMxArray(JNIEnv *env, jstring str) {
         numclasses++;
     }
 
-    DPRINTF("Found %d classes \n", numclasses);
+    fprintf(stderr,"Found %d classes \n", numclasses);
 
     if (numclasses == 0)
         return NULL;
@@ -234,24 +234,25 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
     options[3] = "-nodisplay";
 
     try {
-        DPRINTF("Initializing mcl\n");
+        fprintf(stderr,"Initializing mcl\n");
         if (!mclInitializeApplication(options, 4)) {
             ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the MCR properly"); 
             return;
         }
-        DPRINTF("Initializing library\n");
+        fprintf(stderr,"Initializing library\n");
         // Initialize the library of MATLAB functions
         if (!libavedsharedlibInitialize()) {
              ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the Classifier MATLAB library properly");  
             return;
         }
 
-        DPRINTF("Library initialized\n");
-        DPRINTF("MCR initialized : %d\n", mclIsMCRInitialized());
-        DPRINTF("JVM initialized : %d\n", mclIsJVMEnabled());
-        DPRINTF("Logfile name : %s\n", mclGetLogFileName());
-        DPRINTF("nodisplay set : %d\n", mclIsNoDisplaySet());
- 
+        fprintf(stderr,"Library initialized\n");
+        fprintf(stderr,"MCR initialized : %d\n", mclIsMCRInitialized());
+        fprintf(stderr,"JVM initialized : %d\n", mclIsJVMEnabled());
+        fprintf(stderr,"Logfile name : %s\n", mclGetLogFileName());
+        fprintf(stderr,"nodisplay set : %d\n", mclIsNoDisplaySet());
+
+        env->ReleaseStringUTFChars(jmatlablog, matlablog);
     } catch (const mwException &e) { 
         ThrowByName(env, "java/lang/RuntimeException", e.what());
         return;
@@ -268,12 +269,13 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
 JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_closeLib
 (JNIEnv *env, jobject obj) {
     try {
-
+        fprintf(stderr, "Closing library\n");
         libavedsharedlibTerminate();
         if (!mclTerminateApplication()) {
-            DPRINTF("could not terminate the library properly\n");
+            fprintf(stderr,"could not terminate the library properly\n");
             return;
         }
+        fprintf(stderr, "Library closed\n");
     } catch (const mwException &e) {
         ThrowByName(env, "java/lang/RuntimeException", e.what());
         return;
@@ -397,7 +399,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_colle
         ThrowByName(env, "java/lang/IllegalArgumentException", "NULL killfile name");
     } 
 
-    DPRINTF("Collecting test data from %s \n", testdir);
+    fprintf(stderr,"Collecting test data from %s \n", testdir);
 
     mxArray *mxTestDir = mxCreateString(testdir);
     mxArray *mxDbRoot = mxCreateString(matlabdbdir);
@@ -471,7 +473,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_colle
 
     removeFile(env, killfile);
     
-    DPRINTF("Collecting class %s \n", classname);
+    fprintf(stderr,"Collecting class %s \n", classname);
 
     mxArray *mxClassName = mxCreateString(classname);
     mxArray *mxDbRoot = mxCreateString(matlabdbdir);
@@ -547,7 +549,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_run_1
     
     removeFile(env, killfile);
     
-    DPRINTF("Testing class %s\n", testclass);
+    fprintf(stderr,"Testing class %s\n", testclass);
 
     mxArray *mxMajorityClassIndex = NULL;
     mxArray *mxProbabilityClassIndex = NULL;
@@ -722,7 +724,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_test_
     
     removeFile(env, killfile);
     
-    DPRINTF("Testing class %s kill\n", testclass);
+    fprintf(stderr,"Testing class %s kill\n", testclass);
 
     mxArray *mxEventFilenames = NULL;
     mxArray *mxClassIndex = NULL;
@@ -873,13 +875,13 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
         return 0;
     }
 
-    DPRINTF("Scanning %s for files matching %s\n", featuresDir, filematch);
+    fprintf(stderr,"Scanning %s for files matching %s\n", featuresDir, filematch);
     for (i = 0; i < fcount; i++) {
         if (strstr(filelist[i]->d_name, filematch))
             numfound++;
     }
 
-    DPRINTF("found %d matches\n", numfound);
+    fprintf(stderr,"found %d matches\n", numfound);
     if (numfound) {
         jclass jClassModel = env->FindClass("org/mbari/aved/classifier/ClassModel");
         jmethodID jClassModelInit = env->GetMethodID(jClassModel, "<init>", "()V");
@@ -910,12 +912,12 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
 
             if (pos != string::npos) {
                 // Remove filematch part of file name for display for simplification
-                DPRINTF("Found: %s%s\n", tmpstr.substr(0, pos).c_str(), filematch);
+                fprintf(stderr,"Found: %s%s\n", tmpstr.substr(0, pos).c_str(), filematch);
                 tmpstr2 = string(featuresDir) + "/" + tmpstr.substr(0, pos).c_str() + string(filematch);
 
                 // Open the file for read-only
                 const char *file = tmpstr2.c_str();
-                DPRINTF("Opening %s\n", file);
+                fprintf(stderr,"Opening %s\n", file);
                 MATFile *pmat = matOpen(file, "r");
                 if (pmat == NULL) {
                     string s = string("Error opening ") + string(file);
@@ -936,7 +938,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
                 mxArray *mxRawDir = mxGetField(mxStructurePtr, 0, "raw_directory");
                 mxArray *mxSquareDir = mxGetField(mxStructurePtr, 0, "square_directory");
 
-                DPRINTF("Closing %s\n", file);
+                fprintf(stderr,"Closing %s\n", file);
                 if (matClose(pmat) != 0) {
                     string s = string("Error closing ") + string(file);
                     ThrowByName(env, "java/lang/IllegalArgumentException", s.c_str());
@@ -1011,15 +1013,16 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
     
      // Clean up the allocated memory
      if (fcount) { 
-         DPRINF("Entries are:");
+         fprintf(stderr,"Entries are:");
          for (i=0, list=filelist; i<fcount; i++) {
-             DPRINF(" %s\n", (*list)->d_name);
+             fprintf(stderr," %s\n", (*list)->d_name);
              free(*list);
              list++;
          }
          free(filelist);
      }
- 
+
+    env->ReleaseStringUTFChars(jmatlabdb, matlabdbdir);
     return jClassModelArray;
 }
 
@@ -1064,13 +1067,13 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
          return 0;
     }
 
-    DPRINTF("Scanning %d files in %s for files matching %s\n", fcount, featuresDir, filematch);
+    fprintf(stderr,"Scanning %d files in %s for files matching %s\n", fcount, featuresDir, filematch);
     for (i = 0; i < fcount; i++) {
         if (strstr(filelist[i]->d_name, filematch))
             numfound++;
     }
   
-    DPRINTF("found %d matches\n", numfound);
+    fprintf(stderr,"found %d matches\n", numfound);
     if (numfound) {
 
         // Get the collected classes
@@ -1102,15 +1105,15 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
 
             if (pos != string::npos) {
                 // Remove filematch part of file name for display for simplification   
-                DPRINTF("Found: %s %s\n", tmpstr.substr(0, pos).c_str(), filematch);
+                fprintf(stderr,"Found: %s %s\n", tmpstr.substr(0, pos).c_str(), filematch);
                 tmpstr2 = string(featuresDir) + "/" + tmpstr.substr(0, pos).c_str() + string(filematch);
 
                 // Open the file as read only
                 const char *file = tmpstr2.c_str();
-                DPRINTF("Opening %s\n", file);
+                fprintf(stderr,"Opening %s\n", file);
                 MATFile *pmat = matOpen(file, "r");
                 if (pmat == NULL) {
-                    DPRINTF("Error opening file %s\n", file);
+                    fprintf(stderr,"Error opening file %s\n", file);
                     exit(-1);
                 }
 
@@ -1126,7 +1129,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
                 mxArray *mxClasses = mxGetField(mxStructurePtr, 0, "classes");
 
                 if (matClose(pmat) != 0) {
-                    DPRINTF("Error closing file %s\n", file);
+                    fprintf(stderr,"Error closing file %s\n", file);
                     exit(-1);
                 }
 
@@ -1232,9 +1235,9 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
 
       // Clean up the allocated memory
      if (fcount) {
-         DPRINF("Entries are:");
+         fprintf(stderr,"Entries are:");
          for (i=0, list=filelist; i<fcount; i++) {
-             DPRINF(" %s\n", (*list)->d_name);
+             fprintf(stderr," %s\n", (*list)->d_name);
              free(*list);
              list++;
          }
