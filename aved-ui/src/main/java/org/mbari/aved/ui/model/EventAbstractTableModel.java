@@ -40,7 +40,7 @@ public class EventAbstractTableModel extends AbstractModel {
         + "This is simply a numerically increasing assignment" + " in the order the events were automatically detected",
         "The predicted class name this event was assigned to be. This can either be a VARS "
         + "concept, or a user-defined class name. This corresponds to the "
-        + "AVEDAC classifier assignment and isn't necessarily " + "a biological classification",
+        + "AVEDac classifier prediction",
         "The probability of the predicted class. A number between 0 and 1.0 "
         + "The higher this number, the more accurate the predicted value.",
         "The class name this event was assigned to be. If using VARS " + "this is equivalent to a VARS \"concept\"",

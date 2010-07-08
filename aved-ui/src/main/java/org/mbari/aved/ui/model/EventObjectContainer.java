@@ -56,7 +56,7 @@ public class EventObjectContainer implements Comparable, Serializable {
     private final HashMap<Integer, EventObject> eventHashMap      = new HashMap<Integer, EventObject>(51, 0.75f);
     private int                                 maxEventFrame     = -1;
     private long                                objectId          = 0;
-    private LinkedList<Integer>                 sortedEventFrames = null;
+    private LinkedList<Integer>                 sortedEventFrames = new LinkedList<Integer>(eventHashMap.keySet());
 
     /**
      * Checks the loaded image for being all black/not.
@@ -378,23 +378,29 @@ public class EventObjectContainer implements Comparable, Serializable {
 
             eventHashMap.put(eventObject.getFrameEventSet().getFrameNumber(), eventObject);
 
-            // Reset the Event that represents the maximum sized event if found bigger one
+            // Reset the Event that represents the maximum sized event
             if (maxEventFrame != -1) {
-                EventObject object = eventHashMap.get(maxEventFrame);
-
+                EventObject object = eventHashMap.get(maxEventFrame); 
                 maxSize = object.getCurrSize();
             }
 
-            if (eventObject.getCurrSize() > maxSize) {
+            // Find the new max size
+            if (eventObject.getCurrSize() >= maxSize) {
                 maxEventFrame  = eventObject.getFrameEventSet().getFrameNumber();
-                bestEventFrame = maxEventFrame;
-
-                /*
-                 * System.out.println("#########Max size for event: "
-                 * + eventObject.getObjectId() + " size: " + eventObject.getCurrSize()
-                 * + " frameSet#:" + eventObject.getFrameEventSet().getFrameNumber() );
-                 */
             }
+
+            // The best event frame is generally the largest, however for very long events
+            // it can take a very long time for transcoding of the entire event,
+            // and subsequent searching for the max size, so we'll skip this for
+            // events longer than 300 frames, which is 10 seconds at 30 fps
+            if (getFrameDuration() < 300 &&  maxEventFrame > bestEventFrame ) {
+                    bestEventFrame = maxEventFrame;
+            }
+
+             /*System.out.println("#########Max size for event: "
+                  + eventObject.getObjectId() + " size: " + eventObject.getCurrSize()
+                  + " frameSet#:" + eventObject.getFrameEventSet().getFrameNumber() );*/
+
         }
 
         sort();
@@ -574,25 +580,33 @@ public class EventObjectContainer implements Comparable, Serializable {
 
     public String getStartTimecode() {
         synchronized (eventHashMap) {
+            if(!sortedEventFrames.isEmpty())
             return eventHashMap.get(sortedEventFrames.getFirst()).getFrameEventSet().getTimecode();
+            return "";
         }
     }
 
     public String getEndTimecode() {
         synchronized (eventHashMap) {
+            if(!sortedEventFrames.isEmpty())
             return eventHashMap.get(sortedEventFrames.getLast()).getFrameEventSet().getTimecode();
+            return "";
         }
     }
 
     public int getStartFrame() {
         synchronized (eventHashMap) {
+            if(!sortedEventFrames.isEmpty())
             return eventHashMap.get(sortedEventFrames.getFirst()).getFrameEventSet().getFrameNumber();
+            return -1;
         }
     }
 
     public int getEndFrame() {
         synchronized (eventHashMap) {
+            if(!sortedEventFrames.isEmpty())
             return eventHashMap.get(sortedEventFrames.getLast()).getFrameEventSet().getFrameNumber();
+            return -1;
         }
     }
 

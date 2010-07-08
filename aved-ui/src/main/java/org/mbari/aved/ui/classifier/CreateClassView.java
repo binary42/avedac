@@ -59,7 +59,6 @@ import java.util.logging.Logger;
 
 public class CreateClassView extends JFrameView {
 
-    private static final String ID_BROWSE_BUTTON = "browse";
     private static final String ID_CLASS_DESCRIPTION_TEXTAREA = "classdescription";    // ""
     private static final String ID_CLASS_NAME_TEXTFIELD = "classname";           // javax.swing.JTextArea
     private static final String ID_CLASS_NAME_VARS_TEXTFIELD = "classsnamevars";      // ""
@@ -105,7 +104,6 @@ public class CreateClassView extends JFrameView {
 
         ActionHandler actionHandler = getActionHandler();
 
-        getForm().getButton(ID_BROWSE_BUTTON).addActionListener(actionHandler);
         getForm().getButton(ID_RUN_BUTTON).addActionListener(actionHandler);
         getForm().getButton(ID_STOP_BUTTON).addActionListener(actionHandler);
         dirComboBox.addActionListener(actionHandler);

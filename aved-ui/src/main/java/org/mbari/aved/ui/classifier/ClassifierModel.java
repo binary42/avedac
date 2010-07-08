@@ -133,7 +133,7 @@ public class ClassifierModel extends AbstractModel {
      */
     public void addClassModels(ClassModel model[]) { 
         for(int i=0; i < model.length; i++) {
-            ClassModel c = model[i].copy();
+            ClassModel c = model[i];
             checkClassModel(c);
             classModelList.add(c);
         }

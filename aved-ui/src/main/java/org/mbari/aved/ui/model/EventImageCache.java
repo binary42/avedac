@@ -501,8 +501,9 @@ public class EventImageCache {
                              * " bestFrame: " + bestFrame);
                              */
 
-                            // If the mean is nearly black, then assume this is a bogus image
-                            // this may not be true for all cases, but this is true
+                            // If the mean is nearly black, then assume this is a bogus 
+                            // image and select the next best frame.
+                            // This may not be true for all cases, but this is true
                             // for the still-images processed in Station M when
                             // the strobe mis-fires, resulting in a black image
                             if ((mean < 5) && (length > 0)) {

@@ -30,7 +30,6 @@ import org.mbari.aved.ui.model.EventListModel;
 import org.mbari.aved.ui.progress.ProgressDisplay;
 import org.mbari.aved.ui.progress.ProgressDisplayStream;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
-import org.mbari.aved.ui.userpreferences.UserPreferencesModel;
 import org.mbari.aved.ui.utils.ImageUtils;
 import org.mbari.aved.ui.utils.ParseUtils;
 
@@ -46,17 +45,13 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.InputStreamReader;
 
-import java.security.AccessControlException;
-import java.security.AccessController;
 
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
 
 class CreateClassController extends AbstractController implements ModelListener, MouseListener, WindowListener {
 
@@ -73,9 +68,7 @@ class CreateClassController extends AbstractController implements ModelListener,
         eventListModel.addModelListener(this);
 
         // Create the concept tree
-        getView().createConceptTree(this);
-
-        //File parentDir = getModel().getClassTrainingImageDirectory();
+        getView().createConceptTree(this); 
     }
 
     @Override
@@ -87,28 +80,6 @@ class CreateClassController extends AbstractController implements ModelListener,
         return (CreateClassView) super.getView();
     }
 
-    private void browseForClassImageDir() {
-        System.out.println("2");
-        UserPreferencesModel prefs = UserPreferences.getModel();
-        // Set the filechooser with the last imported directory
-        JFileChooser chooser = new JFileChooser();
-        System.out.println("3");
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-       
-        //chooser.setCurrentDirectory(UserPreferences.getModel().getLastOpenedClassTrainingDirectory());
-        chooser.setSelectedFile(UserPreferences.getModel().getLastOpenedClassTrainingDirectory());
-        chooser.setDialogTitle("Choose class directory");
-
-        if (chooser.showDialog((CreateClassView) getView(), "Save") == JFileChooser.APPROVE_OPTION) {
-            File f = chooser.getSelectedFile();
-            System.out.println("4");
-
-            prefs.setLastOpenedClassTrainingDirectory(f);
-            getView().addImageDirectory(f);
-            getView().selectImageDirectory(f);
-        }
-    }
-
     /**
      * Operation handler for handling actions initiated in the view
      *
@@ -118,15 +89,7 @@ class CreateClassController extends AbstractController implements ModelListener,
     public void actionPerformed(ActionEvent e) {
         String actionCommand = e.getActionCommand();
 
-        if (actionCommand.equals("Browse")) { 
-            Thread change = new Thread(new Runnable() {
-
-                public void run() {
-                    browseForClassImageDir();
-                }
-            });
-            change.start();
-        } else if (actionCommand.equals("imageDirComboBoxChanged")) {
+        if (actionCommand.equals("imageDirComboBoxChanged")) {
             try {
                 JComboBox box = (JComboBox) e.getSource();
                 Object dir = box.getSelectedItem();
@@ -178,7 +141,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                 }
 
                 if (varsClassName.length() == 0) {
-                    String message = new String("Vars class name is empty. Please select a new name.");
+                    String message = new String("VARS class name is empty. Please select a new name.");
                     NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), message);
 
                     dialog.setVisible(true);
@@ -212,14 +175,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                     }
                 }
 
-                ClassModel newModel = new ClassModel();
-
-                newModel.setVarsClassName(classModel.getVarsClassName());
-                newModel.setName(classModel.getName());
-                newModel.setDescription(classModel.getDescription());
-                newModel.setRawImageDirectory(classModel.getRawImageDirectory());
-                newModel.setColorSpace(classModel.getColorSpace());
-                newModel.setDatabaseRoot(UserPreferences.getModel().getClassDatabaseDirectory());
+                ClassModel newModel = classModel.copy();  
 
                 worker = new CreateClassWorker(newModel);
                 worker.execute();
@@ -238,9 +194,55 @@ class CreateClassController extends AbstractController implements ModelListener,
     }
 
     /**
+     * Update the training classes directories in the view
+     */
+    private void updateTrainingClasses() {
+        File dir = UserPreferences.getModel().getLastOpenedClassTrainingDirectory();
+        File parentDir = getModel().getClassTrainingImageDirectory();
+
+        if (parentDir != null) {
+
+            // This filter only returns directories
+            FileFilter fileFilter = new FileFilter() {
+
+                public boolean accept(File file) {
+                    return file.isDirectory();
+                }
+            };
+            File[] subdirs = parentDir.listFiles(fileFilter);
+
+            // Populate the view with subdirectories
+            if ((subdirs != null) && (subdirs.length > 0)) {
+                getView().initializeImageDirectories(subdirs);
+            }
+
+            // Select the last selected directory if it is valid
+            // and in  the list of subdirectories
+            if (subdirs != null) {
+                if ((dir != null) && dir.isDirectory()) {
+                    for (int i = 0; i < subdirs.length; i++) {
+                        System.out.println(subdirs[i].getName() + " =" + dir.getName());
+                        if (subdirs[i].getName().equals(dir.getName())) {
+                            getView().selectImageDirectory(dir);
+
+                            break;
+                        }
+                         // Otherwise, select the first subdirectory
+                        getView().selectImageDirectory(subdirs[0]);
+                    }
+                } // Otherwise, select the first subdirectory
+                else {
+                    if (subdirs.length > 0) {
+                        getView().selectImageDirectory(subdirs[0]);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Model listener. Reacts to changes in the
-     * {@link org.mbari.aved.ui.classifier.model}
-     * and  {@link org.mbari.aved.ui.model.EventListModel}
+     * {@link org.mbari.aved.ui.classifier.model} 
      */
     public void modelChanged(ModelEvent event) {
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
@@ -249,45 +251,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                 // When the *-training class directory changes, update the available
                 // classes
                 case ClassifierModel.ClassifierModelEvent.TRAINING_CLASS_DIR_UPDATED:
-                    File dir = UserPreferences.getModel().getLastOpenedClassTrainingDirectory();
-                    File parentDir = getModel().getClassTrainingImageDirectory();
-
-                    if (parentDir != null) {
-
-                        // This filter only returns directories
-                        FileFilter fileFilter = new FileFilter() {
-
-                            public boolean accept(File file) {
-                                return file.isDirectory();
-                            }
-                        };
-                        File[] subdirs = parentDir.listFiles(fileFilter);
-
-                        // Populate the view with subdirectories
-                        if ((subdirs != null) && (subdirs.length > 0)) {
-                            getView().initializeImageDirectories(subdirs);
-                        }
-
-                        // Select the last selected directory if it is valid
-                        // and in  the list of subdirectories
-                        if (subdirs != null) {
-                            if ((dir != null) && dir.isDirectory()) {
-                                for (int i = 0; i < subdirs.length; i++) {
-                                    if (subdirs[i].equals(dir)) {
-                                        getView().selectImageDirectory(dir);
-
-                                        break;
-                                    }
-                                }
-                            } // Otherwise, select the first subdirectory
-                            else {
-                                if (subdirs.length > 0) {
-                                    getView().selectImageDirectory(subdirs[0]);
-                                }
-                            }
-                        }
-                    }
-
+                    updateTrainingClasses();
                     break;
             }
         }

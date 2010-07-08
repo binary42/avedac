@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import org.jdesktop.swingworker.SwingWorker;
 
 import org.mbari.aved.mbarivision.api.AvedRuntimeException;
@@ -54,16 +50,12 @@ class VideoTranscodeWorker extends SwingWorker {
      * when cancel requested by the user
      */
     private boolean isUserCancel = false;
-
     /** The controller container parent view and model data */
     private ApplicationController controller;
-
     /** Simple display to show process status */
     ProcessDisplay processDisplay;
-
     /** The underlying transcoder process */
     private TranscodeProcess transcodeProcess;
-
     /** *Video to transcode  using this worker */
     private File video;
 
@@ -78,13 +70,11 @@ class VideoTranscodeWorker extends SwingWorker {
         try {
             if ((controller != null) && (videoSource != null)) {
                 this.controller = controller;
-                video           = videoSource;
-                processDisplay  = new ProcessDisplay("Video transcoding " + videoSource.toString() + "...");
+                video = videoSource;
+                processDisplay = new ProcessDisplay("Video transcoding " + videoSource.toString() + "...");
             }
-        } catch (Exception e) {
-
-            // TODO Add error message box here
-            e.printStackTrace();
+        } catch (Exception ex) {
+            Logger.getLogger(VideoTranscodeWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -120,8 +110,8 @@ class VideoTranscodeWorker extends SwingWorker {
      */
     @Override
     protected Object doInBackground() throws Exception {
-        ApplicationView view  = controller.getView();
-        SummaryModel    model = controller.getModel().getSummaryModel();
+        ApplicationView view = controller.getView();
+        SummaryModel model = controller.getModel().getSummaryModel();
 
         processDisplay.getView().setVisible(true);
         processDisplay.getView().toFront();
@@ -130,6 +120,9 @@ class VideoTranscodeWorker extends SwingWorker {
         // If already a running process then stop it
         if ((transcodeProcess != null) && transcodeProcess.isRunning()) {
             transcodeProcess.kill();
+            Application.getView().setBusyCursor();
+            transcodeProcess.clean();
+            Application.getView().setDefaultCursor();
         }
 
         try {
@@ -140,7 +133,7 @@ class VideoTranscodeWorker extends SwingWorker {
             transcodeProcess.setPrintStream(processDisplay);
 
             // Get the temporary directory and create it if it doesn't exist
-	    File tmpDir = UserPreferences.getModel().getLastScratchDirectory();
+            File tmpDir = UserPreferences.getModel().getLastScratchDirectory();
 
             // Initialize the transcoder output directory to be the temporary directory
             if (!tmpDir.exists()) {
@@ -150,7 +143,7 @@ class VideoTranscodeWorker extends SwingWorker {
             // Now, set the transcode directory by default to the temporary directory
             // appended with the source file file stem
             String srcDir = tmpDir + File.separator + ParseUtils.removeFileExtension(clip.getName().toString())
-                            + File.separator;
+                    + File.separator;
 
             // Update the model with the new transcode directory
             model.setTranscodeDir(new File(srcDir));
@@ -160,8 +153,12 @@ class VideoTranscodeWorker extends SwingWorker {
             // Start the process
             transcodeProcess.run();
 
-            // Close the window when done
-            processDisplay.getView().dispose();
+            try {
+                // Close the window when done
+                processDisplay.getView().dispose();
+            } catch (Exception ex) {
+                Logger.getLogger(VideoTranscodeWorker.class.getName()).log(Level.SEVERE, null, ex);
+            }
         } catch (IOException ex) {
             NonModalMessageDialog dialog = new NonModalMessageDialog(view, ex.getMessage());
 
@@ -211,6 +208,10 @@ class VideoTranscodeWorker extends SwingWorker {
             }
 
             while (transcodeProcess.isAlive());
+
+            Application.getView().setBusyCursor();
+            transcodeProcess.clean();
+            Application.getView().setDefaultCursor();
         }
 
         if (processDisplay != null) {

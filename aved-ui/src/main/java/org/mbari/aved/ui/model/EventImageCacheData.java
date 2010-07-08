@@ -34,8 +34,6 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import java.util.Formatter;
-import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

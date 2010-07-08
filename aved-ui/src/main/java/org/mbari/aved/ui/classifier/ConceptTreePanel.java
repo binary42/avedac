@@ -37,8 +37,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
- 
+
 import org.jdesktop.swingworker.SwingWorker;
+import org.mbari.aved.ui.classifier.knowledgebase.KnowledgeBaseUtil;
 
 /**
  *
@@ -77,68 +78,87 @@ public class ConceptTreePanel extends JPanel {
             patience.setEditable(false);
             patience.setWrapStyleWord(true);
             patience.setLineWrap(true);
-            patience.setText("Loading Knowledge Base, your patience is appreciated...");
-            temporaryPanel.add(patience, cc.xy(1, 1));
 
-            final JScrollPane scrollPane = new JScrollPane(temporaryPanel);
-            JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel, scrollPane);
+            // First test for KB existence
+            if (KnowledgeBaseUtil.isKnowledgebaseAvailable()) {
 
-            splitPane.setDividerLocation(.8);
-            splitPane.setDividerSize(1);
-            splitPane.setResizeWeight(0);
-            this.setLayout(new BorderLayout());
-            this.add(splitPane);
-            this.setFocusable(true);
-            this.repaint();
+                patience.setText("Loading Knowledge Base, your patience is appreciated...");
+                temporaryPanel.add(patience, cc.xy(1, 1));
 
-            /*SwingWorker kbThread = new SwingWorker() {
+                final JScrollPane scrollPane = new JScrollPane(temporaryPanel);
+                JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel, scrollPane);
 
-                @Override
-                protected Object doInBackground() throws Exception {
-                    System.out.println("Loading concept tree");
-                    treePanel = new SearchableConceptTreePanel();
+                splitPane.setDividerLocation(.8);
+                splitPane.setDividerSize(1);
+                splitPane.setResizeWeight(0);
+                this.setLayout(new BorderLayout());
+                this.add(splitPane);
+                this.setFocusable(true);
+                this.repaint();
 
-                    Concept rootConcept = null;
+                SwingWorker kbThread = new SwingWorker() {
 
-                    try {
-                        rootConcept = KnowledgeBaseCache.getInstance().findRootConcept();
-                    } catch (DAOException e1) {
+                    @Override
+                    protected Object doInBackground() throws Exception {
+                        System.out.println("Loading concept tree");
+                        treePanel = new SearchableConceptTreePanel();
 
-                        // e1.printStackTrace();
+                        Concept rootConcept = null;
+
+                        try {
+                            rootConcept = KnowledgeBaseCache.getInstance().findRootConcept();
+                        } catch (DAOException e1) {
+
+                            // e1.printStackTrace();
+                            SwingUtilities.invokeLater(new Runnable() {
+
+                                public void run() {
+                                    patience.setText("Error loading knowledge base.");
+                                    patience.repaint();
+                                }
+                            });
+                            isInitialized = false;
+                            return 0;
+                        }
+
+                        conceptTree = new ConceptTreeReadOnly(rootConcept);
+
+                        if (listener != null) {
+                            conceptTree.addMouseListener(listener);
+                        }
+
+                        treePanel.setJTree(conceptTree);
+                        System.out.println("replacing wait panel");
                         SwingUtilities.invokeLater(new Runnable() {
 
-                             public void run() {
-                                patience.setText("Error loading knowledge base.");
-                                patience.repaint();
+                            public void run() {
+                                scrollPane.getViewport().removeAll();
+                                scrollPane.getViewport().add(treePanel);
+                                scrollPane.repaint();
+                                System.out.println("finished");
+                                isInitialized = true;
                             }
                         });
-                        isInitialized = false;
                         return 0;
                     }
+                };
 
-                    conceptTree = new ConceptTreeReadOnly(rootConcept);
+                kbThread.execute();
+            } else {
+                patience.setText("For more information about VARS see: http://vars.sourceforge.net/");
+                temporaryPanel.add(patience, cc.xy(1, 1));
 
-                    if (listener != null) {
-                        conceptTree.addMouseListener(listener);
-                    }
+                final JScrollPane scrollPane = new JScrollPane(temporaryPanel);
+                JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel, scrollPane);
 
-                    treePanel.setJTree(conceptTree);
-                    System.out.println("replacing wait panel");
-                    SwingUtilities.invokeLater(new Runnable() {
-
-                        public void run() {
-                            scrollPane.getViewport().removeAll();
-                            scrollPane.getViewport().add(treePanel);
-                            scrollPane.repaint();
-                            System.out.println("finished");
-                            isInitialized = true;
-                        }
-                    });
-                    return 0;
-                }
-            };
-
-            kbThread.execute();*/
+                splitPane.setDividerLocation(.8);
+                splitPane.setDividerSize(1);
+                splitPane.setResizeWeight(0);
+                this.setLayout(new BorderLayout());
+                this.add(splitPane);
+                this.setFocusable(true);
+                this.repaint();
+            }
         }
     }
 

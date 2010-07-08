@@ -69,6 +69,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
+import org.mbari.aved.mbarivision.api.utils.Utils;
 
 public class ApplicationController extends AbstractController implements ModelListener, WindowListener {
 
@@ -184,7 +185,22 @@ public class ApplicationController extends AbstractController implements ModelLi
             transcodeWorker = null;
         }
 
+        // Clean-up the downloaded and created files and directories
+        SummaryModel summary = getModel().getSummaryModel();
+
+        File transcodeSourceFile = summary.getTranscodeSource();
+        if(transcodeSourceFile.exists() && transcodeSourceFile.canWrite()) {
+            transcodeSourceFile.delete();
+        }
+
+        File testImageDir = summary.getTestImageDirectory();
+        if(testImageDir.exists() && testImageDir.canWrite()) {
+            Utils.deleteDir(testImageDir);
+        }
+
+        // Finally, reset the model
         getModel().reset();
+        
         getView().setDefaultCursor();
     }
 

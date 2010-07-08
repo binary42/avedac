@@ -100,8 +100,7 @@ public class CreateTrainingLibraryView extends JFrameView {
         colorSpaceComboBox.setModel(new ComboBoxAdapter(selectionInList));
 
         // Set default size and.getName()
-        setTitle(ApplicationInfo.getName() + "-" + "Create training library");
-        //this.pack();
+        setTitle(ApplicationInfo.getName() + "-" + "Create training library"); 
     }
 
     /**

@@ -64,8 +64,7 @@ public class LoadModelWorker extends SwingWorker {
             ClassModel[] classes = library.get_collected_classes(dbRoot);
 
             if (classes != null) {
-                //model.addClassModels(classes);
-                classes = null;
+                model.addClassModels(classes);
             }
 
             // Create the training class directory if it doesn't exist

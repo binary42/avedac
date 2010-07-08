@@ -36,6 +36,7 @@ import java.io.File;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import org.mbari.aved.mbarivision.api.utils.Utils;
 
 /**
  *
@@ -80,6 +81,7 @@ public class SummaryModel extends AbstractModel {
      * Clears out the list and notifies model event listeners
      */
     public void reset() throws MalformedURLException {
+       
         this.eventDataStream = null;
         this.avedVideoOut    = null;
         this.setXmlFile(new File(EMPTY_STRING));
@@ -88,6 +90,7 @@ public class SummaryModel extends AbstractModel {
         this.setTranscodeDir(new File(EMPTY_STRING));
         this.setTestImageDir(new File(EMPTY_STRING));
         this.setTranscodeSource(new File(EMPTY_STRING));
+     
     }
 
     /**
