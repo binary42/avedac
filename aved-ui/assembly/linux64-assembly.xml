@@ -8,7 +8,7 @@
         <format>zip</format>
     </formats>
 
-    <!-- Exclude the base directory so that the rchive decompresses into the current
+    <!-- Exclude the base directory so that the archive decompresses into the current
     working directory instead of included the project path directory -->
     <includeBaseDirectory>false</includeBaseDirectory>
     
