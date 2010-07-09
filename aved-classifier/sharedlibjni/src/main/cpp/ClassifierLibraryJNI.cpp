@@ -244,12 +244,14 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
         fprintf(stderr, "Initializing mcl\n");
         if (!mclInitializeApplication(options, 4)) {
             ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the MCR properly");
+            env->ReleaseStringUTFChars(jmatlablog, matlablog);
             return;
         }
         fprintf(stderr, "Initializing library\n");
         // Initialize the library of MATLAB functions
         if (!libavedsharedlibInitialize()) {
             ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the AVED Classifier MATLAB library");
+            env->ReleaseStringUTFChars(jmatlablog, matlablog);
             return;
         }
 
@@ -513,6 +515,8 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_colle
         ThrowByName(env, "java/lang/RuntimeException", "Unknown matlab exception");
     }
 
+    fprintf(stderr, "Done collecting class %s \n", classname);
+
     removeFile(env, killfile);
     mxDestroyArray(mxClassName);
     mxDestroyArray(mxDbRoot);
@@ -521,7 +525,9 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_colle
     mxDestroyArray(mxKillFile);
     mxDestroyArray(mxRawDir);
     mxDestroyArray(mxSquareDir);
-    xDestroyArray(mxColorSpace);
+    mxDestroyArray(mxColorSpace);
+    mxDestroyArray(mxClassMetadata);
+    mxDestroyArray(mxClassData);
     env->ReleaseStringUTFChars(jclassName, classname);
     env->ReleaseStringUTFChars(jmatlabdb, matlabdbdir);
     env->ReleaseStringUTFChars(jvarsClassName, varsclassname);
@@ -917,10 +923,10 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
     if (numfound > 0) {
         jclass jClassModel = env->FindClass("org/mbari/aved/classifier/ClassModel");
         jmethodID jClassModelInit = env->GetMethodID(jClassModel, "<init>", "()V");
-        jobject jobj = env->NewObject(jClassModel, jClassModelInit);
+        //jobject jobj = env->NewObject(jClassModel, jClassModelInit);
 
         // allocate array for class model
-        jClassModelArray = (jobjectArray) env->NewObjectArray(numfound, jClassModel, jobj);
+        jClassModelArray = (jobjectArray) env->NewObjectArray(numfound, jClassModel, 0);
 
         jmethodID jsetRawImageDirectory = env->GetMethodID(jClassModel, "setRawImageDirectory", "(Ljava/io/File;)V");
         jmethodID jsetSquareImageDirectory = env->GetMethodID(jClassModel, "setSquareImageDirectory", "(Ljava/io/File;)V");
@@ -987,8 +993,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
 
                 // Get File constructor method id
                 jmethodID jmethod = env->GetMethodID(jnewFile, "<init>", "(Ljava/lang/String;)V");
-
-
+ 
                 // Call all methods to initialize the object
                 if (mxDbRoot != 0) {
                     // create new java String from the matlab array

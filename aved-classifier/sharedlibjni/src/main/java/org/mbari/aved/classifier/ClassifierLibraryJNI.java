@@ -34,7 +34,7 @@ import org.mbari.aved.classifier.NarSystem;
  * and exposed through a shared library.
  * @author Danelle Cline
  */
-public class ClassifierLibraryJNI {
+public final class ClassifierLibraryJNI {
 
     /* For debugging without the JNI layer, set to true */
     private static final boolean debug = false;
