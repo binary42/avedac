@@ -43,7 +43,7 @@ import org.mbari.aved.classifier.ClassModel;
 public class Classifier {
 
     private static InputStreamReader isr;
-    private static ClassifierLibraryJNI jniLibrary; 
+    private static final ClassifierLibraryJNI jniLibrary = new ClassifierLibraryJNI();;
     private final ClassifierController controller;
     private final Preferences settings;
     private static boolean isInitialized = false;
@@ -54,6 +54,12 @@ public class Classifier {
         ClassifierModel m = controller.getModel();
 
         settings = new Preferences(m);
+        
+        try {
+            getLibrary();
+        } catch (Exception ex) {
+            Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public JFrame getClassifierSetingsView() {
@@ -118,28 +124,27 @@ public class Classifier {
      * @return a {@link org.mbari.aved.classifier.ClassifierLibraryJNI} singleton
      */
     public static synchronized ClassifierLibraryJNI getLibrary() throws Exception {
-        if (isInitialized == false && jniLibrary == null) {
-            jniLibrary = new ClassifierLibraryJNI();
+        if (isInitialized == false) {
 
             File dbDir = UserPreferences.getModel().getDefaultScratchDirectory();
             String dbRoot = dbDir.getAbsolutePath();
             File logFile = new File(dbRoot + "/matlablog.txt");
-            String name = new String(logFile.getAbsolutePath());
-            Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, "Matlab log file: " + name);
 
             try {
-                jniLibrary.initLib(name);
+                jniLibrary.initLib(logFile.getAbsolutePath());
+                Thread.sleep(5000);
+                isInitialized = true;
             } catch (Exception e) {
                 Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, e);
             }
 
-            FileInputStream fis = new FileInputStream(logFile);
-            isr = new InputStreamReader(fis);
-            isInitialized = true;
-
+            if (logFile.exists() && logFile.canRead()) {
+                FileInputStream fis = new FileInputStream(logFile);
+                isr = new InputStreamReader(fis);
+            } 
         }
 
-        if (isInitialized && jniLibrary != null) { 
+        if (isInitialized == true) {
             return jniLibrary;
         }
 
@@ -154,9 +159,9 @@ public class Classifier {
      */
     public static synchronized void closeLibrary() {
         try {
-            if (jniLibrary != null) { 
-                getLibrary().closeLib();
-                jniLibrary = null;
+            if (isInitialized == true) {
+                jniLibrary.closeLib();
+                isInitialized = false;
             }
 
         } catch (Exception ex) {

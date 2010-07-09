@@ -19,7 +19,6 @@ package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
 import aved.model.EventObject;
-import java.awt.Dimension;
 
 import org.jdesktop.swingworker.SwingWorker;
 
@@ -48,9 +47,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.SwingUtilities;
-import org.mbari.aved.classifier.ClassifierLibraryJNI;
-import org.mbari.aved.classifier.TrainingModel;
 
 /**
  *
@@ -111,7 +107,7 @@ public class ClassifierController extends AbstractController implements ModelLis
     public ClassifierModel getModel() {
         return (ClassifierModel) super.getModel();
     }
-
+ 
     @Override
     public ClassifierView getView() {
         return (ClassifierView) super.getView();
@@ -126,7 +122,7 @@ public class ClassifierController extends AbstractController implements ModelLis
      */
     private void loadModels() {
         thread.execute();
-    }
+            }
 
     /**
      * Model listener. Reacts to changes in the

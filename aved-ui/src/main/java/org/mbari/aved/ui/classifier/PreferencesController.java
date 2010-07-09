@@ -15,15 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import org.mbari.aved.ui.appframework.AbstractController;
-import org.mbari.aved.ui.classifier.ClassifierModel;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -61,21 +56,21 @@ public class PreferencesController extends AbstractController {
      * @return null if none found, otherwise user selection
      */
     private File browse(File dir, int choosermode, String dialogTitle) {
-        JFileChooser chooser = new JFileChooser();
+                    JFileChooser chooser = new JFileChooser();
 
-        chooser.setFileSelectionMode(choosermode);
+                    chooser.setFileSelectionMode(choosermode);
 
-        // Initialize the chooser with the model directory
-        chooser.setCurrentDirectory(dir);
-        chooser.setDialogTitle(dialogTitle);
+                    // Initialize the chooser with the model directory
+                        chooser.setCurrentDirectory(dir);
+                    chooser.setDialogTitle(dialogTitle);
 
-        if (chooser.showOpenDialog(getView()) == JFileChooser.APPROVE_OPTION) {
+                    if (chooser.showOpenDialog(getView()) == JFileChooser.APPROVE_OPTION) {
             return chooser.getSelectedFile();
-        } else {
+                    } else {
 
-            // TODO print error message box
-            System.out.println("No Selection ");
-        }
+                        // TODO print error message box
+                        System.out.println("No Selection ");
+                    }
 
         return null;
     }
@@ -85,7 +80,7 @@ public class PreferencesController extends AbstractController {
 
         if (op.equals("BrowseTraining")) {
             File newDir = browse(getModel().getClassTrainingImageDirectory(), JFileChooser.DIRECTORIES_ONLY,
-                                 "Choose training library directory");
+                    "Choose training library directory");
 
             if (newDir != null) {
                 getView().updateTrainingComboBox(new File(newDir.getAbsolutePath()));
@@ -93,7 +88,7 @@ public class PreferencesController extends AbstractController {
             }
         } else if (op.equals("BrowseDbroot")) {
             File newDir = browse(getModel().getDatabaseRoot(), JFileChooser.DIRECTORIES_ONLY,
-                                 "Choose class metadata directory");
+                    "Choose class metadata directory");
 
             try {
                 getView().updateDbrootComboBox(newDir);

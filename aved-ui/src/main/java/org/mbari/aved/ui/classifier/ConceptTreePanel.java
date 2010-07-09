@@ -79,8 +79,11 @@ public class ConceptTreePanel extends JPanel {
             patience.setWrapStyleWord(true);
             patience.setLineWrap(true);
 
-            // First test for KB existence
-            if (KnowledgeBaseUtil.isKnowledgebaseAvailable()) {
+            String s = System.getProperty("os.name").toLowerCase();
+
+            // First test for KB existence - skip this for Linux because this
+            // breaks the classifier TODO: investigate pthreads exceptions
+            if ((s.indexOf("linux") > 0) && KnowledgeBaseUtil.isKnowledgebaseAvailable()) {
 
                 patience.setText("Loading Knowledge Base, your patience is appreciated...");
                 temporaryPanel.add(patience, cc.xy(1, 1));

@@ -91,7 +91,11 @@ abstract public class JFrameView extends JFrame implements View, ModelListener {
                 public void run() {
                     Thread change = new Thread(new Runnable() {
                         public void run() {
+                            try {
                             getController().actionPerformed(e);
+                            }catch (Exception ex) {
+                                System.out.println(ex.getCause());
+                            }
                         }
                     });
 

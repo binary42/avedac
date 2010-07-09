@@ -102,6 +102,8 @@ class CreateClassController extends AbstractController implements ModelListener,
                 }
 
                 if (directory != null) {
+                    File d = UserPreferences.getModel().getClassDatabaseDirectory();
+                    classModel.setDatabaseRoot(d);
                     classModel.setRawImageDirectory(directory);
                     classModel.setDescription(directory.getName());
                     classModel.setName(directory.getName());
@@ -175,7 +177,15 @@ class CreateClassController extends AbstractController implements ModelListener,
                     }
                 }
 
-                ClassModel newModel = classModel.copy();  
+                //ClassModel newModel = classModel.copy();
+                ClassModel newModel = new ClassModel();
+                newModel.setVarsClassName(classModel.getVarsClassName());
+                newModel.setName(classModel.getName());
+                newModel.setDescription(classModel.getDescription());
+                newModel.setRawImageDirectory(classModel.getRawImageDirectory());
+                newModel.setColorSpace(classModel.getColorSpace());
+                File d = UserPreferences.getModel().getClassDatabaseDirectory();
+                newModel.setDatabaseRoot(d);
 
                 worker = new CreateClassWorker(newModel);
                 worker.execute();
@@ -411,14 +421,13 @@ class CreateClassController extends AbstractController implements ModelListener,
             // Get a input stream on the matlab log file to display in
             // the progress display window
             try {
-                ClassifierLibraryJNI app = Classifier.getLibrary();
                 InputStreamReader isr = Classifier.getInputStreamReader();
 
                 progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
                 progressDisplayStream.execute();
 
                 // Run the collection - this creates a new class
-                app.collect_class(this.getCancel(), newClassModel.getRawImageDirectory().toString(),
+                Classifier.getLibrary().collect_class(this.getCancel(), newClassModel.getRawImageDirectory().toString(),
                         newClassModel.getSquareImageDirectory().toString(), newClassModel.getName(),
                         newClassModel.getDatabaseRootdirectory().toString(),
                         newClassModel.getVarsClassName(), newClassModel.getDescription(),

@@ -86,7 +86,10 @@ public class RunClassifierController extends AbstractController implements Model
 
         try {
 
-            // TODO: need check for valid dbroot directory here
+            // Create the directory if it doesn't exist
+            if(!dbroot.exists())
+                dbroot.mkdirs();
+
             trainingModel.setDatabaseRoot(dbroot);
 
             ColorSpace colorSpace = trainingModel.getColorSpace();
@@ -189,8 +192,7 @@ public class RunClassifierController extends AbstractController implements Model
         protected Object doInBackground() throws Exception {
             ProgressDisplayStream progressDisplayStream = null;
 
-            try {
-                ClassifierLibraryJNI app = Classifier.getLibrary();
+            try { 
                 InputStreamReader    isr = Classifier.getInputStreamReader();
 
                 progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
@@ -249,7 +251,7 @@ public class RunClassifierController extends AbstractController implements Model
                 // TODO: only do this once, unless the data has changed
                 // because this takes a very long time to run for large
                 // data sets
-                app.collect_tests(this.getCancel(), testDir.getAbsolutePath(), dbRoot, trainingModel.getColorSpace());
+                Classifier.getLibrary().collect_tests(this.getCancel(), testDir.getAbsolutePath(), dbRoot, trainingModel.getColorSpace());
 
                 int      numEvents              = eventListModel.getSize();
                 int[]    majoritywinnerindex    = new int[numEvents];
@@ -258,7 +260,7 @@ public class RunClassifierController extends AbstractController implements Model
                 String[] eventids               = new String[numEvents];
                 float    minProbThreshold       = getView().getProbabilityThreshold();
 
-                app.run_test(this.getCancel(), eventids, majoritywinnerindex, probabilitywinnerindex, probability,
+                Classifier.getLibrary().run_test(this.getCancel(), eventids, majoritywinnerindex, probabilitywinnerindex, probability,
                              testDir.getName(), trainingModel.getName(), minProbThreshold, dbRoot,
                              trainingModel.getColorSpace());
 

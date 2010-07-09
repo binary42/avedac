@@ -190,7 +190,6 @@ class TestClassController extends AbstractController implements ModelListener {
             // Get a input stream on the matlab log file to display in
             // the progress display window
             try {
-                ClassifierLibraryJNI  library = new ClassifierLibraryJNI();
                 InputStreamReader     isr = Classifier.getInputStreamReader();
                 ProgressDisplayStream progressDisplayStream;
 
@@ -235,7 +234,7 @@ class TestClassController extends AbstractController implements ModelListener {
                         + trainingModel.getName() + " with minimum probability:" + minProbThreshold);
 
                 // Run the class tests
-                library.test_class(this.getCancel(), eventFilenames, classIndex, probability, classModel.getName(),
+                Classifier.getLibrary().test_class(this.getCancel(), eventFilenames, classIndex, probability, classModel.getName(),
                         trainingModel.getName(), minProbThreshold,
                         classModel.getDatabaseRootdirectory().toString(), classModel.getColorSpace());
 

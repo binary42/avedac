@@ -52,11 +52,8 @@ public class MatlabWorker extends SwingWorker {
      * @return
      */
     public boolean cancelWorker(boolean mayInterruptIfRunning) {
-        try {
-            ClassifierLibraryJNI app = Classifier.getLibrary();
-
-            app.set_kill(matlabCancel, 1);
-
+        try {  
+            Classifier.getLibrary().set_kill(matlabCancel, 1); 
             return super.cancel(mayInterruptIfRunning);
         } catch (Exception ex) {
             Logger.getLogger(MatlabWorker.class.getName()).log(Level.SEVERE, null, ex);

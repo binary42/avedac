@@ -189,12 +189,12 @@ public class ApplicationController extends AbstractController implements ModelLi
         SummaryModel summary = getModel().getSummaryModel();
 
         File transcodeSourceFile = summary.getTranscodeSource();
-        if(transcodeSourceFile.exists() && transcodeSourceFile.canWrite()) {
+        if(transcodeSourceFile != null && transcodeSourceFile.exists() && transcodeSourceFile.canWrite()) {
             transcodeSourceFile.delete();
         }
 
         File testImageDir = summary.getTestImageDirectory();
-        if(testImageDir.exists() && testImageDir.canWrite()) {
+        if(testImageDir != null && testImageDir.exists() && testImageDir.canWrite()) {
             Utils.deleteDir(testImageDir);
         }
 

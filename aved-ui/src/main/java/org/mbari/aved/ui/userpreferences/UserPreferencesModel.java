@@ -115,7 +115,7 @@ public final class UserPreferencesModel extends AbstractModel {
         preferences = Preferences.userRoot().node("/org/mbari/aved/editor");
 
         // FOR DEBUGGING ONLY
-        dump(preferences);
+        //dump(preferences);
         VideoPlayoutMode.initialize();
 
         ArrayList<String> list = getNodeValues(TAG_LIST);

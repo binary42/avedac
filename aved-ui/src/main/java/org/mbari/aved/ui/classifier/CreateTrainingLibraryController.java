@@ -321,8 +321,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         protected Object doInBackground() throws Exception {
             progressDisplay.display("Creating training library ...");
 
-            try {
-                ClassifierLibraryJNI  app = Classifier.getLibrary();
+            try { 
                 InputStreamReader     isr = Classifier.getInputStreamReader();
                 ProgressDisplayStream progressDisplayStream;
 
@@ -343,7 +342,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                     }
                 }
 
-                app.train_classes(this.getCancel(), trainingClasses, trainingModel.getName(),
+                Classifier.getLibrary().train_classes(this.getCancel(), trainingClasses, trainingModel.getName(),
                                   trainingModel.getDatabaseRootdirectory().toString(),
                                   trainingModel.getColorSpace(), trainingModel.getDescription());
                 progressDisplayStream.isDone = true;

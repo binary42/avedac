@@ -49,7 +49,7 @@ import java.util.logging.Logger;
 public class ClassModel {
     private String            className             = new String("-");
     private String            description           = new String("-");
-    private String[]          imageExtensions       = {
+    private static String[]          imageExtensions       = {
         "ppm", "jpg", "gif", "png", "tif", "tiff", "bmp", "pnm"
     };
     private String            varsClassName         = new String("-");
@@ -64,7 +64,7 @@ public class ClassModel {
     /**
      * Constructor
      */
-    void ClassModel() {}
+    public void ClassModel() {}
   
     /**
      * Returns a copy of the class model
