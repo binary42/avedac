@@ -1,5 +1,5 @@
 /*
- * @(#)MatlabWorker.java
+ * @(#)ClassifierLibraryJNITask.java
  * 
  * Copyright 2010 MBARI
  *
@@ -22,48 +22,61 @@ package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.jdesktop.swingworker.SwingWorker;
 
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
 
 //~--- JDK imports ------------------------------------------------------------
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  * @author dcline
  */
-public class MatlabWorker extends SwingWorker {
-    private final String matlabCancel;
+public class ClassifierLibraryJNITask {
+    private String matlabCancel = new String("");
+    private boolean isCancelled = false;
+    private boolean isFinished = false;
 
-    public MatlabWorker(String name) throws Exception {
+    public ClassifierLibraryJNITask(String name) throws Exception {
         this.matlabCancel = name;
     }
 
-    public String getCancel() {
-        return this.matlabCancel;
+    /*
+     * return true is the task was successfully finished
+     */
+    public boolean isFini() {
+        return isFinished;
+    }
+    /**
+     * Sets the task completion flag.
+     * This should only be called after successful
+     * task completion
+     */
+    public void setFini() {
+        isFinished = true;
     }
 
     /**
-     * Interrupts the worker and matlab thread
-     * @param mayInterruptIfRunning
-     * @return
+     * Sets the user-cancelled flag
      */
-    public boolean cancelWorker(boolean mayInterruptIfRunning) {
-        try {  
-            Classifier.getLibrary().set_kill(matlabCancel, 1); 
-            return super.cancel(mayInterruptIfRunning);
-        } catch (Exception ex) {
-            Logger.getLogger(MatlabWorker.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        return false;
+    public void setCancelled () {
+        isCancelled = true;
+    }
+    /** 
+     * @return  true if the matlab call was cancelled
+     */
+    public boolean isCancelled() {
+        return isCancelled;
     }
 
-    @Override
-    protected Object doInBackground() throws Exception {
+    /**
+     * @return the cancel signal name
+     */
+    public String getCancel() {
+        return this.matlabCancel;
+    }
+ 
+    protected void run(ClassifierLibraryJNI library) throws Exception {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

@@ -215,10 +215,7 @@ public class MainMenu implements ModelListener {
      * This must be public to be registed with the OSXAdapter
      */
     public void exitApp() {
-        try {
-            if (Classifier.getLibrary() != null) {
-                Classifier.getLibrary().closeLib();
-            }
+        try { 
             Application.getController().reset();
             System.exit(0);
         } catch (Exception ex) {

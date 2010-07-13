@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.thumbnail;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import org.mbari.aved.ui.ApplicationModel;
 import org.mbari.aved.ui.model.EventListModel;
 import org.mbari.aved.ui.model.EventObjectContainer;
@@ -59,13 +55,14 @@ import javax.swing.ListSelectionModel;
  * -J-Xms500M -J-Xmx1000M
  */
 public class ThumbnailPanel extends JPanel {
-    int                            nColumns    = 4;
-    int                            nRows       = 4;
-    JFrame                         parentFrame = null;
-    boolean                        isVisible   = false;
-    private List<ThumbnailPicture> pictures    = new ArrayList<ThumbnailPicture>();
-    int                            iScroller;
-    int                            nPicturesPerPage;
+
+    int nColumns = 4;
+    int nRows = 4;
+    JFrame parentFrame = null;
+    boolean isVisible = false;
+    private List<ThumbnailPicture> pictures = new ArrayList<ThumbnailPicture>();
+    int iScroller;
+    int nPicturesPerPage;
 
     // ==========================================================================
     // Constructor
@@ -86,7 +83,7 @@ public class ThumbnailPanel extends JPanel {
      * @param cols The number of columns to assign
      */
     public void setRowCol(int rows, int cols) {
-        nRows    = rows;
+        nRows = rows;
         nColumns = cols;
 
         // Out with the old.
@@ -142,8 +139,8 @@ public class ThumbnailPanel extends JPanel {
         Iterator<ThumbnailPicture> iter = pictures.iterator();
 
         while (iter.hasNext()) {
-            ThumbnailPicture     picture = iter.next();
-            EventObjectContainer c       = picture.getEventObjectContainer();
+            ThumbnailPicture picture = iter.next();
+            EventObjectContainer c = picture.getEventObjectContainer();
 
             if ((c != null) && (c.getObjectId() == id)) {
                 return picture.getScrollerIndex();
@@ -163,8 +160,8 @@ public class ThumbnailPanel extends JPanel {
         Iterator<ThumbnailPicture> iter = pictures.iterator();
 
         while (iter.hasNext()) {
-            ThumbnailPicture     picture = iter.next();
-            EventObjectContainer c       = picture.getEventObjectContainer();
+            ThumbnailPicture picture = iter.next();
+            EventObjectContainer c = picture.getEventObjectContainer();
 
             if ((c != null) && (c.getObjectId() == id)) {
                 pictures.remove(iter);
@@ -224,8 +221,8 @@ public class ThumbnailPanel extends JPanel {
      * and a valid {@link javax.swing.ListSelectionModel}.
      */
     public void createThumbnailPictures(ApplicationModel model) {
-        EventListModel     events = model.getEventListModel();
-        ListSelectionModel list   = model.getListSelectionModel();
+        EventListModel events = model.getEventListModel();
+        ListSelectionModel list = model.getListSelectionModel();
 
         // Remove any pictures in case already initialized
         pictures.clear();
@@ -256,7 +253,7 @@ public class ThumbnailPanel extends JPanel {
     public void showPageFromScroller(int value, ApplicationModel model) throws Exception {
         invalidatePicPointer();
 
-        if ((iScroller == value) ||!isVisible) {
+        if ((iScroller == value) || !isVisible) {
 
             // Don't need to repaint if have not scrolled or am not showing
             iScroller = value;
@@ -293,6 +290,7 @@ public class ThumbnailPanel extends JPanel {
                     EventObjectContainer data = eventlistmodel.getElementAt(sorter.modelIndex(scrollIndex));
 
                     if (pictures.get(i) != null) {
+                        System.out.println("Resetting picture objectId: " + data.getObjectId());
                         pictures.get(i).reset(data);
                         pictures.get(i).setScrollerIndex(scrollIndex);
                     }

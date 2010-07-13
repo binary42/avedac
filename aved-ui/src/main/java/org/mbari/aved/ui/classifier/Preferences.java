@@ -41,6 +41,11 @@ public class Preferences {
         controller = new PreferencesController(model);
     }
 
+    Preferences() {
+        controller = null;
+         
+    }
+
     JFrame getView() {
         return (JFrame) controller.getView();
     }

@@ -15,14 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
-
-
 import org.mbari.aved.classifier.ClassModel;
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
 import org.mbari.aved.classifier.ColorSpace;
@@ -53,14 +48,15 @@ import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JList;
+import org.jdesktop.swingworker.SwingWorker;
 
 public class CreateTrainingLibraryController extends AbstractController implements ModelListener {
 
     /** True when a popup window is displayed */
-    private Boolean                            hasPopup = false;
+    private Boolean hasPopup = false;
     private final MouseClickJListActionHandler mouseClickJListActionHandler;
-    private TrainingModel                      trainingModel;
-    private CreateTrainingLibraryWorker        worker;
+    private TrainingModel trainingModel;
+    private CreateTrainingLibraryTask task;
 
     /**
      * Constructor
@@ -172,7 +168,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         if (actionCommand.equals("Browse")) {
             browse();
         } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
-            JComboBox  box           = ((JComboBox) e.getSource());
+            JComboBox box = ((JComboBox) e.getSource());
             ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
             ColorSpace oldColorSpace = trainingModel.getColorSpace();
 
@@ -185,17 +181,18 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                 removeItemFromSelected();
             }
         } else if (actionCommand.equals("Stop")) {
-            if (worker != null) {
-                worker.cancelWorker(false);
-                worker.reset();
+            if (task != null) {
+                getView().setRunButton(true);
+                getView().setStopButton(false);
+                Classifier.getController().kill(task);
             }
         } else if (actionCommand.equals("Run")) {
             String trainingClassName = getView().getTrainingClassName();
 
             // Do some checking for valid name and number of classes
             if (trainingClassName.length() == 0) {
-                String                message = new String("Please enter a new library name.");
-                NonModalMessageDialog dialog  = new NonModalMessageDialog((JFrame) this.getView(), message);
+                String message = new String("Please enter a new library name.");
+                NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), message);
 
                 dialog.setVisible(true);
 
@@ -208,7 +205,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
 
             if (trainingModel.getNumClasses() == 0) {
                 String message = new String("Training class must have at least one class. "
-                                            + "Please select at least one class.");
+                        + "Please select at least one class.");
                 NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), message);
 
                 dialog.setVisible(true);
@@ -221,10 +218,51 @@ public class CreateTrainingLibraryController extends AbstractController implemen
             try {
 
                 // If at least one class then create
-                worker = new CreateTrainingLibraryWorker();
-                worker.execute();
+                final SwingWorker worker = Classifier.getController().getWorker();
+                task = new CreateTrainingLibraryTask(trainingModel);
+                Classifier.getController().addQueue(task);
                 getView().setRunButton(false);
                 getView().setStopButton(true);
+
+                /// Create a progress display thread for monitoring this task
+                Thread thread = new Thread() {
+
+                    @Override
+                    public void run() {
+                        InputStreamReader isr = Classifier.getController().getInputStreamReader();
+                        ProgressDisplay progressDisplay = new ProgressDisplay(worker,
+                                "Creating training model " + trainingModel.getName());
+                        progressDisplay.getView().setVisible(true);
+
+                        ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
+                        progressDisplayStream.execute();
+                        while (!task.isCancelled() && !task.isFini()) {
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException ex) {
+                            }
+                        }
+                        getView().setRunButton(true);
+                        getView().setStopButton(false);
+                        progressDisplay.getView().dispose();
+
+                        if (task.isFini()) { 
+                            // Add to training model when successfully run
+                            getModel().addTrainingModel(trainingModel);
+
+                            NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " training library finished");
+                            dialog.setVisible(true);
+                        } else {
+                            if (task.isCancelled()) {
+                                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " training library stopped");
+                                dialog.setVisible(true);
+                            }
+                        }
+                    }
+                };
+
+                thread.start();
+
             } catch (Exception ex) {
                 Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex);
 
@@ -247,15 +285,16 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
 
-            // When the database root directory change or the models are updated
-            // reset the color space
-            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
-            case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
-                
-                  if (trainingModel != null)
-                     getView().selectColorSpace(trainingModel.getColorSpace());
+                // When the database root directory change or the models are updated
+                // reset the color space
+                case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED:
+                case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED:
 
-                break;
+                    if (trainingModel != null) {
+                        getView().selectColorSpace(trainingModel.getColorSpace());
+                    }
+
+                    break;
             }
         }
     }
@@ -290,7 +329,6 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                         removeItemFromSelected();
                     }
                 } else {
-
                     // On a single click toggle selection highlight
                     // list.flipSelection();
                 }
@@ -298,10 +336,10 @@ public class CreateTrainingLibraryController extends AbstractController implemen
 
             hasPopup = false;
         } else if (((e.getID() == MouseEvent.MOUSE_PRESSED) || (e.getID() == MouseEvent.MOUSE_RELEASED))
-                   && e.isPopupTrigger()) {
+                && e.isPopupTrigger()) {
 
             // Only show popup if this is really a popup trigger
-            Point                    pt    = e.getPoint();
+            Point pt = e.getPoint();
             TrainingLibraryPopupMenu popup = new TrainingLibraryPopupMenu(getView());
 
             popup.show(list, pt.x, pt.y);
@@ -309,31 +347,26 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         }
     }
 
-    private class CreateTrainingLibraryWorker extends MatlabWorker {
-        private final ProgressDisplay progressDisplay;
+    private class CreateTrainingLibraryTask extends ClassifierLibraryJNITask {
 
-        public CreateTrainingLibraryWorker() throws Exception {
-            super(trainingModel.getName());
-            this.progressDisplay = new ProgressDisplay(this, "Creating training library " + trainingModel.getName());
+        TrainingModel model;
+
+        public CreateTrainingLibraryTask(TrainingModel model) throws Exception {
+            super(model.getName());
+            this.model = model;
         }
 
         @Override
-        protected Object doInBackground() throws Exception {
-            progressDisplay.display("Creating training library ...");
+        protected void run(ClassifierLibraryJNI library) throws Exception {
 
-            try { 
-                InputStreamReader     isr = Classifier.getInputStreamReader();
-                ProgressDisplayStream progressDisplayStream;
-
-                progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
-                progressDisplayStream.execute();
+            try {
 
                 // Format a comma delimited list of class names for the classifier
                 String trainingClasses = new String("");
-                int    numClassModels  = trainingModel.getNumClasses();
+                int numClassModels = model.getNumClasses();
 
                 for (int i = 0; i < numClassModels; i++) {
-                    ClassModel m = trainingModel.getClassModel(i);
+                    ClassModel m = model.getClassModel(i);
 
                     if (i != 0) {
                         trainingClasses = trainingClasses + "," + m.getName();
@@ -342,53 +375,27 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                     }
                 }
 
-                Classifier.getLibrary().train_classes(this.getCancel(), trainingClasses, trainingModel.getName(),
-                                  trainingModel.getDatabaseRootdirectory().toString(),
-                                  trainingModel.getColorSpace(), trainingModel.getDescription());
-                progressDisplayStream.isDone = true;
-                progressDisplay.getView().dispose();
+                library.train_classes(this.getCancel(), trainingClasses, model.getName(),
+                        model.getDatabaseRootdirectory().toString(),
+                        model.getColorSpace(), model.getDescription());
 
-                // Add to training trainingModel when successfully run
-                getModel().addTrainingModel(trainingModel);
+                setFini();
 
-                NonModalMessageDialog dialog;
-
-                dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " training library finished");
-                dialog.setVisible(true);
-             } catch (RuntimeException ex) {
-                if (isCancelled()) {
-                    reset();            
-                    return this;
-                }            
             } catch (Exception ex) {
-                Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex);
-
-                NonModalMessageDialog dialog;
-
-                dialog = new NonModalMessageDialog(getView(), ex.getMessage());
-                dialog.setVisible(true);
-                setProgress(0);
+                if (!isCancelled()) {
+                    Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
-            reset();
-            return this;
-        } 
-    
-        /**
-         * Reset the start/stop buttons and disables the progress display.
-         */
-        public void reset() {
-            getView().setRunButton(true);
-            getView().setStopButton(false);
-            progressDisplay.getView().setVisible(false);
+            return;
         }
     }
-
 
     /**
      * Subclass to handles mouse clicks in
      * {@link org.mbari.aved.ui.classifier.CreateTrainingLibraryView}
      */
     class MouseClickJListActionHandler implements MouseListener {
+
         public void mouseClicked(MouseEvent e) {
             actionClickList(e);
         }

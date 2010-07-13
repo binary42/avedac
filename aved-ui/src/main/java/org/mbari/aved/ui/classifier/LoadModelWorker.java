@@ -21,7 +21,6 @@
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
-import org.jdesktop.swingworker.SwingWorker;
 
 
 //~--- JDK imports ------------------------------------------------------------
@@ -31,6 +30,7 @@ import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.mbari.aved.classifier.ClassModel;
+import org.mbari.aved.classifier.ClassifierLibraryJNI;
 import org.mbari.aved.classifier.TrainingModel;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
 
@@ -41,15 +41,15 @@ import org.mbari.aved.ui.userpreferences.UserPreferences;
  * the  convention used in the Matlab code
  * @author dcline
  */
-public class LoadModelWorker extends SwingWorker {
+public class LoadModelWorker extends ClassifierLibraryJNITask {
     private final ClassifierModel  model;
 
-    public LoadModelWorker(ClassifierModel model) {
+    public LoadModelWorker(ClassifierModel model) throws Exception {
+        super("");
         this.model           = model; 
     }
 
-    @Override
-    protected Object doInBackground() throws Exception { 
+    protected void run(ClassifierLibraryJNI library) throws Exception {
 
         try {
             File dbDir = UserPreferences.getModel().getClassDatabaseDirectory();
@@ -62,7 +62,7 @@ public class LoadModelWorker extends SwingWorker {
             }
 
             // Get the collected classes in this root directory
-            ClassModel[] classes = Classifier.getLibrary().get_collected_classes(dbRoot); 
+            ClassModel[] classes = library.get_collected_classes(dbRoot);
         
             // Create the training class directory if it doesn't exist
             File trainingDir = new File(dbRoot + "/training/class");
@@ -71,7 +71,7 @@ public class LoadModelWorker extends SwingWorker {
             }
 
             // Get the training classes in this root directory
-            TrainingModel[] training = Classifier.getLibrary().get_training_classes(dbRoot);
+            TrainingModel[] training = library.get_training_classes(dbRoot);
 
             if (classes != null) {
                 model.addClassModels(classes);
@@ -86,7 +86,6 @@ public class LoadModelWorker extends SwingWorker {
 
         } catch (Exception ex) {
             Logger.getLogger(LoadModelWorker.class.getName()).log(Level.SEVERE, null, ex);
-        } 
-         return this;
+        }  
     }
 }

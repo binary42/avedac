@@ -70,6 +70,7 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 import org.mbari.aved.mbarivision.api.utils.Utils;
+import org.mbari.aved.ui.progress.ProgressDisplay;
 
 public class ApplicationController extends AbstractController implements ModelListener, WindowListener {
 
@@ -90,7 +91,7 @@ public class ApplicationController extends AbstractController implements ModelLi
     /** Controls the thumbnail view */
     private ThumbnailController thumbnailController;
     /** Worker to handle transcoding video files */
-    private VideoTranscodeWorker transcodeWorker; 
+    private VideoTranscodeWorker transcodeWorker;
 
     public ApplicationController() throws Exception {
         setModel(new ApplicationModel());
@@ -111,7 +112,8 @@ public class ApplicationController extends AbstractController implements ModelLi
         getView().replaceThumbnailPanel(((ThumbnailView) thumbnailController.getView()).getForm());
         getView().replaceTablePanel(tableController.getTable());
         getView().pack();
-
+        tableController.getView().setFocusable(true);
+        
         String s = System.getProperty("os.name").toLowerCase();
 
         if (s.indexOf("linux") != -1) {
@@ -135,7 +137,7 @@ public class ApplicationController extends AbstractController implements ModelLi
             // otherwise will simply print stack traces
             launcher = new BrowserLauncher();
             launcher.setNewWindowPolicy(true);
- 
+
         } catch (RuntimeException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
 
@@ -189,18 +191,22 @@ public class ApplicationController extends AbstractController implements ModelLi
         SummaryModel summary = getModel().getSummaryModel();
 
         File transcodeSourceFile = summary.getTranscodeSource();
-        if(transcodeSourceFile != null && transcodeSourceFile.exists() && transcodeSourceFile.canWrite()) {
+        // Delete the transcode source file it is exists and was downloaded
+        // to a temporary folder
+        File tmpDir = UserPreferences.getModel().getLastScratchDirectory();
+        if (transcodeSourceFile != null && transcodeSourceFile.toString().startsWith(tmpDir.toString())
+                && transcodeSourceFile.exists() && transcodeSourceFile.canWrite()) {
             transcodeSourceFile.delete();
         }
 
         File testImageDir = summary.getTestImageDirectory();
-        if(testImageDir != null && testImageDir.exists() && testImageDir.canWrite()) {
+        if (testImageDir != null && testImageDir.exists() && testImageDir.canWrite()) {
             Utils.deleteDir(testImageDir);
         }
 
         // Finally, reset the model
         getModel().reset();
-        
+
         getView().setDefaultCursor();
     }
 
@@ -845,7 +851,6 @@ public class ApplicationController extends AbstractController implements ModelLi
     public void modelChanged(ModelEvent event) {
         try {
             if (event instanceof SummaryModel.SummaryModelEvent) {
-                SummaryModel.SummaryModelEvent e = (SummaryModel.SummaryModelEvent) event;
 
                 switch (event.getID()) {
                     case SummaryModelEvent.TRANSCODE_OUTPUT_DIR_CHANGED:
@@ -871,40 +876,35 @@ public class ApplicationController extends AbstractController implements ModelLi
                         File file = model.getTranscodeSource();
 
                         transcodeWorker = new VideoTranscodeWorker(this, file);
-                        SwingUtilities.invokeLater(new Runnable() {
+                        Thread transcodeThread = new Thread(new Runnable() {
 
                             public void run() {
-                                Thread change = new Thread(new Runnable() {
+                                SummaryModel model = getModel().getSummaryModel();
+                                File file = model.getTranscodeSource();
 
-                                    public void run() {
-                                        SummaryModel model = getModel().getSummaryModel();
-                                        File file = model.getTranscodeSource();
-
-                                        try {
-                                            if ((file != null) && file.exists()) {
-                                                transcodeWorker.execute();
-                                            }
-                                        } catch (Exception ex) {
-                                            NonModalMessageDialog dialog;
-
-                                            try {
-                                                dialog = new NonModalMessageDialog((ApplicationView) getView(),
-                                                        ex.getMessage());
-                                                dialog.setVisible(true);
-                                            } catch (Exception ex1) {
-                                                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE,
-                                                        null, ex1);
-                                            }
-
-                                            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null,
-                                                    ex);
-                                        }
+                                try {
+                                    if ((file != null) && file.exists()) {
+                                        transcodeWorker.execute();
                                     }
-                                });
+                                } catch (Exception ex) {
+                                    NonModalMessageDialog dialog;
 
-                                change.start();
+                                    try {
+                                        dialog = new NonModalMessageDialog((ApplicationView) getView(),
+                                                ex.getMessage());
+                                        dialog.setVisible(true);
+                                    } catch (Exception ex1) {
+                                        Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE,
+                                                null, ex1);
+                                    }
+
+                                    Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null,
+                                            ex);
+                                }
                             }
                         });
+
+                        transcodeThread.start();
 
                         break;
 
@@ -912,89 +912,7 @@ public class ApplicationController extends AbstractController implements ModelLi
                         break;
 
                     case SummaryModelEvent.INPUT_SOURCE_URL_CHANGED:
-                        SwingUtilities.invokeLater(new Runnable() {
-
-                            public void run() {
-                                Thread change = new Thread(new Runnable() {
-
-                                    public void run() {
-                                        SummaryModel model = getModel().getSummaryModel();
-
-                                        /**
-                                         * When the input source changes, search for the video source
-                                         * associated with it and copy it to the scratch directory
-                                         * for use in the transcoder
-                                         */
-                                        URL url = model.getInputSourceURL();
-
-                                        if (url != null) {
-                                            File file = null;
-                                            File tmpDir = UserPreferences.getModel().getLastScratchDirectory();
-                                            // Initialize the transcoder output directory to be the temporary directory
-                                            if (!tmpDir.exists()) {
-                                                tmpDir.mkdir();
-                                            }
-
-                                            if (tmpDir != null) {
-                                                String v =
-                                                        new String(tmpDir.toString() + "/"
-                                                        + ParseUtils.parseFileNameRemoveDirectory(url.getFile()));
-
-                                                file = new File(v);
-                                            } else {
-                                                file = new File(ParseUtils.parseFileNameRemoveDirectory(url.getFile()));
-                                            }
-
-                                            try {
-
-                                                // Download the contents of the url to a local file if it doesn't exist
-                                                if (!file.exists()) {
-                                                    download(url, file);
-                                                }
-
-                                                if ((file != null) && file.exists()) {
-                                                    model.setTranscodeSource(file);
-                                                } else {
-
-                                                    /**
-                                                     * Can't find the file automatically so prompt
-                                                     * the user for one.
-                                                     */
-                                                    URL u = searchVideoSource(model.getXmlFile(), url);
-
-                                                    model.setTranscodeSource(new File(u.getFile()));
-                                                }
-                                            } catch (Exception ex) {
-                                                NonModalMessageDialog dialog;
-
-                                                try {
-                                                    dialog = new NonModalMessageDialog((ApplicationView) getView(),
-                                                            ex.getMessage());
-                                                    dialog.setVisible(true);
-
-                                                    /**
-                                                     * Can't find the file automatically so prompt
-                                                     * the user for one.
-                                                     */
-                                                    URL u = searchVideoSource(model.getXmlFile(), url);
-
-                                                    model.setTranscodeSource(new File(u.getFile()));
-                                                } catch (Exception ex1) {
-                                                    Logger.getLogger(ApplicationController.class.getName()).log(
-                                                            Level.SEVERE, null, ex1);
-                                                }
-
-                                                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE,
-                                                        null, ex);
-                                            }
-                                        }
-                                    }
-                                });
-
-                                change.start();
-                            }
-                        });
-
+                        runImportLogic();
                         break;
 
                     default:
@@ -1009,97 +927,10 @@ public class ApplicationController extends AbstractController implements ModelLi
                 switch (event.getID()) {
                     case EventListModel.EventListModelEvent.LIST_CLEARED:
                         this.getView().setDefaultCursor();
-
                         break;
 
                     case EventListModel.EventListModelEvent.LIST_RELOADED:
-                        SwingUtilities.invokeLater(new Runnable() {
-
-                            public void run() {
-                                Thread change = new Thread(new Runnable() {
-
-                                    public void run() {
-                                        EventListModel model = getModel().getEventListModel();
-
-                                        try {
-                                            model.loadImageCacheData();
-                                        } catch (Exception ex) {
-                                            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null,
-                                                    ex);
-                                        }
-
-                                        /**
-                                         * When the list is reloaded, search for the mpeg associated with the
-                                         * results. This isn't required but can be useful for playing
-                                         * back the results in an external video player
-                                         */
-                                        SummaryModel smodel = getModel().getSummaryModel();
-                                        URL mpeg = smodel.getMpegUrl();
-
-                                        if ((mpeg == null) || !URLUtils.isValidURL(mpeg.toString())) {
-
-                                            /**
-                                             * If  doing a save-as operation, then bypass looking
-                                             * for a mpeg because we already have a valid mpeg
-                                             */
-                                            if (isSaveAs == true) {
-                                                isSaveAs = false;
-                                            } else {
-
-                                                /**
-                                                 * If not doing a save-as operation, then look for the
-                                                 * mpeg results.
-                                                 */
-                                                try {
-
-                                                    /**
-                                                     * First try to find associated mpeg results
-                                                     * clip in same URL format as the source clip
-                                                     * Get the URL e.g. http://localhost/foobar.avi
-                                                     */
-                                                    URL lasturl = UserPreferences.getModel().getLastImportedSourceURL();
-                                                    URL url;
-
-                                                    // If found a valid starting url
-                                                    if (lasturl != null) {
-
-                                                        /**
-                                                         * Remove the file extension (this assumes only one . in the end
-                                                         *  of the string. If the video is formatted differently, e.g.
-                                                         * http://localhost/foobar.master.avi rework this code
-                                                         */
-                                                        String fileName = lasturl.toString();
-
-                                                        if (fileName.lastIndexOf('.') >= 0) {
-                                                            fileName = fileName.substring(0, fileName.lastIndexOf('.'));
-                                                        }
-
-                                                        if ((url = searchForURLClip(new URL(fileName.toString()),
-                                                                ".results.mpeg")) != null) {
-                                                            smodel.setMpegUrl(url);
-
-                                                            return;
-                                                        }
-                                                    }
-
-                                                    File f = searchMpegResults(smodel.getXmlFile());
-
-                                                    if (f != null) {
-                                                        smodel.setMpegUrl(f.toURL());
-                                                    }
-                                                } catch (MalformedURLException ex) {
-                                                    Logger.getLogger(ApplicationController.class.getName()).log(
-                                                            Level.SEVERE, null, ex);
-                                                }
-                                            }
-                                        }
-                                    }
-                                });
-
-                                change.start();
-                            }
-                        });
-
+                        runListReloadLogic();
                         break;
 
                     case EventListModelEvent.ONE_ENTRY_REMOVED:
@@ -1141,7 +972,6 @@ public class ApplicationController extends AbstractController implements ModelLi
     public void download(URL url, File target) throws Exception {
         try {
             getView().setBusyCursor();
-
             // create/overwrite target
             target.createNewFile();
 
@@ -1190,7 +1020,7 @@ public class ApplicationController extends AbstractController implements ModelLi
                 }
             }
         } else {
-            try { 
+            try {
                 getView().setBusyCursor();
                 reset();
                 System.exit(0);
@@ -1213,6 +1043,205 @@ public class ApplicationController extends AbstractController implements ModelLi
     }
 
     public void windowDeactivated(WindowEvent e) {
+    }
+
+    /**
+     * Runs logic to run every time a new event file is loaded.
+     * Starts the image loading cache,
+     * and searches for associated results.mpeg clip.
+     * Prompts the user if none exist.
+     */
+    private void runListReloadLogic() {
+        Thread searchMpeg = new Thread(new Runnable() {
+
+            public void run() {
+                EventListModel model = getModel().getEventListModel();
+
+                try {
+                    model.loadImageCacheData();
+                } catch (Exception ex) {
+                    Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null,
+                            ex);
+                }
+
+                /**
+                 * When the list is reloaded, search for the mpeg associated with the
+                 * results. This isn't required but can be useful for playing
+                 * back the results in an external video player
+                 */
+                SummaryModel smodel = getModel().getSummaryModel();
+                URL mpeg = smodel.getMpegUrl();
+
+                if ((mpeg == null) || !URLUtils.isValidURL(mpeg.toString())) {
+
+                    /**
+                     * If  doing a save-as operation, then bypass looking
+                     * for a mpeg because we already have a valid mpeg
+                     */
+                    if (isSaveAs == true) {
+                        isSaveAs = false;
+                    } else {
+
+                        /**
+                         * If not doing a save-as operation, then look for the
+                         * mpeg results.
+                         */
+                        try {
+
+                            /**
+                             * First try to find associated mpeg results
+                             * clip in same URL format as the source clip
+                             * Get the URL e.g. http://localhost/foobar.avi
+                             */
+                            URL lasturl = UserPreferences.getModel().getLastImportedSourceURL();
+                            URL url;
+
+                            // If found a valid starting url
+                            if (lasturl != null) {
+
+                                /**
+                                 * Remove the file extension (this assumes only one . in the end
+                                 *  of the string. If the video is formatted differently, e.g.
+                                 * http://localhost/foobar.master.avi rework this code
+                                 */
+                                String fileName = lasturl.toString();
+
+                                if (fileName.lastIndexOf('.') >= 0) {
+                                    fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+                                }
+
+                                if ((url = searchForURLClip(new URL(fileName.toString()),
+                                        ".results.mpeg")) != null) {
+                                    smodel.setMpegUrl(url);
+
+                                    return;
+                                }
+                            }
+
+                            File f = searchMpegResults(smodel.getXmlFile());
+
+                            if (f != null) {
+                                smodel.setMpegUrl(f.toURL());
+                            }
+                        } catch (MalformedURLException ex) {
+                            Logger.getLogger(ApplicationController.class.getName()).log(
+                                    Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+            }
+        });
+        searchMpeg.start();
+    }
+
+    /**
+     * Runs logic following selecting a new file for import
+     */
+    private void runImportLogic() {
+        Thread downloadUrlThread = new Thread(new Runnable() {
+
+            public void run() {
+                SummaryModel model = getModel().getSummaryModel();
+
+                /**
+                 * When the input source changes, search for the video source
+                 * associated with it and copy it to the scratch directory
+                 * if it's a http source for use in the transcoder
+                 */
+                URL url = model.getInputSourceURL();
+
+                if (url != null) {
+                    // If this is a http url reference and not a local file
+                    if (url.getProtocol().startsWith("http:")) {
+                        File file = null;
+                        File tmpDir = UserPreferences.getModel().getLastScratchDirectory();
+
+                        // Initialize the transcoder output directory to be the temporary directory
+                        if (!tmpDir.exists()) {
+                            tmpDir.mkdir();
+                        }
+
+                        if (tmpDir != null) {
+                            String v =
+                                    new String(tmpDir.toString() + "/"
+                                    + ParseUtils.parseFileNameRemoveDirectory(url.getFile()));
+
+                            file = new File(v);
+                        } else {
+                            file = new File(ParseUtils.parseFileNameRemoveDirectory(url.getFile()));
+                        }
+
+                        try {
+                            // Download the contents of the url to a local file if it doesn't exist
+                            if (!file.exists()) {
+                                download(url, file);
+                            }
+
+                            if ((file != null) && file.exists()) {
+                                model.setTranscodeSource(file);
+                            } else {
+
+                                /**
+                                 * Can't find the file automatically so prompt
+                                 * the user for one.
+                                 */
+                                URL u = searchVideoSource(model.getXmlFile(), url);
+                                model.setTranscodeSource(new File(u.getFile()));
+                            }
+                        } catch (Exception ex) {
+                            NonModalMessageDialog dialog;
+
+                            try {
+                                dialog = new NonModalMessageDialog((ApplicationView) getView(),
+                                        ex.getMessage());
+                                dialog.setVisible(true);
+
+                                /**
+                                 * Can't find the file automatically so prompt
+                                 * the user tfor one.
+                                 */
+                                URL u = searchVideoSource(model.getXmlFile(), url);
+
+                                model.setTranscodeSource(new File(u.getFile()));
+                            } catch (Exception ex1) {
+                                Logger.getLogger(ApplicationController.class.getName()).log(
+                                        Level.SEVERE, null, ex1);
+                            }
+
+                            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE,
+                                    null, ex);
+                        }
+                    } else {
+
+                        // Convert to to a local file reference
+                        File xml = model.getXmlFile();
+                        File file = new File(url.getPath());
+                        File localFile;
+                        if (xml.getParent() != null) {
+                            localFile = new File(xml.getParent() + "/" + file.getName());
+                        } else {
+                            localFile = file;
+                        }
+
+                        // If there is no root path in the source identifier
+                        // assume it is in the same path as the XML,
+                        // and set its root to the same path as the XML
+                        if (localFile.exists()) {
+                            model.setTranscodeSource(localFile);
+                        } else {
+                            /**
+                             * Can't find the file automatically so prompt
+                             * the user for one.
+                             */
+                            URL u = searchVideoSource(model.getXmlFile(), url);
+                            model.setTranscodeSource(new File(u.getFile()));
+                        }
+                    }
+
+                }
+            }
+        });
+        downloadUrlThread.start();
     }
 
     /**

@@ -46,13 +46,13 @@ public class ApplicationModel extends AbstractModel {
     private TableSorter sorter = null;
 
     /** Summary model */
-    private SummaryModel summary = new SummaryModel();
+    private final SummaryModel summary = new SummaryModel();
 
     /** List selection model for selecting this model data */
-    private ListSelectionModel listSelectionModel = new DefaultListSelectionModel();
+    private final ListSelectionModel listSelectionModel = new DefaultListSelectionModel();
 
     /** Custom event list model */
-    private EventListModel list = new EventListModel();
+    private final EventListModel list = new EventListModel();
 
     /** Constructor. Initializes the model components */
     public ApplicationModel() throws Exception {}

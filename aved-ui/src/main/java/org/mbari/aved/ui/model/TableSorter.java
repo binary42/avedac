@@ -32,6 +32,7 @@ import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.*;
+import org.mbari.aved.ui.model.EventAbstractTableModel.CustomTableModel;
 
 /**
  * TableSorter is a decorator for TableModels; adding sorting
@@ -145,7 +146,7 @@ public class TableSorter extends AbstractTableModel {
         }
 
         clearSortingState();
-        fireTableStructureChanged();
+        this.fireTableDataChanged(); 
     }
 
     public JTableHeader getTableHeader() {

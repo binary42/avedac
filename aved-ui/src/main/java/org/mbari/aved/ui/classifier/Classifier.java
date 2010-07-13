@@ -31,35 +31,28 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JFrame;
-import org.mbari.aved.classifier.ClassModel;
 
 /**
  * The AVED Classifier. This handles creating the components needed
  * for creating classes, testing classes, and running the classifier.
  * The underlying AVED Classifier is Matlab code, and that code is
- * accessed through a JNI layer in the {@link org.mbari.aved.classifier.ClassifierLibraryJNI}
+ * accessed through a JNI layer in the
+ * {@link org.mbari.aved.classifier.ClassifierLibraryJNI}
  * @author dcline
  */
-public class Classifier {
+public final class Classifier {
 
-    private static InputStreamReader isr;
-    private static final ClassifierLibraryJNI jniLibrary = new ClassifierLibraryJNI();;
-    private final ClassifierController controller;
-    private final Preferences settings;
-    private static boolean isInitialized = false;
+    private static ClassifierController controller = new ClassifierController();
+    private static Preferences settings = new Preferences();
 
     public Classifier(ApplicationModel model) {
         controller = new ClassifierController(model.getEventListModel(), model.getSummaryModel());
-
-        ClassifierModel m = controller.getModel();
-
+        ClassifierModel m = controller.getModel(); 
         settings = new Preferences(m);
-        
-        try {
-            getLibrary();
-        } catch (Exception ex) {
-            Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    }
+
+    public static ClassifierController getController() {
+        return controller;
     }
 
     public JFrame getClassifierSetingsView() {
@@ -100,73 +93,6 @@ public class Classifier {
      */
     public void selectRunPanelTabbedView() {
         controller.getView().setRunPanelVisible();
-    }
-
-    /**
-     * Gets the {@link java.io.InputStreamReader} associated with the Matlab log file
-     * This is intended for use for redirecting the Matlab text log ouput
-     * to a display.
-     *
-     * @return the InputStreamReader
-     */
-    static InputStreamReader getInputStreamReader() {
-        return isr;
-    }
-
-    /**
-     * Returns the singleton <code>ClassifierLibraryJNI</code>
-     * <p> An exception may be thrown if the Matlab log file does not exist,
-     * which indicates there is something  wrong with the Matlab library
-     * initialization. This is likely caused by an invalid matlab log directory
-     *
-     * Call within block synced by: <code>sync</code>
-     *
-     * @return a {@link org.mbari.aved.classifier.ClassifierLibraryJNI} singleton
-     */
-    public static synchronized ClassifierLibraryJNI getLibrary() throws Exception {
-        if (isInitialized == false) {
-
-            File dbDir = UserPreferences.getModel().getDefaultScratchDirectory();
-            String dbRoot = dbDir.getAbsolutePath();
-            File logFile = new File(dbRoot + "/matlablog.txt");
-
-            try {
-                jniLibrary.initLib(logFile.getAbsolutePath());
-                Thread.sleep(5000);
-                isInitialized = true;
-            } catch (Exception e) {
-                Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, e);
-            }
-
-            if (logFile.exists() && logFile.canRead()) {
-                FileInputStream fis = new FileInputStream(logFile);
-                isr = new InputStreamReader(fis);
-            } 
-        }
-
-        if (isInitialized == true) {
-            return jniLibrary;
-        }
-
-        return null;
-    }
-
-    /**
-     * Closes the library. If this is called, the library will be reopened
-     * during the first getLibrary() call
-     *
-     * @see     getLibrary()
-     */
-    public static synchronized void closeLibrary() {
-        try {
-            if (isInitialized == true) {
-                jniLibrary.closeLib();
-                isInitialized = false;
-            }
-
-        } catch (Exception ex) {
-            Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
 
     /**

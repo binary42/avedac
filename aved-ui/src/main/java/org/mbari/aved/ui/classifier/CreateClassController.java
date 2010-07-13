@@ -52,23 +52,23 @@ import java.util.logging.Logger;
 
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import org.jdesktop.swingworker.SwingWorker;
 
 class CreateClassController extends AbstractController implements ModelListener, MouseListener, WindowListener {
 
-    private ClassModel classModel;
-    private CreateClassWorker worker;
+    private static final ClassModel classModel = new ClassModel();
+    private static CreateClassTask task;
 
     CreateClassController(ClassifierModel model, EventListModel eventListModel) {
         setModel(model);
         setView(new CreateClassView(model, this));
-        classModel = new ClassModel();
 
         // Register as listener to the models
         getModel().addModelListener(this);
         eventListModel.addModelListener(this);
 
         // Create the concept tree
-        getView().createConceptTree(this); 
+        getView().createConceptTree(this);
     }
 
     @Override
@@ -122,8 +122,10 @@ class CreateClassController extends AbstractController implements ModelListener,
                 getView().loadModel(classModel);
             }
         } else if (actionCommand.equals("Stop")) {
-            if (worker != null) {
-                worker.cancelWorker(false);
+            if (task != null) {
+                getView().setRunButton(true);
+                getView().setStopButton(false);
+                Classifier.getController().kill(task);
             }
         } else if (actionCommand.equals("Run")) {
             try {
@@ -178,7 +180,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                 }
 
                 //ClassModel newModel = classModel.copy();
-                ClassModel newModel = new ClassModel();
+                final ClassModel newModel = new ClassModel();
                 newModel.setVarsClassName(classModel.getVarsClassName());
                 newModel.setName(classModel.getName());
                 newModel.setDescription(classModel.getDescription());
@@ -187,16 +189,76 @@ class CreateClassController extends AbstractController implements ModelListener,
                 File d = UserPreferences.getModel().getClassDatabaseDirectory();
                 newModel.setDatabaseRoot(d);
 
-                worker = new CreateClassWorker(newModel);
-                worker.execute();
+                // Check if you have permission to write to the target
+                // parent directory
+                ArrayList<String> filePaths = newModel.getRawImageFileListing();
+                LibraryImage[] imageset = new LibraryImage[filePaths.size()];
+                File rootPath = newModel.getRawImageDirectory();
+                File path = new File(rootPath.toString() + "/square/");
+                File parent = new File(path.getParent());
+
+                if (!parent.canWrite()) {
+                    String message = new String(
+                            "You do not have write permission to " + parent.toString()
+                            + ". Please correct this.");
+                    NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), message);
+                    dialog.setVisible(true);
+                    dialog.answer();
+                    return;
+                }
+
+                // Create the command for class creation and add it to the queue
+                final SwingWorker worker = Classifier.getController().getWorker();
+                task = new CreateClassTask(worker, newModel);
+                Classifier.getController().addQueue(task);
                 getView().setRunButton(false);
                 getView().setStopButton(true);
-            } catch (Exception ex) {
-                NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), ex.getMessage());
 
+                /// Create a progress display thread for monitoring this task
+                Thread thread = new Thread() {
+
+                    @Override
+                    public void run() {
+                        InputStreamReader isr = Classifier.getController().getInputStreamReader();
+                        ProgressDisplay progressDisplay = new ProgressDisplay(worker,
+                                "Creating class " + newModel.getName());
+                        progressDisplay.getView().setVisible(true);
+
+                        ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
+                        progressDisplayStream.execute();
+                        while (!task.isCancelled() && !task.isFini()) {
+                            try {
+                                Thread.sleep(3000);
+                            } catch (InterruptedException ex) {
+                            }
+                        }
+                        getView().setRunButton(true);
+                        getView().setStopButton(false); 
+                        progressDisplay.getView().dispose(); 
+
+                        // Add the model only after successfully created
+                        if (task.isFini() && getModel() != null) {
+                            getModel().addClassModel(newModel);
+                            NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), newModel.getName() + " class creation finished");
+                            dialog.setVisible(true); 
+                        }
+                        else {
+                            if (task.isCancelled()) {
+                                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), newModel.getName() + " classcreation stopped");
+                                dialog.setVisible(true);
+                            }
+                        }
+                    }
+                };
+
+                thread.start();
+
+            } catch (Exception ex) {
+                Logger.getLogger(CreateClassController.class.getName()).log(Level.SEVERE, null, ex);
+                NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), ex.getMessage());
                 dialog.setVisible(true);
                 dialog.answer();
-                Logger.getLogger(CreateClassController.class.getName()).log(Level.SEVERE, null, ex);
+
                 getView().setRunButton(true);
                 getView().setStopButton(false);
             }
@@ -231,13 +293,12 @@ class CreateClassController extends AbstractController implements ModelListener,
             if (subdirs != null) {
                 if ((dir != null) && dir.isDirectory()) {
                     for (int i = 0; i < subdirs.length; i++) {
-                        System.out.println(subdirs[i].getName() + " =" + dir.getName());
                         if (subdirs[i].getName().equals(dir.getName())) {
                             getView().selectImageDirectory(dir);
 
                             break;
                         }
-                         // Otherwise, select the first subdirectory
+                        // Otherwise, select the first subdirectory
                         getView().selectImageDirectory(subdirs[0]);
                     }
                 } // Otherwise, select the first subdirectory
@@ -310,29 +371,16 @@ class CreateClassController extends AbstractController implements ModelListener,
     public void windowOpened(WindowEvent e) {
     }
 
-    private class CreateClassWorker extends MatlabWorker {
+    private class CreateClassTask extends ClassifierLibraryJNITask {
 
         private ClassModel newClassModel;
-        private final ProgressDisplay progressDisplay;
 
-        public CreateClassWorker(ClassModel newClassModel) throws Exception {
+        public CreateClassTask(SwingWorker parentWorker, ClassModel newClassModel) throws Exception {
             super(newClassModel.getName());
             this.newClassModel = newClassModel;
-            this.progressDisplay = new ProgressDisplay(this, "Creating class " + newClassModel.getName());
         }
 
-        /**
-         * Resets the start/stop buttons and disables the progress display.
-         */
-        private void reset() {
-            getView().setRunButton(true);
-            getView().setStopButton(false);
-            progressDisplay.getView().setVisible(false);
-        }
-
-        @Override
-        protected Object doInBackground() throws Exception {
-            progressDisplay.display("Creating class ...");
+        protected void run(ClassifierLibraryJNI library) throws Exception {
 
             ArrayList<String> filePaths = newClassModel.getRawImageFileListing();
             LibraryImage[] imageset = new LibraryImage[filePaths.size()];
@@ -346,18 +394,10 @@ class CreateClassController extends AbstractController implements ModelListener,
             File parent = new File(path.getParent());
 
             if (!parent.canWrite()) {
-                NonModalMessageDialog dialog;
-
-                dialog = new NonModalMessageDialog(getView(),
-                        "You do not have write permission to " + parent.toString()
-                        + ". Please correct this.");
-                dialog.setVisible(true);
-
-                if (dialog.answer()) {
-                    reset();
-
-                    return this;
-                }
+                String message = new String(
+                        "Incorrect write permission to " + parent.toString());
+                Logger.getLogger(CreateClassController.class.getName()).log(Level.SEVERE, null, message);
+                return;
             }
 
             // Create the new directory for storing squared images
@@ -369,16 +409,6 @@ class CreateClassController extends AbstractController implements ModelListener,
                     // Should never get here with the above checkWrite
                     Logger.getLogger(CreateClassController.class.getName()).log(Level.SEVERE, null, ex);
 
-                    NonModalMessageDialog dialog;
-
-                    dialog = new NonModalMessageDialog(getView(), ex.getMessage());
-                    dialog.setVisible(true);
-
-                    if (dialog.answer()) {
-                        reset();
-
-                        return this;
-                    }
                 }
             }
 
@@ -387,9 +417,7 @@ class CreateClassController extends AbstractController implements ModelListener,
 
                 // If user cancelled, return
                 if (isCancelled()) {
-                    reset();
-
-                    return this;
+                    return;
                 }
 
                 String f = rootPath + "/" + filePaths.get(i);
@@ -399,7 +427,6 @@ class CreateClassController extends AbstractController implements ModelListener,
                 // Only create the square image if it doesn't exist to save
                 // some time
                 if (!image.exists()) {
-                    progressDisplay.display("Creating square image " + image.getName() + imageFileOut.toString());
 
                     try {
                         ImageUtils.squareJpegThumbnail(f, imageFileOut);
@@ -408,67 +435,32 @@ class CreateClassController extends AbstractController implements ModelListener,
 
                         dialog = new NonModalMessageDialog(getView(), ex.getMessage());
                         dialog.setVisible(true);
-
-                        return this;
+                        return;
                     }
                 }
 
                 imageset[i] = new LibraryImage(imageFileOut);
             }
 
-            ProgressDisplayStream progressDisplayStream = null;
-
             // Get a input stream on the matlab log file to display in
             // the progress display window
             try {
-                InputStreamReader isr = Classifier.getInputStreamReader();
-
-                progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
-                progressDisplayStream.execute();
 
                 // Run the collection - this creates a new class
-                Classifier.getLibrary().collect_class(this.getCancel(), newClassModel.getRawImageDirectory().toString(),
+                library.collect_class(this.getCancel(), newClassModel.getRawImageDirectory().toString(),
                         newClassModel.getSquareImageDirectory().toString(), newClassModel.getName(),
                         newClassModel.getDatabaseRootdirectory().toString(),
                         newClassModel.getVarsClassName(), newClassModel.getDescription(),
                         newClassModel.getColorSpace());
 
-                // Add the model only after successfully created
-                if (getModel() != null) {
-                    getModel().addClassModel(newClassModel);
+                this.setFini();
 
-                }
-                progressDisplayStream.isDone = true;
-                progressDisplay.getView().dispose();
-
-                NonModalMessageDialog dialog;
-
-                dialog = new NonModalMessageDialog(getView(), newClassModel.getName() + " class finished");
-                dialog.setVisible(true);
             } catch (Exception ex) {
-
-                // if (this.getCancel() == 0) {
-                Logger.getLogger(CreateClassController.class.getName()).log(Level.SEVERE, null, ex);
-
-                NonModalMessageDialog dialog;
-
-                dialog = new NonModalMessageDialog(getView(), ex.getMessage());
-                dialog.setVisible(true);
-
-                if (dialog.answer()) {
-                    reset();
-
-                    return null;
+                // Only log if this was an exception caused by a non-user cancel
+                if (!this.isCancelled()) {
+                    Logger.getLogger(CreateClassController.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
-                // }
             }
-
-            setProgress(0);
-            progressDisplayStream.isDone = true;
-            reset();
-
-            return this;
         }
     }
 }

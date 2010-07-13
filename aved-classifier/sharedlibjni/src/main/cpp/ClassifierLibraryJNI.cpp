@@ -330,6 +330,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_train
     }
     if (killfile == NULL) {
         ThrowByName(env, "java/lang/IllegalArgumentException", "NULL killfile name");
+        return;
     }
 
     removeFile(env, killfile);
@@ -526,8 +527,11 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_colle
     mxDestroyArray(mxRawDir);
     mxDestroyArray(mxSquareDir);
     mxDestroyArray(mxColorSpace);
+<<<<<<< local
+=======
     mxDestroyArray(mxClassMetadata);
     mxDestroyArray(mxClassData);
+>>>>>>> other
     env->ReleaseStringUTFChars(jclassName, classname);
     env->ReleaseStringUTFChars(jmatlabdb, matlabdbdir);
     env->ReleaseStringUTFChars(jvarsClassName, varsclassname);
@@ -1049,7 +1053,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
             }// end}//  if (pos != string::npos)
         }// end for (i = 0; i < fcount; i++)
     }
-    fprintf(stderr, "Cleaning up allocated memory\n");
+
     // Clean up the allocated memory
     if (fcount > 0) {
         for (i = 0, list = filelist; i < fcount; i++) {
@@ -1058,7 +1062,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
         }
         free(filelist);
     }
-    fprintf(stderr, "Cleaning up allocated memory\n");
+   
     env->ReleaseStringUTFChars(jmatlabdb, matlabdbdir);
     return jClassModelArray;
 }
@@ -1274,8 +1278,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
         }// end for (i = 0; i < fcount; i++)
     }//end if (numfound) 
 
-    // Clean up the allocated memory
-    fprintf(stderr, "Cleaning up allocated memory\n");
+    // Clean up the allocated memory 
     if (fcount > 0) {
         for (i = 0, list = filelist; i < fcount; i++) {
             free(*list);
@@ -1283,7 +1286,6 @@ JNIEXPORT jobjectArray JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJ
         }
         free(filelist);
     }
-    fprintf(stderr, "Cleaning up allocated memory\n");
     env->ReleaseStringUTFChars(jmatlabdb, matlabdbdir);
     return jtrainingModelArray;
 }

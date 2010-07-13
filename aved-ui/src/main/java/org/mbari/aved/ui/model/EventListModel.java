@@ -62,7 +62,7 @@ public class EventListModel extends AbstractModel implements ListModel, BoundedR
     private ArrayList<ChangeListener> boundedRangeModelDataListeners = new ArrayList<ChangeListener>(5);
 
     /** Sync for this list */
-    private String syncList = "syncList";
+    private final String syncList = "syncList";
 
     /**
      * Default constructor
@@ -93,15 +93,16 @@ public class EventListModel extends AbstractModel implements ListModel, BoundedR
      *  Call within block synced by: <code>syncList</code>
      */
     public void reset() {
-        synchronized (syncList) {
-            list.clear();
-        }
-
+        
         if (imageCache != null) {
             imageCache.reset();
         }
 
         imageCache = null;
+
+        synchronized (syncList) {
+            list.clear();
+        }
 
         // Run the garbage collector
         Runtime.getRuntime().gc();

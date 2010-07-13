@@ -175,11 +175,12 @@ public class ThumbnailController extends AbstractController
             EventListModel.EventListModelEvent e = (EventListModel.EventListModelEvent) event;
 
             switch (e.getID()) {
-            case EventListModel.EventListModelEvent.NUM_LOADED_IMAGES_CHANGED :                
-                 getView().getSlider().setValue(e.getFlag());
+            case EventListModel.EventListModelEvent.NUM_LOADED_IMAGES_CHANGED : 
+                 int slider = getView().getSlider().getValue(); 
                  if (!events.getValueIsAdjusting()) {
-                   getView().showPageFromScroller(e.getFlag());
-                 }                 
+                   System.out.println("=====>Show page from scroller : " + slider);
+                   getView().showPageFromScroller(slider);
+                 }
                 break;
 
             case EventListModel.EventListModelEvent.LIST_CLEARED :

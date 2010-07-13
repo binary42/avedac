@@ -42,11 +42,16 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.mbari.aved.classifier.ClassifierLibraryJNI;
 
 /**
  *
@@ -59,7 +64,7 @@ public class ClassifierController extends AbstractController implements ModelLis
     private final EventListModel eventListModel;
     private final RunClassifier runClassifier;
     private final TestClass testClass;
-    private final LoadModelWorker thread;
+    private ClassifierLibraryJNITaskWorker jniQueue;
 
     public ClassifierController(EventListModel list, SummaryModel summaryModel) {
         eventListModel = list;
@@ -78,8 +83,6 @@ public class ClassifierController extends AbstractController implements ModelLis
 
         // Register as listener to the model
         model.addModelListener(this);
-
-        thread = new LoadModelWorker(getModel());
 
         createTrainingLib = new CreateTrainingLibrary(model);
         createClass = new CreateClass(model, list);
@@ -101,13 +104,35 @@ public class ClassifierController extends AbstractController implements ModelLis
         File trainingDir = UserPreferences.getModel().getClassTrainingImageDirectory();
         model.setClassTrainingImageDirectory(trainingDir);
 
+        try {
+            jniQueue = new ClassifierLibraryJNITaskWorker();
+            jniQueue.execute();
+
+            // First thread is to load the models
+            LoadModelWorker worker = new LoadModelWorker(model);
+            jniQueue.add(worker);
+
+        } catch (Exception ex) {
+
+            Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }
+
+    ClassifierController() {
+        createTrainingLib = null;
+        createClass = null;
+        testClass = null;
+        runClassifier = null;
+        eventListModel = null;
+        jniQueue = null;
     }
 
     @Override
     public ClassifierModel getModel() {
         return (ClassifierModel) super.getModel();
     }
- 
+
     @Override
     public ClassifierView getView() {
         return (ClassifierView) super.getView();
@@ -116,13 +141,6 @@ public class ClassifierController extends AbstractController implements ModelLis
     public void actionPerformed(ActionEvent e) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
-    /**
-     * Loads the available models
-     */
-    private void loadModels() {
-        thread.execute();
-            }
 
     /**
      * Model listener. Reacts to changes in the
@@ -140,7 +158,8 @@ public class ClassifierController extends AbstractController implements ModelLis
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
                 case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED:
-                    loadModels();
+                    //LoadModelWorker task = new LoadModelWorker();
+
                     break;
             }
         } /**
@@ -211,7 +230,9 @@ public class ClassifierController extends AbstractController implements ModelLis
 
     public void windowClosing(WindowEvent e) {
         try {
-            Classifier.closeLibrary();
+            if (jniQueue != null) {
+                jniQueue.cancel();
+            } 
         } catch (Exception ex) {
             Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -232,6 +253,44 @@ public class ClassifierController extends AbstractController implements ModelLis
     public void windowDeactivated(WindowEvent e) {
     }
 
+    SwingWorker getWorker() {
+        if (this.jniQueue != null) {
+            return jniQueue;
+        }
+        return null;
+    }
+
+    public void kill(ClassifierLibraryJNITask task) {
+        jniQueue.cancelTask(task);
+    }
+
+    /**
+     * Adds a task to the jni queue for later execution
+     * @param task
+     */
+    public void addQueue(ClassifierLibraryJNITask task) {
+        if (jniQueue != null) {
+            jniQueue.add(task);
+        }
+    } 
+    /**
+     * Utility method to pass through a reader to bridge byte streams
+     * between the matlab log file to a graphical display
+     * @return the input stream reader associated with the matlab log file
+     */
+    InputStreamReader getInputStreamReader() {
+         if (this.jniQueue != null) {
+            return jniQueue.getInputStreamReader();
+         }
+         return null;
+    }
+
+    /**
+     * Worker to manager adding class event images which are
+     * cropped-event images to the class training directory
+     * in the background before class creating and training
+     * can begin.  
+     */
     public class AddClassImageWorker extends SwingWorker {
 
         private final ClassModel classModel;
@@ -285,6 +344,136 @@ public class ClassifierController extends AbstractController implements ModelLis
             progressDisplay.display("Done !");
 
             return this;
+        }
+    }
+
+    /**
+     * A task thread designed to execute JNI functions from a command queue
+     * @author dcline
+     */
+    private class ClassifierLibraryJNITaskWorker extends SwingWorker {
+
+        private boolean exit = false;
+        Queue<ClassifierLibraryJNITask> queue = new LinkedList<ClassifierLibraryJNITask>();
+        ClassifierLibraryJNITask task = null;
+        private InputStreamReader isr;
+        private final ClassifierLibraryJNI jniLibrary = new ClassifierLibraryJNI();
+        private boolean isInitialized = false;
+
+        ClassifierLibraryJNITaskWorker() throws Exception{
+            getLibrary();
+        }
+        @Override
+        protected Object doInBackground() throws Exception {
+            while (!exit) {
+                if (!queue.isEmpty()) {
+                    task = queue.element();
+                    task.run(jniLibrary);
+                    queue.remove();
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Add a task to the queue for later execution
+         * @param task the task to add
+         */
+        public void add(ClassifierLibraryJNITask task) {
+            queue.add(task);
+        }
+
+        /**
+         * Cancels a running Matlab method through the JNI layer
+         * This sets a kill flag in a file that is read
+         * by the compiled matlab code.  
+         * @param task
+         */
+        private void cancelTask(ClassifierLibraryJNITask task) {
+            Iterator<ClassifierLibraryJNITask> it = queue.iterator();
+            while (it.hasNext()) {
+                if (it.next().equals(task)) {
+                    task.setCancelled();
+                    jniLibrary.set_kill(task.getCancel(), 1);
+                    break;
+                }
+            }
+        }
+
+        /**
+         * Cancels this worker and closes the jni library
+         */
+        public void cancel() {
+            exit = true;
+            super.cancel(true);
+            jniLibrary.closeLib();
+        }
+
+        /**
+         * Gets the {@link java.io.InputStreamReader} associated with the Matlab log file
+         * This is intended for use in redirecting the Matlab text log ouput
+         * to a display.
+         *
+         * @return the InputStreamReader
+         */
+        public InputStreamReader getInputStreamReader() {
+            return isr;
+        }
+
+        /**
+         * Returns the singleton <code>ClassifierLibraryJNI</code>
+         * <p> An exception may be thrown if the Matlab log file does not exist,
+         * which indicates there is something  wrong with the Matlab library
+         * initialization. This is likely caused by an invalid matlab log directory
+         *
+         * Call within block synced by: <code>sync</code>
+         *
+         * @return a {@link org.mbari.aved.classifier.ClassifierLibraryJNI} singleton
+         */
+        private synchronized ClassifierLibraryJNI getLibrary() throws Exception {
+            if (isInitialized == false) {
+
+                File dbDir = UserPreferences.getModel().getDefaultScratchDirectory();
+                String dbRoot = dbDir.getAbsolutePath();
+                File logFile = new File(dbRoot + "/matlablog.txt");
+
+                try {
+                    jniLibrary.initLib(logFile.getAbsolutePath());
+                    Thread.sleep(5000);
+                    isInitialized = true;
+                } catch (Exception e) {
+                    Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, e);
+                }
+
+                if (logFile.exists() && logFile.canRead()) {
+                    FileInputStream fis = new FileInputStream(logFile);
+                    isr = new InputStreamReader(fis);
+                }
+            }
+
+            if (isInitialized == true) {
+                return jniLibrary;
+            }
+
+            return null;
+        }
+
+        /**
+         * Closes the library. If this is called, the library will be reopened
+         * during the first getLibrary() call
+         *
+         * @see     getLibrary()
+         */
+        private synchronized void closeLibrary() {
+            try {
+                if (isInitialized == true) {
+                    jniLibrary.closeLib();
+                    isInitialized = false;
+                }
+
+            } catch (Exception ex) {
+                Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 }

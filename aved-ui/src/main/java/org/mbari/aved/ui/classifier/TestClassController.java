@@ -43,10 +43,11 @@ import java.util.logging.Logger;
 
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import org.jdesktop.swingworker.SwingWorker;
 
 class TestClassController extends AbstractController implements ModelListener {
 
-    private RunTestClassWorker worker;
+    private RunTestClassTask task;
 
     TestClassController(ClassifierModel model) {
         setModel(model);
@@ -95,13 +96,15 @@ class TestClassController extends AbstractController implements ModelListener {
 
                 getView().loadTrainingModel(model);
             } else if (actionCommand.equals("Stop")) {
-                if ((worker != null) && !worker.isDone()) {
-                    worker.cancelWorker(true);
+                if (task != null) {
+                    getView().setRunButton(true);
+                    getView().setStopButton(false);
+                    Classifier.getController().kill(task);
                 }
             } else if (actionCommand.equals("Run")) {
                 try {
-                    ClassModel classModel = getView().getClassModel();
-                    TrainingModel trainingModel = getView().getTrainingModel();
+                    final ClassModel classModel = getView().getClassModel();
+                    final TrainingModel trainingModel = getView().getTrainingModel();
 
                     if (classModel == null) {
                         String message = new String("Please select a class to test");
@@ -125,8 +128,67 @@ class TestClassController extends AbstractController implements ModelListener {
                         }
                     }
 
-                    worker = new RunTestClassWorker(classModel, trainingModel);
-                    worker.execute();
+                    // Count the number of unique events in this model to use
+                    // to allocate the arrays to pass to the Matlab function
+                    ArrayList<String> fileName = classModel.getRawImageFileListing();
+
+                    if (fileName.size() == 0) {
+                        NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
+                                "Error - cannot find the images for this class");
+
+                        dialog.setVisible(true);
+                        return;
+                    }
+
+                    final SwingWorker worker = Classifier.getController().getWorker();
+                    task = new RunTestClassTask(classModel, trainingModel);
+                    Classifier.getController().addQueue(task);
+                    getView().setRunButton(false);
+                    getView().setStopButton(true);
+
+
+                    /// Create a progress display thread for monitoring this task
+                    Thread thread = new Thread() {
+
+                        @Override
+                        public void run() {
+                            InputStreamReader isr = Classifier.getController().getInputStreamReader();
+                            ProgressDisplay progressDisplay = new ProgressDisplay(worker,
+                                    "Testing class " + classModel.getName() + "against " + trainingModel.getName());
+
+                            progressDisplay.getView().setVisible(true);
+
+                            ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
+                            progressDisplayStream.execute();
+                            while (!task.isCancelled() && !task.isFini()) {
+                                try {
+                                    Thread.sleep(500);
+                                } catch (InterruptedException ex) {
+                                }
+                            }
+                            getView().setRunButton(true);
+                            getView().setStopButton(false);
+                            progressDisplay.getView().dispose();
+
+                            if (task.isFini()) {
+                                // Add to training model when successfully run
+                                getModel().addTrainingModel(trainingModel);
+
+                                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " test finished");
+                                dialog.setVisible(true);
+
+                                task.controller.getView().pack();
+                                task.controller.getView().setVisible(true);
+                            } else {
+                                if (task.isCancelled()) {
+                                    NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " test stopped");
+                                    dialog.setVisible(true);
+                                }
+                            }
+                        }
+                    };
+
+                    thread.start();
                 } catch (Exception ex) {
                     Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -139,7 +201,7 @@ class TestClassController extends AbstractController implements ModelListener {
      * {@link org.mbari.aved.ui.classifier.model}
      * and  {@link org.mbari.aved.ui.classifier.ClassifierModel}
      */
-     public void modelChanged(ModelEvent event) {
+    public void modelChanged(ModelEvent event) {
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             ColorSpace colorSpace = (ColorSpace) getView().getClassColorSpace();
 
@@ -169,166 +231,133 @@ class TestClassController extends AbstractController implements ModelListener {
         }
     }
 
-    private class RunTestClassWorker extends MatlabWorker {
+    private class RunTestClassTask extends ClassifierLibraryJNITask {
 
         private final ClassModel classModel;
-        private final ProgressDisplay progressDisplay;
         private final TrainingModel trainingModel;
+        private TableModel tableModel;
+        private TableController controller = null;
 
-        public RunTestClassWorker(ClassModel classModel, TrainingModel trainingModel) throws Exception {
+        public RunTestClassTask(ClassModel classModel, TrainingModel trainingModel) throws Exception {
             super(classModel.getName());
             this.classModel = classModel;
             this.trainingModel = trainingModel;
-            this.progressDisplay = new ProgressDisplay(this, "Testing class " + classModel.getName());
         }
 
         @Override
-        @SuppressWarnings("empty-statement")
-        protected Object doInBackground() throws Exception {
-            progressDisplay.display("Testing class ...");
+        protected void run(ClassifierLibraryJNI library) throws Exception {
 
             // Get a input stream on the matlab log file to display in
             // the progress display window
             try {
-                InputStreamReader     isr = Classifier.getInputStreamReader();
-                ProgressDisplayStream progressDisplayStream;
-
-                progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
-                progressDisplayStream.execute();
 
                 // Count the number of unique events in this model to use
                 // to allocate the arrays to pass to the Matlab function
                 ArrayList<String> fileName = classModel.getRawImageFileListing();
 
-                if (fileName.size() == 0) {
-                    NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
-                            "Error - cannot find the images for this class");
+                if (fileName.size() > 0) {
 
-                    dialog.setVisible(true);
-                    progressDisplay.getView().dispose();
+                    int numEvents;
 
-                    return this;
-                }
-
-                int numEvents;
-
-                // Round up a 10% file size; this is what is sampled
-                // for class testing. This is hardcoded in the Matlab code
-                // so don't change this without changing the Matlab code
-                // and recompiling. If less than 10 files in the class to
-                // test then use all of them
-                if (fileName.size() > 10) {
-                    numEvents = (int) (0.10 * (fileName.size()) + 0.5);
-                } else {
-                    numEvents = fileName.size();
-                }
-
-                // Allocate the arrays for storing the results
-                int[] classIndex = new int[numEvents];
-                float[] probability = new float[numEvents];
-                String[] eventFilenames = new String[numEvents];
-                float minProbThreshold = 0.8f;
-
-                System.out.println("Running test class");
-                System.out.println("Testing " + classModel.getName() + " against training library:"
-                        + trainingModel.getName() + " with minimum probability:" + minProbThreshold);
-
-                // Run the class tests
-                Classifier.getLibrary().test_class(this.getCancel(), eventFilenames, classIndex, probability, classModel.getName(),
-                        trainingModel.getName(), minProbThreshold,
-                        classModel.getDatabaseRootdirectory().toString(), classModel.getColorSpace());
-
-                // Dump out some debuging info. TODO: remove this when done
-                // testing
-                if ((classIndex != null) && (probability != null)) {
-                    for (int i = 0; i < numEvents; i++) {
-                        System.out.println("filename:" + eventFilenames[i] + "\tclassindex:" + classIndex[i]
-                                + "\tprobability in class:" + probability[i]);
-                    }
-                }
-
-                // Kill the progress display
-                progressDisplayStream.isDone = true;
-                progressDisplay.getView().dispose();
-
-                // Add one column for the Unknown class
-                int columns = trainingModel.getNumClasses() + 1;
-                int rows = columns;
-                String[] columnName = new String[columns];
-                int[][] statistic = new int[rows][columns];
-                int sum[] = new int[trainingModel.getNumClasses() + 1];
-
-                // Format the column name and sums for display in a JTable
-                for (int j = 0; j < columns; j++) {
-                    if (j > 0) {
-                        columnName[j] = trainingModel.getClassModel(j - 1).getName();
+                    // Round up a 10% file size; this is what is sampled
+                    // for class testing. This is hardcoded in the Matlab code
+                    // so don't change this without changing the Matlab code
+                    // and recompiling. If less than 10 files in the class to
+                    // test then use all of them
+                    if (fileName.size() > 10) {
+                        numEvents = (int) (0.10 * (fileName.size()) + 0.5);
                     } else {
-                        columnName[0] = TrainingModel.UNKNOWN_CLASS_LABEL;
-                    }
-                }
-
-                // Sum up all the winners and put into the appropriate bucket
-                for (int k = 0; k < numEvents; k++) {
-                    if (classIndex[k] > 0) {
-                        sum[classIndex[k] - 1]++;
-                    }
-                }
-
-                // Format the statistic array for display in a JTable
-                for (int j = 0; j < columns; j++) {
-                    if (j > 0) {
-                        columnName[j] = trainingModel.getClassModel(j - 1).getName();
-                    } else {
-                        columnName[0] = TrainingModel.UNKNOWN_CLASS_LABEL;
+                        numEvents = fileName.size();
                     }
 
-                    for (int i = 0; i < rows; i++) {
-                        if ((i == j) && (i < columns)) {
-                            int ttl = 0;
+                    // Allocate the arrays for storing the results
+                    int[] classIndex = new int[numEvents];
+                    float[] probability = new float[numEvents];
+                    String[] eventFilenames = new String[numEvents];
+                    float minProbThreshold = 0.8f;
 
-                            for (int k = 0; k < numEvents; k++) {
-                                if (classIndex[k] == (i + 1)) {
-                                    ttl++;
-                                }
-                            }
+                    System.out.println("Running test class");
+                    System.out.println("Testing " + classModel.getName() + " against training library:"
+                            + trainingModel.getName() + " with minimum probability:" + minProbThreshold);
 
-                            statistic[i][j] = ttl;
-                        } else {
-                            statistic[i][j] = 0;
+                    // Run the class tests
+                    library.test_class(this.getCancel(), eventFilenames, classIndex, probability, classModel.getName(),
+                            trainingModel.getName(), minProbThreshold,
+                            classModel.getDatabaseRootdirectory().toString(), classModel.getColorSpace());
+
+                    // Dump out some debuging info. TODO: remove this when done
+                    // testing
+                    if ((classIndex != null) && (probability != null)) {
+                        for (int i = 0; i < numEvents; i++) {
+                            System.out.println("filename:" + eventFilenames[i] + "\tclassindex:" + classIndex[i]
+                                    + "\tprobability in class:" + probability[i]);
                         }
                     }
+
+                    // Add one column for the Unknown class
+                    int columns = trainingModel.getNumClasses() + 1;
+                    int rows = columns;
+                    String[] columnName = new String[columns];
+                    int[][] statistic = new int[rows][columns];
+                    int sum[] = new int[trainingModel.getNumClasses() + 1];
+
+                    // Format the column name and sums for display in a JTable
+                    for (int j = 0; j < columns; j++) {
+                        if (j > 0) {
+                            columnName[j] = trainingModel.getClassModel(j - 1).getName();
+                        } else {
+                            columnName[0] = TrainingModel.UNKNOWN_CLASS_LABEL;
+                        }
+                    }
+
+                    // Sum up all the winners and put into the appropriate bucket
+                    for (int k = 0; k < numEvents; k++) {
+                        if (classIndex[k] > 0) {
+                            sum[classIndex[k] - 1]++;
+                        }
+                    }
+
+                    // Format the statistic array for display in a JTable
+                    for (int j = 0; j < columns; j++) {
+                        if (j > 0) {
+                            columnName[j] = trainingModel.getClassModel(j - 1).getName();
+                        } else {
+                            columnName[0] = TrainingModel.UNKNOWN_CLASS_LABEL;
+                        }
+
+                        for (int i = 0; i < rows; i++) {
+                            if ((i == j) && (i < columns)) {
+                                int ttl = 0;
+
+                                for (int k = 0; k < numEvents; k++) {
+                                    if (classIndex[k] == (i + 1)) {
+                                        ttl++;
+                                    }
+                                }
+
+                                statistic[i][j] = ttl;
+                            } else {
+                                statistic[i][j] = 0;
+                            }
+                        }
+                    }
+
+                    // Put the statistic and column names in a TableModel
+                    tableModel = new TableModel(columnName, statistic, sum);
+                    controller = new TableController(getModel(), tableModel,
+                            "testclass" + classModel.getName());
+
+                    controller.getView().setTitle(classModel.getName());
+
+                    controller.getView().setDescription("Confusion Matrix for " + classModel.getName()
+                            + ", Probability Threshold: " + minProbThreshold);
+
+                    this.setFini();
+
                 }
-
-                // Put the statistic and column names in a TableModel
-                TableModel tableModel = new TableModel(columnName, statistic, sum);
-                TableController controller = new TableController(getModel(), tableModel,
-                        "testclass" + classModel.getName());
-
-                controller.getView().setTitle(classModel.getName());
-                ;
-                controller.getView().setDescription("Confusion Matrix for " + classModel.getName()
-                        + ", Probability Threshold: " + minProbThreshold);
-                controller.getView().pack();
-                controller.getView().setVisible(true);
-
-                NonModalMessageDialog dialog;
-
-                dialog = new NonModalMessageDialog(getView(), classModel.getName() + " testing finished");
-                dialog.setVisible(true);
             } catch (Exception ex) {
                 Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
-
-                NonModalMessageDialog dialog;
-
-                dialog = new NonModalMessageDialog(getView(), ex.getMessage());
-                dialog.setVisible(true);
-                setProgress(0);
             }
-
-            getView().setRunButton(true);
-            getView().setStopButton(false);
-
-            return this;
         }
     }
 }

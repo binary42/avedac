@@ -113,9 +113,8 @@ class VideoTranscodeWorker extends SwingWorker {
         ApplicationView view = controller.getView();
         SummaryModel model = controller.getModel().getSummaryModel();
 
-        processDisplay.getView().setVisible(true);
-        processDisplay.getView().toFront();
         Application.getView().setBusyCursor();
+        processDisplay.getView().setVisible(true); 
 
         // If already a running process then stop it
         if ((transcodeProcess != null) && transcodeProcess.isRunning()) {

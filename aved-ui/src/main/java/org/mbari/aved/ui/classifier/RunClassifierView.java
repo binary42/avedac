@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import com.jgoodies.binding.adapter.ComboBoxAdapter;
 import com.jgoodies.binding.list.ArrayListModel;
 import com.jgoodies.binding.list.SelectionInList;
@@ -51,24 +47,24 @@ public class RunClassifierView extends JFrameView {
      * should be modified here too
      */
     private static final String ID_CLASSES_IN_LIBRARY_JLIST = "classes";                 // javax.swing.JLIST
-    private static final String ID_COLORSPACE_COMBOBOX      = "colorspace";              // javax.swing.JComboBox
-    private static final String ID_LIBRARY_NAME_COMBO       = "libraryname";             // javax.swing.JComboBox
-    private static final String ID_PROBABILITY_THRESH_TEXT  = "probabilitythreshold";    // javax.swing.JTextField
-    private static final String ID_RUN_BUTTON               = "run";                     // javax.swing.JButton
-    private static final String ID_STOP_BUTTON              = "stop";                    // ""
+    private static final String ID_COLORSPACE_COMBOBOX = "colorspace";              // javax.swing.JComboBox
+    private static final String ID_LIBRARY_NAME_COMBO = "libraryname";             // javax.swing.JComboBox
+    private static final String ID_PROBABILITY_THRESH_TEXT = "probabilitythreshold";    // javax.swing.JTextField
+    private static final String ID_RUN_BUTTON = "run";                     // javax.swing.JButton
+    private static final String ID_STOP_BUTTON = "stop";                    // ""
 
     /* Some frequently accessed variables */
-    private final JList      classesInLibraryList;
-    private final JComboBox  colorSpaceComboBox;
-    private final JComboBox  libraryNameComboBox;
+    private final JList classesInLibraryList;
+    private final JComboBox colorSpaceComboBox;
+    private final JComboBox libraryNameComboBox;
     private final JTextField probThresholdTextField;
 
     public RunClassifierView(ClassifierModel model, RunClassifierController controller) {
         super("org/mbari/aved/ui/forms/ClassifierRun.xml", model, controller);
-        classesInLibraryList   = getForm().getList(ID_CLASSES_IN_LIBRARY_JLIST);
-        libraryNameComboBox    = getForm().getComboBox(ID_LIBRARY_NAME_COMBO);
+        classesInLibraryList = getForm().getList(ID_CLASSES_IN_LIBRARY_JLIST);
+        libraryNameComboBox = getForm().getComboBox(ID_LIBRARY_NAME_COMBO);
         probThresholdTextField = getForm().getTextField(ID_PROBABILITY_THRESH_TEXT);
-        colorSpaceComboBox     = getForm().getComboBox(ID_COLORSPACE_COMBOBOX);
+        colorSpaceComboBox = getForm().getComboBox(ID_COLORSPACE_COMBOBOX);
 
         ActionHandler actionHandler = getActionHandler();
 
@@ -85,9 +81,9 @@ public class RunClassifierView extends JFrameView {
         list.add(ColorSpace.RGB);
         list.add(ColorSpace.YCBCR);
 
-        ListModel       listModel          = new ArrayListModel(list);
-        ValueModel      selectedItemHolder = new ValueHolder();
-        SelectionInList selectionInList    = new SelectionInList(listModel, selectedItemHolder);
+        ListModel listModel = new ArrayListModel(list);
+        ValueModel selectedItemHolder = new ValueHolder();
+        SelectionInList selectionInList = new SelectionInList(listModel, selectedItemHolder);
 
         colorSpaceComboBox.setModel(new ComboBoxAdapter(selectionInList));
 
@@ -96,7 +92,8 @@ public class RunClassifierView extends JFrameView {
         this.pack();
     }
 
-    public void modelChanged(ModelEvent event) {}
+    public void modelChanged(ModelEvent event) {
+    }
 
     /**
      * Selects the given color space in the combobox
@@ -105,7 +102,7 @@ public class RunClassifierView extends JFrameView {
     public void selectColorSpace(ColorSpace colorSpace) {
         colorSpaceComboBox.setSelectedItem(colorSpace);
     }
- 
+
     /**
      * Enables/disables the Run JButton in this view
      *  @param b  true to enable the button, otherwise false
@@ -128,8 +125,8 @@ public class RunClassifierView extends JFrameView {
      * @return a probability threshold between 0 and 90%
      */
     float getProbabilityThreshold() {
-        String  text = probThresholdTextField.getText();
-        Integer i    = Integer.valueOf(text);
+        String text = probThresholdTextField.getText();
+        Integer i = Integer.valueOf(text);
 
         return i.floatValue() / 100f;
     }
@@ -137,10 +134,12 @@ public class RunClassifierView extends JFrameView {
     /**
      * Loads the training models into this view in the correct color space
      */
-    public void populateLibraries(ColorSpace colorSpace) {
-        ClassifierModel model     = (ClassifierModel) getModel();
-        ArrayListModel  modelList = model.getTrainingModels();
-        ArrayListModel  newList   = new ArrayListModel();
+    public void populateTrainingLibraryList(ColorSpace colorSpace) {
+        loadModel(null);
+
+        ClassifierModel model = (ClassifierModel) getModel();
+        ArrayListModel modelList = model.getTrainingModels();
+        ArrayListModel newList = new ArrayListModel();
 
         for (int i = 0; i < modelList.size(); i++) {
             TrainingModel m = (TrainingModel) modelList.get(i);
@@ -151,11 +150,16 @@ public class RunClassifierView extends JFrameView {
             }
         }
 
-        ListModel       listModel          = new ArrayListModel(newList);
-        ValueModel      selectedItemHolder = new ValueHolder();
-        SelectionInList selectionInList    = new SelectionInList(listModel, selectedItemHolder);
+        ListModel listModel = new ArrayListModel(newList);
+        ValueModel selectedItemHolder = new ValueHolder();
+        SelectionInList selectionInList = new SelectionInList(listModel, selectedItemHolder);
 
         libraryNameComboBox.setModel(new ComboBoxAdapter(selectionInList));
+
+        // Select the first one
+        if (!selectionInList.isEmpty()) {
+            libraryNameComboBox.setSelectedIndex(0);
+        }
     }
 
     /**
@@ -164,24 +168,30 @@ public class RunClassifierView extends JFrameView {
      * @param trainingModel the training model
      */
     public void loadModel(TrainingModel trainingModel) {
-        int            size      = trainingModel.getNumClasses();
-        ArrayListModel listModel = new ArrayListModel();
+        if (trainingModel != null) {
+            int size = trainingModel.getNumClasses();
+            ArrayListModel listModel = new ArrayListModel();
 
-        for (int i = 0; i < size; i++) {
-            listModel.add(trainingModel.getClassModel(i));
+            for (int i = 0; i < size; i++) {
+                listModel.add(trainingModel.getClassModel(i));
+            }
+
+            classesInLibraryList.setModel(listModel);
+
+            ClassModelListRenderer renderer = new ClassModelListRenderer(listModel);
+
+            classesInLibraryList.setCellRenderer(renderer);
+        } else {
+            // Set an empty model
+            ArrayListModel listModel = new ArrayListModel();
+            classesInLibraryList.setModel(listModel);
         }
-
-        classesInLibraryList.setModel(listModel);
-
-        ClassModelListRenderer renderer = new ClassModelListRenderer(listModel);
-
-        classesInLibraryList.setCellRenderer(renderer);
     }
-    
+
     /**
      * 
      */
-    void clearClasses() { 
+    void clearClasses() {
         ArrayListModel listModel = new ArrayListModel();
         classesInLibraryList.setModel(listModel);
     }
@@ -193,7 +203,7 @@ public class RunClassifierView extends JFrameView {
      */
     boolean selectLibrary(String name) {
         int index = -1;
-        int size  = libraryNameComboBox.getModel().getSize();
+        int size = libraryNameComboBox.getModel().getSize();
 
         if (size > 0) {
             index = 0;

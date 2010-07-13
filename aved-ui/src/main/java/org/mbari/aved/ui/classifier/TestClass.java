@@ -56,12 +56,15 @@ public class TestClass {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 try {
+                    ClassifierLibraryJNI library = new ClassifierLibraryJNI();
                     ClassifierModel      model   = new ClassifierModel();
                     File                 dbDir   = UserPreferences.getModel().getClassDatabaseDirectory();
                     String               dbRoot  = dbDir.getAbsolutePath();
 
+                    library.initLib(dbDir.getAbsolutePath());
+
                     // Get the collected classes in this root directory
-                    ClassModel[] classes = Classifier.getLibrary().get_collected_classes(dbRoot);
+                    ClassModel[] classes = library.get_collected_classes(dbRoot);
 
                     if (classes != null) {
                         for (int i = 0; i < classes.length; i++) {
@@ -70,7 +73,7 @@ public class TestClass {
                     }
 
                     // Get the training classes in this root directory
-                    TrainingModel[] training = Classifier.getLibrary().get_training_classes(dbRoot);
+                    TrainingModel[] training = library.get_training_classes(dbRoot);
 
                     if (classes != null) {
                         for (int i = 0; i < training.length; i++) {

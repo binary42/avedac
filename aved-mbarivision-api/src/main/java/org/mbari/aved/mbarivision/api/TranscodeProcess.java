@@ -531,7 +531,7 @@ public class TranscodeProcess extends Thread {
 
                 // only show progress every 100 frames on Mac
                 if (lcOSName.startsWith("mac")) {
-                   transcodecmd = transcodecmd + " --progress_rate 100 --threads 10 ";
+                   transcodecmd = transcodecmd + " --progress_rate 100 ";
                 } else {
                    transcodecmd = transcodecmd + " -q 0  ";
                 }

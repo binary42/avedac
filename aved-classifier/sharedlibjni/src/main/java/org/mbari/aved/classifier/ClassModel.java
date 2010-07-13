@@ -166,7 +166,7 @@ public class ClassModel {
 
                     return false;
                 }
-            });
+            }); 
 
             // All files should have some event number that we need to sort on.
             Arrays.sort(files, new Comparator() {
@@ -189,7 +189,7 @@ public class ClassModel {
                     return event1.compareTo(event2);
                 }
             });
-
+ 
             if ((files != null) && (files.length > 0)) {
                 fileList.addAll(Arrays.asList(files));
             }

@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import aved.model.EventObject;
 
 import com.jgoodies.binding.list.ArrayListModel;
@@ -57,22 +53,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JComboBox;
+import org.jdesktop.swingworker.SwingWorker;
 
 public class RunClassifierController extends AbstractController implements ModelListener {
 
     /** The AVED XML file to save the results of this classifier run */
-    private final File           avedXmlFile;
+    private final File avedXmlFile;
     private final EventListModel eventListModel;
-    private final SummaryModel   summaryModel;
-    private TrainingModel        trainingModel;
-    private RunClassifierWorker  worker;
+    private final SummaryModel summaryModel;
+    private TrainingModel trainingModel;
+    private RunClassifierWorker task;
 
     RunClassifierController(ClassifierModel model, final EventListModel eventListModel, SummaryModel summaryModel) {
         setModel(model);
         setView(new RunClassifierView(model, this));
         this.eventListModel = eventListModel;
-        this.summaryModel   = summaryModel;
-        this.avedXmlFile    = new File("");
+        this.summaryModel = summaryModel;
+        this.avedXmlFile = new File("");
 
         // Register as listener to the models
         getModel().addModelListener(this);
@@ -87,8 +84,9 @@ public class RunClassifierController extends AbstractController implements Model
         try {
 
             // Create the directory if it doesn't exist
-            if(!dbroot.exists())
+            if (!dbroot.exists()) {
                 dbroot.mkdirs();
+            }
 
             trainingModel.setDatabaseRoot(dbroot);
 
@@ -116,7 +114,7 @@ public class RunClassifierController extends AbstractController implements Model
 
         if (actionCommand.equals("Run")) {
             if (eventListModel.getSize() == 0) {
-                String                msg = new String("Please open a valid XML file ");
+                String msg = new String("Please open a valid XML file ");
                 NonModalMessageDialog dialog;
 
                 dialog = new NonModalMessageDialog(getView(), msg);
@@ -126,30 +124,95 @@ public class RunClassifierController extends AbstractController implements Model
                 return;
             } else {
                 try {
-                    worker = new RunClassifierWorker();
-                    worker.execute();
+                    // Temporarily turn off this user preference to not add all the
+                    // predicted images to the library during assignment
+                    final boolean isAddTrainingImages = UserPreferences.getModel().getAddTrainingImages();
+
+                    if (isAddTrainingImages) {
+                        UserPreferences.getModel().setAddLabeledTrainingImages(false);
+                    }
+
+                    // If at least one class then create
+                    final SwingWorker worker = Classifier.getController().getWorker();
+                    final float minProbThreshold = getView().getProbabilityThreshold();
+                    task = new RunClassifierWorker(minProbThreshold);
+                    Classifier.getController().addQueue(task);
                     getView().setRunButton(false);
                     getView().setStopButton(true);
+
+                    /// Create a progress display thread for monitoring this task
+                    Thread thread = new Thread() {
+
+                        @Override
+                        public void run() {
+                            InputStreamReader isr = Classifier.getController().getInputStreamReader();
+                            ProgressDisplay progressDisplay = new ProgressDisplay(worker,
+                                    "Running classifier with training model " + trainingModel.getName());
+                            progressDisplay.getView().setVisible(true);
+
+                            ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
+                            progressDisplayStream.execute();
+                            while (!task.isCancelled() && !task.isFini()) {
+                                try {
+                                    Thread.sleep(3000);
+                                } catch (InterruptedException ex) {
+                                }
+                            }
+                            getView().setRunButton(true);
+                            getView().setStopButton(false);
+                            progressDisplay.getView().dispose();
+
+                            // Reset the user preference
+                            UserPreferences.getModel().setAddLabeledTrainingImages(isAddTrainingImages);
+
+                            // Add the results only after successfully run
+                            if (task.isFini() && getModel() != null) {
+                                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " classification finished");
+                                dialog.setVisible(true); 
+
+                                // Make the title the same as the XML file name
+                                String xmlFile = summaryModel.getXmlFile().getName();
+                                String title = ParseUtils.removeFileExtension(xmlFile);
+                                TableController controller = new TableController(getModel(), task.tableModel, "testclass" + title);
+
+                                controller.getView().setTitle(title);
+                                controller.getView().setDescription("Confusion Matrix for " + title + ", Probability Threshold: "
+                                        + task.minProbThreshold);
+                                controller.getView().pack();
+                                controller.getView().setVisible(true);
+                            } else {
+                                if (task.isCancelled()) {
+                                    NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " classification stopped");
+                                    dialog.setVisible(true);
+                                }
+                            }
+                        }
+                    };
+
+                    thread.start();
+
                 } catch (Exception ex) {
                     Logger.getLogger(RunClassifierController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
-            JComboBox  box           = ((JComboBox) e.getSource());
-            ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem(); 
-            String          lastSelection = UserPreferences.getModel().getLastTrainingLibrarySelection();
-            
+            JComboBox box = ((JComboBox) e.getSource());
+            ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
+            String lastSelection = UserPreferences.getModel().getLastTrainingLibrarySelection();
+
             // Populate the libraries in the new color space
-            getView().populateLibraries(newColorSpace);  
- 
+            getView().populateTrainingLibraryList(newColorSpace); 
+
             // Set the library 
-            if(getView().selectLibrary(lastSelection) == false)
+            if (getView().selectLibrary(lastSelection) == false) {
                 getView().clearClasses();
-            
+            }
+
         } else if (actionCommand.equals("Stop")) {
-            if (worker != null) {
-                worker.cancelWorker(false);
-                worker.reset();
+            if (task != null) {
+                getView().setRunButton(true);
+                getView().setStopButton(false);
+                Classifier.getController().kill(task);
             }
         } else if (actionCommand.equals("availLibraryNameComboBoxChanged")) {
             JComboBox box = ((JComboBox) e.getSource());
@@ -170,36 +233,32 @@ public class RunClassifierController extends AbstractController implements Model
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
 
-            // When the database root directory change or the models are updated
-            // reset the color space
-            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
-            case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
-                break;
+                // When the database root directory change or the models are updated
+                // reset the color space
+                case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED:
+                case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED: 
+                    getView().populateTrainingLibraryList(trainingModel.getColorSpace());
+                    break;
             }
         }
     }
 
-    private class RunClassifierWorker extends MatlabWorker {
-        private final ProgressDisplay progressDisplay;
+    private class RunClassifierWorker extends ClassifierLibraryJNITask {
 
-        public RunClassifierWorker() throws Exception {
+        float minProbThreshold = .09f;
+        TableModel tableModel;
+
+        public RunClassifierWorker(float minProbThreshold) throws Exception {
             super(trainingModel.getName());
-            this.progressDisplay = new ProgressDisplay(this,
-                    "Running classifier with training library " + trainingModel.getName());
+            this.minProbThreshold = minProbThreshold;
         }
 
         @Override
-        protected Object doInBackground() throws Exception {
-            ProgressDisplayStream progressDisplayStream = null;
+        protected void run(ClassifierLibraryJNI library) throws Exception {
 
-            try { 
-                InputStreamReader    isr = Classifier.getInputStreamReader();
-
-                progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
-                progressDisplayStream.execute();
-
+            try {
                 File testDir = summaryModel.getTestImageDirectory();
-                int  size    = eventListModel.getSize();
+                int size = eventListModel.getSize();
 
                 if (!testDir.exists()) {
                     testDir.mkdirs();
@@ -213,17 +272,14 @@ public class RunClassifierController extends AbstractController implements Model
 
                     for (int frameNo = event.getStartFrame(); frameNo <= event.getEndFrame(); frameNo++) {
                         if (isCancelled()) {
-                            reset();
-
-                            return this;
+                            return;
                         }
 
                         // If found a valid frame number
                         if (frameNo >= 0) {
-                            progressDisplay.display("Creating " + "squared image of Object ID: " + event.getObjectId());
 
-                            int                 bestFrameNo = frameNo;
-                            EventImageCacheData data        = new EventImageCacheData(event);
+                            int bestFrameNo = frameNo;
+                            EventImageCacheData data = new EventImageCacheData(event);
 
                             // If the event has a class, then rename
                             // the event with an appended name - replacing
@@ -245,30 +301,27 @@ public class RunClassifierController extends AbstractController implements Model
 
                 String dbRoot = trainingModel.getDatabaseRootdirectory().toString();
 
-                progressDisplay.display("Collecting test images ...");
-
                 // Run test image collection on the data
                 // TODO: only do this once, unless the data has changed
                 // because this takes a very long time to run for large
-                // data sets
-                Classifier.getLibrary().collect_tests(this.getCancel(), testDir.getAbsolutePath(), dbRoot, trainingModel.getColorSpace());
+                // event sets
+                library.collect_tests(this.getCancel(), testDir.getAbsolutePath(), dbRoot, trainingModel.getColorSpace());
 
-                int      numEvents              = eventListModel.getSize();
-                int[]    majoritywinnerindex    = new int[numEvents];
-                int[]    probabilitywinnerindex = new int[numEvents];
-                float[]  probability            = new float[numEvents];
-                String[] eventids               = new String[numEvents];
-                float    minProbThreshold       = getView().getProbabilityThreshold();
+                int numEvents = eventListModel.getSize();
+                int[] majoritywinnerindex = new int[numEvents];
+                int[] probabilitywinnerindex = new int[numEvents];
+                float[] probability = new float[numEvents];
+                String[] eventids = new String[numEvents];
 
-                Classifier.getLibrary().run_test(this.getCancel(), eventids, majoritywinnerindex, probabilitywinnerindex, probability,
-                             testDir.getName(), trainingModel.getName(), minProbThreshold, dbRoot,
-                             trainingModel.getColorSpace());
+                library.run_test(this.getCancel(), eventids, majoritywinnerindex, probabilitywinnerindex, probability,
+                        testDir.getName(), trainingModel.getName(), minProbThreshold, dbRoot,
+                        trainingModel.getColorSpace());
 
                 // Add one column for the Unknown class
-                int      columns     = trainingModel.getNumClasses() + 1;
-                int      rows        = columns;
+                int columns = trainingModel.getNumClasses() + 1;
+                int rows = columns;
                 String[] columnNames = new String[columns];
-                int[][]  statistics  = new int[rows][columns];
+                int[][] statistics = new int[rows][columns];
 
                 // Create hash map for look-up of the class index by name and
                 // vice-versa
@@ -288,23 +341,13 @@ public class RunClassifierController extends AbstractController implements Model
                     mapbyid.put(new Integer(j), trainingModel.getClassModel(j - 1).getName());
                 }
 
-                // Temporarily turn off this user preference to not add all the
-                // predicted images to the library during assignment to the output
-                boolean isAddTrainingImages = UserPreferences.getModel().getAddTrainingImages();
-
-                if (isAddTrainingImages) {
-                    UserPreferences.getModel().setAddLabeledTrainingImages(false);
-                }
-
                 // Put the predicted class in the list model using the majority winner
                 for (int i = 0; i < size; i++) {
                     EventObjectContainer event = eventListModel.getElementAt(i);
 
                     for (int frameNo = event.getStartFrame(); frameNo <= event.getEndFrame(); frameNo++) {
                         if (isCancelled()) {
-                            reset();
-
-                            return this;
+                            return;
                         }
 
                         // If found a valid frame number
@@ -312,7 +355,7 @@ public class RunClassifierController extends AbstractController implements Model
                             EventObject obj = event.getEventObject(frameNo);
 
                             // Only populate the classes
-                            // that are know. Skip over all the unknown
+                            // that are known. Skip over all the unknown
                             // results - these have an index equal to 1
                             if ((majoritywinnerindex[i] > 1) && (obj != null)) {
                                 Float p = obj.getPredictedClassProbability();
@@ -322,7 +365,7 @@ public class RunClassifierController extends AbstractController implements Model
                                 }
 
                                 String np = mapbyid.get(new Integer(majoritywinnerindex[i] - 1));
-                                Float  pp = new Float(probability[i]);
+                                Float pp = new Float(probability[i]);
 
                                 // Always choosing the
                                 // strongest prediction
@@ -333,9 +376,6 @@ public class RunClassifierController extends AbstractController implements Model
                         }
                     }
                 }
-
-                // Reset the preference
-                UserPreferences.getModel().setAddLabeledTrainingImages(isAddTrainingImages);
 
                 int sum[] = new int[trainingModel.getNumClasses() + 1];
 
@@ -349,10 +389,10 @@ public class RunClassifierController extends AbstractController implements Model
                 }
 
                 for (int k = 0; k < numEvents; k++) {
-                    EventObjectContainer evt             = eventListModel.getElementAt(k);
-                    int                  frame           = evt.getBestEventFrame();
-                    int                  j               = 0;
-                    String               actualClassName = evt.getEventObject(frame).getClassName();
+                    EventObjectContainer evt = eventListModel.getElementAt(k);
+                    int frame = evt.getBestEventFrame();
+                    int j = 0;
+                    String actualClassName = evt.getEventObject(frame).getClassName();
 
                     if (map.containsKey(actualClassName)) {
                         j = map.get(actualClassName);
@@ -362,48 +402,16 @@ public class RunClassifierController extends AbstractController implements Model
 
                     sum[i]++;
                     statistics[i][j]++;
+
+                    // Put the statistics and column names in a TableModel
+                    TableModel tableModel = new TableModel(columnNames, statistics, sum);
                 }
-
-                // Put the statistics and column names in a TableModel
-                TableModel tableModel = new TableModel(columnNames, statistics, sum);
-
-                // Make the title the same as the XML file name
-                String          xmlFile    = summaryModel.getXmlFile().getName();
-                String          title      = ParseUtils.removeFileExtension(xmlFile);
-                TableController controller = new TableController(getModel(), tableModel, "testclass" + title);
-
-                controller.getView().setTitle(title);
-                controller.getView().setDescription("Confusion Matrix for " + title + ", Probability Threshold: "
-                        + minProbThreshold);
-                controller.getView().pack();
-                controller.getView().setVisible(true);
-                progressDisplayStream.isDone = true;
-                progressDisplay.getView().dispose();
-
-                NonModalMessageDialog dialog;
-
-                dialog = new NonModalMessageDialog(getView(), title + " classification finished");
-                dialog.setVisible(true);
             } catch (RuntimeException ex) {
-                if (isCancelled()) {
-                    reset();
-
-                    return this;
-                }
+                Logger.getLogger(RunClassifierController.class.getName()).log(Level.SEVERE, null, ex);
             } catch (Exception ex) {
-                if (progressDisplayStream != null) {
-                    progressDisplayStream.isDone = true;
-                }
-
                 Logger.getLogger(RunClassifierController.class.getName()).log(Level.SEVERE, null, ex);
 
-                NonModalMessageDialog dialog;
-
-                dialog = new NonModalMessageDialog(getView(), ex.getMessage());
-                dialog.setVisible(true);
             }
-
-            return this;
         }
 
         /**
@@ -430,15 +438,6 @@ public class RunClassifierController extends AbstractController implements Model
 
             // The directory is now empty so delete it
             return dir.delete();
-        }
-
-        /**
-         * Reset the start/stop buttons and disables the progress display.
-         */
-        private void reset() {
-            getView().setRunButton(true);
-            getView().setStopButton(false);
-            progressDisplay.getView().setVisible(false);
         }
     }
 }

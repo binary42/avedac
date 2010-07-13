@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import aved.model.EventDataStream;
 import aved.model.EventObject;
 import aved.model.FrameEventSet;
@@ -67,15 +63,13 @@ import javax.swing.JFrame;
 class ImportXMLWorker extends SwingWorker {
 
     /** Frequently accessed busy and wait cursors */
-    public final static Cursor busyCursor    = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
+    public final static Cursor busyCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
     public final static Cursor defaultCursor = Cursor.getDefaultCursor();
-
     /**
      * Helper member to send message to editor controller
      *
      */
     private ApplicationController controller;
-
     /**
      * Handle to data stream mapped to the current editor. This is reset
      * every time a new XML schema is loaded
@@ -84,22 +78,19 @@ class ImportXMLWorker extends SwingWorker {
 
     /* Simple display to show import progress */
     ProgressDisplay progressDisplay;
-
     /** XML file to import and controller */
     File xmlFile;
 
     /**
      * Import the results in the XML file and put in hash map
      *
-     * @param file
+     * @param xmlFile
      *            XML file to import/edit
      */
-    public ImportXMLWorker(File file, ApplicationController controller) {
+    public ImportXMLWorker(File xmlFile, ApplicationController controller) {
         try {
-
-            // TODO: need null checking here
             this.controller = controller;
-            xmlFile         = file;
+            this.xmlFile = xmlFile;
             progressDisplay = new ProgressDisplay((SwingWorker) this, "Importing " + xmlFile.getName() + "...");
         } catch (Exception e) {
 
@@ -135,8 +126,8 @@ class ImportXMLWorker extends SwingWorker {
         // Create event map with 201 objects and 75% loading factor
         // This should be enough to store events collected over a few
         // minutes and will grow when needed
-        HashMap<Long, EventObjectContainer> map    = new HashMap<Long, EventObjectContainer>(201, 0.75f);
-        Object                              object = null;
+        HashMap<Long, EventObjectContainer> map = new HashMap<Long, EventObjectContainer>(201, 0.75f);
+        Object object = null;
 
         progressDisplay.display("Parsing XML file now");
 
@@ -145,7 +136,7 @@ class ImportXMLWorker extends SwingWorker {
         try {
             progressDisplay.display("Unmarshalling the XML file...");
 
-            URL         url         = xmlFile.toURL();
+            URL url = xmlFile.toURL();
             InputStream inputStream = url.openStream();
 
             object = Mapper.unmarshall(inputStream);
@@ -156,7 +147,7 @@ class ImportXMLWorker extends SwingWorker {
             Logger.getLogger(ImportXMLWorker.class.getName()).log(Level.SEVERE, null, e);
 
             String message = new String("Error - cannot parse xml file: " + xmlFile.getName() + "\nmessage:"
-                                        + e.getMessage());
+                    + e.getMessage());
             NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) controller.getView(), message);
 
             dialog.setVisible(true);
@@ -190,8 +181,8 @@ class ImportXMLWorker extends SwingWorker {
             // just set it
             if (URLUtils.isURL(id)) {
                 model.setInputSourceURL(new URL(id));
-            }    // otherwise check if a file and convert it to a file URL reference
-                    else if (URLUtils.isFile(id)) {
+            } else if (URLUtils.isFile(id)) {
+                // otherwise check if a file and convert it to a file URL reference
 
                 // Convert to to a file reference
                 File video = new File(id);
@@ -211,16 +202,16 @@ class ImportXMLWorker extends SwingWorker {
             model.setInputSourceURL(null);
         }
 
-        long                 key   = 0;
+        long key = 0;
         EventObjectContainer value = null;
 
         progressDisplay.display("Extracting event objects...");
 
         // Walk through all FrameEventSets and extract event objects
         SortedSet<FrameEventSet> frames = eventDataStream.getFrameEventSets();
-        int                      max    = ((frames.size() > 0)
-                                           ? frames.size()
-                                           : 1);    // avoid divide
+        int max = ((frames.size() > 0)
+                ? frames.size()
+                : 1);    // avoid divide
 
         // by zero
         // exception
@@ -270,9 +261,9 @@ class ImportXMLWorker extends SwingWorker {
         Thread.sleep(1000);
 
         LinkedList<EventObjectContainer> entries = new LinkedList<EventObjectContainer>();
-        Iterator<Long>                   i       = keys.iterator();
+        Iterator<Long> i = keys.iterator();
 
-        max   = keys.size();
+        max = keys.size();
         count = 0;
 
         while (i.hasNext()) {
