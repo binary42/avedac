@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.table;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import org.mbari.aved.ui.Application;
 import org.mbari.aved.ui.model.EventAbstractTableModel;
 
@@ -45,6 +41,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 public class AvedTable extends JTable {
+
     private static final Color VERTICAL_LINE_COLOR = new Color(0xd9d9d9);
 
     public AvedTable() {
@@ -68,13 +65,15 @@ public class AvedTable extends JTable {
      *
      * @return column tool tip text
      */
+    @Override
     protected JTableHeader createDefaultTableHeader() {
         return new JTableHeader(columnModel) {
+
+            @Override
             public String getToolTipText(MouseEvent e) {
-                String         tip       = null;
-                java.awt.Point p         = e.getPoint();
-                int            index     = columnModel.getColumnIndexAtX(p.x);
-                int            realIndex = columnModel.getColumn(index).getModelIndex();
+                java.awt.Point p = e.getPoint();
+                int index = columnModel.getColumnIndexAtX(p.x);
+                int realIndex = columnModel.getColumn(index).getModelIndex();
 
                 return EventAbstractTableModel.columnToolTips[realIndex];
             }
@@ -85,11 +84,14 @@ public class AvedTable extends JTable {
      * Paints empty rows too, after letting the UI delegate do
      * its painting.
      */
+    @Override
     public void paint(Graphics g) {
-        if (this.getModel().getRowCount() > 0) {
-            super.paint(g);
-        } else {
-            paintEmptyRows(g);
+        if (this.getModel() != null) {
+            if (this.getModel().getRowCount() > 0) {
+                super.paint(g);
+            } else {
+                paintEmptyRows(g);
+            }
         }
     }
 
@@ -100,22 +102,22 @@ public class AvedTable extends JTable {
      * we have no data.
      */
     protected void paintEmptyRows(Graphics g) {
-        final int       rowCount = getRowCount();
-        final Rectangle clip     = g.getClipBounds();
-        final int       height   = clip.y + clip.height;
+        final int rowCount = getRowCount();
+        final Rectangle clip = g.getClipBounds();
+        final int height = clip.y + clip.height;
 
         if (rowCount * rowHeight < height) {
             for (int i = rowCount; i <= height / rowHeight; ++i) {
                 g.setColor((i % 2 == 0)
-                           ? Color.LIGHT_GRAY
-                           : Color.WHITE);
+                        ? Color.LIGHT_GRAY
+                        : Color.WHITE);
                 g.fillRect(clip.x, i * rowHeight, clip.width, rowHeight);
             }
 
             g.setColor(VERTICAL_LINE_COLOR);
 
-            TableColumnModel columnModel = getColumnModel();
-            int              x           = 0;
+            columnModel = getColumnModel();
+            int x = 0;
 
             for (int i = 0; i < columnModel.getColumnCount(); ++i) {
                 TableColumn column = columnModel.getColumn(i);
@@ -132,6 +134,7 @@ public class AvedTable extends JTable {
      * JTable normally restricts its size to just what's needed by its
      * model.
      */
+    @Override
     public boolean getScrollableTracksViewportHeight() {
         if (getParent() instanceof JViewport) {
             JViewport parent = (JViewport) getParent();
@@ -146,8 +149,8 @@ public class AvedTable extends JTable {
      * Shades alternate rows in different colors.
      */
     public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-        Component c        = super.prepareRenderer(renderer, row, column);
-        boolean   selected = isCellSelected(row, column);
+        Component c = super.prepareRenderer(renderer, row, column);
+        boolean selected = isCellSelected(row, column);
 
         if (selected) {
             c.setBackground(Application.lookAndFeelSettings.getSelectedColor());
@@ -155,8 +158,8 @@ public class AvedTable extends JTable {
 
             // Outside of selected rows, we want to alternate the background color.
             c.setBackground((row % 2 == 0)
-                            ? Color.LIGHT_GRAY
-                            : Color.WHITE);
+                    ? Color.LIGHT_GRAY
+                    : Color.WHITE);
         }
 
         if (c instanceof JComponent) {
@@ -205,7 +208,7 @@ public class AvedTable extends JTable {
             return null;
         }
 
-        final int row    = rowAtPoint(e.getPoint());
+        final int row = rowAtPoint(e.getPoint());
         final int column = columnAtPoint(e.getPoint());
 
         if ((row == -1) || (column == -1)) {

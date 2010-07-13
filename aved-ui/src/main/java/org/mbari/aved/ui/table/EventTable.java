@@ -65,6 +65,7 @@ public class EventTable extends AvedTable {
             TableModelEvent evt = new TableModelEvent(((TableModel) e.getSource()), e.getFirstRow());
 
             super.tableChanged(evt);
+            setRowHeight( getRowHeight() );
 
             if ((iMin == -1) || (iMax == -1)) {
                 dlsm.setSelectionInterval(iMin, iMax);
