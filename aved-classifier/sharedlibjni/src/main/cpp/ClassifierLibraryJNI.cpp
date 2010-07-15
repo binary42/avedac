@@ -527,11 +527,8 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_colle
     mxDestroyArray(mxRawDir);
     mxDestroyArray(mxSquareDir);
     mxDestroyArray(mxColorSpace);
-<<<<<<< local
-=======
     mxDestroyArray(mxClassMetadata);
     mxDestroyArray(mxClassData);
->>>>>>> other
     env->ReleaseStringUTFChars(jclassName, classname);
     env->ReleaseStringUTFChars(jmatlabdb, matlabdbdir);
     env->ReleaseStringUTFChars(jvarsClassName, varsclassname);

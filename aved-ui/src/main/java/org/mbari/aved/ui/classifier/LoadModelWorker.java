@@ -49,6 +49,7 @@ public class LoadModelWorker extends ClassifierLibraryJNITask {
         this.model           = model; 
     }
 
+    @Override
     protected void run(ClassifierLibraryJNI library) throws Exception {
 
         try {

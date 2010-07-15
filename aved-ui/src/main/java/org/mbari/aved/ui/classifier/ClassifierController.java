@@ -19,6 +19,8 @@ package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
 import aved.model.EventObject;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import org.jdesktop.swingworker.SwingWorker;
 
@@ -96,6 +98,13 @@ public class ClassifierController extends AbstractController implements ModelLis
         view.setRunPanel(runClassifier.getView().getForm());
         view.pack();
 
+        try {
+            jniQueue = new ClassifierLibraryJNITaskWorker();
+            jniQueue.execute();
+        } catch (Exception ex) {
+            Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         // Initialize the database directory from the user-defined preferences
         File dbDir = UserPreferences.getModel().getClassDatabaseDirectory();
         model.setDatabaseRoot(dbDir);
@@ -103,22 +112,11 @@ public class ClassifierController extends AbstractController implements ModelLis
         // Initialize the training image directory
         File trainingDir = UserPreferences.getModel().getClassTrainingImageDirectory();
         model.setClassTrainingImageDirectory(trainingDir);
-
-        try {
-            jniQueue = new ClassifierLibraryJNITaskWorker();
-            jniQueue.execute();
-
-            // First thread is to load the models
-            LoadModelWorker worker = new LoadModelWorker(model);
-            jniQueue.add(worker);
-
-        } catch (Exception ex) {
-
-            Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
     }
 
+    /**
+     * Default constructor
+     */
     ClassifierController() {
         createTrainingLib = null;
         createClass = null;
@@ -158,8 +156,12 @@ public class ClassifierController extends AbstractController implements ModelLis
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
                 case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED:
-                    //LoadModelWorker task = new LoadModelWorker();
-
+                    try {
+                        LoadModelWorker task = new LoadModelWorker(this.getModel());
+                        this.addQueue(task);
+                    } catch (Exception ex) {
+                        Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     break;
             }
         } /**
@@ -232,7 +234,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         try {
             if (jniQueue != null) {
                 jniQueue.cancel();
-            } 
+            }
         } catch (Exception ex) {
             Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -272,17 +274,18 @@ public class ClassifierController extends AbstractController implements ModelLis
         if (jniQueue != null) {
             jniQueue.add(task);
         }
-    } 
+    }
+
     /**
      * Utility method to pass through a reader to bridge byte streams
      * between the matlab log file to a graphical display
      * @return the input stream reader associated with the matlab log file
      */
     InputStreamReader getInputStreamReader() {
-         if (this.jniQueue != null) {
+        if (this.jniQueue != null) {
             return jniQueue.getInputStreamReader();
-         }
-         return null;
+        }
+        return null;
     }
 
     /**
@@ -354,24 +357,32 @@ public class ClassifierController extends AbstractController implements ModelLis
     private class ClassifierLibraryJNITaskWorker extends SwingWorker {
 
         private boolean exit = false;
-        Queue<ClassifierLibraryJNITask> queue = new LinkedList<ClassifierLibraryJNITask>();
-        ClassifierLibraryJNITask task = null;
-        private InputStreamReader isr;
-        private final ClassifierLibraryJNI jniLibrary = new ClassifierLibraryJNI();
         private boolean isInitialized = false;
+        private final Queue<ClassifierLibraryJNITask> queue = new LinkedList<ClassifierLibraryJNITask>();
+        private final ClassifierLibraryJNI jniLibrary = new ClassifierLibraryJNI();
+        private final File logFile = new File(UserPreferences.getModel().getDefaultScratchDirectory().getAbsolutePath() + "/matlablog.txt");
 
-        ClassifierLibraryJNITaskWorker() throws Exception{
-            getLibrary();
+        ClassifierLibraryJNITaskWorker() throws Exception {
         }
+
         @Override
         protected Object doInBackground() throws Exception {
-            while (!exit) {
+            getLibrary();
+
+            while (exit == false) {
                 if (!queue.isEmpty()) {
-                    task = queue.element();
+                    ClassifierLibraryJNITask task = queue.element();
                     task.run(jniLibrary);
                     queue.remove();
                 }
+                try {
+                    Thread.sleep(1000);
+                    System.out.println("Sleeping");
+                } catch (InterruptedException ex) {
+                    break;
+                }
             }
+            closeLibrary();
             return null;
         }
 
@@ -379,7 +390,7 @@ public class ClassifierController extends AbstractController implements ModelLis
          * Add a task to the queue for later execution
          * @param task the task to add
          */
-        public void add(ClassifierLibraryJNITask task) {
+        public synchronized void add(ClassifierLibraryJNITask task) {
             queue.add(task);
         }
 
@@ -389,7 +400,7 @@ public class ClassifierController extends AbstractController implements ModelLis
          * by the compiled matlab code.  
          * @param task
          */
-        private void cancelTask(ClassifierLibraryJNITask task) {
+        private synchronized void cancelTask(ClassifierLibraryJNITask task) {
             Iterator<ClassifierLibraryJNITask> it = queue.iterator();
             while (it.hasNext()) {
                 if (it.next().equals(task)) {
@@ -403,20 +414,36 @@ public class ClassifierController extends AbstractController implements ModelLis
         /**
          * Cancels this worker and closes the jni library
          */
-        public void cancel() {
+        public synchronized void cancel() {
             exit = true;
             super.cancel(true);
             jniLibrary.closeLib();
         }
 
         /**
-         * Gets the {@link java.io.InputStreamReader} associated with the Matlab log file
+         * Creates a {@link java.io.InputStreamReader} associated with the Matlab log file
          * This is intended for use in redirecting the Matlab text log ouput
          * to a display.
          *
          * @return the InputStreamReader
          */
-        public InputStreamReader getInputStreamReader() {
+        public synchronized InputStreamReader getInputStreamReader() {
+            InputStreamReader isr = null;
+            if (logFile.exists() && logFile.canRead()) {
+                FileInputStream fis = null;
+                try {
+                    fis = new FileInputStream(logFile);
+                    isr = new InputStreamReader(fis);
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+                } finally {
+                    try {
+                        fis.close();
+                    } catch (IOException ex) {
+                        Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
             return isr;
         }
 
@@ -424,30 +451,19 @@ public class ClassifierController extends AbstractController implements ModelLis
          * Returns the singleton <code>ClassifierLibraryJNI</code>
          * <p> An exception may be thrown if the Matlab log file does not exist,
          * which indicates there is something  wrong with the Matlab library
-         * initialization. This is likely caused by an invalid matlab log directory
-         *
-         * Call within block synced by: <code>sync</code>
+         * initialization. This is likely caused by an invalid matlab log file
+         * directory 
          *
          * @return a {@link org.mbari.aved.classifier.ClassifierLibraryJNI} singleton
          */
         private synchronized ClassifierLibraryJNI getLibrary() throws Exception {
             if (isInitialized == false) {
 
-                File dbDir = UserPreferences.getModel().getDefaultScratchDirectory();
-                String dbRoot = dbDir.getAbsolutePath();
-                File logFile = new File(dbRoot + "/matlablog.txt");
-
                 try {
                     jniLibrary.initLib(logFile.getAbsolutePath());
-                    Thread.sleep(5000);
                     isInitialized = true;
                 } catch (Exception e) {
                     Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, e);
-                }
-
-                if (logFile.exists() && logFile.canRead()) {
-                    FileInputStream fis = new FileInputStream(logFile);
-                    isr = new InputStreamReader(fis);
                 }
             }
 

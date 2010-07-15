@@ -145,10 +145,10 @@
                                 </library>
                             </libraries>
                             <cpp> 
-                                <options>
+                                <!--<options>
                                     <option>-pthread</option>
                                     <option>-D_REENTRANT</option>
-                                </options>
+                                </options>-->
                                 <systemIncludePaths>
                                     <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
