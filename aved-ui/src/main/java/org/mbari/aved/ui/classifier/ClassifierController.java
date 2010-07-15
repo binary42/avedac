@@ -467,7 +467,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                 }
             }
 
-            if (isInitialized == true) {
+                if (isInitialized == true) {
                 return jniLibrary;
             }
 

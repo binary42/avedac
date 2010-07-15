@@ -49,6 +49,16 @@ int debug = 1;
 
 using namespace std;
 
+static struct sigaction old_sa[NSIG];
+
+void android_sigaction(int signal, siginfo_t *info, void *reserved)
+{
+     fprintf(stderr, "Native crashing signal:%d siginfo: signal:%d code:%d %d %d %d",
+             signal, info->si_signo, info->si_code, info->si_errno,
+             info->si_status, info->si_status);
+     
+     old_sa[signal].sa_handler(signal);
+}
 
 //**************************************************************************
 // Throw new exception
@@ -268,7 +278,23 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
     } catch (...) {
         ThrowByName(env, "java/lang/RuntimeException", "Unknown matlab exception");
     }
+        
+    // Try to catch crashes...
+	struct sigaction handler;
+        //int size = sizeof(sigaction);
+	//memset(&handler, 0, size);
+	handler.sa_sigaction = android_sigaction;
+	handler.sa_flags = SA_RESETHAND;
+#define CATCHSIG(X) sigaction(X, &handler, &old_sa[X])
+	CATCHSIG(SIGILL);
+	CATCHSIG(SIGABRT);
+	CATCHSIG(SIGBUS);
+	CATCHSIG(SIGFPE);
+	CATCHSIG(SIGSEGV);
+	CATCHSIG(SIGPIPE);
+    
     env->ReleaseStringUTFChars(jmatlablog, matlablog);
+
 }
 
 //*************************************************************************** 
