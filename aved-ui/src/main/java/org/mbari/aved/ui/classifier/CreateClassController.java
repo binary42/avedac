@@ -40,6 +40,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.BufferedReader;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -219,12 +220,12 @@ class CreateClassController extends AbstractController implements ModelListener,
 
                     @Override
                     public void run() {
-                        InputStreamReader isr = Classifier.getController().getInputStreamReader();
+                        BufferedReader br = Classifier.getController().getBufferedReader();
                         ProgressDisplay progressDisplay = new ProgressDisplay(worker,
                                 "Creating class " + newModel.getName());
                         progressDisplay.getView().setVisible(true);
 
-                        ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
+                        ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, br);
                         progressDisplayStream.execute();
                         while (!task.isCancelled() && !task.isFini()) {
                             try {
@@ -238,9 +239,13 @@ class CreateClassController extends AbstractController implements ModelListener,
 
                         // Add the model only after successfully created
                         if (task.isFini() && getModel() != null) {
-                            getModel().addClassModel(newModel);
-                            NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), newModel.getName() + " class creation finished");
-                            dialog.setVisible(true); 
+                            try {
+                                getModel().addClassModel(newModel);
+                                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), newModel.getName() + " class creation finished");
+                                dialog.setVisible(true);
+                            } catch (Exception ex) {
+                                Logger.getLogger(CreateClassController.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         }
                         else {
                             if (task.isCancelled()) {

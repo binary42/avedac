@@ -58,6 +58,7 @@ public class NonModalMessageDialog extends JDialog implements ActionListener {
 
         // Make button get the focus whenever frame is activated.
         frame.addWindowListener(new WindowAdapter() {
+            @Override
             public void windowGainedFocus(WindowEvent e) {
                 button.requestFocusInWindow();
             }
@@ -75,8 +76,7 @@ public class NonModalMessageDialog extends JDialog implements ActionListener {
         int y = (screenSize.height - this.getHeight()) / 2;
 
         this.setLocation(x, y);
-        button.requestFocusInWindow();
-        this.setVisible(true);
+        button.requestFocusInWindow(); 
     }
 
     // Use synchronization to insure only one

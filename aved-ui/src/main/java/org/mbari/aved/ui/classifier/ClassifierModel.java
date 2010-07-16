@@ -103,6 +103,15 @@ public class ClassifierModel extends AbstractModel {
         }
     }
 
+     /**
+     * Sets the model event to tell listeners a jni task has completed
+     * @param f the root directory to set
+     */
+    public void setJniTaskComplete(int taskId) {
+            notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.JNI_TASK_COMPLETED,
+                    Integer.toString(taskId)));
+    }
+
     /**
      * Null safe check if the files have the same
      * @returns True is the files are the same
@@ -131,7 +140,10 @@ public class ClassifierModel extends AbstractModel {
      * Adds an array of class model to the list
      * @param models class models to add
      */
-    public void addClassModels(ClassModel model[]) { 
+    public void addClassModels(ClassModel model[]) throws Exception {
+         if(model == null)
+            throw new Exception ("model cannot be null");
+
         for(int i=0; i < model.length; i++) {
             ClassModel c = model[i].copy();
             checkClassModel(c);
@@ -145,7 +157,10 @@ public class ClassifierModel extends AbstractModel {
      * Adds a class model to the list
      * @param model class model to add
      */
-    public void addClassModel(ClassModel model) {
+    public void addClassModel(ClassModel model) throws Exception {
+        if(model == null)
+            throw new Exception ("model cannot be null");
+
         ClassModel m = model.copy();
         checkClassModel(m);
         classModelList.add(m);
@@ -156,7 +171,10 @@ public class ClassifierModel extends AbstractModel {
      * Adds a training model to the list
      * @param model training model to add
      */
-    public void addTrainingModel(TrainingModel model) {
+    public void addTrainingModel(TrainingModel model) throws Exception {
+          if(model == null)
+            throw new Exception ("model cannot be null");
+
         checkTrainingModel(model);
         trainingModelList.add(model);
         notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODELS_UPDATED, model.getName()));
@@ -279,6 +297,7 @@ public class ClassifierModel extends AbstractModel {
         public static final int CLASS_MODELS_UPDATED = 2;
         public static final int TRAINING_CLASS_DIR_UPDATED = 1;
         public static final int TRAINING_MODELS_UPDATED = 3;
+        public static final int JNI_TASK_COMPLETED = 4;
 
         /**
          * Constructor for this custom ModelEvent. Basically just like ModelEvent.

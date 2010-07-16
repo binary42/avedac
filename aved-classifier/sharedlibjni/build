@@ -12,7 +12,7 @@ uname=`uname`
 if [ `echo $uname | grep Linux` ]; then
   if [ ! "`echo $uname | grep 64`" ] ;then
     echo "Running Linux 32-bit build"
-    mvn install -PLinux32 -Dmaven.test.skip=true
+    mvn -e -X install -PLinux32 -Dmaven.test.skip=true
   else
     echo "Running Linux 64-bit build"
     mvn install -PLinux64 -Dmaven.test.skip=true

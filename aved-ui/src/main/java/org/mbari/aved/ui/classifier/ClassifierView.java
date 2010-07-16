@@ -23,7 +23,9 @@ package org.mbari.aved.ui.classifier;
 //~--- non-JDK imports --------------------------------------------------------
 
 import com.jeta.forms.components.panel.FormPanel;
+import java.awt.Component;
 import java.awt.Dimension;
+import javax.swing.event.ChangeEvent;
 
 import org.mbari.aved.ui.appframework.JFrameView;
 import org.mbari.aved.ui.appframework.ModelEvent;
@@ -31,6 +33,7 @@ import org.mbari.aved.ui.appframework.ModelEvent;
 //~--- JDK imports ------------------------------------------------------------
 
 import javax.swing.JTabbedPane;
+import javax.swing.event.ChangeListener;
 
 /**
  *
@@ -51,6 +54,26 @@ public class ClassifierView extends JFrameView {
         Dimension size = new Dimension(900, 480);
         this.setMinimumSize(size);
         this.setResizable(true);
+        
+        final JTabbedPane tabs = getTabbedPane();
+
+        final Dimension originalTabsDim = tabs.getPreferredSize();
+
+        tabs.addChangeListener(new ChangeListener()  {
+
+            public void stateChanged(ChangeEvent e) {
+                Component p = ((JTabbedPane) e.getSource()).getSelectedComponent();
+                Dimension panelDim = p.getPreferredSize();
+
+                Dimension nd = new Dimension(
+                        originalTabsDim.width - panelDim.width,
+                        originalTabsDim.height - panelDim.height);
+
+                tabs.setPreferredSize(originalTabsDim);
+                pack();
+            }
+        });
+ 
     }
 
     public void modelChanged(ModelEvent event) {}

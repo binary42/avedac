@@ -37,9 +37,9 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.BufferedReader;
 
 import java.io.File;
-import java.io.InputStreamReader;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -229,12 +229,12 @@ public class CreateTrainingLibraryController extends AbstractController implemen
 
                     @Override
                     public void run() {
-                        InputStreamReader isr = Classifier.getController().getInputStreamReader();
+                        BufferedReader br = Classifier.getController().getBufferedReader();
                         ProgressDisplay progressDisplay = new ProgressDisplay(worker,
                                 "Creating training model " + trainingModel.getName());
                         progressDisplay.getView().setVisible(true);
 
-                        ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
+                        ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, br);
                         progressDisplayStream.execute();
                         while (!task.isCancelled() && !task.isFini()) {
                             try {
@@ -247,11 +247,14 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                         progressDisplay.getView().dispose();
 
                         if (task.isFini()) { 
-                            // Add to training model when successfully run
-                            getModel().addTrainingModel(trainingModel);
-
-                            NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " training library finished");
-                            dialog.setVisible(true);
+                            try {
+                                // Add to training model when successfully run
+                                getModel().addTrainingModel(trainingModel);
+                                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " training library finished");
+                                dialog.setVisible(true);
+                            } catch (Exception ex) {
+                                Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         } else {
                             if (task.isCancelled()) {
                                 NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " training library stopped");

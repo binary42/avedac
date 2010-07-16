@@ -44,8 +44,8 @@ public class ProgressDisplayStream extends SwingWorker {
     private BufferedReader    br;
     private ProgressDisplay   display; 
 
-    public ProgressDisplayStream(ProgressDisplay display, InputStreamReader isr) {
-        br           = new BufferedReader(isr);
+    public ProgressDisplayStream(ProgressDisplay display, BufferedReader br) {
+        this.br = br;
         this.display = display;
     }
 

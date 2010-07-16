@@ -44,6 +44,7 @@ import org.mbari.aved.ui.utils.ParseUtils;
 //~--- JDK imports ------------------------------------------------------------
 
 import java.awt.event.ActionEvent;
+import java.io.BufferedReader;
 
 import java.io.File;
 import java.io.InputStreamReader;
@@ -145,12 +146,12 @@ public class RunClassifierController extends AbstractController implements Model
 
                         @Override
                         public void run() {
-                            InputStreamReader isr = Classifier.getController().getInputStreamReader();
+                            BufferedReader br = Classifier.getController().getBufferedReader();
                             ProgressDisplay progressDisplay = new ProgressDisplay(worker,
                                     "Running classifier with training model " + trainingModel.getName());
                             progressDisplay.getView().setVisible(true);
 
-                            ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
+                            ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, br);
                             progressDisplayStream.execute();
                             while (!task.isCancelled() && !task.isFini()) {
                                 try {

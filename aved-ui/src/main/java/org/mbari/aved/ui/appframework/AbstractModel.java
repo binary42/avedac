@@ -30,7 +30,7 @@ import java.util.Iterator;
  * notification behaviour
  */
 public abstract class AbstractModel implements Model {
-    private ArrayList listeners = new ArrayList(5);
+    private final ArrayList listeners = new ArrayList(10);
 
     /**
      * Method that is called by subclasses of AbstractModel when they want to

@@ -20,12 +20,8 @@ package org.mbari.aved.ui.classifier;
 //~--- non-JDK imports --------------------------------------------------------
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
 import org.mbari.aved.ui.ApplicationModel;
-import org.mbari.aved.ui.userpreferences.UserPreferences;
 
 //~--- JDK imports ------------------------------------------------------------
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

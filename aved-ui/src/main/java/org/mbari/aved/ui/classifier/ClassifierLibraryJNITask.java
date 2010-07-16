@@ -42,9 +42,9 @@ public class ClassifierLibraryJNITask {
     }
 
     /*
-     * return true is the task was successfully finished
+     * return true if the task was successfully finished
      */
-    public synchronized boolean isFini() {
+    public final synchronized boolean isFini() {
         return isFinished;
     }
     /**
@@ -52,31 +52,39 @@ public class ClassifierLibraryJNITask {
      * This should only be called after successful
      * task completion
      */
-    public synchronized void setFini() {
+    public final synchronized void setFini() {
         isFinished = true;
     }
 
     /**
      * Sets the user-cancelled flag
      */
-    public synchronized void setCancelled () {
+    public final synchronized void setCancelled () {
         isCancelled = true;
     }
     /** 
      * @return  true if the matlab call was cancelled
      */
-    public synchronized boolean isCancelled() {
+    public final synchronized boolean isCancelled() {
         return isCancelled;
     }
 
     /**
      * @return the cancel signal name
      */
-    public synchronized String getCancel() {
+    public final synchronized String getCancel() {
         return this.matlabCancel;
     }
  
-    protected synchronized void run(ClassifierLibraryJNI library) throws Exception {
+    protected void run(ClassifierLibraryJNI library) throws Exception {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     *
+     * @return the task id - this is used for checking the status
+     */
+    public final synchronized int getId() {
+        return this.hashCode();
     }
 }

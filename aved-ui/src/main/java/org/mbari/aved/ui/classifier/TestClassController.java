@@ -34,6 +34,7 @@ import org.mbari.aved.ui.progress.ProgressDisplayStream;
 //~--- JDK imports ------------------------------------------------------------
 
 import java.awt.event.ActionEvent;
+import java.io.BufferedReader;
 
 import java.io.InputStreamReader;
 
@@ -152,13 +153,13 @@ class TestClassController extends AbstractController implements ModelListener {
 
                         @Override
                         public void run() {
-                            InputStreamReader isr = Classifier.getController().getInputStreamReader();
+                            BufferedReader br = Classifier.getController().getBufferedReader();
                             ProgressDisplay progressDisplay = new ProgressDisplay(worker,
                                     "Testing class " + classModel.getName() + "against " + trainingModel.getName());
 
                             progressDisplay.getView().setVisible(true);
 
-                            ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, isr);
+                            ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, br);
                             progressDisplayStream.execute();
                             while (!task.isCancelled() && !task.isFini()) {
                                 try {
@@ -171,14 +172,16 @@ class TestClassController extends AbstractController implements ModelListener {
                             progressDisplay.getView().dispose();
 
                             if (task.isFini()) {
-                                // Add to training model when successfully run
-                                getModel().addTrainingModel(trainingModel);
-
-                                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " test finished");
-                                dialog.setVisible(true);
-
-                                task.controller.getView().pack();
-                                task.controller.getView().setVisible(true);
+                                try {
+                                    // Add to training model when successfully run
+                                    getModel().addTrainingModel(trainingModel);
+                                    NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " test finished");
+                                    dialog.setVisible(true);
+                                    task.controller.getView().pack();
+                                    task.controller.getView().setVisible(true);
+                                } catch (Exception ex) {
+                                    Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
+                                }
                             } else {
                                 if (task.isCancelled()) {
                                     NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " test stopped");

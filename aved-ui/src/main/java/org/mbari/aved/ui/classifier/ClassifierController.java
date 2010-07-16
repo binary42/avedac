@@ -20,7 +20,6 @@ package org.mbari.aved.ui.classifier;
 //~--- non-JDK imports --------------------------------------------------------
 import aved.model.EventObject;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 
 import org.jdesktop.swingworker.SwingWorker;
 
@@ -42,6 +41,7 @@ import org.mbari.aved.ui.userpreferences.UserPreferences;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.BufferedReader;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -50,6 +50,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -112,6 +113,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         // Initialize the training image directory
         File trainingDir = UserPreferences.getModel().getClassTrainingImageDirectory();
         model.setClassTrainingImageDirectory(trainingDir);
+
     }
 
     /**
@@ -265,7 +267,7 @@ public class ClassifierController extends AbstractController implements ModelLis
     public void kill(ClassifierLibraryJNITask task) {
         jniQueue.cancelTask(task);
     }
-
+  
     /**
      * Adds a task to the jni queue for later execution
      * @param task
@@ -281,9 +283,9 @@ public class ClassifierController extends AbstractController implements ModelLis
      * between the matlab log file to a graphical display
      * @return the input stream reader associated with the matlab log file
      */
-    InputStreamReader getInputStreamReader() {
+    public BufferedReader getBufferedReader() {
         if (this.jniQueue != null) {
-            return jniQueue.getInputStreamReader();
+            return jniQueue.getBufferedReader();
         }
         return null;
     }
@@ -294,7 +296,7 @@ public class ClassifierController extends AbstractController implements ModelLis
      * in the background before class creating and training
      * can begin.  
      */
-    public class AddClassImageWorker extends SwingWorker {
+    public class AddClassImageWorker extends SwingWorker  {
 
         private final ClassModel classModel;
         private final EventObjectContainer event;
@@ -360,7 +362,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         private boolean isInitialized = false;
         private final Queue<ClassifierLibraryJNITask> queue = new LinkedList<ClassifierLibraryJNITask>();
         private final ClassifierLibraryJNI jniLibrary = new ClassifierLibraryJNI();
-        private final File logFile = new File(UserPreferences.getModel().getDefaultScratchDirectory().getAbsolutePath() + "/matlablog.txt");
+        private final File logFile = new File(UserPreferences.getModel().getDefaultScratchDirectory().getAbsolutePath() + "/matlablog.txt"); 
 
         ClassifierLibraryJNITaskWorker() throws Exception {
         }
@@ -370,16 +372,18 @@ public class ClassifierController extends AbstractController implements ModelLis
             getLibrary();
 
             while (exit == false) {
-                if (!queue.isEmpty()) {
+                if (queue.isEmpty() == false) {
                     ClassifierLibraryJNITask task = queue.element();
+                    System.out.println("running task");
                     task.run(jniLibrary);
                     queue.remove();
-                }
-                try {
-                    Thread.sleep(1000);
-                    System.out.println("Sleeping");
-                } catch (InterruptedException ex) {
-                    break;
+                    getModel().setJniTaskComplete(task.getId());
+                } else {
+                    try {
+                        Thread.sleep(1000); 
+                    } catch (InterruptedException ex) {
+                        break;
+                    }
                 }
             }
             closeLibrary();
@@ -421,30 +425,25 @@ public class ClassifierController extends AbstractController implements ModelLis
         }
 
         /**
-         * Creates a {@link java.io.InputStreamReader} associated with the Matlab log file
+         * Creates a {@link java.io.BufferedReader} associated with the Matlab log file
          * This is intended for use in redirecting the Matlab text log ouput
          * to a display.
          *
-         * @return the InputStreamReader
+         * @return the BufferedReader
          */
-        public synchronized InputStreamReader getInputStreamReader() {
-            InputStreamReader isr = null;
+        public synchronized BufferedReader getBufferedReader() {
+            BufferedReader br = null;
             if (logFile.exists() && logFile.canRead()) {
                 FileInputStream fis = null;
                 try {
                     fis = new FileInputStream(logFile);
-                    isr = new InputStreamReader(fis);
+                    InputStreamReader isr = new InputStreamReader(fis);
+                    br = new BufferedReader(isr);
                 } catch (FileNotFoundException ex) {
                     Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-                } finally {
-                    try {
-                        fis.close();
-                    } catch (IOException ex) {
-                        Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
+                }  
             }
-            return isr;
+            return br;
         }
 
         /**
@@ -461,13 +460,14 @@ public class ClassifierController extends AbstractController implements ModelLis
 
                 try {
                     jniLibrary.initLib(logFile.getAbsolutePath());
+                    Thread.sleep(2000);
                     isInitialized = true;
                 } catch (Exception e) {
                     Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, e);
                 }
             }
 
-                if (isInitialized == true) {
+            if (isInitialized == true) {
                 return jniLibrary;
             }
 
