@@ -41,6 +41,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseListener;
 
@@ -105,6 +106,18 @@ public class ApplicationView extends JFrameView {
         // Don't do anything; require the program to handle the operation in the
         // windowClosing  method of a registered WindowListener object.
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+
+        Toolkit kit = this.getToolkit();
+        Dimension screenSize = kit.getScreenSize();
+
+        // Set window size to 90% of display
+        setSize((int) (0.90 * screenSize.width), (int) (0.90 * screenSize.height));
+
+        // Display window in center of screen
+        int x = (screenSize.width - getWidth()) / 2;
+        int y = (screenSize.height - getHeight()) / 2;
+
+        setLocation(x, y);
     }
 
     public void replaceThumbnailPanel(FormPanel form) {

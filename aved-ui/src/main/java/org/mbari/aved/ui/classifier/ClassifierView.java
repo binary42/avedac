@@ -33,7 +33,6 @@ import org.mbari.aved.ui.appframework.ModelEvent;
 //~--- JDK imports ------------------------------------------------------------
 
 import javax.swing.JTabbedPane;
-import javax.swing.event.ChangeListener;
 
 /**
  *
@@ -48,32 +47,8 @@ public class ClassifierView extends JFrameView {
     private final static int TRAINING_PANEL_INDEX     = 1;
 
     ClassifierView(ClassifierModel model, ClassifierController controller) {
-        super("org/mbari/aved/ui/forms/Classifier.xml", model, controller);
-
-        // TODO: make this a function of screen size
-        Dimension size = new Dimension(900, 480);
-        this.setMinimumSize(size);
-        this.setResizable(true);
-        
-        final JTabbedPane tabs = getTabbedPane();
-
-        final Dimension originalTabsDim = tabs.getPreferredSize();
-
-        tabs.addChangeListener(new ChangeListener()  {
-
-            public void stateChanged(ChangeEvent e) {
-                Component p = ((JTabbedPane) e.getSource()).getSelectedComponent();
-                Dimension panelDim = p.getPreferredSize();
-
-                Dimension nd = new Dimension(
-                        originalTabsDim.width - panelDim.width,
-                        originalTabsDim.height - panelDim.height);
-
-                tabs.setPreferredSize(originalTabsDim);
-                pack();
-            }
-        });
- 
+        super("org/mbari/aved/ui/forms/Classifier.xml", model, controller); 
+        this.setResizable(true);  
     }
 
     public void modelChanged(ModelEvent event) {}

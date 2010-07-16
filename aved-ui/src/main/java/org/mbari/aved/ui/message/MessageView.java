@@ -69,19 +69,16 @@ public class MessageView extends JFrame {
 
         // Set.getName() of display and size it
         header.setText(headerdescription);
-        this.setTitle(ApplicationInfo.getName() + "-" + headerdescription);
+        setTitle(ApplicationInfo.getName() + "-" + headerdescription);
 
-        // Format the size the message
-        this.setVisible(false);
-        this.pack();
-
-        Dimension dims = this.getSize();
+        // Format the size the message 
+        Dimension dims = getSize();
 
         dims.width = 750;
-        this.setSize(dims);
-        this.setResizable(true);
-        this.setVisible(true);
-
+        setSize(dims);
+        setResizable(true);
+        pack(); 
+      
         // Setup the window location
         Toolkit   kit        = this.getToolkit();
         Dimension screenSize = kit.getScreenSize();
@@ -90,8 +87,8 @@ public class MessageView extends JFrame {
         int x = (screenSize.width - this.getWidth()) / 2;
         int y = (screenSize.height - this.getHeight()) / 2;
 
-        this.setLocation(x, y);
-    }
+        this.setLocation(x, y); 
+     }
 
     private Component findNestedForm() {
         Iterator iter = mainViewAccessor.beanIterator();

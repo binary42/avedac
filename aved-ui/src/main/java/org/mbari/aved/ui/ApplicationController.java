@@ -110,9 +110,7 @@ public class ApplicationController extends AbstractController implements ModelLi
 
         // Replace the tabbed panels with the customized ones
         getView().replaceThumbnailPanel(((ThumbnailView) thumbnailController.getView()).getForm());
-        getView().replaceTablePanel(tableController.getTable());
-        getView().pack();
-        tableController.getView().setFocusable(true);
+        getView().replaceTablePanel(tableController.getTable()); 
         
         String s = System.getProperty("os.name").toLowerCase();
 

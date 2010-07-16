@@ -6,7 +6,11 @@
     <packaging>pom</packaging>
     <version>0.4.3-SNAPSHOT</version>
     <name>aved</name>
-    <url>http://maven.apache.org</url>
+    <organization>
+        <name>Monterey Bay Aquarium Research Institute</name>
+        <url>http://www.mbari.org</url>
+    </organization>
+    <url>avedac.googlecode.com/</url>
     <profiles>
         <profile>
             <id>Linux32</id>

@@ -131,11 +131,11 @@
                                     <tasks>
                                         <!--
                       during the development, debug profile defined in ../pom.xml will cause
-                      the jars to be signed by a self-certified dummy public key.
-
+                      the jars to be signed by a self-certified dummy public key. 
                       For release, you should define the real values in ~/.m2/settings.xml
                     -->
-                                        <signjar jar="target/aved-ui-0.4.3-SNAPSHOT.jar" alias="MBARIjava" storepass="java1700" keypass="javaBeansMakeLousyCoffee" keystore="${basedir}/src/main/app-resources/keystore.bin" />
+                                        <signjar jar="target/aved-ui-0.4.3-SNAPSHOT.jar" 
+                                        alias="${mbari.sign.alias}" storepass="${mbari.sign.storepass}" keypass="${mbari.sign.keypass}" keystore="${basedir}/src/main/app-resources/keystore.bin" />
                                         <fileset dir="target/" includes="**/.jar"/>
 
                                     </tasks>

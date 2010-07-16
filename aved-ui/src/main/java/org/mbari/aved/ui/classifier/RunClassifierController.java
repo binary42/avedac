@@ -237,7 +237,8 @@ public class RunClassifierController extends AbstractController implements Model
                 // When the database root directory change or the models are updated
                 // reset the color space
                 case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED:
-                case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED: 
+                case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED:
+                case ClassifierModel.ClassifierModelEvent.TRAINING_MODELS_UPDATED:
                     getView().populateTrainingLibraryList(trainingModel.getColorSpace());
                     break;
             }

@@ -26,6 +26,7 @@ import com.jgoodies.binding.list.ArrayListModel;
 import com.jgoodies.binding.list.SelectionInList;
 import com.jgoodies.binding.value.ValueHolder;
 import com.jgoodies.binding.value.ValueModel;
+import java.awt.Component;
 
 import org.mbari.aved.classifier.ClassModel;
 import org.mbari.aved.classifier.ColorSpace;
@@ -43,7 +44,6 @@ import java.io.File;
 import java.net.URL;
 
 import java.util.ArrayList;
-import java.util.logging.Level;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
@@ -55,7 +55,9 @@ import javax.swing.JTextField;
 import javax.swing.ListModel;
 
 import java.util.logging.Level;
-import java.util.logging.Logger; 
+import java.util.logging.Logger;
+import javax.swing.JList;
+import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
 public class CreateClassView extends JFrameView {
 
@@ -97,6 +99,8 @@ public class CreateClassView extends JFrameView {
         knowledgeBasePanel = getForm().getPanel(ID_KNOWLEDGE_BASE_PANEL);
         classImageComponent = (ImageComponent) getForm().getComponentByName(ID_IMAGE_COMPONENT);
 
+        dirComboBox.setRenderer(new ComboBoxRenderer());
+        
         // / most of the tool tips are handled by the Abeille designer, but this
         // is a dynamic compoment so set it here
         knowledgeBasePanel.setToolTipText("VARS knowledge base. Double-click "
@@ -135,6 +139,34 @@ public class CreateClassView extends JFrameView {
         this.addWindowListener((WindowListener) this.getController());
     }
 
+    /**
+     * Custom renderer for displaying full file paths as a tooltip
+     * when selecting the image directory combo box
+     */
+    class ComboBoxRenderer extends BasicComboBoxRenderer {
+
+        @Override
+        public Component getListCellRendererComponent(JList list, Object value,
+                int index, boolean isSelected, boolean cellHasFocus) {
+            if (isSelected) {
+                setBackground(list.getSelectionBackground());
+                setForeground(list.getSelectionForeground());
+                if (-1 < index) { 
+                    if (value.getClass().equals(File.class)) {
+                        String text = ((File) value).getAbsolutePath();
+                        list.setToolTipText(text);
+                    }
+                }
+            } else {
+                setBackground(list.getBackground());
+                setForeground(list.getForeground());
+            }
+            setFont(list.getFont());
+            setText((value == null) ? "" : value.toString());
+            return this;
+        }
+    }
+
     public void replaceKnowledgeBasePanel(JPanel panel) {
         FormAccessor formAccessor = getForm().getFormAccessor("class.form");
 
@@ -156,6 +188,7 @@ public class CreateClassView extends JFrameView {
         conceptTreePanel.setOpaque(true);
         conceptTreePanel.buildPanel();
         replaceKnowledgeBasePanel(conceptTreePanel);
+        pack();
     }
 
     /**

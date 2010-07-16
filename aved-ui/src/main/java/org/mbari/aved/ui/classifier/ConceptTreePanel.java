@@ -72,7 +72,7 @@ public class ConceptTreePanel extends JPanel {
             JPanel panel = new JPanel();
 
             CellConstraints cc = new CellConstraints();
-            JPanel temporaryPanel = new JPanel(new FormLayout("fill:m:grow", "fill:d:noGrow"));
+            JPanel temporaryPanel = new JPanel(new FormLayout("fill:m:grow", "fill:d:grow"));
             final JTextArea patience = new JTextArea();
 
             patience.setEditable(false);
@@ -148,7 +148,7 @@ public class ConceptTreePanel extends JPanel {
 
                 kbThread.execute();
             } else {
-                patience.setText("For more information about VARS see: http://vars.sourceforge.net/");
+                patience.setText("For more information about VARS see: http://www.mbari.org/vars/");
                 temporaryPanel.add(patience, cc.xy(1, 1));
 
                 final JScrollPane scrollPane = new JScrollPane(temporaryPanel);

@@ -28,7 +28,7 @@ import javax.swing.JFrame;
 
 public class MessagePrintStream extends PrintStream {
     private static final MessagePrintStream INSTANCE     = new MessagePrintStream(System.out);
-    MessageController                       myController = null;
+    MessageController                       controller = null;
 
     private MessagePrintStream(OutputStream out) {
         super(out);
@@ -44,7 +44,7 @@ public class MessagePrintStream extends PrintStream {
         }
 
         try {
-            myController = new MessageController("Messages");
+            controller = new MessageController("Messages");
         } catch (Exception e) {
             e.printStackTrace();
 
@@ -57,18 +57,18 @@ public class MessagePrintStream extends PrintStream {
     }
 
     public static JFrame getView() {
-        return (JFrame) INSTANCE.myController.getView();
+        return (JFrame) INSTANCE.controller.getView();
     }
 
     public void write(byte b[]) throws IOException {
         String str = new String(b);
 
-        myController.display(str);
+        controller.display(str);
     }
 
     public void write(byte b[], int off, int len) {
         String str = new String(b, off, len);
 
-        myController.display(str);
+        controller.display(str);
     }
 }
