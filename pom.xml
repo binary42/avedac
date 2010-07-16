@@ -166,6 +166,12 @@
             </modules>
         </profile>
     </profiles>
+    <properties>
+        <mbari.sign.alias>avedjava</mbari.sign.alias>
+        <mbari.sign.storepass>avedjavakeystore</mbari.sign.storepass>
+        <mbari.sign.keypass>avedjavapsswd</mbari.sign.keypass>
+        <mbari.sign.keystore>src/main/app-resources/keystore.bin</mbari.sign.keystore>
+    </properties>
     <scm>
         <connection>scm:hg:https://avedac.googlecode.com/hg/</connection>
         <developerConnection>scm:hg:https://avedac.googlecode.com/hg/</developerConnection> 

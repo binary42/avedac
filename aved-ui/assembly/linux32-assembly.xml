@@ -30,6 +30,13 @@
                                         <include>readme.*</include>
                                     </includes>
                                 </fileSet>
+	<fileSet>
+            <directory>${basedir}/target/classes/tools/abeilleforms</directory>
+            <outputDirectory>/</outputDirectory>
+            <excludes>
+                <exclude>*</exclude>
+            </excludes>
+        </fileSet>
 
         <fileSet>
             <directory>${basedir}/src/main/app-resources</directory>
