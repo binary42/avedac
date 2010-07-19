@@ -187,17 +187,7 @@ public class Application {
         initLookAndFeel(); 
 
         final JFrame view = Application.getView();
-        Toolkit kit = view.getToolkit();
-        Dimension screenSize = kit.getScreenSize();
-
-        // Set window size to 90% of display
-        view.setSize((int) (0.90 * screenSize.width), (int) (0.70 * screenSize.height));
-
-        // Display window in center of screen
-        int x = (screenSize.width - view.getWidth()) / 2;
-        int y = (screenSize.height - view.getHeight()) / 2;
-
-        view.setLocation(x, y);
+        
         SwingUtilities.invokeLater(new Runnable() {
 
             public void run() {
@@ -206,7 +196,7 @@ public class Application {
                     public void run() {
                         try {
 
-                            URL name = getClass().getResource("/2344_00_32_40_25.events.small.xml");
+                            //URL name = getClass().getResource("/2344_00_32_40_25.events.small.xml");
                             //URL name = getClass().getResource("/20060808T000000_4912_32_103.events.xml");
                             // URL name = new URL("file:/Volumes/nanomiaRAID-1/JAMSTEC/20080604T063139Z_tests/20080604T063139Z-test1/20080604T063139Z-test1.events.xml");
                             //Application.getController().importProcessedResults(new File(name.getFile()));

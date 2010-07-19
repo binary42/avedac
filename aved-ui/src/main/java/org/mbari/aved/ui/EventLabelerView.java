@@ -52,12 +52,13 @@ public class EventLabelerView extends JFrameView {
      */
     private static final String ID_CLASS_BROWSE_KB_BUTTON = "browseknowledgebase";
     private static final String ID_CLASS_NAME_COMBO       = "classname";
+    private static final String ID_SPECIES_NAME_COMBO     = "speciesname";
     private static final String ID_CLOSE_BUTTON           = "close";
     private static final String ID_IDENTITY_REF_COMBO     = "identityreference";
     private static final String ID_TAG_COMBO              = "tag";
 
     /** Frequently accessed components */
-    private JComboBox        classComboBox, predictedClassComboBox;
+    private JComboBox        classComboBox, speciesClassComboBox;
     private JFrame           conceptTreeFrame;
     private ConceptTreePanel conceptTreePanel;
 
@@ -85,6 +86,7 @@ public class EventLabelerView extends JFrameView {
         // Create and set up the content pane.
         ArrayList<String> list = UserPreferences.getModel().getClassNameList();
 
+        speciesClassComboBox = getForm().getComboBox(ID_SPECIES_NAME_COMBO);
         classComboBox = getForm().getComboBox(ID_CLASS_NAME_COMBO);
         classComboBox.setModel(new DefaultComboBoxModel(list.toArray()));
         classComboBox.addActionListener(actionHandler);
@@ -113,6 +115,7 @@ public class EventLabelerView extends JFrameView {
     /**
      * Override the view dispose to also close the conceptTreePanel
      */
+    @Override
     public void dispose() {
         if (conceptTreeFrame != null) {
             conceptTreeFrame.dispose();
@@ -132,13 +135,13 @@ public class EventLabelerView extends JFrameView {
     }
 
     /**
-     * Sets the selected item in the predictedClassName combo box display area
+     * Sets the selected item in the speciesClassName combo box display area
      * to the object in the argument.
      *
-     * @param predictedClassName  the object to display
+     * @param speciesClassName  the object to display
      */
-    void setSpeciesCombo(String predictedClassName) {
-        predictedClassComboBox.setSelectedItem(predictedClassName);
+    void setSpeciesCombo(String speciesClassName) {
+        speciesClassComboBox.setSelectedItem(speciesClassName);
     }
 
     public void displayConceptTree() {

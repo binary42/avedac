@@ -1,20 +1,18 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
+<html><head>
   <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-  <title>AVED Event Table</title>
-  <link href="mbariexternal.css" type="text/css" rel="stylesheet">
-</head>
+  
+  <title>AVED Event Table</title><link href="mbariexternal.css" type="text/css" rel="stylesheet"></head>
 <body>
 <div id="pagetable" background-color="#ffffff">
 <div id="header">
-<div id="header_title">Automated Visual Event Detection 
+<div id="header_title">Automated Visual Event Detection&nbsp;and Classification 
 </div>
 </div> 
 <br>
 <div id="pagetitle" style="font-size: 18px;" align="center">Event Table</div>
-The Event table is a spreadsheet display of AVED events where
-each row defines a single AVED event. <br>
+The <span style="font-weight: bold;">Event Table</span> is a spreadsheet display of&nbsp; events where
+each row defines a single&nbsp; event. <br>
 <br>
 <table style="text-align: left; width: 100px;" border="0" cellpadding="2" cellspacing="2">
   <tbody>
@@ -28,55 +26,60 @@ header label<br>
       <br>
       <br>
       <br>
-Each table row defines a single AVED event </span><br>
+Each table row defines a single&nbsp; event <br>
       <br>
       </td>
-      <td><img style="width: 750px; height: 441px;" alt="AVED Editor Annotated Row" src="Images/editorannotated_row.png"></td>
+      <td><img style="width: 640px; height: 390px;" alt="AVEDac Overview" src="Images/editorannotated_row.png"></td>
     </tr>
   </tbody>
 </table>
 <br>
 <br>
-Each column displays one type of AVED data as defined as follows:<br>
+Each column displays&nbsp;data as defined as follows:<br>
 <br>
-<table style="text-align: left; margin-left: auto; margin-right: auto; width=auto; height: auto;" border="1" cellpadding="2" cellspacing="2">
+<table style="text-align: left; margin-left: auto; margin-right: auto; height: auto;" border="1" cellpadding="2" cellspacing="2">
   <tbody>
     <tr style="font-weight: bold;">
-      <td style="height: 36px;" class="caption">Object ID</td>
-      <td style="height: 36px;" class="caption">Max Size</td>
-      <td style="height: 36px;" class="caption">Start Timecode</td>
-      <td style="height: 36px;" class="caption" ="">End<br> Timecode</td>
-      <td style="height: 36px;" class="caption">Start
-      <br>Frame</td>
-      <td style="height: 36px;" class="caption">End
-      <br>Frame</td>
-      <td style="height: 36px;" class="caption">Thumbnail</td>
+      <td style="height: 36px; font-weight: bold;" class="caption">Object ID</td>
+      <td style="font-weight: bold;">
+  
+    
+      Predicted Class</td><td style="font-weight: bold;">
+      Probability in Class</td><td style="font-weight: bold;">Class</td>
+      
+      
+      
+      
+      
     </tr>
     <tr>
-      <td style="vertical-align: top; height: 71px;">Event Object Identifier</td>
-      <td style="vertical-align: top; height: 71px;">Largest square pixel size of
-the event found over its duration&nbsp;</td>
-      <td style="vertical-align: top; height: 71px;">Starting time
-code of the event, or missing if no timecode used</td>
-     <td style="vertical-align: top; height: 71px;">Ending time code
-of the event, or missing if no timecode used</td>
-      <td style="vertical-align: top; height: 71px;">Starting frame
-number of the event</td>
-     <td style="vertical-align: top; height: 71px;">Ending frame number of
-the event</td>
-      <td style="vertical-align: top; height: 71px;">Event image
-with the largest size found over its duration. This is generally the
-best representation of an event. </td>
+      <td style="vertical-align: top; height: 71px;">Event Object Identifier. The&nbsp; numerical index assigned by mbarivision to this event.</td>
+      <td>The
+predicted class name for this&nbsp;event. This can either be
+a VARS&nbsp;concept, or a user-defined class name.
+This&nbsp;corresponds to the&nbsp;AVEDac classifier prediction.</td><td>The
+probability of the predicted class. A number between 0 and 1.0. The
+higher this number, the more accurate the predicted value.</td><td>The
+class name this event was assigned. This is user-defined class, versus
+the AVEDac classifier prediction. If using VARS, this is equivalent to
+a VARS&nbsp;concept.</td>
+      
+     
+      
+     
+      
     </tr>
   </tbody>
 </table>
-<span style="font-weight: bold;"></span><br>
+<span style="font-weight: bold;"></span><br><br><table style="text-align: left; margin-left: auto; margin-right: auto;" border="1" cellpadding="2" cellspacing="2"><tbody><tr><td style="font-weight: bold;">Tag</td><td style="font-weight: bold;">Identity Reference</td><td style="font-weight: bold;">Max Size</td><td style="font-weight: bold;">Start Timecode/Frame</td><td style="font-weight: bold;">End<br> Timecode/Frame</td><td style="font-weight: bold;">Event Duration</td><td style="font-weight: bold;">Thumbnail</td></tr><tr><td>A user defined tag. This can be anything you define, e.g. swimming ,ignore, junk. Useful to help sort and combine events</td><td>A user defined identity reference.&nbsp; This can be anything you define,
+e.g. benthocodon1, benthocodon2. Use e.g. to label whether same animal
+or new animal.</td><td style="vertical-align: top;">The maximum size (square pixels) of any instance of this event&nbsp;over its lifetime.</td><td style="vertical-align: top;">Starting time
+code/frame number of the event</td><td style="vertical-align: top;">&nbsp;Ending time
+code/frame number of the event</td><td style="vertical-align: top;">The frame duration of this event</td><td style="vertical-align: top;">A thumbnail picture of this event.</td></tr></tbody></table><br>
+<h3>Event Table selection</h3>
+<br>How events are selected, depends on the operating system. Events can be selected in the table according to the following:<br>
 <br>
-<h3>Event table selection</h3>
-<br>
-Events can be selected in the table according to the following:<br>
-<br>
-<table style="text-align: left; margin-left: auto; margin-right: auto; width=auto; height=auto; " border="1">
+<table style="text-align: left; margin-left: auto; margin-right: auto;" border="1">
   <thead> </thead><tbody>
     <tr>
       <th class="caption">Operation</th>
@@ -105,13 +108,31 @@ Control-Space Bar to toggle row selection.</td>
      </tr>
  </tbody>
 </table>
- <br>
-<table style="text-align: left; " border="0" cellpadding="2" cellspacing="2">
+ <br><h3>Event Table Operations: Delete, Combine, Unselect.</h3>Once
+events are selected,&nbsp; a few operations can be performed on these
+events, namely deleting, combining, and unselecting. &nbsp;The
+algorithm for automated event detection and tracking does product false
+detections and tracking can skip frames for many reasons beyond the
+scope of this help document. &nbsp;To assist with cleaning up these
+errors, the capability to delete and combine events exists in the user
+interface.<br><br>If one of more events are selected, selecting delete
+will delete the event reference. &nbsp;This might be used, for example,
+to delete false detections. This can also be useful to simply remove
+events that are not of interest to you.<br><br>Combing events is useful
+for cases when the same object/animal is detected multiple times as a
+separate event.&nbsp; The combine operation will combine all events
+according to the algorithm:<br><br><span style="font-style: italic;">Using
+the lowest objectId of the selction (which is completely&nbsp;arbitrary
+and has no significance), combine events.&nbsp; If two events exist in
+the same frame, the conflict is&nbsp; resolved by simply choosing the
+event with the larger square pixesl area. &nbsp;This proceeds in
+contiguous order by object ID.</span><br style="font-style: italic;"><br>Unselecting events&nbsp; simply unselects the user selection.<br><br>
+<table style="text-align: left;" border="0" cellpadding="2" cellspacing="2">
   <tbody>
     <tr>
-      <td style="width: 100;">Once events are selected, delete events with Control-Click, then Delete, or Delete all
+      <td style="width: 100px;">Once events are selected, delete events with Control-Click, then select Delete, or Delete all (if multiple events selected).
 </td>
-      <td style="width: 685px;"><img style="height: 279px; width: 708px;" alt="AVED Editor Annotated Row Delete" src="Images/editorannotated_delete.png"></td>
+      <td style="width: 685px;"><img style="width: 640px; height: 391px;" alt="AVEDac Event Table" src="Images/editorannotated_delete.png"></td>
     </tr>
   </tbody>
 </table>
@@ -124,5 +145,4 @@ Moss Landing, CA 95039-USA &nbsp; &middot; &nbsp; Tel: (831) 775-1700 &nbsp;&nbs
 </div>
 </div>
 </div>
-</body>
-</html>
+</body></html>

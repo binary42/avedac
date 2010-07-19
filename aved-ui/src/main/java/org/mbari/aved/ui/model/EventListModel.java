@@ -277,7 +277,8 @@ public class EventListModel extends AbstractModel implements ListModel, BoundedR
      * associated EventObjectContainers found at the <code>indexes</code>, by
      * their objectId's, and combines all the events into one with the lowest
      * objectId. Using the lowest objectId is completely aarbitrary and has no
-     * significance.
+     * significance.  If two events exist in the same frame, the conflict is
+     * resolved by simply choosing the one with the larger square pixesl area. 
      *
      * Called within block synced by: <code>syncList</code>
      * @param indexes the list of indexes delete

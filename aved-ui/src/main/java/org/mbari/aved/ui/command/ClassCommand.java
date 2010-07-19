@@ -1,5 +1,5 @@
 /*
- * @(#)BiologicalClassificationCommand.java
+ * @(#)ClassCommand.java
  * 
  * Copyright 2010 MBARI
  *
@@ -30,13 +30,14 @@ import org.mbari.aved.ui.model.EventObjectContainer;
 import java.util.ArrayList;
 
 /**
- *
+ * Assigned the user-defined/VARS concept class to an event or group of events
+ * 
  * @author dcline
  */
-public class BiologicalClassificationCommand extends StringCommand {
+public class ClassCommand extends StringCommand {
     private final String className;
 
-    public BiologicalClassificationCommand(String command) {
+    public ClassCommand(String command) {
         this.className = command;
     }
 

@@ -224,7 +224,7 @@ public class ClassifierModel extends AbstractModel {
     public void checkTrainingModel(TrainingModel m) {
         Iterator<TrainingModel> i = trainingModelList.iterator();
 
-        while (i.hasNext()) {
+        while (i.hasNext() && m != null) {
             TrainingModel model = i.next();
 
             if (m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())

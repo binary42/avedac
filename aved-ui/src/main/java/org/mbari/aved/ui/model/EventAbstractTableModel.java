@@ -43,19 +43,19 @@ public class EventAbstractTableModel extends AbstractModel {
         + "AVEDac classifier prediction",
         "The probability of the predicted class. A number between 0 and 1.0 "
         + "The higher this number, the more accurate the predicted value.",
-        "The class name this event was assigned to be. If using VARS " + "this is equivalent to a VARS \"concept\"",
+        "The class name this event was assigned to be. If using VARS " + "this is equivalent to a VARS concept",
         "A user defined tag. This can be anything you define, e.g. swimming, "
         + "ignore, junk. Useful to help sort and combine events",
         "A user defined identity reference.  This can be anything you define,"
-        + " e.g. benthocodon1, benthocodon2. Use to label whether same " + "animal or new animal",
+        + " e.g. benthocodon1, benthocodon2. Use e.g. to label whether same " + "animal or new animal",
         "The maximum size (square pixels) of any instance of this event " + "over its lifetime.",
         "The first time the event was detected. An optional field and is emtpy "
         + "if the video source was not ISO860 formatted.",
-        "The last time the event was detected. An optional field is emtpy if "
+        "The last time the event was detected. An optional field that's emtpy if "
         + "the video source was not ISO860 formatted.",
         "The first frame the event was detected", "The last frame the event was detected",
         "The frame duration of this event",
-        "A thumbnail picture of the maximum size (square pixels) of any " + "instance of this event over its lifetime"
+        "A thumbnail picture of event"
     };
     private static final long serialVersionUID = 1L;
 

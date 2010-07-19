@@ -83,7 +83,7 @@ public class ConceptTreePanel extends JPanel {
 
             // First test for KB existence - skip this for Linux because this
             // breaks the classifier TODO: investigate pthreads exceptions
-            if ((s.indexOf("linux") > 0) && KnowledgeBaseUtil.isKnowledgebaseAvailable()) {
+            if (KnowledgeBaseUtil.isKnowledgebaseAvailable()) {
 
                 patience.setText("Loading Knowledge Base, your patience is appreciated...");
                 temporaryPanel.add(patience, cc.xy(1, 1));
@@ -99,54 +99,61 @@ public class ConceptTreePanel extends JPanel {
                 this.setFocusable(true);
                 this.repaint();
 
-                SwingWorker kbThread = new SwingWorker() {
 
-                    @Override
-                    protected Object doInBackground() throws Exception {
-                        System.out.println("Loading concept tree");
-                        treePanel = new SearchableConceptTreePanel();
+                SwingUtilities.invokeLater(new Runnable() {
 
-                        Concept rootConcept = null;
+                    public void run() {
 
-                        try {
-                            rootConcept = KnowledgeBaseCache.getInstance().findRootConcept();
-                        } catch (DAOException e1) {
+                        SwingWorker kbThread = new SwingWorker() {
 
-                            // e1.printStackTrace();
-                            SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            protected Object doInBackground() throws Exception {
+                                System.out.println("Loading concept tree");
+                                treePanel = new SearchableConceptTreePanel();
 
-                                public void run() {
-                                    patience.setText("Error loading knowledge base.");
-                                    patience.repaint();
+                                Concept rootConcept = null;
+
+                                try {
+                                    rootConcept = KnowledgeBaseCache.getInstance().findRootConcept();
+                                } catch (DAOException e1) {
+
+                                    // e1.printStackTrace();
+                                    SwingUtilities.invokeLater(new Runnable() {
+
+                                        public void run() {
+                                            patience.setText("Error loading knowledge base.");
+                                            patience.repaint();
+                                        }
+                                    });
+                                    isInitialized = false;
+                                    return 0;
                                 }
-                            });
-                            isInitialized = false;
-                            return 0;
-                        }
 
-                        conceptTree = new ConceptTreeReadOnly(rootConcept);
+                                conceptTree = new ConceptTreeReadOnly(rootConcept);
 
-                        if (listener != null) {
-                            conceptTree.addMouseListener(listener);
-                        }
+                                if (listener != null) {
+                                    conceptTree.addMouseListener(listener);
+                                }
 
-                        treePanel.setJTree(conceptTree);
-                        System.out.println("replacing wait panel");
-                        SwingUtilities.invokeLater(new Runnable() {
+                                treePanel.setJTree(conceptTree);
+                                System.out.println("replacing wait panel");
+                                SwingUtilities.invokeLater(new Runnable() {
 
-                            public void run() {
-                                scrollPane.getViewport().removeAll();
-                                scrollPane.getViewport().add(treePanel);
-                                scrollPane.repaint();
-                                System.out.println("finished");
-                                isInitialized = true;
+                                    public void run() {
+                                        scrollPane.getViewport().removeAll();
+                                        scrollPane.getViewport().add(treePanel);
+                                        scrollPane.repaint();
+                                        System.out.println("finished");
+                                        isInitialized = true;
+                                    }
+                                });
+                                return 0;
                             }
-                        });
-                        return 0;
-                    }
-                };
+                        };
 
-                kbThread.execute();
+                        kbThread.execute();
+                    }
+                });
             } else {
                 patience.setText("For more information about VARS see: http://www.mbari.org/vars/");
                 temporaryPanel.add(patience, cc.xy(1, 1));

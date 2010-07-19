@@ -24,7 +24,7 @@ package org.mbari.aved.ui;
 
 import org.mbari.aved.ui.classifier.ConceptTreePanel;
 import org.mbari.aved.ui.command.AbstractCommand;
-import org.mbari.aved.ui.command.BiologicalClassificationCommand;
+import org.mbari.aved.ui.command.ClassCommand;
 import org.mbari.aved.ui.command.CombineCommand;
 import org.mbari.aved.ui.command.CommandHistory;
 import org.mbari.aved.ui.command.CommandHistory.UndoRedoState;
@@ -669,7 +669,7 @@ public class EditMenu extends JFrame {
                 } else if ((classNameTextEntryPanel != null) && source.equals(classNameTextEntryPanel.getComboBox())) {
                     String className = classNameTextEntryPanel.getText();
 
-                    Execute.run(new BiologicalClassificationCommand(className));
+                    Execute.run(new ClassCommand(className));
                     classNameTextEntryFrame.setVisible(false);
                 } else if ((idTextEntryPanel != null) && source.equals(idTextEntryPanel.getComboBox())) {
                     String id = idTextEntryPanel.getText();
@@ -754,7 +754,7 @@ public class EditMenu extends JFrame {
             } else if (source.equals(classRepeatMenuItem)) {
                 String lastClassName = UserPreferences.getModel().getLastUsedClassName();
 
-                Execute.run(new BiologicalClassificationCommand(lastClassName));
+                Execute.run(new ClassCommand(lastClassName));
             } else if (source.equals(classNewCustomMenuItem)) {
                 classNameTextEntryFrame.setLocation(lastInvokerPoint);
                 classNameTextEntryFrame.setVisible(true);
@@ -765,7 +765,7 @@ public class EditMenu extends JFrame {
                             String conceptName = conceptTreePanel.getSelectedConceptName();
 
                             if (conceptName.length() > 0) {
-                                Execute.run(new BiologicalClassificationCommand(conceptName));
+                                Execute.run(new ClassCommand(conceptName));
                                 conceptTreeFrame.dispose();
                             }
                         }
@@ -774,7 +774,7 @@ public class EditMenu extends JFrame {
 
                 displayConceptTree(adapter, lastInvokerPoint);
             } else if (source.equals(classClearMenuItem)) {
-                Execute.run(new BiologicalClassificationCommand(""));
+                Execute.run(new ClassCommand(""));
             } else if (source.equals(menuItemIdMenuClear)) {
                 UserPreferences.getModel().clearIdList();
             } else if (source.equals(menuItemClassMenuClear)) {
@@ -810,7 +810,7 @@ public class EditMenu extends JFrame {
             } else if (classMenuItems.contains(source)) {
                 String className = source.getText();
 
-                Execute.run(new BiologicalClassificationCommand(className));
+                Execute.run(new ClassCommand(className));
             } else if (source.equals(menuItemLabelAll)) {
                 EventLabelerController classLabelController = new EventLabelerController(mainModel.getEventListModel());
 

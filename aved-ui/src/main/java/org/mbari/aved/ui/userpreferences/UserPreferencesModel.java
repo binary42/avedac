@@ -929,7 +929,8 @@ public final class UserPreferencesModel extends AbstractModel {
 
     /** Returns the video playout mode preference */
     public VideoPlayoutMode getPlayoutMode() {
-        String s = get(videoPlayoutMode.VIDEO_PLAYOUT_MODE, "0");    // set to default if can't find preference
+        String s = get(videoPlayoutMode.VIDEO_PLAYOUT_MODE, "0");
+        // set to default if can't find preference
 
         if (String.valueOf(videoPlayoutMode.DEFAULT.index).equals(s)) {
             return videoPlayoutMode.DEFAULT;
@@ -944,7 +945,7 @@ public final class UserPreferencesModel extends AbstractModel {
 
     /** Sets the video playout mode preference */
     public void setPlayoutMode(VideoPlayoutMode mode) {
-        if (videoPlayoutMode == VideoPlayoutMode.DEFAULT) {
+        if (mode == VideoPlayoutMode.DEFAULT) {
             put(VideoPlayoutMode.VIDEO_PLAYOUT_MODE, String.valueOf(VideoPlayoutMode.DEFAULT.index));
         } else {
             put(VideoPlayoutMode.VIDEO_PLAYOUT_MODE, String.valueOf(VideoPlayoutMode.OTHER.index));

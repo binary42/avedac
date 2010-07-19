@@ -110,8 +110,8 @@ public class ApplicationView extends JFrameView {
         Toolkit kit = this.getToolkit();
         Dimension screenSize = kit.getScreenSize();
 
-        // Set window size to 90% of display
-        setSize((int) (0.90 * screenSize.width), (int) (0.90 * screenSize.height));
+        // Set window size to full display
+        setSize((int) (screenSize.width), (int) (screenSize.height));
 
         // Display window in center of screen
         int x = (screenSize.width - getWidth()) / 2;

@@ -181,9 +181,7 @@ public class CreateClassView extends JFrameView {
      * @param listener the listener to attach to the concept tree
      */
     public void createConceptTree(MouseListener listener) {
-
-        // TODO: put check for knowledge base existence and replace with
-        // string message if so in the panel
+ 
         conceptTreePanel = new ConceptTreePanel(listener);
         conceptTreePanel.setOpaque(true);
         conceptTreePanel.buildPanel();

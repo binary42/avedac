@@ -70,7 +70,6 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 import org.mbari.aved.mbarivision.api.utils.Utils;
-import org.mbari.aved.ui.progress.ProgressDisplay;
 
 public class ApplicationController extends AbstractController implements ModelListener, WindowListener {
 
