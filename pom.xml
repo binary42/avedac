@@ -11,6 +11,18 @@
         <url>http://www.mbari.org</url>
     </organization>
     <url>avedac.googlecode.com/</url>
+    <developers>
+        <developer>
+            <id>dcline</id>
+            <name>Danelle E. Cline</name>
+            <email>dcline@mbari.org</email>
+            <roles>
+                <role>Lead Engineer</role>
+            </roles>
+            <organization>MBARI</organization>
+            <timezone>-8</timezone>
+        </developer>
+    </developers>
     <profiles>
         <profile>
             <id>Linux32</id>
@@ -46,8 +58,8 @@
                 outside of this pom.xml but referenced here because it is
                 needed in the aved-classifier modules -->
                 <mcrRoot>${env.MCR_ROOT}</mcrRoot>
-                
-		<!-- The location of the Matlab install. The matlab license
+
+                <!-- The location of the Matlab install. The matlab license
                 should include both the image processing libraries and
                 the matlab runtime compiler. MATLAB_ROOT must be setup external to
                 maven as it is needed to setup the correct LD_LIBRARY_PATH
@@ -100,8 +112,8 @@
                 outside of this pom.xml but referenced here because it is
                 needed in the aved-classifier modules -->
                 <mcrRoot>${env.MCR_ROOT}</mcrRoot>
-                
-		<!-- The location of the Matlab install. The matlab license
+
+                <!-- The location of the Matlab install. The matlab license
                 should include both the image processing libraries and
                 the matlab runtime compiler. MATLAB_ROOT must be setup external to
                 maven as it is needed to setup the correct LD_LIBRARY_PATH
@@ -149,7 +161,7 @@
                 needed in the aved-classifier modules -->
                 <mcrRoot>${env.MCR_ROOT}</mcrRoot>
 
-		<!-- The location of the Matlab install. The matlab license
+                <!-- The location of the Matlab install. The matlab license
                 should include both the image processing libraries and
                 the matlab runtime compiler. MATLAB_ROOT must be setup external to
                 maven as it is needed to setup the correct DYLD_LIBRARY_PATH
@@ -166,6 +178,7 @@
             </modules>
         </profile>
     </profiles>
+    <!--Properties for signing a temporary executable jar-->
     <properties>
         <mbari.sign.alias>avedjava</mbari.sign.alias>
         <mbari.sign.storepass>avedjavakeystore</mbari.sign.storepass>
@@ -174,7 +187,7 @@
     </properties>
     <scm>
         <connection>scm:hg:https://avedac.googlecode.com/hg/</connection>
-        <developerConnection>scm:hg:https://avedac.googlecode.com/hg/</developerConnection> 
+        <developerConnection>scm:hg:https://avedac.googlecode.com/hg/</developerConnection>
     </scm>
     <reporting>
         <plugins>
@@ -252,7 +265,7 @@
             <id>freehep-maven</id>
             <name>Maven FreeHEP</name>
             <url>http://java.freehep.org/maven2</url>
-        </pluginRepository> 
+        </pluginRepository>
     </pluginRepositories>
     <dependencyManagement>
         <dependencies>
@@ -279,10 +292,10 @@
                     <arguments>-Prelease</arguments>
                 </configuration>
             </plugin>
-                <plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                 <configuration>
+                <configuration>
                     <source>1.5</source>
                     <target>1.5</target>
                 </configuration>

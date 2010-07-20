@@ -19,6 +19,8 @@ package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
 import com.jgoodies.binding.list.ArrayListModel;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.mbari.aved.classifier.ClassModel;
 import org.mbari.aved.classifier.TrainingModel;
@@ -40,10 +42,11 @@ public class ClassifierModel extends AbstractModel {
 
     public static final String DBROOT = "databaseRoot";
     // a list of available models under this database root
-    private ArrayListModel classModelList = new ArrayListModel();
-    private ArrayListModel trainingModelList = new ArrayListModel();
+    private final ArrayListModel classModelList = new ArrayListModel();
+    private final ArrayListModel trainingModelList = new ArrayListModel();
     private File lastClassTrainingDirectory = new File("");
     private File dbrootDirectory = new File("");
+    final String syncArrays = "syncArrays";
 
     /**
      * Constructor.
@@ -79,14 +82,21 @@ public class ClassifierModel extends AbstractModel {
     }
 
     /**
-     * Get the list of already trained models. Returns an empty
-     * ArrayListModel if no models exist, otherwise returns
-     * the available training models
+     * Get a training model at the given index. Returns an empty
+     * <code>TrainingModel</code> if no model exist at that index
      *
-     * @return the list of already trained models
+     * @return a TrainingModel
      */
-    public ArrayListModel getTrainingModels() {
-        return trainingModelList;
+    public TrainingModel getTrainingModel(int index) {
+
+        synchronized (syncArrays) {
+            try {
+                TrainingModel model = (TrainingModel) trainingModelList.get(index);
+                return model;
+            } catch (IndexOutOfBoundsException ex) {
+            }
+            return new TrainingModel();
+        }
     }
 
     /**
@@ -103,13 +113,13 @@ public class ClassifierModel extends AbstractModel {
         }
     }
 
-     /**
+    /**
      * Sets the model event to tell listeners a jni task has completed
      * @param f the root directory to set
      */
     public void setJniTaskComplete(int taskId) {
-            notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.JNI_TASK_COMPLETED,
-                    Integer.toString(taskId)));
+        notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.JNI_TASK_COMPLETED,
+                Integer.toString(taskId)));
     }
 
     /**
@@ -128,12 +138,20 @@ public class ClassifierModel extends AbstractModel {
     }
 
     /**
-     * Gets the available class models. These are the classes
-     * that have been successfully collected and trained.
-     * @return
+     * Get a class models at the given index. Returns an empty
+     * <code>ClassModel</code> if no model exist at that index
+     *
+     * @return a ClassModel
      */
-    public ArrayListModel getClassModels() {
-        return this.classModelList;
+    public ClassModel getClassModel(int index) {
+        synchronized (syncArrays) {
+            try {
+                ClassModel model = (ClassModel) classModelList.get(index);
+                return model;
+            } catch (IndexOutOfBoundsException ex) {
+            }
+            return new ClassModel();
+        }
     }
 
     /**
@@ -141,13 +159,17 @@ public class ClassifierModel extends AbstractModel {
      * @param models class models to add
      */
     public void addClassModels(ClassModel model[]) throws Exception {
-         if(model == null)
-            throw new Exception ("model cannot be null");
+        if (model == null) {
+            throw new Exception("class model cannot be null");
+        }
 
-        for(int i=0; i < model.length; i++) {
-            ClassModel c = model[i].copy();
-            checkClassModel(c);
-            classModelList.add(c);
+
+        synchronized (syncArrays) {
+            for (int i = 0; i < model.length; i++) {
+                ClassModel c = model[i].copy();
+                checkClassModel(c);
+                classModelList.add(c);
+            }
         }
 
         notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASS_MODELS_UPDATED, "all"));
@@ -158,13 +180,17 @@ public class ClassifierModel extends AbstractModel {
      * @param model class model to add
      */
     public void addClassModel(ClassModel model) throws Exception {
-        if(model == null)
-            throw new Exception ("model cannot be null");
+        if (model == null) {
+            throw new Exception("class model cannot be null");
+        }
 
-        ClassModel m = model.copy();
-        checkClassModel(m);
-        classModelList.add(m);
-        notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASS_MODELS_UPDATED, m.getName()));
+        synchronized (syncArrays) {
+            ClassModel m = model.copy();
+            checkClassModel(m);
+            classModelList.add(m);
+
+            notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASS_MODELS_UPDATED, m.getName()));
+        }
     }
 
     /**
@@ -172,25 +198,38 @@ public class ClassifierModel extends AbstractModel {
      * @param model training model to add
      */
     public void addTrainingModel(TrainingModel model) throws Exception {
-          if(model == null)
-            throw new Exception ("model cannot be null");
+        if (model == null) {
+            throw new Exception("training model cannot be null");
+        }
 
-        checkTrainingModel(model);
-        trainingModelList.add(model);
-        notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODELS_UPDATED, model.getName()));
+        synchronized (syncArrays) {
+            checkTrainingModel(model);
+            this.trainingModelList.add(model);
+            notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODELS_UPDATED, model.getName()));
+        }
     }
 
-     /**
+    /**
      * Adds training models to the list
      * @param model training models to add
      */
-    void addTrainingModels(TrainingModel[] training) {
-         for(int i=0; i < training.length; i++) {
-            TrainingModel t = training[i];
-            checkTrainingModel(t);
-            trainingModelList.add(t);
-        } 
-        notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODELS_UPDATED, "all"));
+    void addTrainingModels(TrainingModel[] training) throws Exception {
+        if (training == null) {
+            throw new Exception("training model array cannot be null");
+        }
+
+        synchronized (syncArrays) {
+            for (int i = 0; i < training.length; i++) {
+                try {
+                    TrainingModel t = training[i];
+                    checkTrainingModel(t);
+                    this.trainingModelList.add(t);
+                } catch (Exception ex) {
+                    Logger.getLogger(ClassifierModel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODELS_UPDATED, "all"));
+        }
     }
 
     /**
@@ -199,39 +238,49 @@ public class ClassifierModel extends AbstractModel {
      * @return true if it exists
      */
     public boolean checkClassExists(ClassModel newModel) {
-        Iterator<ClassModel> i = classModelList.iterator();
 
-        while (i.hasNext()) {
-            ClassModel model = i.next();
+        synchronized (syncArrays) {
+            Iterator<ClassModel> i = classModelList.iterator();
 
-            if (newModel.getName().equals(model.getName())
-                    && newModel.getColorSpace().equals(model.getColorSpace())
-                    && newModel.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
-                    && newModel.getDescription().equals(model.getDescription())
-                    && newModel.getRawImageDirectory().equals(model.getRawImageDirectory())
-                    && newModel.getVarsClassName().equals(model.getVarsClassName())) {
-                return true;
+
+            while (i.hasNext()) {
+                ClassModel model = i.next();
+
+                if (newModel.getName().equals(model.getName())
+                        && newModel.getColorSpace().equals(model.getColorSpace())
+                        && newModel.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
+                        && newModel.getDescription().equals(model.getDescription())
+                        && newModel.getRawImageDirectory().equals(model.getRawImageDirectory())
+                        && newModel.getVarsClassName().equals(model.getVarsClassName())) {
+                    return true;
+                }
             }
+            return false;
         }
-
-        return false;
     }
 
     /**
      * Checks if the training model exists and delete it if so
      * @param m the training model to check 
      */
-    public void checkTrainingModel(TrainingModel m) {
-        Iterator<TrainingModel> i = trainingModelList.iterator();
+    public void checkTrainingModel(TrainingModel model) throws Exception {
+        if (model == null) {
+            throw new Exception("training model cannot be null");
+        }
 
-        while (i.hasNext() && m != null) {
-            TrainingModel model = i.next();
+        synchronized (syncArrays) {
+            Iterator<TrainingModel> i = trainingModelList.iterator();
 
-            if (m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())
-                    && m.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
-                    && m.getDescription().equals(model.getDescription())) {
-                trainingModelList.remove(model);
-                break;
+            while (i.hasNext()) {
+                TrainingModel m = i.next();
+
+                if (m != null
+                        && m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())
+                        && m.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
+                        && m.getDescription().equals(model.getDescription())) {
+                    trainingModelList.remove(model);
+                    break;
+                }
             }
         }
     }
@@ -240,17 +289,23 @@ public class ClassifierModel extends AbstractModel {
      * Checks if the class model exists and delete it if so
      * @param m the class model to check 
      */
-    public void checkClassModel(ClassModel m) {
-        Iterator<ClassModel> i = classModelList.iterator();
+    public void checkClassModel(ClassModel m) throws Exception {
+        if (m == null) {
+            throw new Exception("class model cannot be null");
+        }
 
-        while (i.hasNext()) {
-            ClassModel model = i.next();
+        synchronized (syncArrays) {
+            Iterator<ClassModel> i = classModelList.iterator();
 
-            if (m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())
-                    && m.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
-                    && m.getDescription().equals(model.getDescription())) {
-                classModelList.remove(model);
-                break;
+            while (i.hasNext()) {
+                ClassModel model = i.next();
+
+                if (m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())
+                        && m.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
+                        && m.getDescription().equals(model.getDescription())) {
+                    classModelList.remove(model);
+                    break;
+                }
             }
         }
     }
@@ -262,17 +317,20 @@ public class ClassifierModel extends AbstractModel {
      * @return the class model if found, otherwise throws exception
      */
     public ClassModel getClassModel(String className) throws Exception {
-        Iterator<ClassModel> i = classModelList.iterator();
 
-        while (i.hasNext()) {
-            ClassModel model = i.next();
+        synchronized (syncArrays) {
+            Iterator<ClassModel> i = classModelList.iterator();
 
-            if (model.getName().equals(className)) {
-                return model;
+            while (i.hasNext()) {
+                ClassModel model = i.next();
+
+                if (model.getName().equals(className)) {
+                    return model;
+                }
             }
-        }
 
-        throw new Exception("Class Model with name: " + className + " not found");
+            throw new Exception("Class Model with name: " + className + " not found");
+        }
     }
 
     /**
@@ -282,6 +340,26 @@ public class ClassifierModel extends AbstractModel {
      */
     public File getDatabaseRoot() {
         return dbrootDirectory;
+    }
+
+    /**
+     *
+     * @return the number of class models
+     */
+    public int getNumClassModels() {
+        synchronized (syncArrays) {
+            return classModelList.getSize();
+        }
+    }
+
+    /**
+     *
+     * @return the number of training models
+     */
+    public int getNumTrainingModels() {
+        synchronized (syncArrays) {
+            return trainingModelList.getSize();
+        }
     }
 
     /**

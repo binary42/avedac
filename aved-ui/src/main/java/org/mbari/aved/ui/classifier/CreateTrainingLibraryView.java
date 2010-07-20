@@ -133,11 +133,11 @@ public class CreateTrainingLibraryView extends JFrameView {
         ClassifierModel model = (ClassifierModel) getModel();
 
         // Get all available models
-        ArrayListModel classModel = model.getClassModels();
+        int size = model.getNumClassModels();
         ArrayListModel list       = new ArrayListModel();
 
-        for (int i = 0; i < classModel.getSize(); i++) {
-            ClassModel aClassModel = (ClassModel) classModel.get(i);
+        for (int i = 0; i < size; i++) {
+            ClassModel aClassModel = (ClassModel) model.getClassModel(i);
 
             if (aClassModel.getColorSpace().equals(colorSpace)) {
                 list.add(aClassModel);

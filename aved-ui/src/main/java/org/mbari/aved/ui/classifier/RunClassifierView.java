@@ -138,11 +138,11 @@ public class RunClassifierView extends JFrameView {
         loadModel(null);
 
         ClassifierModel model = (ClassifierModel) getModel();
-        ArrayListModel modelList = model.getTrainingModels();
+        int size = model.getNumTrainingModels();
         ArrayListModel newList = new ArrayListModel();
 
-        for (int i = 0; i < modelList.size(); i++) {
-            TrainingModel m = (TrainingModel) modelList.get(i);
+        for (int i = 0; i < size; i++) {
+            TrainingModel m =  model.getTrainingModel(i);
 
             // Only add those libraries in this color space
             if (m.getColorSpace().equals(colorSpace)) {

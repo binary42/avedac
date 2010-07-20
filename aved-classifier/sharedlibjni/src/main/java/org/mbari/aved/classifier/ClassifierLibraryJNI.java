@@ -15,9 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
@@ -25,8 +22,13 @@ package org.mbari.aved.classifier;
 // NetBeans IDE here. Don't worry about it.
 // The nar-plugin generates a NarSystem class to assist with
 // loading the correct version.  This isn't generated until
-// build time in the target directory, so this import isn't resolved
-// until that time.
+// build time in the target directory, so this import isn't resolved.
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.mbari.aved.classifier.NarSystem;
 
 /**
@@ -34,23 +36,65 @@ import org.mbari.aved.classifier.NarSystem;
  * and exposed through a shared library.
  * @author Danelle Cline
  */
-public final class ClassifierLibraryJNI {
+public class ClassifierLibraryJNI {
 
-    /* For debugging without the JNI layer, set to true */
-    private static final boolean debug = false;
+    public ClassifierLibraryJNI(Object classToUse) {
 
-    static {
-        if (!debug) {
-            try {
-                System.out.println("Loading sharedlibjni");
+        try {
+            // If loading from an executable jar, use the absolute path
+            System.out.println(classToUse.toString());
+            String path = getPathToJarfileDir(classToUse);
+            String loadFile = null;
+            if (path != null) {
+                loadFile = new String(path + "/lib/" + "libsharedlib-0.4.3-SNAPSHOT");
+
+                String lcOSName = System.getProperty("os.name").toLowerCase(); 
+                if (lcOSName.startsWith("mac os x")) {
+                    loadFile = loadFile + ".dylib";
+                } else {
+                    loadFile = loadFile + ".so";
+                }
+                System.out.println("Loading " + loadFile);
+                System.load(loadFile);
+            } else {
+                // otherwise, if loading for testing or otherwise
+                // use the nar system loader
                 NarSystem.loadLibrary();
-            } catch (UnsatisfiedLinkError u) {
-                System.err.println("ERROR: could not load library sharedlibjni:" + u.getMessage());
-                System.exit(1);
             }
-        } else {
-            System.out.println("Debug mode - not loading sharedlib");
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(ClassifierLibraryJNI.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (UnsatisfiedLinkError u) {
+
+            System.err.println("ERROR: could not load library sharedlibjni:" + u.getMessage());
+            System.exit(1);
         }
+
+    }
+
+    /**
+     * Utility method to get the absolute path to the directory containing
+     * the jar file for the calling class
+     * 
+     * @param classToUse
+     * @return  the absolute path to the directory containing the jarfile
+     * @throws URISyntaxException
+     */
+    public static String getPathToJarfileDir(Object classToUse) throws URISyntaxException {
+        String url = classToUse.getClass().getResource("/" + classToUse.getClass().getName().replaceAll("\\.", "/") + ".class").toString();
+        System.out.println(url);
+        url = url.substring(4).replaceFirst("/[^/]+\\.jar!.*$", "/");
+        System.out.println(url);
+        try {
+            File dir = new File(new URL(url).toURI());
+            url = dir.getAbsolutePath();
+            System.out.println(url);
+        } catch (MalformedURLException mue) {
+            url = null;
+        } catch (URISyntaxException ue) {
+            url = null;
+        }
+        System.out.println(url);
+        return url;
     }
 
     /**
@@ -86,8 +130,8 @@ public final class ClassifierLibraryJNI {
      * @param description the description of this class
      */
     public native void collect_class(String killfile, String rawDirectoryName, String squaredDirectoryName,
-                                     String classname, String matlabdbDirName, String varsclassname,
-                                     String description, ColorSpace colorspace);
+            String classname, String matlabdbDirName, String varsclassname,
+            String description, ColorSpace colorspace);
 
     /**
      * Collect testing images information. Call this before running run_test
@@ -100,7 +144,7 @@ public final class ClassifierLibraryJNI {
      * @param colorSpace the color space to use for this test
      */
     public native void collect_tests(String killfile, String testDirName, String matlabdbDirName,
-                                     ColorSpace colorspace);
+            ColorSpace colorspace);
 
     /**
      * Test class against set of training classes in <code>trainingclasses
@@ -124,8 +168,8 @@ public final class ClassifierLibraryJNI {
      * @param matlabdbDirName the root directory of the stored classifier matlab (.mat) data
      */
     public native void test_class(String killfile, String[] eventfilenames, int[] classindex, float[] probability,
-                                  String testclassname, String trainingclasses, float minprobthreshold,
-                                  String matlabdbDirName,  ColorSpace colorspace);
+            String testclassname, String trainingclasses, float minprobthreshold,
+            String matlabdbDirName, ColorSpace colorspace);
 
     /**
      * Test data against set of training classes in <code>trainingclasses
@@ -153,9 +197,9 @@ public final class ClassifierLibraryJNI {
      * @param colorSpace the color space to use for this class
      */
     public native void run_test(String killfile, String[] eventids, int[] majoritywinnerindex,
-                                int[] probabilitywinnerindex, float[] probability, String testclassname,
-                                String trainingalias, float minprobthreshold, String matlabdbDirName,
-                                ColorSpace colorspace);
+            int[] probabilitywinnerindex, float[] probability, String testclassname,
+            String trainingalias, float minprobthreshold, String matlabdbDirName,
+            ColorSpace colorspace);
 
     /**
      * This will initialialize the classifier with a training classes
@@ -174,7 +218,7 @@ public final class ClassifierLibraryJNI {
      * @param description the description of this training class
      */
     public native void train_classes(String killfile, String trainingclasses, String trainingalias,
-                                     String matlabdbDirName, ColorSpace colorspace, String description);
+            String matlabdbDirName, ColorSpace colorspace, String description);
 
     /**
      * Returns training class names.  A training classes name is simply appended

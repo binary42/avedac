@@ -361,7 +361,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         private boolean exit = false;
         private boolean isInitialized = false;
         private final Queue<ClassifierLibraryJNITask> queue = new LinkedList<ClassifierLibraryJNITask>();
-        private final ClassifierLibraryJNI jniLibrary = new ClassifierLibraryJNI();
+        private final ClassifierLibraryJNI jniLibrary = new ClassifierLibraryJNI(this);
         private final File logFile = new File(UserPreferences.getModel().getDefaultScratchDirectory().getAbsolutePath() + "/matlablog.txt"); 
 
         ClassifierLibraryJNITaskWorker() throws Exception {
@@ -421,7 +421,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         public synchronized void cancel() {
             exit = true;
             super.cancel(true);
-            jniLibrary.closeLib();
+            closeLibrary(); 
         }
 
         /**
@@ -460,8 +460,8 @@ public class ClassifierController extends AbstractController implements ModelLis
 
                 try {
                     jniLibrary.initLib(logFile.getAbsolutePath());
-                    Thread.sleep(2000);
                     isInitialized = true;
+                    Thread.sleep(2000);                    
                 } catch (Exception e) {
                     Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, e);
                 }

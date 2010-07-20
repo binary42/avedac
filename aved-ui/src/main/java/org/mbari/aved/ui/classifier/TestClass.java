@@ -56,7 +56,7 @@ public class TestClass {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    ClassifierLibraryJNI library = new ClassifierLibraryJNI();
+                    ClassifierLibraryJNI library = new ClassifierLibraryJNI(this);
                     ClassifierModel      model   = new ClassifierModel();
                     File                 dbDir   = UserPreferences.getModel().getClassDatabaseDirectory();
                     String               dbRoot  = dbDir.getAbsolutePath();

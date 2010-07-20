@@ -294,6 +294,7 @@ public class CreateClassView extends JFrameView {
 
         try {
             ArrayList<String> fileList = model.getRawImageFileListing();
+            Thread.sleep(3000);
             Integer numImages = Integer.valueOf(fileList.size());
 
             numImagesLabel.setText(numImages.toString());
