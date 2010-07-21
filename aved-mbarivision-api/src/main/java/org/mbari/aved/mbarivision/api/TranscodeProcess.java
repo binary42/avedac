@@ -425,7 +425,7 @@ public class TranscodeProcess extends Thread {
 
         // Convert colon delimited string to an array
         String[] paths = stringToArray(p);
-        long timeout = (long) 1000;
+        long timeout = (long) 10000;
 
         String path = null;
         int count = 0;
@@ -560,7 +560,7 @@ public class TranscodeProcess extends Thread {
             ext.toLowerCase();
 
             if (ext.equals("avi")) {
-                tcprobecmd = getCmdLoc("tcprobe");
+                /*tcprobecmd = getCmdLoc("tcprobe");
                 if (tcprobecmd.length() != 0) {
                     String tcprobe = new String(tcprobecmd + " -i " + filename);
                     System.out.println("Executing " + tcprobe);
@@ -580,7 +580,7 @@ public class TranscodeProcess extends Thread {
                     // if have a ISO timecode formatted file, need to calculate the correct framenumber
                     // this only works for the patched version of transcode on our
                     // Linux server
-                    /*if (hasISOtimecode && lcOSName.startsWith("linux")) {
+                    if (hasISOtimecode && lcOSName.startsWith("linux")) {
                         //find the floating number between the -f <rate> command sequence,
                         //by finding the indexes between the two delimeters, and 
                         //parsing the resulting substring into a float
@@ -594,8 +594,8 @@ public class TranscodeProcess extends Thread {
                             int framenumber = Utils.timecode2counter(rate, timecode);
                             extraargs = new String("-f " + rate + " " + "-start_timecode " + framenumber);
                         }
-                    }*/
-                }
+                    }
+                }*/
                 String codec = new String("Unknown");
                 // If have the avidump command, use it to find the codec to better
                 // control transcoding
