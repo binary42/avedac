@@ -50,7 +50,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,7 +68,7 @@ public class ClassifierController extends AbstractController implements ModelLis
     private final TestClass testClass;
     private ClassifierLibraryJNITaskWorker jniQueue;
 
-    public ClassifierController(EventListModel list, SummaryModel summaryModel) {
+    public ClassifierController(EventListModel list, SummaryModel summaryModel) throws Exception {
         eventListModel = list;
 
         // Create common model for all controllers/views to use
@@ -104,6 +103,7 @@ public class ClassifierController extends AbstractController implements ModelLis
             jniQueue.execute();
         } catch (Exception ex) {
             Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+            throw new Exception(ex.getMessage());
         }
 
         // Initialize the database directory from the user-defined preferences
@@ -112,8 +112,7 @@ public class ClassifierController extends AbstractController implements ModelLis
 
         // Initialize the training image directory
         File trainingDir = UserPreferences.getModel().getClassTrainingImageDirectory();
-        model.setClassTrainingImageDirectory(trainingDir);
-
+        model.setClassTrainingImageDirectory(trainingDir); 
     }
 
     /**

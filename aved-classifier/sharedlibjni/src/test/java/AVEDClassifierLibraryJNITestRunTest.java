@@ -12,7 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */ 
+ */
+
 import java.io.File;
 import java.io.FilenameFilter;
 import junit.framework.*;
@@ -63,8 +64,8 @@ public class AVEDClassifierLibraryJNITestRunTest extends TestCase {
                 int index1 = file1.indexOf("evt");
                 int index2 = file2.indexOf("evt");
                 if (index1 == -1 || index2 == -1) {
-                    System.err.println("ERROR: File does conform " +
-                            "to naming specification, no evt##### found.");
+                    System.err.println("ERROR: File does conform "
+                            + "to naming specification, no evt##### found.");
                     System.err.println("Offending file: " + file1 + " or " + file2);
                     return file1.compareTo(file2);
                 }
@@ -79,23 +80,25 @@ public class AVEDClassifierLibraryJNITestRunTest extends TestCase {
     public void testAVEDClassifierLibraryJNI() throws Exception {
         String dbRoot = System.getProperty("user.home");
         String logfile = System.getProperty("user.home") + "/matlablog.txt";
-	ClassifierLibraryJNI app = new ClassifierLibraryJNI();
-        
+        ClassifierLibraryJNI app = new ClassifierLibraryJNI(this);
+
         System.out.println("initialize library");
         app.initLib(logfile);
 
         try {
-            
+
             URL squaredFlatImageUrl = getClass().getResource("2526_Training_Classes/flat");
-	    if(squaredFlatImageUrl == null)
-		System.out.println("Null");          
-        System.out.println(squaredFlatImageUrl.toString());
-            URL squaredRathImageUrl = getClass().getResource("2526_Training_Classes/rath");  
-	    if(squaredRathImageUrl == null)
-        System.out.println(squaredRathImageUrl.toString());
-            
+            if (squaredFlatImageUrl == null) {
+                System.out.println("Null");
+            }
+            System.out.println(squaredFlatImageUrl.toString());
+            URL squaredRathImageUrl = getClass().getResource("2526_Training_Classes/rath");
+            if (squaredRathImageUrl == null) {
+                System.out.println(squaredRathImageUrl.toString());
+            }
+
             String killFile = dbRoot + "runtest";
-            
+
             // Now run image collection on this set - 
             // this should be run anytime images are added to the class Library
             app.collect_class(killFile,
@@ -121,9 +124,9 @@ public class AVEDClassifierLibraryJNITestRunTest extends TestCase {
             // build the training library if it isn't already built
             // this takes a while to run, so be patient
             app.train_classes(killFile,
-                    trainingClasses, 
-                    trainingAlias, 
-                    dbRoot, ColorSpace.GRAY, 
+                    trainingClasses,
+                    trainingAlias,
+                    dbRoot, ColorSpace.GRAY,
                     "Test benthic training class");
 
             // Test  - this section tests images against the created  training library  
@@ -133,11 +136,11 @@ public class AVEDClassifierLibraryJNITestRunTest extends TestCase {
 
             // Run test image collection on this directory
             app.collect_tests(killFile,
-                    testDir.getFile(), 
+                    testDir.getFile(),
                     dbRoot, ColorSpace.GRAY);
 
             File f = new File(testDir.getFile());
-            
+
             // The test class name is simply the  last name in the test 
             // directory pathname's name sequence. 
             String testClassName = f.getName();
@@ -151,30 +154,30 @@ public class AVEDClassifierLibraryJNITestRunTest extends TestCase {
             String[] eventids = new String[numEvents];
             float minprobthreshold = 0.8f;
 
-            System.out.println("Running classifier");            
-            System.out.println("Test class: " + testClassName + 
-                                "\tTraining classes: " + trainingAlias);
+            System.out.println("Running classifier");
+            System.out.println("Test class: " + testClassName
+                    + "\tTraining classes: " + trainingAlias);
             app.run_test(killFile,
-                    eventids, 
-                    majoritywinnerindex, 
+                    eventids,
+                    majoritywinnerindex,
                     probabilitywinnerindex,
-                    probability, 
-                    testClassName, 
-                    trainingAlias, 
-                    minprobthreshold, 
+                    probability,
+                    testClassName,
+                    trainingAlias,
+                    minprobthreshold,
                     dbRoot, ColorSpace.GRAY);
 
             for (int i = 0; i < numEvents; i++) {
-                System.out.println("event:" + eventids[i] 
-                        + "\tmin prob:" + minprobthreshold 
-                        + "\tmajoritywinnerclassindex:" 
-                        + majoritywinnerindex[i] 
+                System.out.println("event:" + eventids[i]
+                        + "\tmin prob:" + minprobthreshold
+                        + "\tmajoritywinnerclassindex:"
+                        + majoritywinnerindex[i]
                         + "\tprobabilitywinnerindex:"
-                        + probabilitywinnerindex[i] 
-                        + "\tprobability in class:" 
+                        + probabilitywinnerindex[i]
+                        + "\tprobability in class:"
                         + probability[i]);
-            } 
-             
+            }
+
         } catch (Exception e) {
             System.out.println("Exception" + e);
         }

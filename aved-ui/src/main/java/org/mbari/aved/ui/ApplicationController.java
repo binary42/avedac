@@ -213,8 +213,7 @@ public class ApplicationController extends AbstractController implements ModelLi
             isSaveAs = true;
             exportProcessedResults(browseForXMLExport());
         } catch (Exception e) {
-
-            // TODO Auto-generated catch block
+            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, e);
             e.printStackTrace();
         }
     }
@@ -346,9 +345,7 @@ public class ApplicationController extends AbstractController implements ModelLi
             xmlfile = browseForXMLImport();
             importProcessedResults(xmlfile);
         } catch (Exception e) {
-
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, e); 
         }
     }
 

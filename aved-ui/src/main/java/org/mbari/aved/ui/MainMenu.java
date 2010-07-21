@@ -135,11 +135,16 @@ public class MainMenu implements ModelListener {
     }
 
     /**
-     * Displays the Classifier  class creation interface
+     * Displays the Classifier class creation interface
      */
     void displayCreateClass() {
         if (classifier == null) {
-            classifier = new Classifier(model);
+            try {
+                classifier = new Classifier(model);
+            } catch (Exception ex) {
+                Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
+                return;
+            }
         }
         classifier.selectCreateClassTabbedView();
         display(classifier.getView());
@@ -151,7 +156,12 @@ public class MainMenu implements ModelListener {
     void displayTestClass() {
 
         if (classifier == null) {
-            classifier = new Classifier(model);
+            try {
+                classifier = new Classifier(model);
+            } catch (Exception ex) {
+                Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
+                return;
+            }
         }
         classifier.selectTestClassTabbedView();
         display(classifier.getView());
@@ -163,7 +173,12 @@ public class MainMenu implements ModelListener {
     private void displayTrainingLibrary() {
 
         if (classifier == null) {
-            classifier = new Classifier(model);
+            try {
+                classifier = new Classifier(model);
+            } catch (Exception ex) {
+                Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
+                return;
+            }
         }
         classifier.selectTrainingPanelTabbedView();
         display(classifier.getView());
@@ -175,7 +190,12 @@ public class MainMenu implements ModelListener {
     private void displayRunClassifier() {
 
         if (classifier == null) {
-            classifier = new Classifier(model);
+            try {
+                classifier = new Classifier(model);
+            } catch (Exception ex) {
+                Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
+                return;
+            }
         }
         classifier.selectRunPanelTabbedView();
         display(classifier.getView());
@@ -187,7 +207,12 @@ public class MainMenu implements ModelListener {
     private void displayClassifierSettings() {
 
         if (classifier == null) {
-            classifier = new Classifier(model);
+            try {
+                classifier = new Classifier(model);
+            } catch (Exception ex) {
+                Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
+                return;
+            }
         }
         display(classifier.getClassifierSetingsView());
     }

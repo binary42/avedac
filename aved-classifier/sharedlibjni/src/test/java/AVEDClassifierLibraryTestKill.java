@@ -44,7 +44,7 @@ public class AVEDClassifierLibraryTestKill extends TestCase {
 
         final String killFile = dbRoot + "/testkill";
 
-        ClassifierLibraryJNI app = new ClassifierLibraryJNI();
+        ClassifierLibraryJNI app = new ClassifierLibraryJNI(this);
 
         System.out.println("initialize library");
         app.initLib(logfile);

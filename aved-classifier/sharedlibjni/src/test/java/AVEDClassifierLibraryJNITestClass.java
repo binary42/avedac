@@ -46,7 +46,7 @@ public class AVEDClassifierLibraryJNITestClass extends TestCase {
     public void testAVEDClassifierLibraryJNI() throws Exception {
         String               dbRoot  = System.getProperty("user.home");
         String               logfile = System.getProperty("user.home") + "/matlablog.txt";
-        ClassifierLibraryJNI app     = new ClassifierLibraryJNI();
+        ClassifierLibraryJNI app     = new ClassifierLibraryJNI(this);
 
         System.out.println("initialize library");
         app.initLib(logfile);

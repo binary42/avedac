@@ -27,6 +27,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JFrame;
+import org.mbari.aved.ui.Application;
+import org.mbari.aved.ui.ApplicationView;
+import org.mbari.aved.ui.message.NonModalMessageDialog;
 
 /**
  * The AVED Classifier. This handles creating the components needed
@@ -41,10 +44,21 @@ public final class Classifier {
     private static ClassifierController controller = new ClassifierController();
     private static Preferences settings = new Preferences();
 
-    public Classifier(ApplicationModel model) {
-        controller = new ClassifierController(model.getEventListModel(), model.getSummaryModel());
-        ClassifierModel m = controller.getModel(); 
-        settings = new Preferences(m);
+    public Classifier(ApplicationModel model) throws Exception {
+        try {
+            controller = new ClassifierController(model.getEventListModel(), model.getSummaryModel());
+            ClassifierModel m = controller.getModel();
+            settings = new Preferences(m);
+        } catch (Exception ex) {
+            String msg = new String("Cannot create classifier. This is either " +
+                    "because the classifier libraries are missing, or your environment variables" +
+                    " MCR_ROOT/LD_LIBRARY_PATH/XAPPLRESDIR are incorrect");
+            NonModalMessageDialog dialog;
+            dialog = new NonModalMessageDialog((ApplicationView) Application.getView(),
+                    msg);
+            dialog.setVisible(true);
+            throw new Exception("Cannot create Classifier");
+        }
     }
 
     public static ClassifierController getController() {

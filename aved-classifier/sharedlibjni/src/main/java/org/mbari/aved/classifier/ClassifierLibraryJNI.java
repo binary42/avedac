@@ -38,7 +38,7 @@ import org.mbari.aved.classifier.NarSystem;
  */
 public class ClassifierLibraryJNI {
 
-    public ClassifierLibraryJNI(Object classToUse) {
+    public ClassifierLibraryJNI(Object classToUse) throws Exception {
 
         try {
             // If loading from an executable jar, use the absolute path
@@ -64,9 +64,9 @@ public class ClassifierLibraryJNI {
         } catch (URISyntaxException ex) {
             Logger.getLogger(ClassifierLibraryJNI.class.getName()).log(Level.SEVERE, null, ex);
         } catch (UnsatisfiedLinkError u) {
-
-            System.err.println("ERROR: could not load library sharedlibjni:" + u.getMessage());
-            System.exit(1);
+            String message = new String("ERROR: could not load library sharedlibjni:" + u.getMessage());
+            Logger.getLogger(ClassifierLibraryJNI.class.getName()).log(Level.SEVERE, null, message);
+            throw new Exception(message);
         }
 
     }
