@@ -84,7 +84,7 @@ public class ApplicationView extends JFrameView {
 
         if (icon != null) {
             JPanel p = new JPanel(new BorderLayout());
-            HeaderPanel header = new HeaderPanel("Automated Visual Event Detection and Classification", icon, 0.25f);
+            HeaderPanel header = new HeaderPanel("Automated Visual Event Detection and Classification   ", icon, 0.25f);
 
             p.add(BorderLayout.NORTH, header);
             p.setBorder(new EmptyBorder(0, 0, 0, 0));
@@ -140,19 +140,18 @@ public class ApplicationView extends JFrameView {
 
             pane.setComponentAt(0, s);
 
-            // Set the preferred height to 800 because we want as large
-            // a table as possible. TODO: this should really take into account
-            // the size of the display in the main application view
-            Dimension d = this.getPreferredSize();
-
-            d.height = 800;
-            pane.setPreferredSize(d);
+            // Calculate the height remaining in the view
+            // after the summary view
+            Dimension pd = this.getPreferredSize(); 
+            Dimension sd = summaryView.getSize();
+            Dimension vd = getSize();
+            sd.height = vd.height - sd.height;
+            pane.setPreferredSize(sd);
         }
     }
 
     private void replaceSummaryPanel(FormPanel panel) {
-        FormAccessor accessor = getForm().getFormAccessor("main");
-        Iterator<Component> i = accessor.beanIterator();
+        FormAccessor accessor = getForm().getFormAccessor("main"); 
 
         // TODO: put exception handling code around this
         accessor.replaceBean("editorSummary", panel);

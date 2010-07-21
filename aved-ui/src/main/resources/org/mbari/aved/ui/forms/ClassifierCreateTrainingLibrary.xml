@@ -27,7 +27,7 @@
    <at name="id">/home/aved/aved/avedac/aved-ui/src/main/resources/org/mbari/aved/ui/forms/ClassifierCreateTrainingLibrary.xml</at>
    <at name="path">ClassifierCreateTrainingLibrary.xml</at>
    <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,TOP:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,TOP:DEFAULT:NONE,CENTER:DEFAULT:NONE,CENTER:DEFAULT:NONE,CENTER:DEFAULT:NONE,CENTER:DEFAULT:NONE,FILL:DEFAULT:GROW(1.0),BOTTOM:DEFAULT:GROW(1.0),CENTER:1PX:NONE</at>
-   <at name="colspecs">RIGHT:DEFAULT:NONE,FILL:MIN(150PX;DEFAULT):GROW(1.0),FILL:4DLU:NONE,FILL:DEFAULT:NONE,FILL:52DLU:NONE,FILL:4PX:NONE,FILL:107PX:NONE,FILL:4PX:NONE,FILL:DEFAULT:GROW(1.0),FILL:DEFAULT:NONE,FILL:5PX:NONE,FILL:DEFAULT:NONE</at>
+   <at name="colspecs">RIGHT:DEFAULT:NONE,FILL:MIN(150PX;DEFAULT):GROW(1.0),FILL:4DLU:NONE,FILL:DEFAULT:NONE,FILL:52DLU:NONE,FILL:4PX:NONE,FILL:107PX:NONE,FILL:4PX:NONE,FILL:PREF:GROW(1.0),FILL:DEFAULT:NONE,FILL:5PX:NONE,FILL:DEFAULT:NONE</at>
    <at name="components">
     <object classname="java.util.LinkedList">
      <item >
@@ -55,7 +55,7 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="text">&lt;&lt;</at>
-            <at name="height">25</at>
+            <at name="height">27</at>
             <at name="width">103</at>
             <at name="name">remove</at>
             <at name="actionCommand">&lt;&lt;</at>
@@ -111,9 +111,9 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="text">Available classes</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="name"/>
-            <at name="width">114</at>
+            <at name="width">106</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -171,7 +171,7 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="text">Selected classes</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="name"/>
             <at name="width">103</at>
             <at name="fill">
@@ -233,7 +233,7 @@
             <at name="text">Select classes to include in the library</at>
             <at name="height">16</at>
             <at name="name"/>
-            <at name="width">987</at>
+            <at name="width">891</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
               <super classname="com.jeta.forms.store.properties.BorderProperty">
@@ -294,9 +294,9 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Color space:</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="name"/>
-            <at name="width">85</at>
+            <at name="width">78</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -353,14 +353,15 @@
           <at name="classname">javax.swing.JComboBox</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
-            <at name="height">23</at>
+            <at name="height">25</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>
              </object>
             </at>
-            <at name="width">219</at>
+            <at name="width">183</at>
             <at name="name">colorspace</at>
+            <at name="background" object="color">236,233,216</at>
             <at name="actionCommand">colorSpaceComboBoxChanged</at>
             <at name="toolTipText">Selects the color space this library will be created in</at>
             <at name="border">
@@ -416,8 +417,8 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Description (optional):</at>
-            <at name="height">17</at>
-            <at name="width">153</at>
+            <at name="height">15</at>
+            <at name="width">140</at>
             <at name="name">imagedirectory</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
@@ -543,8 +544,8 @@
           <at name="classname">javax.swing.JTextField</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
-            <at name="height">23</at>
-            <at name="width">361</at>
+            <at name="height">27</at>
+            <at name="width">325</at>
             <at name="name">newLibraryName</at>
             <at name="toolTipText">Name of the library</at>
             <at name="border">
@@ -600,8 +601,8 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="lineWrap">true</at>
             <at name="scrollableTracksViewportWidth">true</at>
-            <at name="height">89</at>
-            <at name="width">344</at>
+            <at name="height">87</at>
+            <at name="width">304</at>
             <at name="name">classdescription</at>
             <at name="columns">20</at>
             <at name="toolTipText">Optional description of the library </at>
@@ -686,8 +687,8 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="text">Run</at>
-            <at name="height">25</at>
-            <at name="width">59</at>
+            <at name="height">27</at>
+            <at name="width">52</at>
             <at name="name">run</at>
             <at name="actionCommand">Run</at>
             <at name="toolTipText">Creates the training library out of the selected classes</at>
@@ -743,13 +744,13 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="scrollableTracksViewportWidth">true</at>
-            <at name="height">402</at>
+            <at name="height">309</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>
              </object>
             </at>
-            <at name="width">338</at>
+            <at name="width">274</at>
             <at name="name">include</at>
             <at name="toolTipText">Double-click any class to remove from the library, or push the &lt;&lt; button</at>
             <at name="scollBars">
@@ -832,7 +833,7 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="text">&gt;&gt;</at>
-            <at name="height">25</at>
+            <at name="height">27</at>
             <at name="width">103</at>
             <at name="name">add</at>
             <at name="actionCommand">&gt;&gt;</at>
@@ -889,8 +890,8 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="enabled">false</at>
             <at name="text">Stop</at>
-            <at name="height">25</at>
-            <at name="width">63</at>
+            <at name="height">27</at>
+            <at name="width">57</at>
             <at name="name">stop</at>
             <at name="actionCommand">Stop</at>
             <at name="border">
@@ -945,13 +946,13 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="scrollableTracksViewportWidth">true</at>
-            <at name="height">402</at>
+            <at name="height">309</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>
              </object>
             </at>
-            <at name="width">359</at>
+            <at name="width">319</at>
             <at name="name">available</at>
             <at name="toolTipText">Double-click any available class to add to the library, or push the &gt;&gt; button</at>
             <at name="scollBars">

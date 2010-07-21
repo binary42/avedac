@@ -68,46 +68,41 @@ public class ConceptTreePanel extends JPanel {
      * This starts a thread to create the tree panel
      */
     public void buildPanel() {
-        if (!isInitialized) {
-            JPanel panel = new JPanel();
+        
+        if (!isInitialized) { 
+            final JPanel panel = this;
 
-            CellConstraints cc = new CellConstraints();
-            JPanel temporaryPanel = new JPanel(new FormLayout("fill:m:grow", "fill:d:grow"));
+            final CellConstraints cc = new CellConstraints();
+
+            final JPanel temporaryPanel = new JPanel(new FormLayout("fill:d:grow", "fill:d:grow"));
             final JTextArea patience = new JTextArea();
 
             patience.setEditable(false);
             patience.setWrapStyleWord(true);
             patience.setLineWrap(true);
 
-            String s = System.getProperty("os.name").toLowerCase();
+            SwingUtilities.invokeLater(new Runnable() {
 
-            // First test for KB existence - skip this for Linux because this
-            // breaks the classifier TODO: investigate pthreads exceptions
-            if (KnowledgeBaseUtil.isKnowledgebaseAvailable()) {
+                public void run() {
 
-                patience.setText("Loading Knowledge Base, your patience is appreciated...");
-                temporaryPanel.add(patience, cc.xy(1, 1));
+                    SwingWorker kbThread = new SwingWorker() {
 
-                final JScrollPane scrollPane = new JScrollPane(temporaryPanel);
-                JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel, scrollPane);
+                        @Override
+                        protected Object doInBackground() throws Exception {
 
-                splitPane.setDividerLocation(.8);
-                splitPane.setDividerSize(1);
-                splitPane.setResizeWeight(0);
-                this.setLayout(new BorderLayout());
-                this.add(splitPane);
-                this.setFocusable(true);
-                this.repaint();
+                            patience.setText("Searching for Knowledge Base, your patience is appreciated...");
+                            temporaryPanel.add(patience, cc.xy(1, 1));
+                            final JScrollPane scrollPane = new JScrollPane(temporaryPanel); 
+                            panel.setLayout(new BorderLayout());
+                            panel.add(scrollPane);
+                            panel.setFocusable(true);
+                            panel.repaint();
 
+                            if (KnowledgeBaseUtil.isKnowledgebaseAvailable()) {
 
-                SwingUtilities.invokeLater(new Runnable() {
+                                patience.setText("Loading Knowledge Base, your patience is appreciated...");
+                                temporaryPanel.add(patience, cc.xy(1, 1)); 
 
-                    public void run() {
-
-                        SwingWorker kbThread = new SwingWorker() {
-
-                            @Override
-                            protected Object doInBackground() throws Exception {
                                 System.out.println("Loading concept tree");
                                 treePanel = new SearchableConceptTreePanel();
 
@@ -147,28 +142,18 @@ public class ConceptTreePanel extends JPanel {
                                         isInitialized = true;
                                     }
                                 });
-                                return 0;
+                            } else {
+                                patience.setText("For more information about VARS see: http://www.mbari.org/vars/");
+                                temporaryPanel.add(patience, cc.xy(1, 1));
+                                panel.repaint();
                             }
-                        };
+                            return 0;
+                        }
+                    };
 
-                        kbThread.execute();
-                    }
-                });
-            } else {
-                patience.setText("For more information about VARS see: http://www.mbari.org/vars/");
-                temporaryPanel.add(patience, cc.xy(1, 1));
-
-                final JScrollPane scrollPane = new JScrollPane(temporaryPanel);
-                JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel, scrollPane);
-
-                splitPane.setDividerLocation(.8);
-                splitPane.setDividerSize(1);
-                splitPane.setResizeWeight(0);
-                this.setLayout(new BorderLayout());
-                this.add(splitPane);
-                this.setFocusable(true);
-                this.repaint();
-            }
+                    kbThread.execute();
+                }
+            });
         }
     }
 

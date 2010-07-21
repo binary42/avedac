@@ -23,9 +23,6 @@ package org.mbari.aved.ui.classifier;
 //~--- non-JDK imports --------------------------------------------------------
 
 import com.jeta.forms.components.panel.FormPanel;
-import java.awt.Component;
-import java.awt.Dimension;
-import javax.swing.event.ChangeEvent;
 
 import org.mbari.aved.ui.appframework.JFrameView;
 import org.mbari.aved.ui.appframework.ModelEvent;
@@ -101,8 +98,7 @@ public class ClassifierView extends JFrameView {
 
         if (pane != null) {
             pane.setComponentAt(RUN_PANEL_INDEX, form);
-        }
-        ;
+        } 
     }
 
     /**

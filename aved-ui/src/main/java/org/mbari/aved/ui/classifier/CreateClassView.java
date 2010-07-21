@@ -121,9 +121,9 @@ public class CreateClassView extends JFrameView {
         list.add(ColorSpace.YCBCR);
 
         ListModel listModel = new ArrayListModel(list);
-        ValueModel selectedItemHolder = new ValueHolder();
+        ValueModel selectedItemHolder = new ValueHolder("Select a color space");
         SelectionInList selectionInList = new SelectionInList(listModel, selectedItemHolder);
-
+         
         colorSpaceComboBox.setModel(new ComboBoxAdapter(selectionInList));
 
         // default to RGB color space
@@ -290,24 +290,21 @@ public class CreateClassView extends JFrameView {
     void loadModel(ClassModel model) {
         classNameTextField.setText(model.getName());
         classNameVarsTextField.setText(model.getVarsClassName());
-        classDescriptionTextArea.setText(model.getDescription());
-
+        classDescriptionTextArea.setText(model.getDescription()); 
         try {
             ArrayList<String> fileList = model.getRawImageFileListing();
-            Thread.sleep(3000);
+            Thread.sleep(500);
             Integer numImages = Integer.valueOf(fileList.size());
 
             numImagesLabel.setText(numImages.toString());
 
             if (fileList.size() > 0) {
-                File exampleImage = new File(model.getRawImageDirectory() + "/" + fileList.get(0));
-
+                File exampleImage = new File(model.getRawImageDirectory() + "/" + fileList.get(0)); 
                 initializeImageComponent(exampleImage);
             } else {
 
                 // Insert a default icon
                 URL url = Application.class.getResource("/org/mbari/aved/ui/images/missingframeexception.jpg");
-
                 initializeImageComponent(new File(url.getFile()));
             }
         } catch (Exception ex) {

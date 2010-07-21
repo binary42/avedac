@@ -53,7 +53,7 @@ abstract public class JFrameView extends JFrame implements View, ModelListener {
         form    = new FormPanel(formpanel);
         handler = new ActionHandler();
         this.setContentPane(form);
-        getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
+        //getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
     }
 
     public FormPanel getForm() {

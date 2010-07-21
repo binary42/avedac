@@ -184,7 +184,7 @@ public class Application {
     private static void createAndShowGUI() {
 
         // Set the look and feel.
-        initLookAndFeel(); 
+        initLookAndFeel();
 
         final JFrame view = Application.getView();
         

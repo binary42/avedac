@@ -14,10 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-
-
-
+ */  
 package org.mbari.aved.ui.userpreferences;
 
 //~--- non-JDK imports --------------------------------------------------------
@@ -47,6 +44,7 @@ public class UserPreferencesController extends AbstractController {
 
         // Implement key enter check on text field
         Action checkplayertext = new AbstractAction() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 String           s    = (String) ((JTextField) e.getSource()).getText();
                 VideoPlayoutMode mode = getModel().getPlayoutMode();
@@ -59,16 +57,20 @@ public class UserPreferencesController extends AbstractController {
         // Add action handler for enter to slider text field
         getView().getVideoPlayerTextField().getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "check");
         getView().getVideoPlayerTextField().getActionMap().put("check", checkplayertext);
+
+
     }
 
+    @Override
     public UserPreferencesView getView() {
         return (UserPreferencesView) super.getView();
     }
 
+    @Override
     public UserPreferencesModel getModel() {
         return (UserPreferencesModel) super.getModel();
     }
-
+ 
     /**
      * Creates a browser
      * @param dir sets the current directory to start the browser in
@@ -96,6 +98,7 @@ public class UserPreferencesController extends AbstractController {
         return null;
     }
 
+    @Override
     public void actionPerformed(ActionEvent e) {
         String op = e.getActionCommand();
 
@@ -120,7 +123,7 @@ public class UserPreferencesController extends AbstractController {
             getView().setVisible(false);
         } else if (op.equals("BrowseScratchDir")) {
              File       scratch =  getModel().getLastScratchDirectory();
-             File       f = browse(scratch, JFileChooser.FILES_AND_DIRECTORIES, "Choose scratch directory");
+             File       f = browse(scratch, JFileChooser.DIRECTORIES_ONLY, "Choose scratch directory");
 
             if (f != null) {
                 getModel().setScratchDirectory(f); 

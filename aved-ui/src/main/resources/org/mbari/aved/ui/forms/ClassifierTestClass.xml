@@ -55,8 +55,8 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="text">Run</at>
-            <at name="height">25</at>
-            <at name="width">59</at>
+            <at name="height">27</at>
+            <at name="width">52</at>
             <at name="name">run</at>
             <at name="actionCommand">Run</at>
             <at name="border">
@@ -121,7 +121,7 @@
              </object>
             </at>
             <at name="name"/>
-            <at name="width">151</at>
+            <at name="width">143</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -246,13 +246,13 @@
           <at name="classname">javax.swing.JComboBox</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
-            <at name="height">23</at>
+            <at name="height">25</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>
              </object>
             </at>
-            <at name="width">368</at>
+            <at name="width">213</at>
             <at name="name">libraryname</at>
             <at name="actionCommand">libraryNameComboBoxChanged</at>
             <at name="toolTipText">Select a training library to test against the selected class. This library must contain the test class.</at>
@@ -309,9 +309,9 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Class image directory:</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="name"/>
-            <at name="width">151</at>
+            <at name="width">143</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -370,9 +370,9 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Example image:</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="name"/>
-            <at name="width">151</at>
+            <at name="width">143</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -431,9 +431,9 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Total images:</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="name"/>
-            <at name="width">151</at>
+            <at name="width">143</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -492,9 +492,9 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text"> Predicted class name:</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="name"/>
-            <at name="width">151</at>
+            <at name="width">143</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -553,9 +553,9 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Class name (VARS):</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="name"/>
-            <at name="width">151</at>
+            <at name="width">143</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -614,7 +614,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Color space:</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="name"/>
             <at name="width">149</at>
             <at name="fill">
@@ -674,8 +674,8 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="text">JLabel</at>
-            <at name="height">17</at>
-            <at name="width">305</at>
+            <at name="height">15</at>
+            <at name="width">157</at>
             <at name="name">librarycolorspace</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
@@ -735,7 +735,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Classes in library:</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="name"/>
             <at name="width">149</at>
             <at name="fill">
@@ -796,14 +796,14 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="enabled">false</at>
             <at name="scrollableTracksViewportWidth">true</at>
-            <at name="height">503</at>
+            <at name="height">407</at>
             <at name="selectionMode">0</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>
              </object>
             </at>
-            <at name="width">366</at>
+            <at name="width">207</at>
             <at name="name">classesinlibrary</at>
             <at name="toolTipText">The classes contained in this library</at>
             <at name="scollBars">
@@ -887,9 +887,9 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Description:</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="name"/>
-            <at name="width">151</at>
+            <at name="width">143</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -948,9 +948,9 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Select color space:</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="name"/>
-            <at name="width">151</at>
+            <at name="width">143</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -1007,7 +1007,7 @@
           <at name="classname">javax.swing.JComboBox</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
-            <at name="height">23</at>
+            <at name="height">25</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>
@@ -1068,10 +1068,13 @@
           <at name="classname">javax.swing.JComboBox</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
-            <at name="height">23</at>
+            <at name="height">25</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>
+              <at name="items">
+               <object classname="java.util.LinkedList"/>
+              </at>
              </object>
             </at>
             <at name="width">146</at>
@@ -1130,7 +1133,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">2</at>
             <at name="text">-</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="width">295</at>
             <at name="name">imagedirectory</at>
             <at name="fill">
@@ -1245,7 +1248,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">2</at>
             <at name="text">-</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="width">295</at>
             <at name="name">numclassimages</at>
             <at name="fill">
@@ -1306,7 +1309,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">2</at>
             <at name="text">-</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="width">295</at>
             <at name="name">classname</at>
             <at name="fill">
@@ -1367,7 +1370,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">2</at>
             <at name="text">-</at>
-            <at name="height">17</at>
+            <at name="height">15</at>
             <at name="width">295</at>
             <at name="name">classnamevars</at>
             <at name="fill">
@@ -1428,8 +1431,8 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="lineWrap">true</at>
             <at name="scrollableTracksViewportWidth">true</at>
-            <at name="height">89</at>
-            <at name="width">278</at>
+            <at name="height">87</at>
+            <at name="width">274</at>
             <at name="name">classdescription</at>
             <at name="columns">20</at>
             <at name="toolTipText">Optional description of the class to test</at>
@@ -1516,8 +1519,8 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="enabled">false</at>
             <at name="text">Stop</at>
-            <at name="height">25</at>
-            <at name="width">63</at>
+            <at name="height">27</at>
+            <at name="width">57</at>
             <at name="name">stop</at>
             <at name="actionCommand">Stop</at>
             <at name="border">

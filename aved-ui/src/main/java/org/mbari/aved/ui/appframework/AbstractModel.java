@@ -36,6 +36,7 @@ public abstract class AbstractModel implements Model {
      * Method that is called by subclasses of AbstractModel when they want to
      * notify other classes of changes to themselves.
      */
+    @Override
      public void notifyChanged(ModelEvent event) {
         synchronized (listeners) {
             ArrayList list = (ArrayList) listeners.clone();

@@ -197,7 +197,7 @@ public class MainMenu implements ModelListener {
     }
 
     private void displayPreferences() {
-        UserPreferences.getInstance().getView().setVisible(true);
+        display(UserPreferences.getInstance().getView());
     }
 
     private void displaySettings() {
@@ -231,7 +231,7 @@ public class MainMenu implements ModelListener {
      */
     void displayClassImageOrganizer() {
         if (imageOrganizer == null) {
-            imageOrganizer = new JFrame("AVED Class Image Organizer");
+            imageOrganizer = new JFrame("AVEDac Class Image Organizer");
 
             // TODO: push this logic into the ApplicationController class
             // Don't do anything; require the program to handle the operation in the

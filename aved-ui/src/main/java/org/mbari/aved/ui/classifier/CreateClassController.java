@@ -44,8 +44,6 @@ import java.io.BufferedReader;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.InputStreamReader;
-
 
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -77,6 +75,7 @@ class CreateClassController extends AbstractController implements ModelListener,
         return (ClassifierModel) super.getModel();
     }
 
+    @Override
     public CreateClassView getView() {
         return (CreateClassView) super.getView();
     }
@@ -192,8 +191,7 @@ class CreateClassController extends AbstractController implements ModelListener,
 
                 // Check if you have permission to write to the target
                 // parent directory
-                ArrayList<String> filePaths = newModel.getRawImageFileListing();
-                LibraryImage[] imageset = new LibraryImage[filePaths.size()];
+                ArrayList<String> filePaths = newModel.getRawImageFileListing(); 
                 File rootPath = newModel.getRawImageDirectory();
                 File path = new File(rootPath.toString() + "/square/");
                 File parent = new File(path.getParent());

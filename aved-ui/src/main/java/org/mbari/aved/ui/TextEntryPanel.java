@@ -80,7 +80,7 @@ public class TextEntryPanel extends JPanel implements ActionListener {
             comboBox.setSelectedItem(currentText);
         } else if (comboBoxItems.size() > 0) {
             currentText = comboBoxItems.get(0);
-            comboBox.setSelectedItem(0);
+            comboBox.setSelectedIndex(0);
         } else {
             currentText = "";
             comboBox.setSelectedIndex(-1);

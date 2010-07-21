@@ -70,7 +70,7 @@ public class DockingContainer extends JPanel {
 
         JPanel      p      = new JPanel(new BorderLayout());
         HeaderPanel header = new HeaderPanel("Automated Visual Event Detection and Classification - "
-                                 + " Class Image Organizer", icon, 0.25f);
+                                 + " Class Image Organizer  ", icon, 0.25f);
 
         p.add(BorderLayout.NORTH, header);
 
