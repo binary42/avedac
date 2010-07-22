@@ -169,7 +169,7 @@ public class RunClassifierController extends AbstractController implements Model
                             // Add the results only after successfully run
                             if (task.isFini() && getModel() != null) {
                                 NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " classification finished");
-                                dialog.setVisible(true); 
+                                dialog.setVisible(true);
 
                                 // Make the title the same as the XML file name
                                 String xmlFile = summaryModel.getXmlFile().getName();
@@ -202,7 +202,7 @@ public class RunClassifierController extends AbstractController implements Model
             String lastSelection = UserPreferences.getModel().getLastTrainingLibrarySelection();
 
             // Populate the libraries in the new color space
-            getView().populateTrainingLibraryList(newColorSpace); 
+            getView().populateTrainingLibraryList(newColorSpace);
 
             // Set the library 
             if (getView().selectLibrary(lastSelection) == false) {
@@ -406,13 +406,17 @@ public class RunClassifierController extends AbstractController implements Model
                     statistics[i][j]++;
 
                     // Put the statistics and column names in a TableModel
-                    TableModel tableModel = new TableModel(columnNames, statistics, sum);
+                    tableModel = new TableModel(columnNames, statistics, sum);
+
+                    setFini();
                 }
             } catch (RuntimeException ex) {
                 Logger.getLogger(RunClassifierController.class.getName()).log(Level.SEVERE, null, ex);
             } catch (Exception ex) {
-                Logger.getLogger(RunClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-
+                // Only log if this was an exception caused by a non-user cancel
+                if (!this.isCancelled()) {
+                    Logger.getLogger(RunClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
 

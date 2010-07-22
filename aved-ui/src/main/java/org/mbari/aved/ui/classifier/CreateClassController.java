@@ -190,8 +190,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                 newModel.setDatabaseRoot(d);
 
                 // Check if you have permission to write to the target
-                // parent directory
-                ArrayList<String> filePaths = newModel.getRawImageFileListing(); 
+                // parent directory 
                 File rootPath = newModel.getRawImageDirectory();
                 File path = new File(rootPath.toString() + "/square/");
                 File parent = new File(path.getParent());

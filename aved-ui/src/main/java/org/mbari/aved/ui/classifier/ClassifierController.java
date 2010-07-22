@@ -59,7 +59,7 @@ import org.mbari.aved.classifier.ClassifierLibraryJNI;
  *
  * @author dcline
  */
-public class ClassifierController extends AbstractController implements ModelListener, WindowListener {
+public class ClassifierController extends AbstractController implements ModelListener {
 
     private final CreateClass createClass;
     private final CreateTrainingLibrary createTrainingLib;
@@ -78,11 +78,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         // Need to create the model and view before creating the controllers
         setView(view);
         setModel(model);
-
-        // Register as a window listener to handle closing the shared library
-        // gracefully
-        getView().addWindowListener(this);
-
+  
         // Register as listener to the summary and list model
         model.addModelListener(this);
         list.addModelListener(this);
@@ -229,34 +225,6 @@ public class ClassifierController extends AbstractController implements ModelLis
         }
     }
 
-    public void windowOpened(WindowEvent e) {
-    }
-
-    public void windowClosing(WindowEvent e) {
-        try {
-            if (jniQueue != null) {
-                jniQueue.cancel();
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    public void windowClosed(WindowEvent e) {
-    }
-
-    public void windowIconified(WindowEvent e) {
-    }
-
-    public void windowDeiconified(WindowEvent e) {
-    }
-
-    public void windowActivated(WindowEvent e) {
-    }
-
-    public void windowDeactivated(WindowEvent e) {
-    }
-
     SwingWorker getWorker() {
         if (this.jniQueue != null) {
             return jniQueue;
@@ -374,15 +342,17 @@ public class ClassifierController extends AbstractController implements ModelLis
             while (exit == false) {
                 if (queue.isEmpty() == false) {
                     ClassifierLibraryJNITask task = queue.element();
-                    System.out.println("running task");
+                    try {
                     task.run(jniLibrary);
+                    } catch (Exception ex) {
+                         Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     queue.remove();
                     getModel().setJniTaskComplete(task.getId());
                 } else {
                     try {
                         Thread.sleep(1000);
-                    } catch (InterruptedException ex) {
-                        break;
+                    } catch (InterruptedException ex) { 
                     }
                 }
             }
@@ -440,7 +410,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                     InputStreamReader isr = new InputStreamReader(fis);
                     br = new BufferedReader(isr);
                 } catch (FileNotFoundException ex) {
-                    Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
             return br;
@@ -463,7 +433,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                     isInitialized = true;
                     Thread.sleep(2000);
                 } catch (Exception e) {
-                    Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, e);
+                    Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null, e);
                 }
             }
 
@@ -488,7 +458,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                 }
 
             } catch (Exception ex) {
-                Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }

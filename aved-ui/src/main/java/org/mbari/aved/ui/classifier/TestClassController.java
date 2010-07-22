@@ -155,7 +155,7 @@ class TestClassController extends AbstractController implements ModelListener {
                         public void run() {
                             BufferedReader br = Classifier.getController().getBufferedReader();
                             ProgressDisplay progressDisplay = new ProgressDisplay(worker,
-                                    "Testing class " + classModel.getName() + "against " + trainingModel.getName());
+                                    "Testing class " + classModel.getName() + " against " + trainingModel.getName());
 
                             progressDisplay.getView().setVisible(true);
 

@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"><title>AVEDac Classifier</title> <link href="mbariexternal.css" type="text/css" rel="stylesheet"></head>
+<body><div id="pagetable" background-color="#ffffff">
+<div id="header"><div id="header_title">Automated
+Visual Event Detection and Classification </div>
+</div> <br><div id="pagetitle" style="font-size: 18px;" align="center">AVEDac
+Classifier </div>
+<h3>Classifier</h3>The AVEDac classifier uses a
+supervised learning method that requires a predefined class.
+&nbsp;By
+default, all the
+events that you label in the EventTable or EventThumbnail views are
+sorted into these predefined <span style="font-weight: bold;">classes</span>
+(which in this context is a group of related images). A <span style="font-weight: bold;">training library</span> is
+a collection of these <span style="font-weight: bold;">classes</span>
+that is trained by a statistical learning approach called a Gaussian mixture
+model. More information on the classifier can found in the following
+paper:<br><br><a href="http://www.sciencedirect.com/science?_ob=ArticleURL&amp;_udi=B6V15-4KJDWN6-1&amp;_user=521390&amp;_rdoc=1&amp;_fmt=&amp;_orig=search&amp;_sort=d&amp;view=c&amp;_acct=C000059566&amp;_version=1&amp;_urlVersion=0&amp;_userid=521390&amp;md5=20b4cc4267f58e44a33cd89ec4880ec7">M. Ranzato, P.E. Taylor, J.M. House, R.C.
+Flagan, Y. LeCun and P. Perona. Pattern Recognition Letters<br>Volume
+28, Issue 1, 1 January 2007, Pages 31-39.
+doi:10.1016/j.patrec.2006.06.010 </a><a href="http://www.sciencedirect.com/science?_ob=ArticleURL&amp;_udi=B6V15-4KJDWN6-1&amp;_user=521390&amp;_rdoc=1&amp;_fmt=&amp;_orig=search&amp;_sort=d&amp;view=c&amp;_acct=C000059566&amp;_version=1&amp;_urlVersion=0&amp;_userid=521390&amp;md5=20b4cc4267f58e44a33cd89ec4880ec7"><br></a><br style="font-style: italic;"><span style="font-style: italic;">If you use this sofware in your research, please cite this work !</span><br>&nbsp;<br><span style="font-weight: bold;">Step 1.</span> <a href="ClassifierCreateClass.html">Create Class</a><br><div style="margin-left: 40px;">Before
+creating a training library, a statistical pattern for each class in
+the training library has to created. This step must be repeated whenever new image are added to a class.<br></div><br><span style="font-weight: bold;">Step 2.</span> <a href="ClassifierCreateTrainingLibrary.html">Create Training Library</a><br><div style="margin-left: 40px;">When the
+classes are collected, a training library can be generated. A training library can constist of one or more classes.<br><br></div><span style="font-weight: bold;">Step 3.</span> <a href="ClassifierTestClass.html">Test Class</a><br><div style="margin-left: 40px;">Testing
+a class is a method that test a 10% random sample of the class against
+a training library. This is an <span style="font-weight: bold;">optional</span>
+step, but useful to determine how effective a class in discriminating
+itself. <br><br></div><span style="font-weight: bold;">Step
+4.</span> <a href="ClassifierRun.html">Run Classifier</a><br><div style="margin-left: 40px;">Once a training library is created, the classifier can
+be run.&nbsp;<br></div> &nbsp;<br><div style="text-align: center;"><img style="width: 640px; height: 480px;" alt="AVEDac Event Player" src="Images/classifier.png"><br><br><h3 style="text-align: left;">Classifier preferences &nbsp;</h3><div style="text-align: left;">&nbsp;By default, all the
+events that you label in the EventTable or EventThumbnail views
+automatically generate these predefined <span style="font-weight: bold;">classes</span>. When you
+are done creating classes, to turn off this default, first, select the
+Preferences in the Classifier menu.<br></div><div style="text-align: center;"><img style="width: 327px; height: 219px;" alt="classifier preferences menu selection" src="Images/classifier_preferences_menu.png"><br></div><br><div style="text-align: left;">Next, &nbsp;uncheck the Add
+all labeled events to the image library.<br></div><img style="width: 743px; height: 183px;" alt="classifier preferences" src="Images/classifier_preferences.png"><br><br>
+</div><div id="footer">
+<div id="aquarium_link" style="text-align: right;"><a title="visit Monterey Bay Aquarium's website" target="_blank" href="http://www.mbayaq.org/"><img alt="visit Monterey Bay Aquarium's website" src="art/home/misc/aquarium_link.gif" border="0" height="40" hspace="0" vspace="0" width="211"></a></div>
+<div id="footer_menu"> <ul type="disc"> <li class="address"><address><span class="current" style="color: rgb(255, 255, 255);">MBARI&nbsp;
+&middot; 7700 Sandholdt Road &nbsp; &middot; &nbsp;
+Moss Landing, CA 95039-USA &nbsp; &middot; &nbsp; Tel:
+(831) 775-1700 &nbsp;&nbsp;&middot; &copy; 2007 MBARI</span></address></li></ul>
+</div></div>
+</div></body></html>

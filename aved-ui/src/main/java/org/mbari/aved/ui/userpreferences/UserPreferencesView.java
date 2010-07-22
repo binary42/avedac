@@ -191,8 +191,7 @@ public class UserPreferencesView extends JFrameView {
         } else if (e.getID() == UserPreferencesModel.SCRATCH_DIR_CHANGED) {
             File f = model.getLastScratchDirectory();
             addScratchDirectoryToComboBox(f);
-        }
-        System.out.println("---->" + scratchDirComboBox.getSelectedItem().toString());
+        } 
         scratchDirComboBox.repaint(); 
     }
 

@@ -274,7 +274,7 @@ public class ClassifierModel extends AbstractModel {
             while (i.hasNext()) {
                 TrainingModel m = i.next();
 
-                if (m != null
+                if (m != null && model != null
                         && m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())
                         && m.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
                         && m.getDescription().equals(model.getDescription())) {

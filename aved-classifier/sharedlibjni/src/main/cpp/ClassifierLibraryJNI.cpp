@@ -753,7 +753,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_test_
 
     removeFile(env, killfile);
 
-    DPRINTF("Testing class %s kill\n", testclass);
+    DPRINTF("Testing class %s\n", testclass);
 
     mxArray *mxEventFilenames = NULL;
     mxArray *mxClassIndex = NULL;
