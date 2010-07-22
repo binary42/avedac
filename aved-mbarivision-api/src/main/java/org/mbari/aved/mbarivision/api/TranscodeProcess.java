@@ -645,7 +645,7 @@ public class TranscodeProcess extends Thread {
                 } else if (codec.equals("mpg2")) {
                     cmd = new String(transcodecmd + " -i " + filename + " -o " + outputfileseed + " -x mpeg2,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts);
                 } else {
-                    cmd = new String(transcodecmd + " -i " + filename + " -o " + outputfileseed + " -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts + " -H 0");
+                    cmd = new String(transcodecmd + " -i " + filename + " -o " + outputfileseed + " -x ffmpeg,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts);
                 }
 
             } else if (ext.equals("mpeg") || ext.equals("mpg")) {

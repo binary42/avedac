@@ -129,7 +129,7 @@ public class ApplicationController extends AbstractController implements ModelLi
             System.setProperty("apple.laf.useScreenMenuBar", "true");
         }
 
-        MainMenu menu = new MainMenu(getModel()); 
+        MainMenu menu = new MainMenu(getModel());
         getView().setJMenuBar(menu.buildJJMenuBar());
 
         // Initialize mouse listener for tabbed pane
@@ -792,6 +792,10 @@ public class ApplicationController extends AbstractController implements ModelLi
         }
     }
 
+    /**
+     * Handles mouse clicks on video links in the <code>SummaryView</code>
+     * @param e
+     */
     void actionClickVideoFile(final MouseEvent e) {
         final SummaryModel model = getModel().getSummaryModel();
 
@@ -820,7 +824,6 @@ public class ApplicationController extends AbstractController implements ModelLi
 
                                     if (urlString != null) {
                                         try {
-
                                             // This will launch a separate
                                             // browser window each time it's
                                             // called and this process is not
@@ -841,9 +844,11 @@ public class ApplicationController extends AbstractController implements ModelLi
                                         }
                                     }
                                 } else if (mode == VideoPlayoutMode.OTHER) {
-                                    // TODO: launch separate process to play
-                                    // video
-                                    // urlString = mode.command + model.getInputSourceURL().toString();
+                                    // launch separate process to play video
+                                    // TODO: add error handling/display for bogus commands
+                                    String cmd = mode.command + " " + model.getInputSourceURL().getFile();
+                                    System.out.println("Executing " + cmd);
+                                    Runtime.getRuntime().exec(cmd); 
                                 } else {
                                     // TODO: launch err message - cannot find
                                     // file - need to check the CLASSPATH
@@ -1033,7 +1038,7 @@ public class ApplicationController extends AbstractController implements ModelLi
             }
         } else {
             try {
-                getView().setBusyCursor(); 
+                getView().setBusyCursor();
                 shutdown();
             } catch (Exception ex) {
                 Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);

@@ -31,6 +31,7 @@ import org.mbari.aved.ui.userpreferences.UserPreferencesModel.VideoPlayoutMode;
 
 //~--- JDK imports ------------------------------------------------------------
 import java.io.File;
+import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
@@ -127,10 +128,10 @@ public class UserPreferencesView extends JFrameView {
         File[] dirs = {model.getScratchDirectory()};
         initializeScratchDirectories(dirs);
 
-         scratchDirComboBox.setSelectedIndex(0);
+        scratchDirComboBox.setSelectedIndex(0);
 
         ListCellRenderer r = scratchDirComboBox.getRenderer();
-        System.out.println(r.toString()); 
+        System.out.println(r.toString());
     }
 
     public class CustomerListCellRenderer extends DefaultListCellRenderer {
@@ -153,7 +154,7 @@ public class UserPreferencesView extends JFrameView {
 
             setEnabled(list.isEnabled());
             setFont(list.getFont());
-            setOpaque(true); 
+            setOpaque(true);
             return this;
         }
     }
@@ -191,8 +192,8 @@ public class UserPreferencesView extends JFrameView {
         } else if (e.getID() == UserPreferencesModel.SCRATCH_DIR_CHANGED) {
             File f = model.getScratchDirectory();
             addScratchDirectoryToComboBox(f);
-        } 
-        scratchDirComboBox.repaint(); 
+        }
+        scratchDirComboBox.repaint();
     }
 
     public JTextField getVideoPlayerTextField() {
@@ -204,29 +205,26 @@ public class UserPreferencesView extends JFrameView {
      * @param f
      */
     public void addScratchDirectoryToComboBox(File f) {
-        /*if (f != null) {
+        if (f != null) {
+            DefaultComboBoxModel scratchDirListModel = (DefaultComboBoxModel) scratchDirComboBox.getModel();
+            if (scratchDirListModel.getSize() == 0) {
+                scratchDirListModel.addElement(f);
+            } else {
+                int num = scratchDirListModel.getSize();
+                boolean found = false;
 
-        if (scratchDirListModel.getSize() == 0) {
-        scratchDirListModel.addElement(f);
-        scratchDirComboBox.setSelectedItem(f);
-        } else {
-        int num = scratchDirListModel.getSize();
-        boolean found = false;
+                for (int i = 0; i < num; i++) {
+                    String s = scratchDirListModel.getElementAt(i).toString();
 
-        for (int i = 0; i < num; i++) {
-        String s = scratchDirListModel.getElementAt(i).toString();
-
-        if (s.equals(f.toString())) {
-        found = true;
-        break;
+                    if (s.equals(f.toString())) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    scratchDirListModel.addElement(f);
+                }
+            } 
         }
-        }
-
-        if (!found) {
-        scratchDirListModel.addElement(f);
-        scratchDirComboBox.setSelectedItem(f);
-        }
-        }
-        }*/
     }
 }
