@@ -47,6 +47,7 @@ public class TranscodeProcess extends Thread {
     private OutputStream printStream = System.out;
     private boolean isRunning = false;
     private String transcodeCmd = null;
+    private String transcodeOpts= new String("");
     private Process process ;
     /** Environmental parameters to use in Runtime calls*/
     private String envParams[] = null;
@@ -276,6 +277,14 @@ public class TranscodeProcess extends Thread {
         this.transcodeCmd = command;
     }
 
+
+    /**
+     * Sets optional transcode arguments to pass to the transcoder
+     */
+    public void setTranscodeOpts(String command) {
+        this.transcodeOpts = command;
+    }
+
     /**
      * Helper function to return the defined transcode command
      * @return the transcoded command used
@@ -302,7 +311,7 @@ public class TranscodeProcess extends Thread {
                     isRunning = true;
 
                     //TODO pass extra args here as 3rd argument
-                    runTranscode(this.getInVideoFile(), this.getOutAVEDVideo().getOutputDirectory(), new String(""));
+                    runTranscode(this.getInVideoFile(), this.getOutAVEDVideo().getOutputDirectory(), transcodeOpts);
 
                 } catch (IOException e) {
                     isRunning = false;
@@ -529,12 +538,11 @@ public class TranscodeProcess extends Thread {
                 // Get transcode path 
                 transcodecmd = getCmdLoc("transcode");
 
-                // only show progress every 100 frames on Mac
+                // only show progress every 100 frames
                 if (lcOSName.startsWith("mac")) {
                    transcodecmd = transcodecmd + " --progress_rate 100 ";
-                } else {
-                    // otherwise show info progress on Linux
-                   transcodecmd = transcodecmd + " -q 1  ";
+                } else { 
+                   transcodecmd = transcodecmd + " -q 1 --print_status 100";
                 }
 
                 outAvedVideo.setFileExt("ppm");
@@ -637,7 +645,7 @@ public class TranscodeProcess extends Thread {
                 } else if (codec.equals("mpg2")) {
                     cmd = new String(transcodecmd + " -i " + filename + " -o " + outputfileseed + " -x mpeg2,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts);
                 } else {
-                    cmd = new String(transcodecmd + " -i " + filename + " -o " + outputfileseed + " -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts);
+                    cmd = new String(transcodecmd + " -i " + filename + " -o " + outputfileseed + " -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts + " -H 0");
                 }
 
             } else if (ext.equals("mpeg") || ext.equals("mpg")) {
@@ -661,7 +669,7 @@ public class TranscodeProcess extends Thread {
             } else if (ext.endsWith("tar")) {
                 cmd = new String("tar " + " -C " + outputdir.toString() + " -x -v -f " + filename);
             } else {
-                cmd = new String(transcodecmd + " -i " + filename + " -o " + outputfileseed + " -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts);
+                cmd = new String(transcodecmd + "-i " + filename + " -o " + outputfileseed + " -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts);
             }
 
             // Create output directory if it doesn't exist 
