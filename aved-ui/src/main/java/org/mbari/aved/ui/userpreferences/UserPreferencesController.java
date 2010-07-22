@@ -120,7 +120,7 @@ public class UserPreferencesController extends AbstractController {
         } else if (op.equals("Close")) {
             getView().setVisible(false);
         } else if (op.equals("BrowseScratchDir")) {
-             File       scratch =  getModel().getLastScratchDirectory();
+             File       scratch =  getModel().getScratchDirectory();
              File       f = browse(scratch, JFileChooser.DIRECTORIES_ONLY, "Choose scratch directory");
 
             if (f != null) {

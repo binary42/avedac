@@ -177,7 +177,7 @@ public class DockingContainer extends JPanel {
                     if (action == JFileChooser.APPROVE_OPTION) {
                         File dir = chooser.getSelectedFile();
 
-                        UserPreferences.getModel().setLastDockingImageDirectory(dir);
+                        UserPreferences.getModel().setDockingImageDirectory(dir);
                         addSynopsisView(dir);
                     }
                 }

@@ -39,6 +39,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.plaf.metal.DefaultMetalTheme;
 import javax.swing.plaf.metal.MetalLookAndFeel;
+import org.mbari.aved.ui.classifier.Classifier;
 import org.mbari.aved.ui.message.NonModalMessageDialog;
 
 public class Application {
@@ -46,6 +47,7 @@ public class Application {
     private static final Application    INSTANCE = new Application();
     public static ApplicationLookandFeelSettings lookAndFeelSettings = ApplicationLookandFeelSettings.createDefault();
     private static ApplicationController controller;
+
 
     public Application() {
         try {
@@ -75,6 +77,15 @@ public class Application {
      */
     public static ApplicationView getView() {
         return (ApplicationView) controller.getView();
+    }
+
+    /**
+      * Helper function to return the <code>Classifier</code> associated with
+     * this <code>Application</code>
+     * @return the Classifier singleton
+     */
+    public static Classifier getClassifier() {
+        return controller.getClassifier();
     }
 
     /**
@@ -112,7 +123,8 @@ public class Application {
                 Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
             } catch (UnsupportedLookAndFeelException ex) {
                 Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
-            }  
+            }
+ 
         } else {
 
             // Otherwise, set the look and feel to a metal look

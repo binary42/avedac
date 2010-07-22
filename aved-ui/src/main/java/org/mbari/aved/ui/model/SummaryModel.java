@@ -184,11 +184,11 @@ public class SummaryModel extends AbstractModel {
                 UserPreferencesModel prefs = UserPreferences.getModel();
 
                 if (url.getProtocol().startsWith("file") || url.getProtocol().startsWith("http")) {
-                    prefs.setLastImportedMPEGDirectory(url);
+                    prefs.setImportMpegDirectory(url);
                 } else {
                     File f = new File(url.getFile());
 
-                    prefs.setLastImportedMPEGDirectory(new URL("file://" + f.getParent()));
+                    prefs.setImportMpegDirectory(new URL("file://" + f.getParent()));
                 }
 
                 notifyChanged(new SummaryModelEvent(this, SummaryModelEvent.MPEG_SOURCE_URL_CHANGED, url.toString()));
@@ -211,7 +211,7 @@ public class SummaryModel extends AbstractModel {
             UserPreferencesModel prefs = UserPreferences.getModel();
 
             if (url != null) {
-                prefs.setLastImportedSourceURL(url);
+                prefs.setImportSourceUrl(url);
                 notifyChanged(new SummaryModelEvent(this, SummaryModelEvent.INPUT_SOURCE_URL_CHANGED, url.toString()));
             } else {
                 notifyChanged(new SummaryModelEvent(this, SummaryModelEvent.INPUT_SOURCE_URL_CHANGED, "null"));

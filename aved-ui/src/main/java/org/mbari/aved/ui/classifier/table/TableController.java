@@ -184,7 +184,7 @@ public class TableController extends AbstractController implements ModelListener
             // Browse for XML to import starting with the last exported directory
             JFileChooser chooser = new JFileChooser();
 
-            chooser.setCurrentDirectory(UserPreferences.getModel().getLastExportedExcelDirectory());
+            chooser.setCurrentDirectory(UserPreferences.getModel().getExportedExcelDirectory());
             chooser.setSelectedFile(file);
             chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             chooser.setDialogTitle("Choose Excel file to save the results to");
@@ -192,7 +192,7 @@ public class TableController extends AbstractController implements ModelListener
             if (chooser.showDialog(getView(), "Export") == JFileChooser.APPROVE_OPTION) {
                 File f = chooser.getSelectedFile();
 
-                UserPreferences.getModel().setLastExportedExcelDirectory(new File(f.getAbsolutePath()));
+                UserPreferences.getModel().setExportedExcelDirectory(new File(f.getAbsolutePath()));
 
                 return f;
             } else {

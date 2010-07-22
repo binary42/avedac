@@ -78,7 +78,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         // Need to create the model and view before creating the controllers
         setView(view);
         setModel(model);
-  
+
         // Register as listener to the summary and list model
         model.addModelListener(this);
         list.addModelListener(this);
@@ -172,14 +172,16 @@ public class ClassifierController extends AbstractController implements ModelLis
 
             switch (e.getID()) {
                 case EventListModelEvent.MULTIPLE_ENTRIES_CHANGED:
+                    // Get the list of model indexes that have changes
                     ArrayList<Integer> a = e.getModelIndexes();
                     Iterator<Integer> iter = a.iterator();
 
+                    // Go through each, creating directories if needed and adding
+                    // the images to the model
                     while (iter.hasNext()) {
                         File f = UserPreferences.getModel().getClassTrainingImageDirectory();
                         EventObjectContainer eoc = eventListModel.getElementAt(iter.next());
-
-                        // TODO: add check for user pref to add all classes to training set
+ 
                         if ((eoc != null) && (eoc.getClassName().length() > 0)) {
                             try {
                                 String className = eoc.getClassName();
@@ -195,8 +197,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                                     }
                                 }
 
-                                // create a new model with some reasonable
-                                // defaults
+                                // create a new model with some reasonable defaults
                                 ClassModel newModel = new ClassModel();
 
                                 newModel.setRawImageDirectory(dir);
@@ -204,13 +205,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                                 newModel.setVarsClassName(eoc.getClassName());
                                 newModel.setDescription(eoc.getClassName());
 
-                                if (!getModel().checkClassExists(newModel)) {
-                                    getModel().addClassModel(newModel);
-                                }
-
-                                // get the existing model and add an image to it
-                                ClassModel model = getModel().getClassModel(className);
-                                AddClassImageWorker thread = new AddClassImageWorker(model, eoc);
+                                AddClassImageWorker thread = new AddClassImageWorker(newModel, eoc);
 
                                 thread.execute();
 
@@ -252,10 +247,19 @@ public class ClassifierController extends AbstractController implements ModelLis
      * @return the input stream reader associated with the matlab log file
      */
     public BufferedReader getBufferedReader() {
-        if (this.jniQueue != null) {
+        if (jniQueue != null) {
             return jniQueue.getBufferedReader();
         }
         return null;
+    }
+
+    /**
+     * Kills the jni worker queue and closes the JNI matlab library
+     */
+    public void shutdown() {
+        if (jniQueue != null) {
+            jniQueue.cancel();
+        }
     }
 
     /**
@@ -268,20 +272,19 @@ public class ClassifierController extends AbstractController implements ModelLis
 
         private final ClassModel classModel;
         private final EventObjectContainer event;
-        private ProgressDisplay progressDisplay;
+        //private ProgressDisplay progressDisplay;
 
         public AddClassImageWorker(ClassModel classModel, EventObjectContainer event) {
             this.event = event;
             this.classModel = classModel;
-
-            if (progressDisplay != null) {
-                progressDisplay = new ProgressDisplay(this, "Adding class image" + classModel.getName());
-            }
+            //TODO: add another type of progress display to the main view
+            //to indicate this is working in the background
+            //progressDisplay = new ProgressDisplay(this, "Adding class image" + classModel.getName());
         }
 
         @Override
         protected Object doInBackground() throws Exception {
-            progressDisplay.display("Adding class " + classModel.getName() + "...");
+            //progressDisplay.display("Adding class " + classModel.getName() + "...");
 
             boolean addImages = UserPreferences.getModel().getAddTrainingImages();
 
@@ -290,7 +293,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                 File classDir = new File(dir + "/" + classModel.getName());
 
                 // Add this class to the docking image directories
-                UserPreferences.getModel().setLastDockingImageDirectory(classDir);
+                UserPreferences.getModel().setDockingImageDirectory(classDir);
 
                 for (int frameNo = event.getStartFrame(); frameNo <= event.getEndFrame(); frameNo++) {
 
@@ -314,7 +317,13 @@ public class ClassifierController extends AbstractController implements ModelLis
                 }
             }
 
-            progressDisplay.display("Done !");
+            //progressDisplay.display("Done !");
+            //progressDisplay.getView().dispose();
+
+            // Add the model to the classes
+            if (!getModel().checkClassExists(classModel)) {
+                getModel().addClassModel(classModel);
+            }
 
             return this;
         }
@@ -343,16 +352,16 @@ public class ClassifierController extends AbstractController implements ModelLis
                 if (queue.isEmpty() == false) {
                     ClassifierLibraryJNITask task = queue.element();
                     try {
-                    task.run(jniLibrary);
+                        task.run(jniLibrary);
                     } catch (Exception ex) {
-                         Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     queue.remove();
                     getModel().setJniTaskComplete(task.getId());
                 } else {
                     try {
                         Thread.sleep(1000);
-                    } catch (InterruptedException ex) { 
+                    } catch (InterruptedException ex) {
                     }
                 }
             }

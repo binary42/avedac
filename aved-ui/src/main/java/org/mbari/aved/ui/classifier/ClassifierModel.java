@@ -75,7 +75,7 @@ public class ClassifierModel extends AbstractModel {
         if (changedName(lastClassTrainingDirectory, directory)) {
             lastClassTrainingDirectory = directory;
             UserPreferences.getModel().setClassTrainingImageDirectory(directory);
-            ClassifierModelEvent e = new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_CLASS_DIR_UPDATED,
+            ClassifierModelEvent e = new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_DIR_UPDATED,
                     "setTrainingClassDirectory" + directory.toString());
             notifyChanged(e);
         }
@@ -373,7 +373,7 @@ public class ClassifierModel extends AbstractModel {
          */
         public static final int CLASSIFIER_DBROOT_MODEL_CHANGED = 0;
         public static final int CLASS_MODELS_UPDATED = 2;
-        public static final int TRAINING_CLASS_DIR_UPDATED = 1;
+        public static final int TRAINING_DIR_UPDATED = 1;
         public static final int TRAINING_MODELS_UPDATED = 3;
         public static final int JNI_TASK_COMPLETED = 4;
 

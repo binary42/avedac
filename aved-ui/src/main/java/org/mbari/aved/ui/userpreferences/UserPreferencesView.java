@@ -124,7 +124,7 @@ public class UserPreferencesView extends JFrameView {
         scratchDirComboBox.setRenderer(new CustomerListCellRenderer());
         scratchDirComboBox.setEditable(false);
 
-        File[] dirs = {model.getLastScratchDirectory()};
+        File[] dirs = {model.getScratchDirectory()};
         initializeScratchDirectories(dirs);
 
          scratchDirComboBox.setSelectedIndex(0);
@@ -189,7 +189,7 @@ public class UserPreferencesView extends JFrameView {
             askBeforeDeleteCheckBox.setSelected(model.getAskBeforeDelete());
 
         } else if (e.getID() == UserPreferencesModel.SCRATCH_DIR_CHANGED) {
-            File f = model.getLastScratchDirectory();
+            File f = model.getScratchDirectory();
             addScratchDirectoryToComboBox(f);
         } 
         scratchDirComboBox.repaint(); 

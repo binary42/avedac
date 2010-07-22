@@ -74,6 +74,12 @@ public final class Classifier {
     }
 
     /**
+     * Does a clean shutdown of the classifier
+     */
+    public void shutdown() {
+        controller.shutdown();
+    }
+    /**
      * Brings the create class tabbed view in the Classifier to the front
      * and visible
      */
@@ -124,4 +130,5 @@ public final class Classifier {
             }
         });
     }
+
 }

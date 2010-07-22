@@ -134,7 +134,6 @@ public class PlayerView extends JFrameView {
         // Set the Menu bar to the same as the main application view
         if (menuBar == null) {
             MainMenu mainMenu = new MainMenu(model);
-
             menuBar = mainMenu.buildJJMenuBar();
         }
 

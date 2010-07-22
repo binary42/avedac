@@ -421,7 +421,7 @@ public final class UserPreferencesModel extends AbstractModel {
             return;
         }
 
-        setLastUsedId(id);
+        setId(id);
 
         ArrayList<String> l = getNodeValues(ID_LIST);
         Iterator<String>  i = l.iterator();
@@ -453,7 +453,7 @@ public final class UserPreferencesModel extends AbstractModel {
             return;
         }
 
-        this.setLastUsedTag(tag);
+        this.setTag(tag);
 
         ArrayList<String> l = getNodeValues(TAG_LIST);
         Iterator<String>  i = l.iterator();
@@ -485,7 +485,7 @@ public final class UserPreferencesModel extends AbstractModel {
             return;
         }
 
-        setLastUsedClassName(className);
+        setClassName(className);
 
         ArrayList<String> l = getNodeValues(CLASS_NAME_LIST);
         Iterator<String>  i = l.iterator();
@@ -517,7 +517,7 @@ public final class UserPreferencesModel extends AbstractModel {
             return;
         }
 
-        setLastUsedSpeciesName(className);
+        setSpeciesName(className);
 
         ArrayList<String> l = getNodeValues(PREDICTED_CLASS_NAME_LIST);
         Iterator<String>  i = l.iterator();
@@ -574,7 +574,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * imported from
      * @param f the directory to set
      */
-    public void setLastOpenedClassTrainingDirectory(File f) {
+    public void setClassTrainingDirectory(File f) {
         put(IMAGE_IMPORT_DIR, f.getAbsolutePath());
     }
 
@@ -595,7 +595,7 @@ public final class UserPreferencesModel extends AbstractModel {
     }
 
     /** Sets the last docking container directories */
-    public void setLastDockingImageDirectory(File f) {
+    public void setDockingImageDirectory(File f) {
         ArrayList<String> l = getNodeValues(IMAGE_DOCKING_DIRS);
         Iterator<String>  i = l.iterator();
 
@@ -689,12 +689,11 @@ public final class UserPreferencesModel extends AbstractModel {
     }
 
     /**
- *      * Returns the scratch directory and if not available returns in the following search order:
- *           * if exists, the SCRATCH_DIR environment variable, or
- *                * if exists /tmp
- *                     * or "./" if all else fails
- *                          */
-    public File getLastScratchDirectory() {
+    *  Returns the scratch directory and if not available returns in the following search order:
+    *  if exists, the SCRATCH_DIR environment variable, or
+    *  if exists /tmp  or "./" if all else fails
+    */
+    public File getScratchDirectory() {
         return new File(preferences.get(SCRATCH_DIR, getDefaultScratchDirectory().getName()));
     }
 
@@ -702,7 +701,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * Returns the directory the last training images where imported from,
      * and if not available returns PWD environment variable
      */
-    public File getLastOpenedClassTrainingDirectory() {
+    public File getClassImageDirectory() {
         return new File(get(IMAGE_IMPORT_DIR, getDefaultDirectoryString()));
     }
 
@@ -725,7 +724,7 @@ public final class UserPreferencesModel extends AbstractModel {
         return list;
     }
 
-    public void removeTrainingImageDockingDirectory(File f) {
+    public void removeClassImageDockingDirectory(File f) {
         try {
             Preferences node      = preferences.node(IMAGE_DOCKING_DIRS);
             String      childname = new String("IMAGE_EXPORT_DIRS" + dockingDirsCnt);
@@ -770,7 +769,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * Returns the directory XML results were successfully imported from,
      * and if not available returns PWD environment variable
      */
-    public File getLastExportedXMLDirectory() {
+    public File getExportedXMLDirectory() {
         return new File(preferences.get(XML_EXPORT_DIR, getDefaultDirectoryString()));
     }
 
@@ -782,7 +781,7 @@ public final class UserPreferencesModel extends AbstractModel {
     }
 
     /** Sets the directory results were successfully imported from */
-    public void setLastExportedXMLDirectory(File f) {
+    public void setExportXmlDirectory(File f) {
         put(XML_EXPORT_DIR, f.getAbsolutePath());
     }
 
@@ -790,12 +789,12 @@ public final class UserPreferencesModel extends AbstractModel {
      * Returns the directory Excel data was successfully exported to,
      * and if not available returns PWD environment variable
      */
-    public File getLastExportedExcelDirectory() {
+    public File getExportedExcelDirectory() {
         return new File(preferences.get(EXCEL_EXPORT_DIR, getDefaultDirectoryString()));
     }
 
     /** Sets the last training library selection by name */
-    public void setLastTrainingLibrarySelection(String className) {
+    public void setTrainingLibrarySelection(String className) {
         put(LAST_TRAINING_SELECTION, className);
     }
 
@@ -803,21 +802,21 @@ public final class UserPreferencesModel extends AbstractModel {
      * Gets the last training library selection by name. If
      * a noe selection exists, return an empty strin
      */
-    public String getLastTrainingLibrarySelection() {
+    public String getTrainingLibrarySelection() {
         return get(LAST_TRAINING_SELECTION, new String(""));
     }
 
     /** Sets the directory Excel data was successfully exported to */
-    public void setLastExportedExcelDirectory(File f) {
+    public void setExportedExcelDirectory(File f) {
         put(EXCEL_EXPORT_DIR, f.getAbsolutePath());
     }
 
     /** Returns the directory XML results were successfully imported from, and if not available returns PWD environment variable */
-    public File getLastImportedXMLDirectory() {
+    public File setImportedXmlDirectory() {
         return new File(get(XML_IMPORT_DIR, getDefaultDirectoryString()));
     }
 
-    public URL getLastImportedSourceURL() throws MalformedURLException {
+    public URL getImportSourceUrl() throws MalformedURLException {
         return new URL(get(LAST_IMPORTED_SRC_URL, getDefaultURLString()));
     }
 
@@ -825,7 +824,7 @@ public final class UserPreferencesModel extends AbstractModel {
      *  Sets the directory results were successfully imported from
      * @param f The directory last successfully imported
      */
-    public void setLastImportedXMLDirectory(File f) {
+    public void setImportXmlDirectory(File f) {
         put(XML_IMPORT_DIR, f.getAbsolutePath());
     }
 
@@ -833,7 +832,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * Returns the parent directory clips were successfully imported from,
      * and if not available returns PWD environment variable
      */
-    public String getLastImportedVideoDir() {
+    public String getImportVideoDir() {
         return get(LAST_VIDEO_IMPORT_DIR, getDefaultDirectoryString());
     }
 
@@ -841,7 +840,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * Returns the last used class name and if not available
      * returns an empty string
      */
-    public String getLastUsedClassName() {
+    public String getClassName() {
         return get(LAST_CLASS_NAME, new String(""));
     }
 
@@ -849,7 +848,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * Returns the last used species name and if not available
      * returns an empty string
      */
-    public String getLastUsedSpeciesName() {
+    public String getSpeciesName() {
         return get(LAST_SPECIES_NAME, new String(""));
     }
 
@@ -857,7 +856,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * Returns the last used id and if not available
      * returns an empty string
      */
-    public String getLastUsedId() {
+    public String getId() {
         return get(LAST_ID_NAME, new String(""));
     }
 
@@ -865,7 +864,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * Returns the last used tag nd if not available
      * returns an empty string
      */
-    public String getLastUsedTag() {
+    public String getTag() {
         return get(LAST_TAG_NAME, new String(""));
     }
 
@@ -873,7 +872,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * Sets the URL path input source video clips were successfully imported from
      * @param dir the directory
      */
-    public void setLastImportedVideoDir(String dir) {
+    public void setImportVideoDir(String dir) {
         put(LAST_VIDEO_IMPORT_DIR, dir);
     }
 
@@ -881,7 +880,7 @@ public final class UserPreferencesModel extends AbstractModel {
      *  Sets the name of the last used class name
      * @param className the class name
      */
-    private void setLastUsedClassName(String className) {
+    private void setClassName(String className) {
         put(LAST_CLASS_NAME, className);
     }
 
@@ -889,7 +888,7 @@ public final class UserPreferencesModel extends AbstractModel {
      *  Sets the name of the last used species name
      * @param className the species name
      */
-    private void setLastUsedSpeciesName(String className) {
+    private void setSpeciesName(String className) {
         put(LAST_SPECIES_NAME, className);
     }
 
@@ -897,7 +896,7 @@ public final class UserPreferencesModel extends AbstractModel {
      *  Sets the name of the last used tag name
      * @param tagName the class name
      */
-    private void setLastUsedTag(String tag) {
+    private void setTag(String tag) {
         put(LAST_TAG_NAME, tag);
     }
 
@@ -905,12 +904,12 @@ public final class UserPreferencesModel extends AbstractModel {
      *  Sets the name of the last used tag name
      * @param tagName the class name
      */
-    private void setLastUsedId(String id) {
+    private void setId(String id) {
         put(LAST_ID_NAME, id);
     }
 
     /** Sets the last imports video source URL */
-    public void setLastImportedSourceURL(URL url) {
+    public void setImportSourceUrl(URL url) {
         put(LAST_IMPORTED_SRC_URL, url.toString());
     }
 
@@ -918,7 +917,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * Sets the URL results were successfully imported from
      * if not available returns PWD environment variable
      */
-    public void setLastImportedMPEGDirectory(URL u) {
+    public void setImportMpegDirectory(URL u) {
         put(LAST_MPEG_RESULTS_IMPORT_URL_PARENT, u.toString());
     }
  

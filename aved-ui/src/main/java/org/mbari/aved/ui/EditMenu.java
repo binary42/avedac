@@ -144,23 +144,6 @@ public class EditMenu extends JFrame {
     }
 
     /**
-     *    Checks if the text is a previously defined in the list
-     *    @param text
-     *    @return true if the text is a class name
-     */
-    private static boolean listContains(ArrayList<String> list, String text) {
-        Iterator<String> i = list.iterator();
-
-        while (i.hasNext()) {
-            if (text.equals(i.next())) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * Dynamically creates a menu based on the number of selections
      * @param menu the top-level menu  to populate with edit <code>JMenuItem</code>
      * @return  the populated edit menu
@@ -751,7 +734,7 @@ public class EditMenu extends JFrame {
             } else if (source.equals(combineMenuItem)) {
                 Execute.run(new CombineCommand());
             } else if (source.equals(classRepeatMenuItem)) {
-                String lastClassName = UserPreferences.getModel().getLastUsedClassName();
+                String lastClassName = UserPreferences.getModel().getClassName();
 
                 Execute.run(new ClassCommand(lastClassName));
             } else if (source.equals(classNewCustomMenuItem)) {
@@ -786,7 +769,7 @@ public class EditMenu extends JFrame {
             } else if (source.equals(menuItemTagClear)) {
                 Execute.run(new TagCommand(""));
             } else if (source.getText().equals(TAG_REPEAT)) {
-                String tag = UserPreferences.getModel().getLastUsedTag();
+                String tag = UserPreferences.getModel().getTag();
 
                 Execute.run(new TagCommand(tag));
             } else if (source.equals(menuItemIdNew)) {
@@ -795,7 +778,7 @@ public class EditMenu extends JFrame {
             } else if (source.equals(menuItemIdClear)) {
                 Execute.run(new IdCommand(""));
             } else if (source.getText().equals(ID_REPEAT)) {
-                String id = UserPreferences.getModel().getLastUsedId();
+                String id = UserPreferences.getModel().getId();
 
                 Execute.run(new IdCommand(id));
             } else if (tagMenuItems.contains(source)) {

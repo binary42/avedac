@@ -69,7 +69,7 @@ public class ClassImageDirectoryViewManager {
                 // our list of "dropviews"
                 if (evt.getPropertyName().equalsIgnoreCase("dockablestate")
                         && evt.getNewValue().equals(new Integer(0))) {
-                    UserPreferences.getModel().removeTrainingImageDockingDirectory(
+                    UserPreferences.getModel().removeClassImageDockingDirectory(
                         new File(view.getModel().getDirectory()));
                     dropViews.remove(view);
                     nextKey.add(view.getQuickKey());

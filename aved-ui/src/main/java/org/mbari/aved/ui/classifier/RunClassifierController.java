@@ -199,7 +199,7 @@ public class RunClassifierController extends AbstractController implements Model
         } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
             JComboBox box = ((JComboBox) e.getSource());
             ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
-            String lastSelection = UserPreferences.getModel().getLastTrainingLibrarySelection();
+            String lastSelection = UserPreferences.getModel().getTrainingLibrarySelection();
 
             // Populate the libraries in the new color space
             getView().populateTrainingLibraryList(newColorSpace);
@@ -225,7 +225,7 @@ public class RunClassifierController extends AbstractController implements Model
 
                 String selection = trainingModel.getName();
 
-                UserPreferences.getModel().setLastTrainingLibrarySelection(selection);
+                UserPreferences.getModel().setTrainingLibrarySelection(selection);
             }
         }
     }

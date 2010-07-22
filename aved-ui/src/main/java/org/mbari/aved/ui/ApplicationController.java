@@ -70,6 +70,7 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 import org.mbari.aved.mbarivision.api.utils.Utils;
+import org.mbari.aved.ui.classifier.Classifier;
 
 public class ApplicationController extends AbstractController implements ModelListener, WindowListener {
 
@@ -91,6 +92,8 @@ public class ApplicationController extends AbstractController implements ModelLi
     private ThumbnailController thumbnailController;
     /** Worker to handle transcoding video files */
     private VideoTranscodeWorker transcodeWorker;
+    /** Classifier **/
+    private Classifier classifier;
 
     public ApplicationController() throws Exception {
         setModel(new ApplicationModel());
@@ -109,17 +112,24 @@ public class ApplicationController extends AbstractController implements ModelLi
 
         // Replace the tabbed panels with the customized ones
         getView().replaceThumbnailPanel(((ThumbnailView) thumbnailController.getView()).getForm());
-        getView().replaceTablePanel(tableController.getTable()); 
-        
+        getView().replaceTablePanel(tableController.getTable());
+
+        // Create the classifier
+        try {
+            classifier = new Classifier(getModel());
+        } catch (Exception ex) {
+            Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+        }
+
         String s = System.getProperty("os.name").toLowerCase();
 
-        if (s.indexOf("linux") != -1) {
+        if (s.indexOf("mac os x") != -1) {
             // needed on mac os x to display menus in the mac convention
             System.setProperty("apple.laf.useScreenMenuBar", "true");
         }
 
-        MainMenu menu = new MainMenu(getModel());
-
+        MainMenu menu = new MainMenu(getModel()); 
         getView().setJMenuBar(menu.buildJJMenuBar());
 
         // Initialize mouse listener for tabbed pane
@@ -171,6 +181,15 @@ public class ApplicationController extends AbstractController implements ModelLi
     }
 
     /**
+     * Shutsdown the application
+     */
+    public void shutdown() {
+        reset();
+        getClassifier().shutdown();
+        System.exit(0);
+    }
+
+    /**
      * Resets the controller, closes all displays and clears
      * out all the data in the model
      */
@@ -190,7 +209,7 @@ public class ApplicationController extends AbstractController implements ModelLi
         File transcodeSourceFile = summary.getTranscodeSource();
         // Delete the transcode source file it is exists and was downloaded
         // to a temporary folder
-        File tmpDir = UserPreferences.getModel().getLastScratchDirectory();
+        File tmpDir = UserPreferences.getModel().getScratchDirectory();
         if (transcodeSourceFile != null && transcodeSourceFile.toString().startsWith(tmpDir.toString())
                 && transcodeSourceFile.exists() && transcodeSourceFile.canWrite()) {
             transcodeSourceFile.delete();
@@ -233,7 +252,7 @@ public class ApplicationController extends AbstractController implements ModelLi
      * a suitable file
      */
     void exportProcessedResultsAsXls() {
-        File dir = UserPreferences.getModel().getLastExportedExcelDirectory();
+        File dir = UserPreferences.getModel().getExportedExcelDirectory();
         File xml = getModel().getSummaryModel().getXmlFile();
         File tmp = new File(dir + "/" + ParseUtils.removeFileExtension(xml.getName()) + ".xls");
         File f = browseForXlsExport(tmp);
@@ -262,7 +281,7 @@ public class ApplicationController extends AbstractController implements ModelLi
         // Browse for XML to import starting with the last exported directory
         JFileChooser chooser = new JFileChooser();
 
-        chooser.setCurrentDirectory(UserPreferences.getModel().getLastExportedExcelDirectory());
+        chooser.setCurrentDirectory(UserPreferences.getModel().getExportedExcelDirectory());
         chooser.setSelectedFile(file);
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         chooser.setDialogTitle("Choose Excel file to save the results to");
@@ -270,7 +289,7 @@ public class ApplicationController extends AbstractController implements ModelLi
         if (chooser.showDialog(getView(), "Export") == JFileChooser.APPROVE_OPTION) {
             File f = chooser.getSelectedFile();
 
-            UserPreferences.getModel().setLastExportedExcelDirectory(new File(f.getAbsolutePath()));
+            UserPreferences.getModel().setExportedExcelDirectory(new File(f.getAbsolutePath()));
 
             return f;
         } else {
@@ -345,7 +364,7 @@ public class ApplicationController extends AbstractController implements ModelLi
             xmlfile = browseForXMLImport();
             importProcessedResults(xmlfile);
         } catch (Exception e) {
-            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, e); 
+            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, e);
         }
     }
 
@@ -396,7 +415,7 @@ public class ApplicationController extends AbstractController implements ModelLi
 
                     // If the video source is an invalid URL, alert user and search for
                     // a source in the same directory as the xmlfile
-                    // File f = new File(UserPreferences.getModel().getLastImportedVideoDir().toString());
+                    // File f = new File(UserPreferences.getModel().getImportVideoDir().toString());
                     File f = new File(xmlfile.toString());
 
                     if ((file = searchForClip(xmlfile, ".avi")) != null
@@ -423,7 +442,7 @@ public class ApplicationController extends AbstractController implements ModelLi
 
                         if (dialog.answer() == true) {
                             try {
-                                File v = new File(UserPreferences.getModel().getLastImportedVideoDir().toString());
+                                File v = new File(UserPreferences.getModel().getImportVideoDir().toString());
                                 File s = browseForVideoClip(v);
 
                                 if (s != null) {
@@ -470,7 +489,7 @@ public class ApplicationController extends AbstractController implements ModelLi
             try {
                 URL url;
                 File clip;
-                File f = new File(UserPreferences.getModel().getLastImportedVideoDir());
+                File f = new File(UserPreferences.getModel().getImportVideoDir());
 
                 if ((clip = searchForClip(xmlfile, ".results.mpeg")) != null) {
                     return clip;
@@ -554,14 +573,14 @@ public class ApplicationController extends AbstractController implements ModelLi
 
         chooser.addChoosableFileFilter(filter);
         chooser.setAcceptAllFileFilterUsed(false);
-        chooser.setCurrentDirectory(UserPreferences.getModel().getLastImportedXMLDirectory());
+        chooser.setCurrentDirectory(UserPreferences.getModel().setImportedXmlDirectory());
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         chooser.setDialogTitle("Choose XML to import");
         chooser.setFileFilter(filter);
 
         if (chooser.showOpenDialog((ApplicationView) getView()) == JFileChooser.APPROVE_OPTION) {
             f = chooser.getSelectedFile();
-            UserPreferences.getModel().setLastImportedXMLDirectory(new File(f.getAbsolutePath()));
+            UserPreferences.getModel().setImportXmlDirectory(new File(f.getAbsolutePath()));
         } else {
 
             // TODO: print dialog message box with something meaningful here
@@ -582,14 +601,14 @@ public class ApplicationController extends AbstractController implements ModelLi
 
         chooser.addChoosableFileFilter(new ProcessedResultsFileFilter());
         chooser.setAcceptAllFileFilterUsed(false);
-        chooser.setCurrentDirectory(UserPreferences.getModel().getLastExportedXMLDirectory());
+        chooser.setCurrentDirectory(UserPreferences.getModel().getExportedXMLDirectory());
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         chooser.setDialogTitle("Choose XML file to save");
 
         if (chooser.showDialog((ApplicationView) getView(), "Save") == JFileChooser.APPROVE_OPTION) {
             f = chooser.getSelectedFile();
             System.out.println(f.toString());
-            UserPreferences.getModel().setLastExportedXMLDirectory(new File(f.getAbsolutePath()));
+            UserPreferences.getModel().setExportXmlDirectory(new File(f.getAbsolutePath()));
         } else {
 
             // TODO: print dialog message box with something meaningful here
@@ -613,7 +632,7 @@ public class ApplicationController extends AbstractController implements ModelLi
 
         if (chooser.showOpenDialog((ApplicationView) getView()) == JFileChooser.APPROVE_OPTION) {
             f = chooser.getSelectedFile();
-            UserPreferences.getModel().setLastImportedVideoDir(f.getParent());
+            UserPreferences.getModel().setImportVideoDir(f.getParent());
         } else {
 
             // TODO: print dialog message box with something meaningful here
@@ -739,7 +758,7 @@ public class ApplicationController extends AbstractController implements ModelLi
 
             // System.out.println(actionCommand);
             SummaryModel model = getModel().getSummaryModel();
-            File v = new File(UserPreferences.getModel().getLastImportedVideoDir().toString());
+            File v = new File(UserPreferences.getModel().getImportVideoDir().toString());
 
             if (actionCommand.equals("BrowseMaster")) {
                 File f;
@@ -1007,17 +1026,15 @@ public class ApplicationController extends AbstractController implements ModelLi
             if (dialog.answer() == true) {
                 try {
                     getView().setBusyCursor();
-                    reset();
-                    System.exit(0);
+                    shutdown();
                 } catch (Exception ex) {
                     Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         } else {
             try {
-                getView().setBusyCursor();
-                reset();
-                System.exit(0);
+                getView().setBusyCursor(); 
+                shutdown();
             } catch (Exception ex) {
                 Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1087,7 +1104,7 @@ public class ApplicationController extends AbstractController implements ModelLi
                              * clip in same URL format as the source clip
                              * Get the URL e.g. http://localhost/foobar.avi
                              */
-                            URL lasturl = UserPreferences.getModel().getLastImportedSourceURL();
+                            URL lasturl = UserPreferences.getModel().getImportSourceUrl();
                             URL url;
 
                             // If found a valid starting url
@@ -1148,7 +1165,7 @@ public class ApplicationController extends AbstractController implements ModelLi
                     // If this is a http url reference and not a local file
                     if (url.getProtocol().startsWith("http:")) {
                         File file = null;
-                        File tmpDir = UserPreferences.getModel().getLastScratchDirectory();
+                        File tmpDir = UserPreferences.getModel().getScratchDirectory();
 
                         // Initialize the transcoder output directory to be the temporary directory
                         if (!tmpDir.exists()) {
@@ -1239,10 +1256,16 @@ public class ApplicationController extends AbstractController implements ModelLi
     }
 
     /**
+     * Helper funtion to return the classifier
+     * @return the classifier singleton
+     */
+    Classifier getClassifier() {
+        return classifier;
+    }
+
+    /**
      * Action handler for responding to clicking video file links
-     *
      * @author dcline
-     *
      */
     class MouseClickFileActionHandler implements MouseListener {
 
@@ -1267,7 +1290,6 @@ public class ApplicationController extends AbstractController implements ModelLi
      * Action handler for responding to clicking tabbed pane in
      * the AVED ApplicationView.
      * @author dcline
-     *
      */
     class MouseClickTabActionHandler implements MouseListener {
 

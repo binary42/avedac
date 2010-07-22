@@ -23,9 +23,6 @@ import com.vlsolutions.swing.docking.DockingDesktop;
 import org.mbari.aved.ui.appframework.JFrameView;
 import org.mbari.aved.ui.appframework.ModelEvent;
 import org.mbari.aved.ui.appframework.ModelListener;
-import org.mbari.aved.ui.classifier.ClassImageDirectoryViewManager;
-import org.mbari.aved.ui.classifier.Classifier;
-import org.mbari.aved.ui.classifier.DockingContainer;
 import org.mbari.aved.ui.detectionsettings.DetectionSettings;
 import org.mbari.aved.ui.message.MessagePrintStream;
 import org.mbari.aved.ui.model.EventListModel;
@@ -78,6 +75,8 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
+import org.mbari.aved.ui.classifier.ClassImageDirectoryViewManager;
+import org.mbari.aved.ui.classifier.DockingContainer;
 
 /**
  *
@@ -109,7 +108,6 @@ public class MainMenu implements ModelListener {
     /** Help menu items */
     public static String HELP_ABOUT = "About " + ApplicationInfo.getName();
     private static JFrame imageOrganizer;
-    private static Classifier classifier;
     private final ApplicationModel model;
     private JMenuItem closeEventsItem;
     private JMenuItem createClassItem;
@@ -131,96 +129,45 @@ public class MainMenu implements ModelListener {
 
     public MainMenu(ApplicationModel model) {
         this.model = model;
-        model.addModelListener(this);
-        try {
-            classifier = new Classifier(model);
-        } catch (Exception ex) {
-            Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
-            return;
-        }
+        model.addModelListener(this);      
     }
 
     /**
      * Displays the Classifier class creation interface
      */
-    void displayCreateClass() {
-        if (classifier == null) {
-            try {
-                classifier = new Classifier(model);
-            } catch (Exception ex) {
-                Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
-                return;
-            }
-        }
-        classifier.selectCreateClassTabbedView();
-        display(classifier.getView());
+    void displayCreateClass() {       
+        Application.getClassifier().selectCreateClassTabbedView();
+        display(Application.getClassifier().getView());
     }
 
     /**
      * Displays the Classifier test class interface
      */
     void displayTestClass() {
-
-        if (classifier == null) {
-            try {
-                classifier = new Classifier(model);
-            } catch (Exception ex) {
-                Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
-                return;
-            }
-        }
-        classifier.selectTestClassTabbedView();
-        display(classifier.getView());
-    }
+        Application.getClassifier().selectTestClassTabbedView();
+        display(Application.getClassifier().getView());    }
 
     /**
      * Displays the Classifier training library interface
      */
     private void displayTrainingLibrary() {
-
-        if (classifier == null) {
-            try {
-                classifier = new Classifier(model);
-            } catch (Exception ex) {
-                Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
-                return;
-            }
-        }
-        classifier.selectTrainingPanelTabbedView();
-        display(classifier.getView());
+        Application.getClassifier().selectTrainingPanelTabbedView();
+        display(Application.getClassifier().getView());
     }
 
     /**
      * Displays the Classifier run interface
      */
     private void displayRunClassifier() {
-
-        if (classifier == null) {
-            try {
-                classifier = new Classifier(model);
-            } catch (Exception ex) {
-                Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
-                return;
-            }
-        }
-        classifier.selectRunPanelTabbedView();
-        display(classifier.getView());
+        Application.getClassifier().selectRunPanelTabbedView();
+        display(Application.getClassifier().getView());
     }
 
     /**
      * Displays the Classifier setup interface
      */
     private void displayClassifierSettings() {
-
-        if (classifier == null) {
-            try {
-                classifier = new Classifier(model);
-            } catch (Exception ex) {
-                Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
-                return;
-            }
-        }
-        display(classifier.getClassifierSetingsView());
+        display(Application.getClassifier().getClassifierSetingsView());
     }
 
     private void displayMessages() {
@@ -247,8 +194,7 @@ public class MainMenu implements ModelListener {
      */
     public void exitApp() {
         try {
-            Application.getController().reset();
-            System.exit(0);
+            Application.getController().shutdown(); 
         } catch (Exception ex) {
             Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -270,6 +216,7 @@ public class MainMenu implements ModelListener {
             imageOrganizer.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
             imageOrganizer.addWindowListener(new WindowAdapter() {
 
+                @Override
                 public void windowClosing(WindowEvent e) {
                     DockingContainer dockContainer = (DockingContainer) imageOrganizer.getContentPane();
                     DockingDesktop desktop = dockContainer.getDesktop();

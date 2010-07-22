@@ -231,8 +231,8 @@ class CreateClassController extends AbstractController implements ModelListener,
                             }
                         }
                         getView().setRunButton(true);
-                        getView().setStopButton(false); 
-                        progressDisplay.getView().dispose(); 
+                        getView().setStopButton(false);
+                        progressDisplay.getView().dispose();
 
                         // Add the model only after successfully created
                         if (task.isFini() && getModel() != null) {
@@ -243,8 +243,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                             } catch (Exception ex) {
                                 Logger.getLogger(CreateClassController.class.getName()).log(Level.SEVERE, null, ex);
                             }
-                        }
-                        else {
+                        } else {
                             if (task.isCancelled()) {
                                 NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), newModel.getName() + " classcreation stopped");
                                 dialog.setVisible(true);
@@ -268,10 +267,10 @@ class CreateClassController extends AbstractController implements ModelListener,
     }
 
     /**
-     * Update the training classes directories in the view
+     * Update the classes directories in the view
      */
-    private void updateTrainingClasses() {
-        File dir = UserPreferences.getModel().getLastOpenedClassTrainingDirectory();
+    private void updateClasses() {
+        File dir = UserPreferences.getModel().getClassImageDirectory();
         File parentDir = getModel().getClassTrainingImageDirectory();
 
         if (parentDir != null) {
@@ -321,10 +320,11 @@ class CreateClassController extends AbstractController implements ModelListener,
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
 
-                // When the *-training class directory changes, update the available
-                // classes
-                case ClassifierModel.ClassifierModelEvent.TRAINING_CLASS_DIR_UPDATED:
-                    updateTrainingClasses();
+                // When the class directory changes or class models are updated
+                // update the available classes
+                case ClassifierModel.ClassifierModelEvent.TRAINING_DIR_UPDATED:
+                case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED:
+                    updateClasses();
                     break;
             }
         }
