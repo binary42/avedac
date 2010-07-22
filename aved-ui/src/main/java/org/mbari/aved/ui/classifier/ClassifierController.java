@@ -113,7 +113,7 @@ public class ClassifierController extends AbstractController implements ModelLis
 
         // Initialize the training image directory
         File trainingDir = UserPreferences.getModel().getClassTrainingImageDirectory();
-        model.setClassTrainingImageDirectory(trainingDir); 
+        model.setClassTrainingImageDirectory(trainingDir);
     }
 
     /**
@@ -210,14 +210,14 @@ public class ClassifierController extends AbstractController implements ModelLis
 
                                 if (!getModel().checkClassExists(newModel)) {
                                     getModel().addClassModel(newModel);
-                                } else {
-
-                                    // get the existing model and add an image to it
-                                    ClassModel model = getModel().getClassModel(className);
-                                    AddClassImageWorker thread = new AddClassImageWorker(model, eoc);
-
-                                    thread.execute();
                                 }
+
+                                // get the existing model and add an image to it
+                                ClassModel model = getModel().getClassModel(className);
+                                AddClassImageWorker thread = new AddClassImageWorker(model, eoc);
+
+                                thread.execute();
+
                             } catch (Exception ex) {
                                 Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
                             }
@@ -267,7 +267,7 @@ public class ClassifierController extends AbstractController implements ModelLis
     public void kill(ClassifierLibraryJNITask task) {
         jniQueue.cancelTask(task);
     }
-  
+
     /**
      * Adds a task to the jni queue for later execution
      * @param task
@@ -291,12 +291,12 @@ public class ClassifierController extends AbstractController implements ModelLis
     }
 
     /**
-     * Worker to manager adding class event images which are
-     * cropped-event images to the class training directory
-     * in the background before class creating and training
-     * can begin.  
+     * Worker to manager adding cropped-event images to 
+     * class training library.  This occurs in a SwingWorker
+     * in the backbgroun because this can take a while for
+     * very long events. 
      */
-    public class AddClassImageWorker extends SwingWorker  {
+    public class AddClassImageWorker extends SwingWorker {
 
         private final ClassModel classModel;
         private final EventObjectContainer event;
@@ -362,7 +362,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         private boolean isInitialized = false;
         private final Queue<ClassifierLibraryJNITask> queue = new LinkedList<ClassifierLibraryJNITask>();
         private final ClassifierLibraryJNI jniLibrary = new ClassifierLibraryJNI(this);
-        private final File logFile = new File(UserPreferences.getModel().getDefaultScratchDirectory().getAbsolutePath() + "/matlablog.txt"); 
+        private final File logFile = new File(UserPreferences.getModel().getDefaultScratchDirectory().getAbsolutePath() + "/matlablog.txt");
 
         ClassifierLibraryJNITaskWorker() throws Exception {
         }
@@ -380,7 +380,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                     getModel().setJniTaskComplete(task.getId());
                 } else {
                     try {
-                        Thread.sleep(1000); 
+                        Thread.sleep(1000);
                     } catch (InterruptedException ex) {
                         break;
                     }
@@ -421,7 +421,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         public synchronized void cancel() {
             exit = true;
             super.cancel(true);
-            closeLibrary(); 
+            closeLibrary();
         }
 
         /**
@@ -441,7 +441,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                     br = new BufferedReader(isr);
                 } catch (FileNotFoundException ex) {
                     Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-                }  
+                }
             }
             return br;
         }
@@ -461,7 +461,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                 try {
                     jniLibrary.initLib(logFile.getAbsolutePath());
                     isInitialized = true;
-                    Thread.sleep(2000);                    
+                    Thread.sleep(2000);
                 } catch (Exception e) {
                     Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, e);
                 }
