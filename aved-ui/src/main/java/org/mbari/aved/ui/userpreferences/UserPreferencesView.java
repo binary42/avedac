@@ -169,7 +169,6 @@ public class UserPreferencesView extends JFrameView {
         scratchDirComboBox.setModel(new DefaultComboBoxModel(directories));
     }
 
-    @Override
     public void modelChanged(ModelEvent e) {
 
         UserPreferencesModel model = (UserPreferencesModel) getModel();

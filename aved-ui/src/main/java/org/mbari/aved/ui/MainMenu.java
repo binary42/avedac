@@ -132,6 +132,12 @@ public class MainMenu implements ModelListener {
     public MainMenu(ApplicationModel model) {
         this.model = model;
         model.addModelListener(this);
+        try {
+            classifier = new Classifier(model);
+        } catch (Exception ex) {
+            Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+        }
     }
 
     /**
@@ -240,7 +246,7 @@ public class MainMenu implements ModelListener {
      * This must be public to be registed with the OSXAdapter
      */
     public void exitApp() {
-        try { 
+        try {
             Application.getController().reset();
             System.exit(0);
         } catch (Exception ex) {

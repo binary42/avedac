@@ -83,8 +83,9 @@ public class ClassifierController extends AbstractController implements ModelLis
         // gracefully
         getView().addWindowListener(this);
 
-        // Register as listener to the model
+        // Register as listener to the summary and list model
         model.addModelListener(this);
+        list.addModelListener(this);
 
         createTrainingLib = new CreateTrainingLibrary(model);
         createClass = new CreateClass(model, list);

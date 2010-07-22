@@ -522,7 +522,6 @@ public class EditMenu extends JFrame {
             conceptTreePanel.replaceListener(listener);
         } else {
 
-            // TODO: put check for knowledge base existence
             conceptTreePanel = new ConceptTreePanel(listener);
 
             // Only build the conceptTreePanel when the window is opened
