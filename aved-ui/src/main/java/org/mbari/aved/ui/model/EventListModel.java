@@ -494,7 +494,7 @@ public class EventListModel extends AbstractModel implements ListModel, BoundedR
                         // Add the event id to the ID list
                         objectIds.add(new Long(c.getObjectId()));
                         indexes.add(new Integer(j));
-                        System.out.println("Assigning actual class for Object ID: " + c.getObjectId() + " as "
+                        System.out.println("Assigning class for Object ID: " + c.getObjectId() + " as "
                                            + className);
                         c.setClassName(className);
                     }
