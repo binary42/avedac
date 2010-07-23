@@ -89,8 +89,7 @@ class VideoTranscodeWorker extends SwingWorker {
     @Override
     protected void done() {
 
-        // If this was cancelled, kill the transcode process if it is running
-        // and cleanup the output files
+        // If this was cancelled, kill the transcode process if it is running 
         if (isCancelled() && (transcodeProcess != null)) {
             if (transcodeProcess.isRunning()) {
                 transcodeProcess.kill();
@@ -201,10 +200,9 @@ class VideoTranscodeWorker extends SwingWorker {
         this.cancel(true);
 
         if (transcodeProcess != null) {
-          transcodeProcess.kill();
           do{
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(3000);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(VideoTranscodeWorker.class.getName()).log(Level.SEVERE, null, ex);
                 } 
