@@ -12,6 +12,7 @@
                 <jpda.listen>true</jpda.listen>
                 <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -Djava.library.path=${project.build.directory}/nar/lib/i386-Linux-g++/jni -Dcom.sun.media.jai.disableMediaLib=true -classpath %classpath ${packageClassName}</exec.args>
                 <Env.XAPPLRESDIR>/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/X11/app-defaults</Env.XAPPLRESDIR>
+		<Env.SCRATCH_DIR>/foo/bar</Env.SCRATCH_DIR>
                 <Env.LD_LIBRARY_PATH>/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/runtime/glnx86:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/bin/glnx86:/home/aved/opt/MATLAB/MATLAB_Compiler_Runtime/v710/sys/os/glnx86:/home/aved/.m2/repository/org/mbari/aved/classifier/sharedlib/0.4.3-SNAPSHOT/nar/lib/i386-Linux-g++/shared</Env.LD_LIBRARY_PATH>
                 <exec.executable>java</exec.executable>
             </properties>

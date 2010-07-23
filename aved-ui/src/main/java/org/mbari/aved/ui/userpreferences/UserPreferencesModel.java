@@ -18,6 +18,7 @@
 package org.mbari.aved.ui.userpreferences;
 
 //~--- non-JDK imports --------------------------------------------------------
+import java.io.IOException;
 import org.mbari.aved.ui.Application;
 import org.mbari.aved.ui.appframework.AbstractModel;
 import org.mbari.aved.ui.appframework.ModelEvent;
@@ -652,25 +653,32 @@ public final class UserPreferencesModel extends AbstractModel {
      * or "./" if all else fails
      */
     public File getDefaultScratchDirectory() {
-
+ 
         if (System.getenv("SCRATCH_DIR") != null) {
-            return new File(System.getenv("SCRATCH_DIR").toString());
+            return new File(System.getenv("SCRATCH_DIR"));
         } else if (System.getenv("PWD") != null) {
-            return new File(System.getenv("PWD").toString());
+            return new File(System.getenv("PWD"));
         } else if (System.getenv("USERPROFILE") != null) {
-            return new File(System.getenv("USERPROFILE").toString());
+            return new File(System.getenv("USERPROFILE"));
         } else {
             return new File("./");
         }
     }
 
     /**
-     *  Returns the scratch directory and if not available returns in the following search order:
-     *  if exists, the SCRATCH_DIR environment variable, or
-     *  if exists /tmp  or "./" if all else fails
-     */
+    *  Returns the scratch directory and if not available returns in the following search order:
+    * if exists, the SCRATCH_DIR
+     * if exists, the PWD environment variable, or
+     * if exists the $USERPROFILE environment variable
+     * or "./" if all else fails
+    */
     public File getScratchDirectory() {
-        return new File(preferences.get(SCRATCH_DIR, getDefaultScratchDirectory().getName()));
+        try {
+            return new File(preferences.get(SCRATCH_DIR, getDefaultScratchDirectory().getCanonicalPath()));
+        } catch (IOException ex) {
+            Logger.getLogger(UserPreferencesModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return  new File(preferences.get(SCRATCH_DIR, getDefaultScratchDirectory().getPath()));
     }
 
     /**
