@@ -36,7 +36,7 @@
                             <workingDirectory>${basedir}/src/main/cpp</workingDirectory>
                             <executable>${basedir}/src/main/scripts/execute</executable>
                             <arguments>
-                                <cmdlineArguments>./configure --prefix=${installPath} --with-saliencyroot=${saliencyRoot} --with-xercescroot=${xercesRoot}</cmdlineArguments>
+                                <cmdlineArguments>./configure --prefix=${installPath} --with-saliency=${saliencyRoot} --with-xercesc=${xercesRoot}</cmdlineArguments>
                             </arguments>
                         </configuration>
                     </execution>
