@@ -945,6 +945,9 @@ namespace MbariVisualEvent {
           {
             PixRGB<byte> circleColor;            
             tk = (*currEvent)->getToken(frameNum);
+	    if(!tk.location.isValid())
+		continue;
+
             Point2D<int> center = tk.location.getPoint2D();
 	
             if ((*currEvent)->getCategory() == VisualEvent::INTERESTING)

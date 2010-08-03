@@ -10,8 +10,8 @@ SCHEMADIR   := schema/
 CXX         := g++
 CXXFLAGS    := -g -O2 
 DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1
-CPPFLAGS    := -I/opt/mpich2-1.1p1/include  -I/usr/include/libxml2 -I./lib -I$(SALIENCYROOT)/src -I $(XERCESCROOT)/src -I$(SRCDIR) -I$(LIBDIR) -include $(SALIENCYROOT)/config.h
-LDFLAGS     := -L/opt/mpich2-1.1p1/lib -L/usr/lib -L./lib -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib -lpthread -lxerces-c -lz -lbz2 -lpng -ljpeg -lXext -lpthread  -lavcodec -lavformat -lxml2 -lSDL
+CPPFLAGS    :=   -I/usr/include/libxml2 -I./lib -I$(SALIENCYROOT)/src -I $(XERCESCROOT)/src -I$(SRCDIR) -I$(LIBDIR) -include $(SALIENCYROOT)/config.h
+LDFLAGS     :=  -L/usr/lib -L./lib -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib -lpthread -lxerces-c -lz -lbz2 -lpng -ljpeg -lXext -lpthread  -lavcodec -lavformat -lxml2 -lSDL
 DEPFILE	    := alldepends
 COMPILE1    := @echo 
 COMPILE2    := @	

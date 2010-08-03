@@ -1,0 +1,6 @@
+# This is a wrapper script used to execute commands
+# from maven a maven build 
+echo "Executing $1"
+$1 
+exit 0 
+
