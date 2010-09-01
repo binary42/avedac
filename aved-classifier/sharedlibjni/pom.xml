@@ -14,7 +14,7 @@
     <url>http://www.mbari.org</url> 
     <profiles>
         <profile>
-            <id>Mac</id>
+            <id>Mac32</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
                 <os>
@@ -83,6 +83,100 @@
                                 </library>
                             </libraries>
                             <cpp> 
+                                <systemIncludePaths>
+                                    <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
+                                    <systemIncludePath>${installPath}/lib</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/runtime/maci</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/bin/glnx86</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/sys/os/maci</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/extern/include</systemIncludePath>
+                                    <systemIncludePath>/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers</systemIncludePath>
+                                </systemIncludePaths>
+                            </cpp>
+                            <linker>
+                                <libs>
+                                    <lib>
+                                        <directory>${mcrRoot}/runtime/maci</directory>
+                                        <name>mwmclmcrrt</name>
+                                        <type>shared</type>
+                                    </lib>
+                                </libs>
+                            </linker>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>Mac64</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <os>
+                    <name>MacOSX</name>
+                    <arch>i386</arch>
+                </os>
+            </activation>
+            <dependencies>
+                <!-- This includes the matlab shared library -->
+                <dependency>
+                    <groupId>org.mbari.aved.classifier</groupId>
+                    <artifactId>sharedlib</artifactId>
+                    <version>0.4.3-SNAPSHOT</version>
+                    <type>nar</type>
+                    <classifier>i386-MacOSX-g++-shared</classifier>
+                </dependency>
+            </dependencies>
+            <build>
+                <defaultGoal>install</defaultGoal>
+                <plugins>
+                    <!-- Skip the surefire test goal because we are using the nar one that
+                    sets up the java path correctly.-->
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <!-- Change the dependency in the created library to use
+                        the loader path instead for the shared Matlab library.
+                        You need the Xcode developer tools to run this command.
+                        TODO: Check for proper Xcode version and existence-->
+                                <id>exec-process-classes</id>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <workingDirectory>${basedir}/target/nar/lib/i386-MacOSX-g++/jni</workingDirectory>
+                                    <executable>${basedir}/src/main/scripts/execute</executable>
+                                    <arguments>
+                                        <cmdlineArguments>install_name_tool -change libavedsharedlib.dylib @loader_path/libavedsharedlib.dylib lib${artifactId}-${version}.jnilib</cmdlineArguments>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                     <!-- Creates the JNI layer for MacOSX environments.
+                        This requires properties in the parent pom like
+                        ${installPath}, ${mcrRoot}, etc.-->
+                    <plugin>
+                        <groupId>org.freehep</groupId>
+                        <artifactId>freehep-nar-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <libraries>
+                                <library>
+                                    <type>jni</type>
+                                    <narSystemPackage>org.mbari.aved.classifier</narSystemPackage>
+                                    <linkCPP>true</linkCPP>
+                                </library>
+                            </libraries>
+                            <cpp>
                                 <systemIncludePaths>
                                     <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>

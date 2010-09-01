@@ -48,7 +48,7 @@
             </properties>
         </profile>
         <profile>
-            <id>Mac</id>
+            <id>Mac32</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
                 <os>
@@ -63,6 +63,23 @@
                 <!-- The nar library directory -->
                 <narLibDir>nar/lib/i386-MacOSX-g++/shared</narLibDir>
             </properties> 
+        </profile>
+          <profile>
+            <id>Mac64</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <os>
+                    <name>MacOSX</name>
+                    <arch>i386</arch>
+                </os>
+            </activation>
+            <properties>
+                <!-- The shared library file extension for this platform-->
+                <sharedExtension>dylib</sharedExtension>
+
+                <!-- The nar library directory -->
+                <narLibDir>nar/lib/i386-MacOSX-g++/shared</narLibDir>
+            </properties>
         </profile>
     </profiles>
     <build>
@@ -79,8 +96,7 @@
                 <configuration>
                     <classifiers>
                         <classifier>i386-Linux-g++</classifier>
-                        <classifier>i386-MacOSX-g++</classifier>
-                        <classifier>amd64-MacOSX-g++</classifier>
+                        <classifier>i386-MacOSX-g++</classifier> 
                     </classifiers>
                     <libraries>
                         <library>
