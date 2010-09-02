@@ -220,7 +220,7 @@ mxArray *ClassStringToMxArray(JNIEnv *env, jstring str) {
 //**************************************************************************
 
 JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initLib
-(JNIEnv *env, jobject obj, jstring jmatlablog) {
+(JNIEnv *env, jobject obj, jstring jmatlablog, jint jnojvm) {
 
     const char *matlablog = env->GetStringUTFChars(jmatlablog, 0);
 
@@ -232,16 +232,26 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
     }
 
     // TODO: check if the parent directory the log file is stored to
-    // actually exists
-    const char* options[3];
-    options[0] = "-logfile";
-    options[1] = matlablog;
-    //options[2] = "-nojvm";
-    options[2] = "-nodisplay";
+    // actually exists    
+    const char* options[4];
+    if ((unsigned int) jnojvm == 1 ) {
+      options[0] = "-logfile";
+      options[1] = matlablog;
+      options[2] = "-nojvm"; // Mac
+      options[3] = "-nodisplay";
+    }
+    else
+    {
+      options[0] = "-logfile";
+      options[1] = matlablog;
+      //options[2] = "-nojvm"; // Disable on Linux - this caused the library to crash
+      options[2] = "-nodisplay";
+      options[3] = "-nodisplay"; //duplicate to fill in
+    }
     
     try {
         fprintf(stderr, "Initializing mcl\n");
-        if (!mclInitializeApplication(options, 3)) {
+        if (!mclInitializeApplication(options, 4)) {
             ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the MCR properly");
             env->ReleaseStringUTFChars(jmatlablog, matlablog);
             return;

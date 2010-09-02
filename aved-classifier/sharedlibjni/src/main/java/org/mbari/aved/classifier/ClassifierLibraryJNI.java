@@ -41,25 +41,23 @@ public class ClassifierLibraryJNI {
     public ClassifierLibraryJNI(Object classToUse) throws Exception {
 
         try {
-            // If loading from an executable jar, use the absolute path
-            System.out.println(classToUse.toString());
-            String path = getPathToJarfileDir(classToUse);
-            String loadFile = null;
-            if (path != null) {
-                loadFile = new String(path + "/lib/" + "libsharedlib-0.4.3-SNAPSHOT");
-
-                String lcOSName = System.getProperty("os.name").toLowerCase(); 
-                if (lcOSName.startsWith("mac os x")) {
-                    loadFile = loadFile + ".dylib";
-                } else {
-                    loadFile = loadFile + ".so";
-                }
-                System.out.println("Loading " + loadFile);
-                System.load(loadFile);
+            String lcOSName = System.getProperty("os.name").toLowerCase();
+            // If running from Mac use system loader
+            if (lcOSName.startsWith("mac os x")) {
+                System.out.println("Loading libsharedlib");
+                NarSystem.loadLibrary(); 
             } else {
-                // otherwise, if loading for testing or otherwise
-                // use the nar system loader
-                NarSystem.loadLibrary();
+                // If running from Linux, then assume running from an executable
+                // jar, so use the absolute path
+                System.out.println(classToUse.toString());
+                String path = getPathToJarfileDir(classToUse);
+                String loadFile = null;
+                if (path != null) {
+                    loadFile = new String(path + "/lib/" + "libsharedlib-0.4.3-SNAPSHOT");
+                    loadFile = loadFile + ".so";
+                    System.out.println("Loading " + loadFile);
+                    System.load(loadFile);
+                }
             }
         } catch (URISyntaxException ex) {
             Logger.getLogger(ClassifierLibraryJNI.class.getName()).log(Level.SEVERE, null, ex);
@@ -102,8 +100,9 @@ public class ClassifierLibraryJNI {
      * before calling any of the following methods
      *
      * @param matlabLogFile the file to log the matlab output to
+     * @param nojvm set to 1 to use a jvm, 0 to not
      */
-    public native void initLib(String matlabLogFileName);
+    public native void initLib(String matlabLogFileName, int nojvm);
 
     /* Close the library - this must be called when done with this library */
     public native void closeLib();

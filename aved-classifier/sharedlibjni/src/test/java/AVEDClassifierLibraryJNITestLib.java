@@ -16,10 +16,7 @@
  * limitations under the License.
  */
 
-
-
 //~--- non-JDK imports --------------------------------------------------------
-
 /** ************************************************************************ */
 import junit.framework.*;
 
@@ -32,6 +29,7 @@ import org.mbari.aved.classifier.TrainingModel;
 import java.io.*;
 
 public class AVEDClassifierLibraryJNITestLib extends TestCase {
+
     public AVEDClassifierLibraryJNITestLib(String name) {
         super(name);
     }
@@ -45,15 +43,22 @@ public class AVEDClassifierLibraryJNITestLib extends TestCase {
     }
 
     public void testAVEDClassifierLibraryJNI() throws Exception {
-        String               dbRoot  = System.getProperty("user.home");
-        String               logfile = System.getProperty("user.home") + "/matlablog.txt";
-        ClassifierLibraryJNI app     = new ClassifierLibraryJNI(this);
+        String dbRoot = System.getProperty("user.home");
+        String logfile = System.getProperty("user.home") + "/matlablog.txt";
+        ClassifierLibraryJNI app = new ClassifierLibraryJNI(this);
 
         try {
             System.out.println("initialize library");
-            
-            app.initLib(logfile);
-            
+            String lcOSName = System.getProperty("os.name").toLowerCase();
+        
+
+            // If running from Mac
+            if (lcOSName.startsWith("mac os x")) {
+                app.initLib(logfile, 1);
+            } else {
+                app.initLib(logfile, 0);
+            }
+
             System.out.println("Getting training classes");
 
             TrainingModel tmodels[] = app.get_training_classes(dbRoot);

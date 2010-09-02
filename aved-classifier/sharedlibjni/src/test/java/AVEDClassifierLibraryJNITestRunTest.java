@@ -82,10 +82,15 @@ public class AVEDClassifierLibraryJNITestRunTest extends TestCase {
         String logfile = System.getProperty("user.home") + "/matlablog.txt";
         ClassifierLibraryJNI app = new ClassifierLibraryJNI(this);
 
-        System.out.println("initialize library");
-        app.initLib(logfile);
-
         try {
+            System.out.println("initialize library");
+            String lcOSName = System.getProperty("os.name").toLowerCase();
+            // If running from Mac
+            if (lcOSName.startsWith("mac os x")) {
+                app.initLib(logfile, 1);
+            } else {
+                app.initLib(logfile, 0);
+            }
 
             URL squaredFlatImageUrl = getClass().getResource("2526_Training_Classes/flat");
             if (squaredFlatImageUrl == null) {

@@ -16,9 +16,7 @@
  * limitations under the License.
  */
 
-
 //~--- non-JDK imports --------------------------------------------------------
-
 import junit.framework.*;
 
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
@@ -31,6 +29,7 @@ import java.io.File;
 import java.net.URL;
 
 public class AVEDClassifierLibraryJNITestClass extends TestCase {
+
     public AVEDClassifierLibraryJNITestClass(String name) {
         super(name);
     }
@@ -44,29 +43,36 @@ public class AVEDClassifierLibraryJNITestClass extends TestCase {
     }
 
     public void testAVEDClassifierLibraryJNI() throws Exception {
-        String               dbRoot  = System.getProperty("user.home");
-        String               logfile = System.getProperty("user.home") + "/matlablog.txt";
-        ClassifierLibraryJNI app     = new ClassifierLibraryJNI(this);
+        String dbRoot = System.getProperty("user.home");
+        String logfile = System.getProperty("user.home") + "/matlablog.txt";
+        ClassifierLibraryJNI app = new ClassifierLibraryJNI(this);
 
         System.out.println("initialize library");
-        app.initLib(logfile);
+        String lcOSName = System.getProperty("os.name").toLowerCase();
+        
+        // If running from Mac
+        if (lcOSName.startsWith("mac os x")) {
+            app.initLib(logfile, 1);
+        } else {
+            app.initLib(logfile, 0);
+        }
 
         try {
-            URL    squaredFlatImageUrl = getClass().getResource("2526_Training_Classes/flat");
-            URL    squaredRathImageUrl = getClass().getResource("2526_Training_Classes/rath");
-            String killFile            = dbRoot + "testcollect";
+            URL squaredFlatImageUrl = getClass().getResource("2526_Training_Classes/flat");
+            URL squaredRathImageUrl = getClass().getResource("2526_Training_Classes/rath");
+            String killFile = dbRoot + "testcollect";
 
             System.out.println("Running collect class");
 
             // Now run image collection on this set - this should be run anytime
             // images are added to the class Library
             app.collect_class(killFile, squaredFlatImageUrl.getFile(), squaredFlatImageUrl.getFile(), "flat", dbRoot,
-                              "flatfish", "Test flatfish class", ColorSpace.GRAY);
+                    "flatfish", "Test flatfish class", ColorSpace.GRAY);
             app.collect_class(killFile, squaredRathImageUrl.getFile(), squaredRathImageUrl.getFile(), "rath", dbRoot,
-                              "Rathbunaster-Californicus", "Test Rathbunaster-Californicus class", ColorSpace.GRAY);
+                    "Rathbunaster-Californicus", "Test Rathbunaster-Californicus class", ColorSpace.GRAY);
             System.out.println("Collect class finished");
 
-            String trainingSet   = "flat,rath";
+            String trainingSet = "flat,rath";
             String trainingAlias = "BenthicTest";
 
             System.out.println("Running train class");
@@ -75,11 +81,11 @@ public class AVEDClassifierLibraryJNITestClass extends TestCase {
             // build the training library if it isn't already built
             // this takes a while to run the first time, so be patient
             app.train_classes(killFile, trainingSet, trainingAlias, dbRoot, ColorSpace.GRAY,
-                              "Test benthic training class");
+                    "Test benthic training class");
             System.out.println("Train class finished");
 
             File dir = new File(squaredFlatImageUrl.getFile());
-            int  numTestImages;
+            int numTestImages;
 
             // Test collection is 10% of the images
             if (dir.list().length > 10) {
@@ -88,22 +94,22 @@ public class AVEDClassifierLibraryJNITestClass extends TestCase {
                 numTestImages = dir.list().length;
             }
 
-            int[]    classIndex       = new int[numTestImages];
-            float[]  storeProbability = new float[numTestImages];
-            String[] eventFilenames   = new String[numTestImages];
-            float    minProbThreshold = 0.8f;
-            String   testClassName    = "flat";
+            int[] classIndex = new int[numTestImages];
+            float[] storeProbability = new float[numTestImages];
+            String[] eventFilenames = new String[numTestImages];
+            float minProbThreshold = 0.8f;
+            String testClassName = "flat";
 
             System.out.println("Running test class");
             System.out.println("Testing against training classes:" + trainingSet + "\t with  minimum probability:"
-                               + minProbThreshold);
+                    + minProbThreshold);
             app.test_class(killFile, eventFilenames, classIndex, storeProbability, testClassName, trainingAlias,
-                           minProbThreshold, dbRoot, ColorSpace.GRAY);
+                    minProbThreshold, dbRoot, ColorSpace.GRAY);
 
             if ((classIndex != null) && (storeProbability != null)) {
                 for (int i = 0; i < numTestImages; i++) {
                     System.out.println("filename:" + eventFilenames[i] + "\tclassindex:" + classIndex[i]
-                                       + "\tprobability in class:" + storeProbability[i]);
+                            + "\tprobability in class:" + storeProbability[i]);
                 }
             }
         } catch (Exception e) {

@@ -47,7 +47,14 @@ public class AVEDClassifierLibraryTestKill extends TestCase {
         ClassifierLibraryJNI app = new ClassifierLibraryJNI(this);
 
         System.out.println("initialize library");
-        app.initLib(logfile);
+        String lcOSName = System.getProperty("os.name").toLowerCase();
+        
+        // If running from Mac
+        if (lcOSName.startsWith("mac os x")) {
+            app.initLib(logfile, 1);
+        } else {
+            app.initLib(logfile, 0);
+        }
 
         SimulateTask test = new SimulateTask(killFile, dbRoot, app);
         test.execute();
@@ -63,7 +70,7 @@ public class AVEDClassifierLibraryTestKill extends TestCase {
         }
 
         System.out.println("Killing " + killFile);
-        app.set_kill(killFile, 1); 
+        app.set_kill(killFile, 1);
 
         app.closeLib();
         System.exit(0);
@@ -92,11 +99,11 @@ public class AVEDClassifierLibraryTestKill extends TestCase {
                 System.out.println("Running collect class");
 
                 library.collect_class(killFile, squaredFlatImageUrl.getFile(),
-                squaredFlatImageUrl.getFile(),
-                "flat", dbRoot,
-                "flatfish",
-                "Test flatfish class",
-                ColorSpace.GRAY);
+                        squaredFlatImageUrl.getFile(),
+                        "flat", dbRoot,
+                        "flatfish",
+                        "Test flatfish class",
+                        ColorSpace.GRAY);
 
                 System.out.println("Collect class finished");
 
