@@ -3,9 +3,9 @@
 <plist version="0.9">
   <dict>
     <key>CFBundleName</key>
-    <string>AVEDac</string>
+    <string>${bundleName}</string>
     <key>CFBundleVersion</key>
-    <string>10.2</string>
+    <string>${version}</string>
     <key>CFBundleAllowMixedLocalizations</key>
     <string>true</string>
     <key>CFBundleExecutable</key>
@@ -19,36 +19,36 @@
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleIconFile</key>
-    <string>${iconFile}</string> 
+    <string>${iconFile}</string>
     <key>LSEnvironment</key>
             <dict>
                 <key>DYLD_LIBRARY_PATH</key>
-                <string>/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/runtime/maci:/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/sys/os/maci:/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/bin/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries:/lib:/usr/lib</string>
+                <string>/Applications/AVEDac/lib:/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/runtime/maci:/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/sys/os/maci:/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/bin/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries:/lib:/usr/lib:/Applications/AVEDac0.4.3</string>
                 <key>XAPPLRESDIR</key>
-                <string>/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/X11/app-defaults</string> 
-            </dict>
+                <string>/Applications/MATLAB/MATLAB_Compiler_Runtime/v710/X11/app-defaults</string>
+            </dict>  
     <key>Java</key>
     <dict>
-        <key>LSArchitecturePriority</key>
+    <key>LSArchitecturePriority</key>
          <array>
-           <string>i386</string> 
-           <string>ppc</string> 
+           <string>i386</string>
+           <string>ppc</string>
         </array> 
       <key>MainClass</key>
-      <string>${mainClass}</string>
+      <string>org.mbari.aved.ui.Application</string>
       <key>JVMVersion</key>
       <string>1.4+</string>
       <key>ClassPath</key>
-      ${classpath}
+      ${classpath} 
       <key>VMOptions</key>
-      <string>-Xmx512m -Xms128m</string>  
-      <key>Properties</key>
+      <string>${vmOptions}</string> 
+     <key>Properties</key>
             <dict>
                 <key>apple.laf.useScreenMenuBar</key>
                 <string>true</string>
                 <key>apple.awt.showGrowBox</key>
-                <string>true</string> 
+                <string>true</string>
             </dict>
-    </dict>
+     </dict>
   </dict>
 </plist>

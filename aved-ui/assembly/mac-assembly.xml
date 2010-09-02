@@ -13,16 +13,24 @@
     <includeBaseDirectory>false</includeBaseDirectory>
 
     <fileSets>
+
+        <fileSet>
+            <directory>${matlabRoot}/toolbox/compiler/deploy/mac</directory>
+            <outputDirectory>tools</outputDirectory>
+            <includes>
+                <include>MCRInstaller.dmg</include>
+            </includes>
+        </fileSet>
         <fileSet>
             <directory>${basedir}/target/nar/lib/i386-MacOSX-g++/jni/</directory>
-            <outputDirectory>/aved-ui/lib</outputDirectory>
+            <outputDirectory>lib</outputDirectory>
             <includes>
                 <include>*.so</include>
             </includes>
         </fileSet>
         <fileSet>
             <directory>${basedir}/target/nar/lib/i386-MacOSX-g++/shared</directory>
-            <outputDirectory>/aved-ui/lib</outputDirectory>
+            <outputDirectory>lib</outputDirectory>
             <includes>
                 <include>*.qtf</include>
                 <include>*.dylib</include>
@@ -32,35 +40,18 @@
         </fileSet>
         <fileSet>
             <directory>${basedir}/target/classes/org/mbari/aved/ui/html</directory>
-            <outputDirectory>/aved-ui/html</outputDirectory>
+            <outputDirectory>html</outputDirectory>
             <includes>
                 <include>*</include>
             </includes>
         </fileSet>
         <fileSet>
             <directory>${basedir}/target/classes</directory>
-            <outputDirectory>/aved-ui/examples</outputDirectory>
+            <outputDirectory>examples</outputDirectory>
             <includes>
                 <include>20060808T000000_4912_32_103.*</include>
                 <include>2344_00_32_40_25.*</include>
             </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${basedir}/src/main/app-resources</directory>
-            <outputDirectory>/aved-ui</outputDirectory>
-            <includes>
-                <include>javahelp-2.0.02.jar</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${project.build.directory}</directory>
-            <outputDirectory>/aved-ui</outputDirectory>
-            <includes>
-                <include>*.jar</include>
-            </includes>
-            <excludes>
-                <exclude>original*.jar</exclude>
-            </excludes>
-        </fileSet>
+        </fileSet> 
     </fileSets>
 </assembly>

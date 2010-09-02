@@ -181,7 +181,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                     while (iter.hasNext()) {
                         File f = UserPreferences.getModel().getClassTrainingImageDirectory();
                         EventObjectContainer eoc = eventListModel.getElementAt(iter.next());
- 
+
                         if ((eoc != null) && (eoc.getClassName().length() > 0)) {
                             try {
                                 String className = eoc.getClassName();
@@ -438,7 +438,15 @@ public class ClassifierController extends AbstractController implements ModelLis
             if (isInitialized == false) {
 
                 try {
-                    jniLibrary.initLib(logFile.getAbsolutePath());
+                    String lcOSName = System.getProperty("os.name").toLowerCase();
+
+                    // If running from Mac
+                    if (lcOSName.startsWith("mac os x")) {
+                        jniLibrary.initLib(logFile.getAbsolutePath(), 1);
+                    } else {
+                        jniLibrary.initLib(logFile.getAbsolutePath(), 0);
+                    }
+
                     isInitialized = true;
                     Thread.sleep(2000);
                 } catch (Exception e) {

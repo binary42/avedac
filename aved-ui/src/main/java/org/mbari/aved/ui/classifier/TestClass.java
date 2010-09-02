@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import org.mbari.aved.classifier.ClassModel;
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
 import org.mbari.aved.classifier.TrainingModel;
@@ -37,6 +33,7 @@ import java.util.logging.Logger;
 import javax.swing.JFrame;
 
 public class TestClass {
+
     private final TestClassController controller;
 
     public TestClass(ClassifierModel model) {
@@ -54,14 +51,23 @@ public class TestClass {
      */
     public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
+
             public void run() {
                 try {
                     ClassifierLibraryJNI library = new ClassifierLibraryJNI(this);
-                    ClassifierModel      model   = new ClassifierModel();
-                    File                 dbDir   = UserPreferences.getModel().getClassDatabaseDirectory();
-                    String               dbRoot  = dbDir.getAbsolutePath();
+                    ClassifierModel model = new ClassifierModel();
+                    File dbDir = UserPreferences.getModel().getClassDatabaseDirectory();
+                    String dbRoot = dbDir.getAbsolutePath();
 
-                    library.initLib(dbDir.getAbsolutePath());
+                    String lcOSName = System.getProperty("os.name").toLowerCase();
+
+                    // If running from Mac
+                    if (lcOSName.startsWith("mac os x")) {
+                        library.initLib(dbDir.getAbsolutePath(), 1);
+                    } else {
+                        library.initLib(dbDir.getAbsolutePath(), 0);
+                    }
+                    library.initLib(dbDir.getAbsolutePath(), 0);
 
                     // Get the collected classes in this root directory
                     ClassModel[] classes = library.get_collected_classes(dbRoot);
