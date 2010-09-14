@@ -18,6 +18,19 @@ if [ "`echo $uname | grep Linux`" ]; then
     mvn install -PLinux64 -Dmaven.test.skip=true
   fi
 else
-  echo "Running MacOSX build"
-  mvn install -PMac -Dmaven.test.skip=true
+ioreg="`/usr/sbin/ioreg -l -p IODeviceTree | grep firmware-abi`"
+  if [ "`echo $ioreg | grep EFI64`" ]; then
+   echo "Mac has 64-bit firmware"
+    if [ "`echo $uname | grep x86_64`" ]; then
+      echo "Running MacOSX 64-bit build"
+      mvn install -PMac64 -Dmaven.test.skip=true
+    else
+      echo "Running MacOSX 32-bit build"
+      mvn install -PMac32 -Dmaven.test.skip=true
+    fi
+  else
+    # Can only run 32-bit if not 64-bit firmware
+    echo "Running MacOSX 32-bit build"
+    mvn install -PMac32 -Dmaven.test.skip=true
+  fi
 fi

@@ -12,24 +12,30 @@
     working directory instead of included the project path directory -->
     <includeBaseDirectory>false</includeBaseDirectory>
 
-    <fileSets>
-
+    <fileSets> 
         <fileSet>
-            <directory>${matlabRoot}/toolbox/compiler/deploy/mac</directory>
+            <directory>${basedir}/src/main/app-resource/mac</directory>
+             <outputDirectory>tools</outputDirectory>
+            <includes>
+                <include>runOnce.sh</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${matlabRoot}/toolbox/compiler/deploy/maci64</directory>
             <outputDirectory>tools</outputDirectory>
             <includes>
                 <include>MCRInstaller.dmg</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${basedir}/target/nar/lib/i386-MacOSX-g++/jni/</directory>
+            <directory>${basedir}/target/nar/lib/x86_64-MacOSX-g++/jni</directory>
             <outputDirectory>lib</outputDirectory>
             <includes>
-                <include>*.so</include>
+                <include>*.jnilib</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${basedir}/target/nar/lib/i386-MacOSX-g++/shared</directory>
+            <directory>${basedir}/target/nar/lib/x86_64-MacOSX-g++/shared</directory>
             <outputDirectory>lib</outputDirectory>
             <includes>
                 <include>*.qtf</include>

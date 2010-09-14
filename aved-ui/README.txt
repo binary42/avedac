@@ -1,10 +1,10 @@
 Building the AVED GUI requires Maven
 
 To build run:
-	$ mvn -PMac compile
+	$ mvn -PMac32 compile
 
 or
-	$ mvn -PLinux compile
+	$ mvn -PLinux32 compile
 
 To increment the version (version displayed in the "About"
     box in the graphical user interface)
@@ -12,4 +12,4 @@ To increment the version (version displayed in the "About"
 
 To create a OS X package for Mac
 	$ cd aved-ui
-	$ mvn -PMac package osxappbundle:bundle
+	$ mvn -PMac32 package 

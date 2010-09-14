@@ -1,0 +1,63 @@
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+    <!-- Generate an archive for each of the desired formats -->
+    <formats>
+        <!--<format>tar.gz</format>
+        <format>tar.bz2</format>-->
+        <format>zip</format>
+    </formats>
+
+    <!-- Exclude the base directory so that the archive decompresses into the current
+    working directory instead of included the project path directory -->
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <fileSets>
+<       <fileSet>
+            <directory>${basedir}/src/main/app-resource/mac</directory>
+             <outputDirectory>tools</outputDirectory>
+            <includes>
+                <include>runOnce.sh</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${matlabRoot}/toolbox/compiler/deploy/maci</directory>
+            <outputDirectory>tools</outputDirectory>
+            <includes>
+                <include>MCRInstaller.dmg</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/target/nar/lib/i386-MacOSX-g++/jni/</directory>
+            <outputDirectory>lib</outputDirectory>
+            <includes>
+                <include>*.jnilib</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/target/nar/lib/i386-MacOSX-g++/shared</directory>
+            <outputDirectory>lib</outputDirectory>
+            <includes>
+                <include>*.qtf</include>
+                <include>*.dylib</include>
+                <include>*.h</include>
+                <include>readme.*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/target/classes/org/mbari/aved/ui/html</directory>
+            <outputDirectory>html</outputDirectory>
+            <includes>
+                <include>*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/target/classes</directory>
+            <outputDirectory>examples</outputDirectory>
+            <includes>
+                <include>20060808T000000_4912_32_103.*</include>
+                <include>2344_00_32_40_25.*</include>
+            </includes>
+        </fileSet> 
+    </fileSets>
+</assembly>

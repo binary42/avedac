@@ -9,7 +9,7 @@
     <key>CFBundleAllowMixedLocalizations</key>
     <string>true</string>
     <key>CFBundleExecutable</key>
-    <string>JavaApplicationStub</string>
+    <string>${javaApplicationStub}</string>
     <key>CFBundleDevelopmentRegion</key>
     <string>English</string>
     <key>CFBundlePackageType</key>
@@ -31,8 +31,7 @@
     <dict>
     <key>LSArchitecturePriority</key>
          <array>
-           <string>i386</string>
-           <string>ppc</string>
+           <string>i386</string> 
         </array> 
       <key>MainClass</key>
       <string>org.mbari.aved.ui.Application</string>
