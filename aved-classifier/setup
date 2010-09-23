@@ -39,8 +39,17 @@ fi
   fi 
   source ~/.bashrc
 else
+maci="maci"
+ioreg="`/usr/sbin/ioreg -l -p IODeviceTree | grep firmware-abi`"
+  if [ "`echo $ioreg | grep EFI64`" ]; then
+   echo "Mac has 64-bit firmware"
+    if [ "`echo $uname | grep x86_64`" ]; then
+	maci="maci64"
+    fi
+  fi
+
   echo "Setting MacOSX environment variables"
-  echo "export DYLD_LIBRARY_PATH=$MCR_ROOT/runtime/maci:$MCR_ROOT/bin/glnx86:$MCR_ROOT/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries" >> ~/.bash_profile
+  echo "export DYLD_LIBRARY_PATH=$MCR_ROOT/runtime/$maci:$MCR_ROOT/bin/glnx86:$MCR_ROOT/sys/os/$maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries" >> ~/.bash_profile
   echo "export XAPPLRESDIR=$MCR_ROOT/X11/app-defaults" >> ~/.bash_profile
   echo "export MCR_ROOT=$MCR_ROOT" >> ~/.bash_profile
   echo "export MATLAB_ROOT=$MATLAB_ROOT" >> ~/.bash_profile

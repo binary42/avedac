@@ -108,7 +108,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         model.setDatabaseRoot(dbDir);
 
         // Initialize the training image directory
-        File trainingDir = UserPreferences.getModel().getClassTrainingImageDirectory();
+        File trainingDir = UserPreferences.getModel().getClassImageDirectory();
         model.setClassTrainingImageDirectory(trainingDir);
     }
 
@@ -179,7 +179,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                     // Go through each, creating directories if needed and adding
                     // the images to the model
                     while (iter.hasNext()) {
-                        File f = UserPreferences.getModel().getClassTrainingImageDirectory();
+                        File f = UserPreferences.getModel().getClassImageDirectory();
                         EventObjectContainer eoc = eventListModel.getElementAt(iter.next());
 
                         if ((eoc != null) && (eoc.getClassName().length() > 0)) {
@@ -289,7 +289,7 @@ public class ClassifierController extends AbstractController implements ModelLis
             boolean addImages = UserPreferences.getModel().getAddTrainingImages();
 
             if (addImages) {
-                File dir = UserPreferences.getModel().getClassTrainingImageDirectory();
+                File dir = UserPreferences.getModel().getClassImageDirectory();
                 File classDir = new File(dir + "/" + classModel.getName());
 
                 // Add this class to the docking image directories

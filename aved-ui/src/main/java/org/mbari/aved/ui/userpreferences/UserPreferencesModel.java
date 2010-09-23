@@ -310,22 +310,22 @@ public final class UserPreferencesModel extends AbstractModel {
 
     /**
      * Gets the root class training image directory.
-     * This defaults to the PWD environment variable, or
-     * the $USERPROFILE environment variable is PWD does not exist
+     * This defaults to the HOME environment variable, or
+     * the USERPROFILE environment variable
      * @return a directory
      */
-    public File getClassTrainingImageDirectory() {
-        return new File(preferences.get(CLASS_TRAINING_DIR_ROOT, getDefaultDirectoryString()));
+    public File getClassImageDirectory() {
+        return new File(preferences.get(CLASS_TRAINING_DIR_ROOT, getDefaultClassDirectoryString()));
     }
 
     /**
      * Gets the root class database directory.
-     * This defaults to the PWD environment variable, or
-     * the $USERPROFILE environment variable is PWD does not exist
+     * This defaults to the HOME environment variable, or
+     * the USERPROFILE environment variable
      * @return a directory
      */
     public File getClassDatabaseDirectory() {
-        return new File(preferences.get(CLASS_DATABASE_DIR_ROOT, getDefaultDirectoryString()));
+        return new File(preferences.get(CLASS_DATABASE_DIR_ROOT, getDefaultClassDirectoryString()));
     }
 
     /**
@@ -634,30 +634,41 @@ public final class UserPreferencesModel extends AbstractModel {
         return new File(get(VIDEO_MASK_DIR, getDefaultDirectoryString()));
     }
 
+    /**
+     *
+     * @return returns in the following search order:
+     * if exists, the PWD 
+     * if exists, the HOME environment variable
+     * if exists, the USERPROFILE environment variable
+     * or "file://" if all else fails
+     */
     private String getDefaultURLString() {
         if (System.getenv("PWD") != null) {
-            return new String("file://" + System.getenv("PWD").toString());
+            return "file://" + System.getenv("PWD").toString();
+        } else if (System.getenv("HOME") != null) {
+            return "file://" + System.getenv("HOME").toString();
         } else if (System.getenv("USERPROFILE") != null) {
-            return new String("file://" + System.getenv("USERPROFILE").toString());
+            return "file://" + System.getenv("USERPROFILE").toString();
         } else {
-            return new String("file://");
+            return "file://";
         }
     }
 
     /**
      *
      * @return returns in the following search order:
-     * if exists, the SCRATCH_DIR
-     * if exists, the PWD environment variable, or
-     * if exists the $USERPROFILE environment variable
+     * if exists and user has write permission, the SCRATCH_DIR
+     * if exists and user has write permission, the /var/tmp directory
+     * if exists and user has write permission, the HOME environment variable
      * or "./" if all else fails
      */
     public File getDefaultScratchDirectory() {
- 
+        File tmp = new File("/var/tmp");
+
         if (System.getenv("SCRATCH_DIR") != null) {
             return new File(System.getenv("SCRATCH_DIR"));
-        } else if (System.getenv("PWD") != null) {
-            return new File(System.getenv("PWD"));
+        } else if (tmp.exists() && tmp.canWrite()) {
+            return tmp;
         } else if (System.getenv("USERPROFILE") != null) {
             return new File(System.getenv("USERPROFILE"));
         } else {
@@ -666,27 +677,22 @@ public final class UserPreferencesModel extends AbstractModel {
     }
 
     /**
-    *  Returns the scratch directory and if not available returns in the following search order:
-    * if exists, the SCRATCH_DIR
-     * if exists, the PWD environment variable, or
-     * if exists the $USERPROFILE environment variable
-     * or "./" if all else fails
-    */
+     *  Returns the default scratch directory
+     */
     public File getScratchDirectory() {
         try {
             return new File(preferences.get(SCRATCH_DIR, getDefaultScratchDirectory().getCanonicalPath()));
         } catch (IOException ex) {
             Logger.getLogger(UserPreferencesModel.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return  new File(preferences.get(SCRATCH_DIR, getDefaultScratchDirectory().getPath()));
+        return new File(preferences.get(SCRATCH_DIR, getDefaultScratchDirectory().getPath()));
     }
 
     /**
-     * Returns the directory the last training images where imported from,
-     * and if not available returns PWD environment variable
+     * Returns the directory the last training images where imported from
      */
-    public File getClassImageDirectory() {
-        return new File(get(IMAGE_IMPORT_DIR, getDefaultDirectoryString()));
+    public File getLastClassImageImportDirectory() {
+        return new File(get(IMAGE_IMPORT_DIR, getDefaultClassDirectoryString()));
     }
 
     /** Returns a list of the  docking container directories */
@@ -735,23 +741,48 @@ public final class UserPreferencesModel extends AbstractModel {
     /**
      *
      * @return  returns in the following search order:
-     * if exists, the PWD environment variable, or
-     * if exists the $USERPROFILE environment variable
+     * if exists, the HOME environment variable, or
+     * if exists the USERPROFILE environment variable
      * or "./" if all else fails
      */
     private String getDefaultDirectoryString() {
-        if (System.getenv("PWD") != null) {
-            return System.getenv("PWD").toString();
+        if (System.getenv("HOME") != null) {
+            return System.getenv("HOME").toString();
         } else if (System.getenv("USERPROFILE") != null) {
             return System.getenv("USERPROFILE").toString();
         } else {
-            return new String("./");
+            return "./";
+        }
+    }
+
+    /**
+     * Returns the default class image training directory.
+     * This is platform-dependent and corresponds the the
+     * installer mac-assembly or linux-assembly file
+     * installation of the examples classes
+     */
+    private String getDefaultClassDirectoryString() {
+
+        String lcOSName = System.getProperty("os.name").toLowerCase();
+
+        if (lcOSName.startsWith("mac os x")) {
+            File examples = new File("/Applications/AVEDac/examples/trainingclasses");
+            if (!examples.exists()) {
+                examples.mkdirs();
+            }
+            return examples.toString();
+        } else {
+            if (System.getenv("HOME") != null) {
+                return System.getenv("HOME").toString();
+            } else {
+                return "./";
+            }
         }
     }
 
     /**
      * Returns the directory XML results were successfully imported from,
-     * and if not available returns PWD environment variable
+     * and if not available returns HOME or USERPROFILE environment variable
      */
     public File getExportedXMLDirectory() {
         return new File(preferences.get(XML_EXPORT_DIR, getDefaultDirectoryString()));
@@ -771,7 +802,7 @@ public final class UserPreferencesModel extends AbstractModel {
 
     /**
      * Returns the directory Excel data was successfully exported to,
-     * and if not available returns PWD environment variable
+     * and if not available returns HOME or environment variable
      */
     public File getExportedExcelDirectory() {
         return new File(preferences.get(EXCEL_EXPORT_DIR, getDefaultDirectoryString()));
@@ -784,10 +815,10 @@ public final class UserPreferencesModel extends AbstractModel {
 
     /**
      * Gets the last training library selection by name. If
-     * a noe selection exists, return an empty strin
+     * a noe selection exists, return an empty string
      */
     public String getTrainingLibrarySelection() {
-        return get(LAST_TRAINING_SELECTION, new String(""));
+        return get(LAST_TRAINING_SELECTION, "");
     }
 
     /** Sets the directory Excel data was successfully exported to */
@@ -795,7 +826,8 @@ public final class UserPreferencesModel extends AbstractModel {
         put(EXCEL_EXPORT_DIR, f.getAbsolutePath());
     }
 
-    /** Returns the directory XML results were successfully imported from, and if not available returns PWD environment variable */
+    /** Returns the directory XML results were successfully imported from, 
+     * and if not available returns HOME or environment variable */
     public File setImportedXmlDirectory() {
         return new File(get(XML_IMPORT_DIR, getDefaultDirectoryString()));
     }
@@ -814,7 +846,7 @@ public final class UserPreferencesModel extends AbstractModel {
 
     /**
      * Returns the parent directory clips were successfully imported from,
-     * and if not available returns PWD environment variable
+     * and if not available returns HOME or USERPROFILE environment variable
      */
     public String getImportVideoDir() {
         return get(LAST_VIDEO_IMPORT_DIR, getDefaultDirectoryString());
@@ -825,7 +857,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * returns an empty string
      */
     public String getClassName() {
-        return get(LAST_CLASS_NAME, new String(""));
+        return get(LAST_CLASS_NAME, "");
     }
 
     /**
@@ -833,7 +865,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * returns an empty string
      */
     public String getSpeciesName() {
-        return get(LAST_SPECIES_NAME, new String(""));
+        return get(LAST_SPECIES_NAME, "");
     }
 
     /**
@@ -841,7 +873,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * returns an empty string
      */
     public String getId() {
-        return get(LAST_ID_NAME, new String(""));
+        return get(LAST_ID_NAME, "");
     }
 
     /**
@@ -849,7 +881,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * returns an empty string
      */
     public String getTag() {
-        return get(LAST_TAG_NAME, new String(""));
+        return get(LAST_TAG_NAME, "");
     }
 
     /**

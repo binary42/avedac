@@ -106,7 +106,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
         // Initialize the chooser with the class directory
-        File dir = UserPreferences.getModel().getClassTrainingImageDirectory();
+        File dir = UserPreferences.getModel().getClassImageDirectory();
 
         chooser.setCurrentDirectory(dir);
         chooser.setDialogTitle("Choose root training directory");

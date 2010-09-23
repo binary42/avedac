@@ -38,13 +38,12 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${basedir}/target/classes</directory>
-            <outputDirectory>/aved-ui/examples</outputDirectory>
+            <directory>${basedir}/target/classes/examples</directory>
+            <outputDirectory>examples</outputDirectory>
             <includes>
-                <include>20060808T000000_4912_32_103.*</include>
-                <include>2344_00_32_40_25.*</include>
+                <include>**/*</include>
             </includes>
-        </fileSet>
+        </fileSet> 
          <fileSet>
             <directory>${basedir}/src/main/app-resources</directory>
             <outputDirectory>/aved-ui</outputDirectory>

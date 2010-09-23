@@ -57,7 +57,7 @@ public class FullViewContainer extends JPanel implements Dockable {
 
         ClassImageDirectoryModel model = new ClassImageDirectoryModel();
 
-        model.setDirectory(UserPreferences.getModel().getClassImageDirectory());
+        model.setDirectory(UserPreferences.getModel().getLastClassImageImportDirectory());
         fullView = new ClassImageDirectoryFullView(model, key);
         build();
         chooser.setAcceptAllFileFilterUsed(false);

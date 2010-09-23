@@ -18,11 +18,6 @@
 package org.mbari.aved.ui.userpreferences;
 
 //~--- non-JDK imports --------------------------------------------------------
-import com.jgoodies.binding.adapter.ComboBoxAdapter;
-import com.jgoodies.binding.list.ArrayListModel;
-import com.jgoodies.binding.list.SelectionInList;
-import com.jgoodies.binding.value.ValueHolder;
-import com.jgoodies.binding.value.ValueModel;
 import java.awt.Component;
 import org.mbari.aved.ui.ApplicationInfo;
 import org.mbari.aved.ui.appframework.JFrameView;
@@ -31,7 +26,6 @@ import org.mbari.aved.ui.userpreferences.UserPreferencesModel.VideoPlayoutMode;
 
 //~--- JDK imports ------------------------------------------------------------
 import java.io.File;
-import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
@@ -41,7 +35,6 @@ import javax.swing.JList;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
-import javax.swing.ListModel;
 
 public class UserPreferencesView extends JFrameView {
 

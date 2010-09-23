@@ -270,7 +270,7 @@ class CreateClassController extends AbstractController implements ModelListener,
      * Update the classes directories in the view
      */
     private void updateClasses() {
-        File dir = UserPreferences.getModel().getClassImageDirectory();
+        File dir = UserPreferences.getModel().getLastClassImageImportDirectory();
         File parentDir = getModel().getClassTrainingImageDirectory();
 
         if (parentDir != null) {

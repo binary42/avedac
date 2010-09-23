@@ -11,10 +11,10 @@
     <packaging>nar</packaging>
     <version>0.4.3-SNAPSHOT</version>
     <name>AVED classifier JNI library</name>
-    <url>http://www.mbari.org</url> 
+    <url>http://www.mbari.org</url>
     <profiles>
         <profile>
-            <id>Mac</id>
+            <id>Mac32</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
                 <os>
@@ -46,6 +46,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.1</version>
                         <executions>
                             <execution>
                                 <!-- Change the dependency in the created library to use
@@ -82,7 +83,7 @@
                                     <linkCPP>true</linkCPP>
                                 </library>
                             </libraries>
-                            <cpp> 
+                            <cpp>
                                 <systemIncludePaths>
                                     <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
@@ -97,6 +98,121 @@
                                 <libs>
                                     <lib>
                                         <directory>${mcrRoot}/runtime/maci</directory>
+                                        <name>mwmclmcrrt</name>
+                                        <type>shared</type>
+                                    </lib>
+                                </libs>
+                            </linker>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>Mac64</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <os>
+                    <name>MacOSX</name>
+                    <arch>x86_64</arch>
+                </os>
+            </activation>
+            <dependencies>
+                <!-- This includes the matlab shared library -->
+                <dependency>
+                    <groupId>org.mbari.aved.classifier</groupId>
+                    <artifactId>sharedlib</artifactId>
+                    <version>0.4.3-SNAPSHOT</version>
+                    <type>nar</type>
+                    <classifier>x86_64-MacOSX-g++-shared</classifier>
+                </dependency>
+            </dependencies>
+            <build>
+                <defaultGoal>install</defaultGoal>
+                <plugins>
+                    <!-- Skip the surefire test goal because we are using the nar one that
+                    sets up the java path correctly.-->
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.1</version>
+                        <executions>
+                            <execution>
+                                <!-- Change the dependency in the created library to use
+                        the loader path instead for the shared Matlab library.
+                        You need the Xcode developer tools to run this command.
+                        TODO: Check for proper Xcode version and existence-->
+                                <id>exec-process-classes</id>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <workingDirectory>${basedir}/target/nar/lib/x86_64-MacOSX-g++/jni</workingDirectory>
+                                    <executable>${basedir}/src/main/scripts/execute</executable>
+                                    <arguments>
+                                        <cmdlineArguments>install_name_tool -change libavedsharedlib.dylib @loader_path/libavedsharedlib.dylib lib${artifactId}-${version}.jnilib</cmdlineArguments>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                     <!-- Creates the JNI layer for MacOSX environments.
+                        This requires properties in the parent pom like
+                        ${installPath}, ${mcrRoot}, etc.-->
+                    <plugin>
+                        <groupId>org.freehep</groupId>
+                        <artifactId>freehep-nar-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <libraries>
+                                <library>
+                                    <type>jni</type>
+                                    <narSystemPackage>org.mbari.aved.classifier</narSystemPackage>
+                                    <linkCPP>true</linkCPP>
+                                </library>
+                            </libraries>
+                            <c>
+                                <name>gcc</name>
+                                <includes>
+                                    <include>**/*.c</include> 
+                                </includes>
+                            </c>
+                            <fortran>
+                                 <name>gfortran</name>
+                                <includes>
+                                    <include>**/*.f</include>
+                                    <include>**/*.for</include>
+                                </includes>
+                            </fortran>
+                            <cpp>
+                                 <name>g++</name>
+                                <includes>
+                                    <include>**/*.cc</include>
+                                    <include>**/*.cpp</include>
+                                    <include>**/*.cxx</include>
+                                </includes>
+                                <systemIncludePaths>
+                                    <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
+                                    <systemIncludePath>${installPath}/lib</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/runtime/maci64</systemIncludePath> 
+                                    <systemIncludePath>${mcrRoot}/sys/os/maci64</systemIncludePath>
+                                    <systemIncludePath>${mcrRoot}/extern/include</systemIncludePath>
+                                    <systemIncludePath>/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers</systemIncludePath>
+                                </systemIncludePaths>
+                            </cpp>
+                            <linker>
+                                <name>g++</name>
+                                <libs>
+                                    <lib>
+                                        <directory>${mcrRoot}/runtime/maci64</directory>
                                         <name>mwmclmcrrt</name>
                                         <type>shared</type>
                                     </lib>
@@ -144,7 +260,7 @@
                                     <linkCPP>true</linkCPP>
                                 </library>
                             </libraries>
-                            <cpp> 
+                            <cpp>
                                 <options>
                                     <option>-pthread</option>
                                     <option>-fPIC</option>
@@ -219,7 +335,7 @@
                                     <linkCPP>true</linkCPP>
                                 </library>
                             </libraries>
-                            <cpp> 
+                            <cpp>
                                 <options>
                                     <option>-pthread</option>
                                 </options>
