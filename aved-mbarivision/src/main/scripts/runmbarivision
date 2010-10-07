@@ -155,7 +155,7 @@ pushd $output_dir;
 
 # First, find the file extension of the input frames - this could be jpeg/jpg, ppm, or png
 tmp=./tmp.$RANDOM
-find | grep '[A-Z0-9._%+-]*[0-9]\.[jp*g|ppm|png]' | grep '[A-Z0-9._%+-]*[0-9]\.[^xml]' | sort > $tmp;
+find | grep '[A-Z0-9._%+-]*[0-9]\.[JP*G|jp*g|PPM|ppm|PNG|png]' | grep '[A-Z0-9._%+-]*[0-9]\.[^xml]' | sort > $tmp;
 h=`cat $tmp | head --lines=1`
 t=`cat $tmp | tail --lines=1`
 input_file_ext=${h##*.}	
@@ -204,7 +204,7 @@ fi
 mbarivision_options="\
 --logverb=Error \
 --input-frames=$start_frame$dash$end_frame@1 \
---in=raster:$output_dir/$input_file_stem#.ppm \
+--in=raster:$output_dir/$input_file_stem#.$input_file_ext \
 --out=raster:$output_dir/$output_file_stem --mbari-save-output \
 --mbari-save-events-xml=$dir_name.events.xml \
 --mbari-save-event-summary=$dir_name.summary \
