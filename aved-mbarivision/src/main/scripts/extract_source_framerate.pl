@@ -2,7 +2,6 @@
 # Script to extract video frame rate from source metadata xml file
 #!/usr/bin/perl
 ######################################################################
-use XML::Xerces;
 use Getopt::Long;
 use vars qw();
 use File::Copy;
