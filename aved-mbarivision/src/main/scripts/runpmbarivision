@@ -128,8 +128,8 @@ done
 if [ $MPDIR ]; then
   export PATH=$MPDIR/bin:.:$PATH
 else
-  MPDIR=/opt/mpich2-1.1p1/bin
-  export PATH=$MPDIR:.:$PATH
+  MPDIR=/opt/mpich2-1.1p1
+  export PATH=$MPDIR/bin:.:$PATH
 fi
 
 # Define the machine file. Change this to point to the MPICH installation 
