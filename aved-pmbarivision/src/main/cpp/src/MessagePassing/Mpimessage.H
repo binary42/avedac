@@ -43,8 +43,8 @@ using namespace std;
 enum dataType{RGBBYTEIMAGE, BYTEIMAGE, SALIENTWINNERLIST, VISUALEVENTSET};
 enum sendrecvType{NON_BLOCKING, BLOCKING};
 
-#define HD_MAX_HEIGHT	1080
-#define HD_MAX_WIDTH	1920
+#define MAX_IMAGE_HEIGHT  2900
+#define MAX_IMAGE_WIDTH	  4300
 
 // !returns -1 on error, otherwise send RGB byte image and return MPI error code
 int sendRGBByteImage(const Image< PixRGB<byte> >& image, int framenum, int dest, int tag, MPI_Comm comm, sendrecvType srType=BLOCKING);
