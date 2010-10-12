@@ -39,10 +39,10 @@
 #include "Stages/Stage.H"
 using namespace std;
 
-/* Statically allocate memory for up to HD frame sizes */
-unsigned char sndPackBuf[sizeof(int)*4 + sizeof(unsigned char)*HD_MAX_HEIGHT*HD_MAX_WIDTH*3];
-unsigned char rcvPackBuf[sizeof(int)*4 + sizeof(unsigned char)*HD_MAX_HEIGHT*HD_MAX_WIDTH*3];  
-char objectBuf[sizeof(int)*4 + sizeof(unsigned char)*HD_MAX_HEIGHT*HD_MAX_WIDTH];  
+/* Statically allocate memory for frames */
+unsigned char sndPackBuf[sizeof(int)*4 + sizeof(unsigned char)*MAX_IMAGE_HEIGHT*MAX_IMAGE_WIDTH*3];
+unsigned char rcvPackBuf[sizeof(int)*4 + sizeof(unsigned char)*MAX_IMAGE_HEIGHT*MAX_IMAGE_WIDTH*3];  
+char objectBuf[sizeof(int)*4 + sizeof(unsigned char)*MAX_IMAGE_HEIGHT*MAX_IMAGE_WIDTH];  
 
 int sendRGBByteImage(const Image< PixRGB<byte> >& image, int framenum, int dest, int tag, MPI_Comm comm, sendrecvType srType)
 {
