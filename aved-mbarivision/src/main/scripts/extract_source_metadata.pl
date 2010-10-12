@@ -118,7 +118,7 @@ my $pixel_height = 1; # Assume square pixels - this may be incorrect
 # uncompress it, then use this with tcprobe
 my $image_file= "";
 if (($input =~ /\.tgz$/) || ($input =~ /\.tar\.gz$/)) {
-    $image_file = `tar -ztf $input | grep -i -m 1 '[A-Z0-9._%+-]*[0-9]\.[dpx|jp*g|ppm|png]'`;
+    $image_file = `tar -ztf $input | grep -i -m 1 '[A-Z0-9._%+-]*[0-9]\.[DPX|dpx|JP*G|jp*g|PPM|ppm|PNG|png]'`;
     print "gunzip < $input | tar x $image_file"; 
     `gunzip < $input | tar x $image_file`;
     $input = $image_file;
@@ -126,7 +126,7 @@ if (($input =~ /\.tgz$/) || ($input =~ /\.tar\.gz$/)) {
     `rm $input`;
 }
 elsif ($input =~ /\.tar$/) { 
-    $image_file = `tar -tf $input | grep -i -m 1 '[A-Z0-9._%+-]*[0-9]\.[dpx|jp*g|ppm|png]'`; 
+    $image_file = `tar -tf $input | grep -i -m 1 '[A-Z0-9._%+-]*[0-9]\.[DPX|dpx|JP*G|jp*g|PPM|ppm|PNG|png]'`; 
     `tar -x -f $input $image_file`;
     $input = $image_file;
     $_ = `tcprobe -i $input`;
