@@ -60,12 +60,14 @@ public class MessagePrintStream extends PrintStream {
         return (JFrame) INSTANCE.controller.getView();
     }
 
+    @Override
     public void write(byte b[]) throws IOException {
         String str = new String(b);
 
         controller.display(str);
     }
 
+    @Override
     public void write(byte b[], int off, int len) {
         String str = new String(b, off, len);
 

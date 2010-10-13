@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 package org.mbari.aved.ui.appframework;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import org.mbari.aved.ui.ApplicationInfo;
 import org.mbari.aved.ui.message.MessagePrintStream;
 import org.mbari.aved.ui.utils.TeeStream;
@@ -31,18 +27,20 @@ import org.mbari.aved.ui.utils.TeeStream;
 import java.io.*;
 
 public class ErrorLog {
+
     private static final ErrorLog INSTANCE = new ErrorLog();
 
     private ErrorLog() {
         try {
-            String logroot;
+            File tmp = new File("/var/tmp");
+            File logroot;
 
-            if (System.getenv("PWD") != null) {
-                logroot = System.getenv("PWD").toString();
-            } else if (System.getenv("USERPROFILE") != null) {
-                logroot = System.getenv("USERPROFILE").toString();
+            if (tmp.exists() && tmp.canWrite()) {
+                logroot = tmp;
+            } else if (System.getenv("HOME") != null) {
+                logroot = new File(System.getenv("HOME"));
             } else {
-                logroot = "./";
+                logroot = new File("./");
             }
 
             MessagePrintStream message = MessagePrintStream.getInstance();
