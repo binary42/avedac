@@ -29,14 +29,7 @@
                 <include>*.h</include>
                 <include>readme.*</include>
             </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${basedir}/target/classes/org/mbari/aved/ui/html</directory>
-            <outputDirectory>/aved-ui/html</outputDirectory>
-            <includes>
-                <include>*</include>
-            </includes>
-        </fileSet>
+        </fileSet> 
         <fileSet>
             <directory>${basedir}/target/classes/examples</directory>
             <outputDirectory>examples</outputDirectory>

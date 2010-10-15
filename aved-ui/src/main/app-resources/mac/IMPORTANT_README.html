@@ -1,0 +1,227 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="content-type">
+  <title>AVEDac GUI Install Guide</title>
+  <link rel="stylesheet" type="text/css" href="html/mbariexternal.css">
+</head>
+<body>
+<div id="pagetable" background-color="#ffffff">
+<div id="header">
+<div id="header_title">Automated
+Visual Event Detection and Classification </div>
+</div>
+<br>
+<div id="pagetitle" style="font-size: 18px;" align="center">AVEDac
+GUI Install Guide</div>
+Copyright 2010 Monterey Bay Aquarium Research Institute. All
+rights reserved. <a href="http://www.mbari.org">http://www.mbari.org</a><br>
+<h3>Overview</h3>
+The following describes how to install and run&nbsp;&nbsp;the
+AVEDac GUI. &nbsp;Please read through these, as it details the
+required software and steps for running
+which vary,
+depending on your operating system. &nbsp;<br>
+<h3>Table of Contents</h3>
+<a href="#macinstallrequirements">Installation
+requirements on Mac OS X</a><br>
+<a href="#macinstall">Installing
+on Mac OS X</a><br>
+<a href="#macrun">Running
+on
+Mac OS X</a><br>
+<br>
+<a href="#linuxinstallrequirements">Installation
+requirements on Linux</a><br>
+<a href="#linuxinstall">Installing
+on Linux</a><br>
+<a href="Running%20on%20Linux">Running
+on Linux</a><br>
+<span style="font-weight: bold;"></span>
+<h3><span style="font-weight: bold;"><a name="#macinstallrequirements"></a>Installation
+requirements on Mac OS X</span><br>
+</h3>
+<ul>
+  <li><span style="font-weight: bold;">Java
+1.5 </span>or higher. &nbsp;You
+can
+download Java from <a href="http://www.java.com">http://www.java.com</a>
+if
+you don't already have it.<br>
+    <br>
+  </li>
+  <li><span style="font-weight: bold;">Transcode</span>
+software. Transcode is used to convert the video into individual
+frames.&nbsp;<span style="font-weight: bold;">If you are not using
+video, but using still images, you can skip this step. &nbsp;</span>To
+install transcode, first install MacPorts, then the latest Xcode Tools
+for your
+version of Mac OS X.&nbsp;<span style="text-decoration: underline;"></span><br>
+  </li>
+  <ul>
+    <li>Download MacPorts for your
+Mac OS X from
+here:&nbsp;<a href="http://www.macports.org/">http://www.macports.org/.</a>&nbsp;<br>
+    </li>
+  </ul>
+  <ul>
+    <li>Xcode Tools&nbsp;can
+be installed from your Mac OS X DVD, or from the <a
+ href="http://developer.apple.com/devcenter/mac/index.action">Apple
+website<span style="text-decoration: underline;">.</span></a>
+You will need to register as a developer first to access the
+tools.&nbsp;</li>
+  </ul>
+</ul>
+<h3><a name="macinstall"></a>Installing
+on Mac OS X</h3>
+<ul>
+  <li>The
+AVEDac GUI is distributed as a package. To install, unzip by
+double-clicking on the zip file<br>
+    <img style="width: 133px; height: 125px;" alt=""
+ src="html/images/macpackagezip.png"><br>
+  </li>
+  <li>Then&nbsp;simply
+double-click the installer to launch the
+installation program
+and follow the instructions.<br>
+    <img style="width: 132px; height: 128px;" alt=""
+ src="html/images/macpackage.png"><br>
+    <br>
+  </li>
+  <li><span style="font-weight: bold;">Matlab Compiler Runtime
+(MCR).&nbsp;</span>The MCR is
+used to run the AVEDac classifier.&nbsp;The&nbsp; MCR installer
+is
+installed from a disk image file and should be mounted
+automatically&nbsp;<span style="font-weight: bold;">as a last step in
+the package installer</span>.
+&nbsp; You should see the disk image
+mounted in your Finder window near the end of the AVEDac package
+installation. Double-click to install, then install the
+package with all the
+defaults.<img style="width: 533px; height: 270px;"
+ alt="Matlab Compiler Runtime Package Install on a Mac"
+ src="html/images/mcrpackage.png"><br>
+    <br>
+    <br>
+If it not, it can be located in
+/Applications/AVEDac/tools/MCRInstaller.dmg. &nbsp; Install the
+disk
+image by
+double-clicking on the MCRInstaller.dmg file.&nbsp;</li>
+</ul>
+<ul>
+  <ul>
+    <ul>
+    </ul>
+  </ul>
+</ul>
+<h3><a name="macrun"></a>Running
+on Mac OS X</h3>
+Navigate to the Applications Folder in your docking bar and select the
+AVEDac folder, then click on the AVEDac application icon<br>
+<img src="html/images/macapp.png"
+ title="AVEDac MBARI eel application system"
+ alt="AVEDac MBARI eel application system"
+ style="width: 804px; height: 374px;">
+<h3><span style="font-weight: bold;"><a name="linuxinstallrequirements"></a>Installation
+requirements on Linux</span><br>
+</h3>
+<ul>
+  <li><span style="font-weight: bold;">Java
+1.5 </span>or higher. You can
+download Java from <a href="http://www.java.com/">http://www.java.com</a>
+if
+you don't already have it.<br>
+    <br>
+    <span style="font-weight: bold;"></span></li>
+  <li><span style="font-weight: bold;">Transcode</span>
+software. Transcode is used to convert the video into individual
+frames. <span style="font-weight: bold;">If
+you are not using video,
+but using still images, you can skip this step. &nbsp;T</span>ranscode
+can be downloaded using yum or from RPM sources, or installed
+from
+source code from: <a href="http://www.transcoding.org/">http://www.transcoding.org/.</a>
+A word to the wise: transcode is not an easy tool to build and install
+from
+source because it has many dependent libraries. Install it using yum or
+from RPMs to
+simplify your life. &nbsp;For more information on installing this
+see the <a
+ href="http://code.google.com/p/avedac/wiki/TranscodeInstallation">wiki
+instructions.</a><br>
+    <br>
+    <span style="font-weight: bold;"></span></li>
+  <li><span style="font-weight: bold;">Matlab Compiler Runtime
+(MCR).&nbsp;</span>The MCR is
+used to run the AVEDac classifier.</li>
+  <ul>
+    <li>The
+MCR installer is contained in the zip file. &nbsp;First, unzip the
+file.
+      <pre># unzip aved-ui-0.3.4-SNAPSHOT.zip</pre>
+    </li>
+    <li>The installer is an
+executable bin file that needs to be installed <span
+ style="font-weight: bold;">as a user with
+root administrative permissions</span>
+From a terminal window
+with,
+define the directory your java executable is in with the MATLAB_JAVA
+environment variable<span style="font-family: monospace;"><br>
+      </span>
+      <pre><span style="font-family: monospace;"># ex</span>port MATLAB_JAVA=/usr/java/latest/jre<br></pre>
+    </li>
+    <li>Then,
+install
+the installer with all the defaults as the user with root
+administrative permissions.<br>
+      <pre># ./MCRInstaller.bin</pre>
+    </li>
+  </ul>
+</ul>
+<h3><a name="linuxinstall"></a>Installing
+on Linux</h3>
+The executable jar package is contained in the zip file. &nbsp;To
+access the jar file, simply unzip the file.<br>
+<pre># <span style="font-weight: normal;">unzip aved-ui-0.3.4-SNAPSHOT.zip</span><br></pre>
+<h3><a name="linuxrun"></a>Running
+on Linux</h3>
+This
+is packaged as an executable jar. However, it also has&nbsp;shared
+libraries that are used in the classifier. TODO: add instructions for
+setting up the necessary environment variables, or add an launch script
+to the zip assembly. <br>
+<br>
+Run by double clicking on
+the jar file. If your
+operating system doesn't
+support running executable JAR files, you can alternatively run it this
+way:<br>
+<pre># <span style="font-weight: normal;">java -jar aved-ui-0.3.4-SNAPSHOT.jar</span></pre>
+<span style="font-style: italic;"></span>
+<div id="footer">
+<div id="aquarium_link" style="text-align: right;"><a
+ title="visit Monterey Bay Aquarium's website" target="_blank"
+ href="http://www.mbayaq.org/"><img
+ alt="visit Monterey Bay Aquarium's website"
+ src="html/images/aquarium_link.gif" border="0" height="40" hspace="0"
+ vspace="0" width="211"></a></div>
+<div id="footer_menu">
+<ul type="disc">
+  <li class="address">
+    <address><span class="current" style="color: rgb(255, 255, 255);">MBARI&nbsp;
+&middot; 7700 Sandholdt Road &nbsp; &middot; &nbsp;
+Moss Landing, CA 95039-USA &nbsp; &middot; &nbsp; Tel:
+(831) 775-1700 &nbsp;&nbsp;&middot; &copy; 2007 MBARI</span></address>
+  </li>
+</ul>
+</div>
+</div>
+</div>
+</body>
+</html>

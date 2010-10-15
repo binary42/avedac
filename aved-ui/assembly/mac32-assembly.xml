@@ -13,11 +13,18 @@
     <includeBaseDirectory>false</includeBaseDirectory>
 
     <fileSets>
-<       <fileSet>
-            <directory>${basedir}/src/main/app-resources/mac</directory>
-             <outputDirectory>tools</outputDirectory>
+        <fileSet>
+            <directory>${basedir}/src/main/app-resources/mac/html</directory>
+            <outputDirectory>html</outputDirectory>
             <includes>
-                <include>runOnce.sh</include>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/src/main/app-resources/mac</directory>
+            <outputDirectory></outputDirectory>
+            <includes>
+                <include>IMPORTANT_README.html</include>
             </includes>
         </fileSet>
         <fileSet>
@@ -43,14 +50,7 @@
                 <include>*.h</include>
                 <include>readme.*</include>
             </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${basedir}/target/classes/org/mbari/aved/ui/html</directory>
-            <outputDirectory>html</outputDirectory>
-            <includes>
-                <include>*</include>
-            </includes>
-        </fileSet>
+        </fileSet> 
         <fileSet>
             <directory>${basedir}/target/classes/examples</directory>
             <outputDirectory>examples</outputDirectory>
