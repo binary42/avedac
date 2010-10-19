@@ -67,6 +67,8 @@ GetSalientRegionsStage::GetSalientRegionsStage(MPI_Comm mastercomm, const char *
                                                const int argc, const char **argv,
                                                nub::soft_ref<Beowulf> &beo,
                                                const LevelSpec &levelSpec,
+                                               const float boringmv,
+                                               const SimTime &boringDelay,
                                                const MaxNormType &maxNormType,
                                                const VisualCortexWeights &wts,
                                                bool &fastBeoSaliency)
@@ -76,10 +78,14 @@ GetSalientRegionsStage::GetSalientRegionsStage(MPI_Comm mastercomm, const char *
    itsBeo(beo),
    itsLevelSpec(levelSpec),
    itsMaxNormType(maxNormType),
+   itsBoringmv(boringmv),
+   itsBoringDelay(boringDelay),
    itsWeights(wts),
+   itsTestGrayscale(false),
+   itsGrayscaleCompute(false),
    itsFastBeoSaliency(fastBeoSaliency)
 {
-
+ 
 }
 GetSalientRegionsStage::~GetSalientRegionsStage()
 {
@@ -114,9 +120,14 @@ void GetSalientRegionsStage::runStage()
       break;									
     case(Stage::MSG_DATAREADY):
       // get saliency winners and send list of winners to the Stages::UE_STAGE
-      if(framenum != -1)	{
+      if(framenum != -1) {
         MPE_Log_event(5,0,"");	 
         
+	if(itsTestGrayscale == false) {
+	  itsGrayscaleCompute = isGrayscale(*img);
+	  itsTestGrayscale = true;
+	}
+	
         if(itsFastBeoSaliency == true)
           sendImage(*img, framenum);
 	
@@ -170,53 +181,79 @@ std::list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte
   int32 cmapframe[NBCMAP];         // array of cmap frame numbers  
   for (int i = 0; i < NBCMAP; i ++) cmapframe[i] = -1;
   int sml = itsLevelSpec.mapLevel();                      // pyramid level of saliency map
-
+ 
   Image<float> sm(img.getWidth() >> sml, img.getHeight() >> sml, ZEROS); // saliency map
   Image<float> color = sm;
   Image<float> intensity = sm;
   Image<float> ori = sm;
 
-  int reccmaps = 0;	
+  int reccmaps = 0;
+  int numcmaps = NBCMAP;	
   Timer masterclock;                // master clock for simulations
   masterclock.reset();
-  float mi,ma,;
+  float mi,ma;
 
   if(itsFastBeoSaliency == true) {
+  
+     // remove the r/g b/w color map computations if gray scale image
+    if (itsGrayscaleCompute == true)
+      itsWeights.chanCw = 0.f;
+
+    // if no channel weight for intensity, color, or orientation
+    // remove computation
+    if (itsWeights.chanIw == 0.f )
+      numcmaps -= 1;
+
+    if (itsWeights.chanOw == 0.f )
+      numcmaps -= 4;
+   
+    if (itsWeights.chanCw == 0.f)
+      numcmaps -= 2;
+
     // receive conspicuity maps:
-    while(reccmaps < NBCMAP) {
+    while(reccmaps < numcmaps) {
       reccmaps += receiveCMAPS(itsBeo, cmap, cmapframe);
-      usleep(500);      
+      usleep(500);
     };     
               
-    // add all the orientation channels together, max normalize and weight
-    for(int i = 3;i < NBCMAP; i++)
-      ori += cmap[i];     	
+    if (itsWeights.chanOw != 0.f ) {
+      // add all the orientation channels together, max normalize and weight
+      for(int i = 3;i < NBCMAP; i++) {
+          LDEBUG("sml: %d image: %dx%d ori: %dx%d cmap: %dx%d", sml, img.getWidth(), img.getHeight(), ori.getWidth(), ori.getHeight(), cmap[i].getWidth(), cmap[i].getHeight());
+	ori += cmap[i];
+      }
+      ori = maxNormalize(ori, 0.0f, 0.0f, itsMaxNormType);
+      getMinMax(ori, mi, ma);
+      LDEBUG("Orientation final range [%f .. %f]", mi, ma);    	
+      ori *= itsWeights.chanOw;
+      getMinMax(ori, mi, ma);
+      LDEBUG("Orientation final weighted range [%f .. %f]", mi, ma);
+    }
+         
+    // add in the r/g b/w color map computations if a color image
+    if (itsWeights.chanCw != 0.f) {
+      // add all the color channels together, max normalize and weight    
+      color = cmap[1] + cmap[2];
+      color = maxNormalize(color, 0.0f, 0.0f, itsMaxNormType);
+      getMinMax(color, mi, ma);
+      LDEBUG("Color final range [%f .. %f]", mi, ma);    	
+      color *= itsWeights.chanCw;
+      getMinMax(color, mi, ma);
+      LDEBUG("Color final weighted range [%f .. %f]", mi, ma);
     
-    ori = maxNormalize(ori, 0.0f, 0.0f, itsMaxNormType);
-    getMinMax(ori, mi, ma);
-    LDEBUG("Orientation final range [%f .. %f]", mi, ma);    	
-    ori *= itsWeights.chanOw;
-    getMinMax(ori, mi, ma);
-    LDEBUG("Orientation final weighted range [%f .. %f]", mi, ma);
+    }
     
-    // add all the color channels together, max normalize and weight    
-    color = cmap[1] + cmap[2];
-    color = maxNormalize(color, 0.0f, 0.0f, itsMaxNormType);
-    getMinMax(color, mi, ma);
-    LDEBUG("Color final range [%f .. %f]", mi, ma);    	
-    color *= itsWeights.chanCw;
-    getMinMax(color, mi, ma);
-    LDEBUG("Color final weighted range [%f .. %f]", mi, ma);
-    
-    // maxnormalize and weight intensity channel
-    intensity = cmap[0];    
-    maxNormalize(intensity,0.0f, 0.0f, itsMaxNormType);
-    getMinMax(intensity, mi, ma);
-    LDEBUG("Intensity final range [%f .. %f]", mi, ma);
-    intensity *= itsWeights.chanIw;
-    getMinMax(intensity, mi, ma);
-    LDEBUG("Intensity final weighted range [%f .. %f]", mi, ma);            	
-    
+    if (itsWeights.chanIw != 0.f ) {
+      // maxnormalize and weight intensity channel
+      intensity = cmap[0];    
+      maxNormalize(intensity,0.0f, 0.0f, itsMaxNormType);
+      getMinMax(intensity, mi, ma);
+      LDEBUG("Intensity final range [%f .. %f]", mi, ma);
+      intensity *= itsWeights.chanIw;
+      getMinMax(intensity, mi, ma);
+      LDEBUG("Intensity final weighted range [%f .. %f]", mi, ma);            	
+   
+    }
     // build our current saliency map
     Image<float> sminput = ori + color + intensity;
     
@@ -246,7 +283,7 @@ std::list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte
     if( (framenum - minframe) > 10)
       LINFO("ERROR: SENDING FRAMES TOO FAST framenum: %d minframe:%d", framenum, minframe);
     
-    winners = getSalientWinnersMaxFast(sml, sm,intensity,color,ori);
+    winners = getSalientWinnersMaxFast(sml, sm, intensity,color,ori);
   }
   else {
     LINFO("------->UNSUPPORTED FUNCTION FIX THIS-----");
@@ -265,12 +302,11 @@ list<WTAwinner> GetSalientRegionsStage::getSalientWinnersMaxFast(int sml,
   int numSpots = 0;
   float maxval;
   Point2D<int> currwin;
-  WTAwinner newwin = WTAwinner::NONE();
-  SimTime boringDelay = SimTime::MSECS(200);
+  WTAwinner newwin = WTAwinner::NONE(); 
   WTAwinner lastwinner = WTAwinner::NONE();
   std::list<WTAwinner> winners;
   Timer masterclock;                // master clock for simulations
-  masterclock.reset();
+  masterclock.reset(); 
 
   DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
 
@@ -286,15 +322,16 @@ list<WTAwinner> GetSalientRegionsStage::getSalientWinnersMaxFast(int sml,
                                               maxval, false);
       
       // if the last covert attention shift was slower than boring Delay(msecs)
-      // or the SM voltage was less than 3mV, mark the covert attention shift as boring:
+      // or the SM voltage was less than (default 3mV), mark the covert attention shift as boring:
       if (lastwinner.t > SimTime::ZERO() &&
-          (newwin.t - lastwinner.t > boringDelay || newwin.sv < 0.003 ) )
+          (newwin.t - lastwinner.t > itsBoringDelay || 
+              newwin.sv < itsBoringmv * 0.001) )
         newwin.boring = true;                                   
       
       if (newwin.isValid()) {
-        LINFO("##### winner #%d found at (%d,%d) with %f voltage at %fms %s %d #####",
-              numSpots, newwin.p.i, newwin.p.j, maxval, newwin.t.msecs(),
-              newwin.boring ? "[boring] ":"");
+        LINFO("##### winner #%d found at (%d,%d) with %f mV maxval %f mV at %fms %s #####",
+              numSpots, newwin.p.i, newwin.p.j, (newwin.sv/0.001), (maxval/0.001), newwin.t.msecs(),
+              newwin.boring ? "[boring] ":"" );
         winners.push_back(newwin);	   
       }
       
@@ -302,9 +339,9 @@ list<WTAwinner> GetSalientRegionsStage::getSalientWinnersMaxFast(int sml,
       lastwinner = newwin;
 
        // if a boring event detected, and not keeping boring WTA points then break simulation
-      if(newwin.boring && p.itsKeepWTABoring == false)
-        break;     	
-      
+      if(newwin.boring == true && p.itsKeepWTABoring == false)
+        break;
+
     }// end if currwin.i != -1
     
     // scan channels, finding the max      
@@ -373,34 +410,56 @@ void GetSalientRegionsStage::sendImage(const Image< PixRGB<byte> >& img, int fra
 {
   // buffer to send messages to nodes
   TCPmessage smsg;                  
-  
-  // prescale image if needed
-  int prescale = itsLevelSpec.levMin();
-  Image<PixRGB<byte> > ima2;
-  if(prescale > 0)
-    ima2 = decY(decX(img,1<<prescale),1<<prescale);
-  else
-    ima2 = img;
-  
+
+  // remove the r/g b/w color map computations if gray scale image
+  if (itsGrayscaleCompute == true)
+    itsWeights.chanCw = 0.f;
+
   // compute luminance and send it off:
-  Image<byte> lum = luminance(ima2);
-  
-  // first, send off luminance to orientation slaves:
-  smsg.reset(framenum, BEO_ORI0); smsg.addImage(lum); itsBeo->send(smsg);
-  smsg.setAction(BEO_ORI45); itsBeo->send(smsg);
-  smsg.setAction(BEO_ORI90); itsBeo->send(smsg);
-  smsg.setAction(BEO_ORI135); itsBeo->send(smsg);
-  
-  // finally, send to luminance slave:
-  smsg.setAction(BEO_LUMINANCE); itsBeo->send(smsg);
-  
-  // compute RG and BY and send them off:
-  Image<byte> r, g, b, y; getRGBY(ima2, r, g, b, y, (byte)25);
-  smsg.reset(framenum, BEO_REDGREEN);
-  smsg.addImage(r); smsg.addImage(g); itsBeo->send(smsg);
-  smsg.reset(framenum, BEO_BLUEYELLOW);
-  smsg.addImage(b); smsg.addImage(y); itsBeo->send(smsg);
+  Image<byte> lum = luminance(ima);
+     
+  if (itsWeights.chanOw != 0.f ){
+    // first, send off luminance to orientation slaves:
+    smsg.reset(framenum, BEO_ORI0); smsg.addImage(lum); itsBeo->send(smsg);
+    smsg.setAction(BEO_ORI45); itsBeo->send(smsg);
+    smsg.setAction(BEO_ORI90); itsBeo->send(smsg);
+    smsg.setAction(BEO_ORI135); itsBeo->send(smsg);
+  }
+     
+  if (itsWeights.chanIw != 0.f) {
+    // finally, send to luminance slave:
+    smsg.setAction(BEO_LUMINANCE); itsBeo->send(smsg);
+  }
+
+ if (itsWeights.chanCw != 0.f) {
+   // compute RG and BY and send them off:
+   Image<byte> r, g, b, y; getRGBY(ima2, r, g, b, y, (byte)25);
+   smsg.reset(framenum, BEO_REDGREEN);
+   smsg.addImage(r); smsg.addImage(g); itsBeo->send(smsg);
+   smsg.reset(framenum, BEO_BLUEYELLOW);
+   smsg.addImage(b); smsg.addImage(y); itsBeo->send(smsg);
+ }
 }
+
+// ######################################################################
+template <class T>
+bool GetSalientRegionsStage::isGrayscale(const Image<PixRGB<T> >& src)
+{
+  ASSERT(src.initialized());
+
+  typename Image< PixRGB<T> >::const_iterator aptr = src.begin();
+  typename Image< PixRGB<T> >::const_iterator stop = src.end();
+  
+  while ( (aptr != stop) && (aptr->red() == aptr->green() == aptr->blue())) 
+    ++aptr;
+
+  // reached the end, and all rgb channels were equal
+  if(aptr == stop)
+	return true;
+
+  return false;
+}
+
 // ######################################################################
 int GetSalientRegionsStage::receiveCMAPS(nub::soft_ref<Beowulf>& beo, Image<float> *cmap,
                                          int32 *cmapframe)
@@ -411,7 +470,7 @@ int GetSalientRegionsStage::receiveCMAPS(nub::soft_ref<Beowulf>& beo, Image<floa
 
   while(beo->receive(rnode, rmsg, rframe, raction) )
     {
-      //LINFO("received %d/%d from %d", rframe, raction, rnode);
+      LDEBUG("received %d/%d from %d", rframe, raction, rnode);
       switch(raction & 0xffff)
         {
         case BEO_CMAP: // ##############################

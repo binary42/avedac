@@ -86,7 +86,7 @@ void SegmentStage::runStage()
           bwImg = maxRGB(*img2segment);
         else
           bwImg = luminance(*img2segment);
-	LINFO("2) DEBUG %06d", framenum);;
+        
         itsbwAvgCache.push_back(bwImg);
             
         // create a binary image for the segmentation

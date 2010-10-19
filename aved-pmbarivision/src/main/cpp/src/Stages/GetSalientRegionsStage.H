@@ -50,6 +50,8 @@ public:
 			 const int argc, const char **argv,
 			 nub::soft_ref<Beowulf> &beo,
                          const LevelSpec &levelSpec,
+                         const float boringmv,
+                         const SimTime &boringDelay,
                          const MaxNormType &maxNormType,
                          const VisualCortexWeights &wts,
 			 bool &fastBeoSaliency);
@@ -68,9 +70,18 @@ public:
 
 private:
   
+  //! A method to test if an image is grayscale or not
+  //! returns true if grayscale, otherwise false
+  /* !@param src the image to test
+   */
+  template <class T>
+  bool isGrayscale(const Image<PixRGB<T> >& src);
+
   //! A fast method to scan iteratively for winning locations
   //! returns list of SalientWinners of the most salient points
   /*! @param sml pyramid level of the saliency map
+   * @param boringmv saliency map level (in mV) below which attention shifts will be considered 'boring'
+   * @param boringdelay attention shifts that come after an interval longer than this will be considered 'boring'
    * @param sm the float scaled down saliency map  to scan for winners
    * @param color intensity map
    @param color conspicuity map  	
@@ -99,6 +110,10 @@ private:
   LevelSpec itsLevelSpec;
   MaxNormType itsMaxNormType;
   VisualCortexWeights itsWeights;
+  bool itsTestGrayscale;
+  bool itsGrayscaleCompute;
+  float itsBoringmv;
+  SimTime itsBoringDelay;
 };
 
 #endif // !defined(GETSALIENTREGIONS_H)

@@ -149,7 +149,10 @@ extern "C" {
 
   Stage *createStage(MPI_Comm master, Stages::stageID id, int argc, const char **argv,  ModelManager &manager)
   {
-    Stage *s = 0; 
+    // turn down log messages until after initialzation
+    MYLOGVERB = LOG_NOTICE;
+
+    Stage *s = 0;
     // by default we only use the fast beo version, but for comparing
     // the results of the fast and slow beo, we can change this to false which will use the slower
     // saliency computation.     
@@ -243,13 +246,11 @@ extern "C" {
 
     // get level spec and norm type 
     const string ls = manager.getOptionValString(&OPT_LevelSpec).c_str();
-    LevelSpec levelSpec;
-    convertFromString(ls, levelSpec);
-    MaxNormType normType;
+    LevelSpec levelSpec;convertFromString(ls, levelSpec);
     const string mn = manager.getOptionValString(&OPT_MaxNormType).c_str();
-    convertFromString(mn, normType);
+    MaxNormType normType; convertFromString(mn, normType);
     
-    LDEBUG("\n-------------> MaxNormType: %d LevelSpec sml %d deltamin %d deltamax"
+    LDEBUG("MaxNormType: %d LevelSpec sml %d deltamin %d deltamax"
             " %d levelmin %d levelmax %d maxdepth %d", normType,
                                             levelSpec.mapLevel(),
                                             levelSpec.delMin(),
@@ -258,6 +259,14 @@ extern "C" {
                                             levelSpec.levMax(),
                                             levelSpec.levMax() + levelSpec.delMax() + 1
                                             );
+
+    // get the boring delay and mv
+    const string bd = manager.getOptionValString(&OPT_BrainBoringDelay).c_str();
+    SimTime boringDelay;  convertFromString(bd, boringDelay); 
+    
+    const string bmv = manager.getOptionValString(&OPT_BrainBoringSMmv).c_str();
+    float boringmv;  convertFromString(bmv, boringmv);
+
     // get the frame range
     FrameRange frameRange = FrameRange::fromString(manager.getOptionValString(&OPT_InputFrameRange));
     string inputFileStem = manager.getOptionValString(&OPT_InputFrameSource).c_str();
@@ -283,6 +292,8 @@ extern "C" {
                                               argc, argv,
                                               beowulf,
 					      levelSpec,
+                                              boringmv,
+                                              boringDelay,
                                               normType,
                                               wts,
                                               fastBeoSaliency);

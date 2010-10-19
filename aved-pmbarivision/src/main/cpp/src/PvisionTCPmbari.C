@@ -89,10 +89,11 @@ MaxNormType normtyp =  VCXNORM_FANCY;
 // ######################################################################
 int main(const int argc, const char **argv)
 {
-  MYLOGVERB = LOG_DEBUG;
-
   // instantiate a model manager:
   ModelManager manager("MBARI Parallel Vision TCP - Slave");
+
+  // turn down log messages until after initialzation
+  MYLOGVERB = LOG_NOTICE;
 
   // Instantiate our various ModelComponents:
   nub::soft_ref<Beowulf>
@@ -164,8 +165,8 @@ int main(const int argc, const char **argv)
   level_max  = levelSpec.levMax();
   maxdepth   = level_max + delta_max + 1;
   normtyp    = normType;
-
-   LDEBUG("\n-------------> MaxNormType: %d LevelSpec sml %d deltamin %d deltamax"
+  
+  LDEBUG("MaxNormType: %d LevelSpec sml %d deltamin %d deltamax"
             " %d levelmin %d levelmax %d maxdepth %d", normType,
                                             sml,
                                             delta_min,
@@ -259,7 +260,7 @@ void computeCMAP(const Image<float>& fima, const PyramidType ptyp,
   // alloc conspicuity map and clear it:
   Image<float> cmap(pyr[sml].getDims(), ZEROS);
 
-  LDEBUG("CMAP W:%d H:%d image width:%d height:%d", cmap.getWidth(), cmap.getHeight(), fima.getWidth(), fima.getHeight());
+  LDEBUG("SML: %d CMAP W:%d H:%d image:%dx%d", sml, cmap.getWidth(), cmap.getHeight(), fima.getWidth(), fima.getHeight());
 
   for (int delta = delta_min; delta <= delta_max; delta ++)
     for (int lev = level_min; lev <= level_max; lev ++)
