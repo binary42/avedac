@@ -161,7 +161,7 @@ int main(const int argc, const char** argv) {
 
     // If these are set to the default, override them
     // with derived values,  otherwise these have been
-    // set by the user so keep the user preferences
+    // set by the user so keep the user preferences 
     if (detectionParms.itsMinEventArea == DEFAULT_MIN_EVENT_AREA)
         detectionParms.itsMinEventArea = minSize; //sq pixels
     if (detectionParms.itsMaxEventArea == DEFAULT_MAX_EVENT_AREA)

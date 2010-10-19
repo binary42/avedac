@@ -586,10 +586,11 @@ void MbariResultViewer::saveVisualEventSummary(string versionString,
 
     for (i = eventList.begin(); i != eventList.end(); ++i) {
 
-        // if also saving non-interesting events and this is BORING event, be sure to save this
-        // otherwise, save all INTERESTING events
-        if ((itsSaveNonInterestingEvents.getVal() && (*i)->getCategory() == MbariVisualEvent::VisualEvent::BORING) ||
-                (*i)->getCategory() == MbariVisualEvent::VisualEvent::INTERESTING) {
+        // if this is an interesting event, or
+        // if this is a non-interesting(boring) event and we are saving boring events
+        if ( (*i)->getCategory() == MbariVisualEvent::VisualEvent::INTERESTING ||
+           ( (*i)->getCategory() == MbariVisualEvent::VisualEvent::BORING &&
+                itsSaveNonInterestingEvents.getVal() == true ) ) {
             ofs << (*i)->getEventNum() << "\t";
 
             if ((*i)->getStartTimecode().length() > 0)
