@@ -48,15 +48,15 @@ using namespace std;
 CachePreprocessStage::CachePreprocessStage(MPI_Comm mastercomm, 
                                            const char *name,
                                            nub::soft_ref<InputFrameSeries> &ifs,
-                                           const DetectionParameters &detectionParms, 
                                            const FrameRange framerange,
                                            const std::string& inputFileStem )
   :Stage(mastercomm,name),
    itsifs(ifs),
    itsFrameRange(framerange),
-   itsAvgCache(ImageCacheAvg< PixRGB<byte> > (detectionParms.itsSizeAvgCache)),
+   itsAvgCache(ImageCacheAvg< PixRGB<byte> > (DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache)),
    itsInputFileStem(inputFileStem)
 {
+
 }
 
 CachePreprocessStage::~CachePreprocessStage()

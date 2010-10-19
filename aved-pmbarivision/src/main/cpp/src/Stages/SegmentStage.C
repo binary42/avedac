@@ -44,10 +44,9 @@
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
-SegmentStage::SegmentStage(MPI_Comm mastercomm, const char *name, 
-                           const DetectionParameters &detectionParms)
+SegmentStage::SegmentStage(MPI_Comm mastercomm, const char *name)
   :Stage(mastercomm,name),
-   itsbwAvgCache(ImageCacheAvg< byte > (detectionParms.itsSizeAvgCache))
+   itsbwAvgCache(ImageCacheAvg< byte > (DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache))
 {				
 }
 

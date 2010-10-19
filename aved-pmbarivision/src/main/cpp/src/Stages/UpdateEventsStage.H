@@ -37,7 +37,6 @@
 #include "Media/FrameSeries.H"
 #include "Media/MbariResultViewer.H"
 #include "DetectionAndTracking/FOEestimator.H"
-//#include "DetectionAndTracking/MbariFunctions.H"
 #include "DetectionAndTracking/MbariVisualEvent.H"
 #include "Media/FrameRange.H"
 #include "Stages/SalientWinner.H"
@@ -49,8 +48,7 @@ class UpdateEventsStage : public Stage
 {
 public:
   // !Constructor
-  UpdateEventsStage(MPI_Comm mastercomm, const char *name,
-		    const DetectionParameters &detectionParms,
+  UpdateEventsStage(MPI_Comm mastercomm, const char *name, 
 		    nub::soft_ref<InputFrameSeries> &ifs,
 		    nub::soft_ref<MbariResultViewer> &rv,
 		    const std::string& eventsFileStem,

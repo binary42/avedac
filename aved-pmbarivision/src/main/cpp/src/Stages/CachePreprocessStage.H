@@ -45,8 +45,7 @@ public:
   // !constructor
   CachePreprocessStage(MPI_Comm mastercomm, 
 		       const char *name,
-		       nub::soft_ref<InputFrameSeries> &ifs, 
-		       const DetectionParameters &detectionParms,
+		       nub::soft_ref<InputFrameSeries> &ifs,
 		       const FrameRange framerange,
 		       const std::string& inputFileStem);
 

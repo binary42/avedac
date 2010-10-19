@@ -29,26 +29,29 @@
 #if !defined(GETSALIENTREGIONS_H)
 #define GETSALIENTREGIONS_H
 
-#include "MessagePassing/Mpidef.H"
+#include "MessagePassing/Mpidef.H" 
 #include "Stages/Stage.H"
 #include "Image/Point2D.H"
 #include "Beowulf/Beowulf.H"
 #include "Neuro/StdBrain.H"
+#include "Image/fancynorm.H"
 #include "Image/Geometry2D.H"
 #include "DetectionAndTracking/MbariFunctions.H"
+#include "Neuro/VisualCortexWeights.H"
 
 // ######################################################################
 //! Runs the longest stage. This stage communicates with workers running on
 // Beowulf nodes to run an faster version of saliency algorithm. 
-class GetSalientRegionsStage : public Stage  
+class GetSalientRegionsStage : public Stage
 {
 public:
   // !constructor
   GetSalientRegionsStage(MPI_Comm mastercomm, const char *name, \
 			 const int argc, const char **argv,
 			 nub::soft_ref<Beowulf> &beo,
-			 const float &maxEvolveTime,
-			 const uint &maxNumSalSpots,
+                         const LevelSpec &levelSpec,
+                         const MaxNormType &maxNormType,
+                         const VisualCortexWeights &wts,
 			 bool &fastBeoSaliency);
 
   // !destructor
@@ -71,16 +74,12 @@ private:
    * @param sm the float scaled down saliency map  to scan for winners
    * @param color intensity map
    @param color conspicuity map  	
-   @param orientation conspicuity map  	
-   @param maxEvolveTime the maximum evolution time for the saliency map
-   @param maxNumSalSpots the maximum number of salient locations extracted*/ 									
+   @param orientation conspicuity map  	 */
   list<WTAwinner> getSalientWinnersMaxFast(int sml,
 					   Image<float> &sm,
 					   Image<float> &intensity,
 					   Image<float> &color,
-					   Image<float> &orientation,
-					   float maxEvolveTime,
-					   int maxNumSalSpots);
+					   Image<float> &orientation );
   
   
   // ! runs saliency filter and creates list of winners
@@ -93,12 +92,13 @@ private:
   //! sendImage to vision slaves
   void sendImage(const Image< PixRGB<byte> >& img, int framenum);
   
-  nub::soft_ref<Beowulf> itsBeo;
-  uint itsMaxNumSalSpots;
-  float itsMaxEvolveTime;
+  nub::soft_ref<Beowulf> itsBeo; 
   bool itsFastBeoSaliency;
   const char **itsArgv;
-  const int itsArgc; 
+  const int itsArgc;
+  LevelSpec itsLevelSpec;
+  MaxNormType itsMaxNormType;
+  VisualCortexWeights itsWeights;
 };
 
 #endif // !defined(GETSALIENTREGIONS_H)

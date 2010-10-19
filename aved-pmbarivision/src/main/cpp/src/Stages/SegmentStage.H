@@ -41,7 +41,7 @@ class SegmentStage: public Stage
 public:		
 
   // !Constructor
-  SegmentStage(MPI_Comm mastercomm, const char *name, const DetectionParameters &detectionParms);
+  SegmentStage(MPI_Comm mastercomm, const char *name);
 
   // !Destructor
   virtual ~SegmentStage();

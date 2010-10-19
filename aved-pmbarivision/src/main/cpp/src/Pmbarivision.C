@@ -36,6 +36,7 @@
 #include "Component/GlobalOpts.H"
 #include "Neuro/NeuroOpts.H"
 #include "Neuro/VisualCortex.H"
+#include "Neuro/VisualCortexWeights.H"
 #include "Component/ModelManager.H"
 #include "Data/MbariOpts.H"
 #include "Stages/SegmentStage.H"
@@ -66,8 +67,9 @@ const uint maxNumSalSpots = 20;
 const int minSizeRatio = 10000;
 const int maxDistRatio = 40;
 const int foaSizeRatio = 19;
-const int circleRadiusRatio = 40;
-string inputFilterScript; 
+const int circleRadiusRatio = 40; 
+
+using namespace std;
 
 extern "C" {
 	
@@ -147,35 +149,32 @@ extern "C" {
 
   Stage *createStage(MPI_Comm master, Stages::stageID id, int argc, const char **argv,  ModelManager &manager)
   {
-    int size = 0;
-    Stage *s = 0;
-    bool displayResults = false;	
-    bool displayOutput = false;
+    Stage *s = 0; 
     // by default we only use the fast beo version, but for comparing
     // the results of the fast and slow beo, we can change this to false which will use the slower
     // saliency computation.     
     bool fastBeoSaliency = true;
-    char *scratchdir = NULL;
 
     LINFO("Creating stage:%s id: %d", Stages::stageName(id), id);
 
-    DetectionParameters detectionParms = DetectionParametersSingleton::instance()->itsParameters ;  
-  
+    DetectionParameters detectionParms;
+    
     nub::soft_ref<InputFrameSeries> ifs(new InputFrameSeries(manager));
     manager.addSubComponent(ifs);			
     nub::soft_ref<OutputFrameSeries> ofs(new OutputFrameSeries(manager));
-    manager.addSubComponent(ofs);  
-    nub::soft_ref<DetectionParametersModelComponent> dp(new DetectionParametersModelComponent(manager));
-    manager.addSubComponent(dp);
+    manager.addSubComponent(ofs);
     nub::soft_ref<OutputFrameSeries> evtofs(new OutputFrameSeries(manager));
     manager.addSubComponent(evtofs);
-
+  
     // Get the binary directory of this executable
     string exe(argv[0]);
     size_t found = exe.find_last_of("/\\");
    
     nub::soft_ref<MbariResultViewer> rv(new MbariResultViewer(manager, evtofs, ofs, exe.substr(0,found)));
     manager.addSubComponent(rv);
+
+    nub::soft_ref<DetectionParametersModelComponent> detectionParmsModel(new DetectionParametersModelComponent(manager));
+    manager.addSubComponent(detectionParmsModel);
 
     // Request mbari specific option aliases
     REQUEST_OPTIONALIAS_MBARI(manager);
@@ -185,8 +184,7 @@ extern "C" {
  
     // add a brain here so we can get the command options
     nub::ref<StdBrain> brain(new StdBrain(manager));
-    manager.addSubComponent(brain);
-    manager.setOptionValString(&OPT_MRVsaveNonInterestingEvents,"true");
+    manager.addSubComponent(brain); 
     
     //create master Beowulf component
     nub::soft_ref<Beowulf> beowulf(new Beowulf(manager, "Beowulf", "Beowulf", true));
@@ -195,7 +193,7 @@ extern "C" {
     // parse the command line
     if(manager.parseCommandLine(argc, argv, "", 0, -1) == false) 
  	LFATAL("Invalid command line argument. Aborting program now !");
- 
+
     // set the range to be the same as the input frame range
     FrameRange fr = ifs->getModelParamVal<FrameRange>("InputFrameRange");
     ofs->setModelParamVal(string("OutputFrameRange"), fr);
@@ -205,7 +203,8 @@ extern "C" {
     // getSalientWinners() where the StdBrain is actually created and used
     manager.removeSubComponent(*brain);        
    
-    // get image dimensions and set a few paremeters that depend on it
+    // get image dimensions and set a few parameters that depend on it
+    detectionParmsModel->reset(&detectionParms);
     const Dims dims = ifs->peekDims();	
     manager.setOptionValString(&OPT_InputFrameDims, convertToString(dims));
     const int circleRadius = dims.w() / circleRadiusRatio;
@@ -231,7 +230,8 @@ extern "C" {
     if(detectionParms.itsTrackingMode == TMKalmanFilter)
       detectionParms.itsMaxCost = pow((double)maxDistFloat,2) + pow((double)maxAreaDiff,2);
 		
-    // disable model manager option for all stages because Xdisplay options not enabled in parallel code.
+    // disable model manager option for all display-related options for
+    // all stages because Xdisplay option are not enabled in parallel code.
     manager.setOptionValString(&OPT_MRVdisplayOutput,"false");
     manager.setOptionValString(&OPT_MRVdisplayResults,"false"); 
   
@@ -239,35 +239,56 @@ extern "C" {
     manager.start();
      
     // initialize detection parameters
-    dp->reset(&detectionParms);
     DetectionParametersSingleton::initialize(detectionParms);
-  
+
+    // get level spec and norm type 
+    const string ls = manager.getOptionValString(&OPT_LevelSpec).c_str();
+    LevelSpec levelSpec;
+    convertFromString(ls, levelSpec);
+    MaxNormType normType;
+    const string mn = manager.getOptionValString(&OPT_MaxNormType).c_str();
+    convertFromString(mn, normType);
+    
+    LDEBUG("\n-------------> MaxNormType: %d LevelSpec sml %d deltamin %d deltamax"
+            " %d levelmin %d levelmax %d maxdepth %d", normType,
+                                            levelSpec.mapLevel(),
+                                            levelSpec.delMin(),
+                                            levelSpec.delMax(),
+                                            levelSpec.levMin(),
+                                            levelSpec.levMax(),
+                                            levelSpec.levMax() + levelSpec.delMax() + 1
+                                            );
     // get the frame range
     FrameRange frameRange = FrameRange::fromString(manager.getOptionValString(&OPT_InputFrameRange));
-    std::string inputFileStem = manager.getOptionValString(&OPT_InputFrameSource).c_str();
-  
+    string inputFileStem = manager.getOptionValString(&OPT_InputFrameSource).c_str();
+
+    string vcweight = manager.getOptionValString(&OPT_VisualCortexType).c_str();
+    bool isbeo = false, issurp = false, isthreaded = false;
+    const VisualCortexWeights wts =
+        VisualCortexWeights::fromString(vcweight,
+                                        &isbeo, &issurp, &isthreaded);
+
     switch(id)	{
     case(Stages::CP_STAGE):            
       s = (Stage *)new CachePreprocessStage(master, Stages::stageName(id), 
-                                            ifs, 
-                                            detectionParms,
+                                            ifs,  
                                             frameRange,
                                             inputFileStem);
       break;
     case(Stages::SG_STAGE):
-      s = (Stage *)new SegmentStage(master, Stages::stageName(id), detectionParms);
+      s = (Stage *)new SegmentStage(master, Stages::stageName(id));
       break;		
     case(Stages::GSR_STAGE):	     
       s = (Stage *)new GetSalientRegionsStage(master, Stages::stageName(id), 
                                               argc, argv,
                                               beowulf,
-                                              maxEvolveTime,
-                                              maxNumSalSpots,
+					      levelSpec,
+                                              normType,
+                                              wts,
                                               fastBeoSaliency);
       break;
     case(Stages::UE_STAGE):    
-      s = (Stage *)new UpdateEventsStage(master, Stages::stageName(id),
-                                         detectionParms,
+      s = (Stage *)new UpdateEventsStage(master, Stages::stageName(id), 
                                          ifs,
                                          rv,
                                          inputFileStem,

@@ -26,7 +26,7 @@
  * David and Lucile Packard Foundation
  */ 
 
-#include "MessagePassing/Mpimessage.H"
+#include "MessagePassing/Mpimessage.H" 
 #include "Stages/GetSalientRegionsStage.H"
 #include "PipelineControl/PipelineController.H"
 #include "Image/BitObject.H"
@@ -60,31 +60,26 @@
 
 using namespace std;
 
-//! prescale level by which we downsize images before sending them off
-#define PRESCALE 2
-
-// relative feature weights:
-#define IWEIGHT 1.0
-#define CWEIGHT 1.0
-#define OWEIGHT 5.0 
-
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 GetSalientRegionsStage::GetSalientRegionsStage(MPI_Comm mastercomm, const char *name, \
                                                const int argc, const char **argv,
                                                nub::soft_ref<Beowulf> &beo,
-                                               const float &maxEvolveTime,
-                                               const uint &maxNumSalSpots,
+                                               const LevelSpec &levelSpec,
+                                               const MaxNormType &maxNormType,
+                                               const VisualCortexWeights &wts,
                                                bool &fastBeoSaliency)
   :Stage(mastercomm,name),
    itsArgc(argc),
    itsArgv(argv),
    itsBeo(beo),
-   itsMaxEvolveTime(maxEvolveTime),
-   itsMaxNumSalSpots(maxNumSalSpots),
+   itsLevelSpec(levelSpec),
+   itsMaxNormType(maxNormType),
+   itsWeights(wts),
    itsFastBeoSaliency(fastBeoSaliency)
 {
+
 }
 GetSalientRegionsStage::~GetSalientRegionsStage()
 {
@@ -98,15 +93,11 @@ void GetSalientRegionsStage::initStage()
 
 void GetSalientRegionsStage::runStage()
 {
-  int exit = 0; 
-  int flag = 1;
+  int exit = 0;  
   Image< PixRGB<byte> > *img; 	
   MPI_Status status;
   MPI_Request request;
   int framenum = -1;
-  BitObject obj;
-  BitObject obj2;
-  Image < byte > grayim;   
    
   LINFO("Running stage %s", Stage::name());    
 
@@ -173,22 +164,23 @@ void GetSalientRegionsStage::shutdown()
 
 std::list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &img, int framenum)
 {
-  Point2D<int> winner(-1,-1);   
+  Point2D<int> winner(-1,-1);
   std::list<WTAwinner> winners;   
   Image<float> cmap[NBCMAP];       // array of conspicuity maps
   int32 cmapframe[NBCMAP];         // array of cmap frame numbers  
   for (int i = 0; i < NBCMAP; i ++) cmapframe[i] = -1;
-  int sml = 4;                      // pyramid level of saliency map
+  int sml = itsLevelSpec.mapLevel();                      // pyramid level of saliency map
+
   Image<float> sm(img.getWidth() >> sml, img.getHeight() >> sml, ZEROS); // saliency map
-  ImageSet<float> mean;   
   Image<float> color = sm;
   Image<float> intensity = sm;
   Image<float> ori = sm;
+
   int reccmaps = 0;	
   Timer masterclock;                // master clock for simulations
   masterclock.reset();
-  float mi,ma,av;
-    
+  float mi,ma,;
+
   if(itsFastBeoSaliency == true) {
     // receive conspicuity maps:
     while(reccmaps < NBCMAP) {
@@ -200,28 +192,28 @@ std::list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte
     for(int i = 3;i < NBCMAP; i++)
       ori += cmap[i];     	
     
-    ori = maxNormalize(ori, 0.0f, 0.0f, VCXNORM_FANCY);
+    ori = maxNormalize(ori, 0.0f, 0.0f, itsMaxNormType);
     getMinMax(ori, mi, ma);
     LDEBUG("Orientation final range [%f .. %f]", mi, ma);    	
-    ori *= OWEIGHT;
+    ori *= itsWeights.chanOw;
     getMinMax(ori, mi, ma);
     LDEBUG("Orientation final weighted range [%f .. %f]", mi, ma);
     
     // add all the color channels together, max normalize and weight    
     color = cmap[1] + cmap[2];
-    color = maxNormalize(color, 0.0f, 0.0f, VCXNORM_FANCY);
+    color = maxNormalize(color, 0.0f, 0.0f, itsMaxNormType);
     getMinMax(color, mi, ma);
     LDEBUG("Color final range [%f .. %f]", mi, ma);    	
-    color *= CWEIGHT;
+    color *= itsWeights.chanCw;
     getMinMax(color, mi, ma);
     LDEBUG("Color final weighted range [%f .. %f]", mi, ma);
     
     // maxnormalize and weight intensity channel
     intensity = cmap[0];    
-    maxNormalize(intensity,0.0f, 0.0f, VCXNORM_FANCY);
+    maxNormalize(intensity,0.0f, 0.0f, itsMaxNormType);
     getMinMax(intensity, mi, ma);
     LDEBUG("Intensity final range [%f .. %f]", mi, ma);
-    intensity *= IWEIGHT;
+    intensity *= itsWeights.chanIw;
     getMinMax(intensity, mi, ma);
     LDEBUG("Intensity final weighted range [%f .. %f]", mi, ma);            	
     
@@ -230,7 +222,7 @@ std::list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte
     
     getMinMax(sminput, mi, ma);         
     LDEBUG("Raw output range is [%f .. %f]", mi, ma);     
-    sminput = maxNormalize(sminput, 0.f, 2.f, VCXNORM_FANCY);     
+    sminput = maxNormalize(sminput, 0.f, 2.f, itsMaxNormType);
     
     // output is now typically in the (0.0..8.0) range;
     // typical images are in (0..4) range; we want input current in nA
@@ -254,11 +246,12 @@ std::list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte
     if( (framenum - minframe) > 10)
       LINFO("ERROR: SENDING FRAMES TOO FAST framenum: %d minframe:%d", framenum, minframe);
     
-    winners = getSalientWinnersMaxFast(sml, sm,intensity,color,ori,itsMaxEvolveTime, itsMaxNumSalSpots);
+    winners = getSalientWinnersMaxFast(sml, sm,intensity,color,ori);
   }
   else {
-    LINFO("------->UNSUPPORTED FUNCTION FIX THIS-----");   
-    //winners = getSalientWinners(itsArgc, itsArgv, img,itsMaxEvolveTime,itsMaxNumSalSpots);
+    LINFO("------->UNSUPPORTED FUNCTION FIX THIS-----");
+    // DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
+    //winners = getSalientWinners(itsArgc, itsArgv, img,p.itsMaxEvolveTime,p.itsMaxWTAPoints);
   }
   return winners;
 }
@@ -267,9 +260,7 @@ list<WTAwinner> GetSalientRegionsStage::getSalientWinnersMaxFast(int sml,
                                                                  Image<float> &sm,
                                                                  Image<float> &intensity,
                                                                  Image<float> &color,
-                                                                 Image<float> &orientation, 
-                                                                 float maxEvolveTime,
-                                                                 int maxNumSalSpots)
+                                                                 Image<float> &orientation)
 {	
   int numSpots = 0;
   float maxval;
@@ -280,7 +271,9 @@ list<WTAwinner> GetSalientRegionsStage::getSalientWinnersMaxFast(int sml,
   std::list<WTAwinner> winners;
   Timer masterclock;                // master clock for simulations
   masterclock.reset();
-  
+
+  DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
+
   do {
     
     // initialize a new winner
@@ -292,7 +285,7 @@ list<WTAwinner> GetSalientRegionsStage::getSalientWinnersMaxFast(int sml,
                                               masterclock.getSimTime(),
                                               maxval, false);
       
-      // if the last covert attention shift was slower than borintDelay(msecs)
+      // if the last covert attention shift was slower than boring Delay(msecs)
       // or the SM voltage was less than 3mV, mark the covert attention shift as boring:
       if (lastwinner.t > SimTime::ZERO() &&
           (newwin.t - lastwinner.t > boringDelay || newwin.sv < 0.003 ) )
@@ -306,9 +299,10 @@ list<WTAwinner> GetSalientRegionsStage::getSalientWinnersMaxFast(int sml,
       }
       
       numSpots++;
-      lastwinner = newwin;  
-      
-      if(newwin.boring)
+      lastwinner = newwin;
+
+       // if a boring event detected, and not keeping boring WTA points then break simulation
+      if(newwin.boring && p.itsKeepWTABoring == false)
         break;     	
       
     }// end if currwin.i != -1
@@ -366,8 +360,8 @@ list<WTAwinner> GetSalientRegionsStage::getSalientWinnersMaxFast(int sml,
       break;
     
     // find up to itsMaxNumSalSpots and evolve up to maxEvolveTime to make a list
-    if (masterclock.getSimTime().secs() > maxEvolveTime || numSpots >= maxNumSalSpots)    {
-      LINFO("##### time limit reached or found maximum number of salient spots %d#####", maxNumSalSpots);
+    if (masterclock.getSimTime().secs() > p.itsMaxEvolveTime || numSpots >= p.itsMaxWTAPoints)    {
+      LINFO("##### time limit reached or found maximum number of salient spots %d#####", p.itsMaxWTAPoints);
       break;
     }
     
@@ -381,9 +375,10 @@ void GetSalientRegionsStage::sendImage(const Image< PixRGB<byte> >& img, int fra
   TCPmessage smsg;                  
   
   // prescale image if needed
+  int prescale = itsLevelSpec.levMin();
   Image<PixRGB<byte> > ima2;
-  if(PRESCALE > 1)
-    ima2 = decY(decX(img,1<<PRESCALE),1<<PRESCALE);
+  if(prescale > 0)
+    ima2 = decY(decX(img,1<<prescale),1<<prescale);
   else
     ima2 = img;
   

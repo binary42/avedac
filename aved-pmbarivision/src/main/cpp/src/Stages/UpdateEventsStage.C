@@ -51,17 +51,16 @@ using namespace std;
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 UpdateEventsStage::UpdateEventsStage(MPI_Comm mastercomm, const char *name, \
-                                     const DetectionParameters &detectionParms, \
                                      nub::soft_ref<InputFrameSeries> &ifs, \
                                      nub::soft_ref<MbariResultViewer> &rv, \
                                      const std::string& inputFileStem, \
                                      const FrameRange &framerange)
   :Stage(mastercomm,name),
-   itsOutCache(detectionParms.itsSizeAvgCache),
-   itsEventSet(detectionParms,inputFileStem),
+   itsOutCache(DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache),
+   itsEventSet(DetectionParametersSingleton::instance()->itsParameters,inputFileStem),
    itsInputFileStem(inputFileStem),
    itsFrameRange(framerange),
-   itsSalientFrameCache(detectionParms.itsSizeAvgCache),
+   itsSalientFrameCache(DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache),
    itsFOEEst(20,0),
    itsLastEventSeedFrameNum(-1),
    itsifs(ifs),
@@ -277,7 +276,7 @@ void UpdateEventsStage::updateEvents()
     
     // initialize a few variables
     list<VisualEvent *> eventFrameList;
-    list<VisualEvent *> eventListToSave;
+    list<VisualEvent *> eventListToSave; 
     PropertyVectorSet pvs, pvsToSave;
     
     if(!loadedEvents) {           
@@ -383,8 +382,7 @@ void UpdateEventsStage::updateEvents()
 }
 
 void UpdateEventsStage::initiateEvents(int frameNum, Image< byte > bitImg )
-{  					
-  Point2D<int> winner;  
+{  				 
   DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
   int index = frameNum - itsLastEventSeedFrameNum;
   
