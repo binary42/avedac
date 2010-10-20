@@ -211,6 +211,7 @@ private:
     OModelParam<int> itsMaxEventFrames;
     OModelParam<int> itsSaliencyFrameDist; 
     OModelParam<bool> itsKeepWTABoring;
+    OModelParam<bool> itsSaveNonInteresting;
 };
 
 #endif

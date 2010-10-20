@@ -416,7 +416,7 @@ void GetSalientRegionsStage::sendImage(const Image< PixRGB<byte> >& img, int fra
     itsWeights.chanCw = 0.f;
 
   // compute luminance and send it off:
-  Image<byte> lum = luminance(ima);
+  Image<byte> lum = luminance(img);
      
   if (itsWeights.chanOw != 0.f ){
     // first, send off luminance to orientation slaves:
@@ -433,7 +433,7 @@ void GetSalientRegionsStage::sendImage(const Image< PixRGB<byte> >& img, int fra
 
  if (itsWeights.chanCw != 0.f) {
    // compute RG and BY and send them off:
-   Image<byte> r, g, b, y; getRGBY(ima2, r, g, b, y, (byte)25);
+   Image<byte> r, g, b, y; getRGBY(img, r, g, b, y, (byte)25);
    smsg.reset(framenum, BEO_REDGREEN);
    smsg.addImage(r); smsg.addImage(g); itsBeo->send(smsg);
    smsg.reset(framenum, BEO_BLUEYELLOW);

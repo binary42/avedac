@@ -265,11 +265,6 @@ const ModelOptionDef OPT_MRVsaveSummaryEventsName =
   { MODOPT_ARG_STRING, "MRVsummaryEvents", &MOC_MBARI, OPTEXP_MRV,
     "Save a human readable summary of all the events to a text file",
     "mbari-save-event-summary", '\0', "fileName", "" };
-
-const ModelOptionDef OPT_MRVsaveNonInterestingEvents =
-  { MODOPT_FLAG, "OPT_MRVsaveNonInterestingEvents", &MOC_MBARI, OPTEXP_MRV,
-    "Save non-interesting events. Default is to remove non-interesting events, set to true to save",
-    "mbari-save-non-interesting-events", '\1', "", "false" };
     
 const ModelOptionDef OPT_MRVsaveXMLEventSet =
   { MODOPT_ARG_STRING, "MRVsaveXMLEventSet", &MOC_MBARI, OPTEXP_MRV,
@@ -366,6 +361,10 @@ const ModelOptionDef OPT_MDPkeepBoringWTAPoints =
     "will increase the number of candidates but can also increase the"
     "number of false detections",
     "mbari-keep-boring-WTA-points", '\0', "", "false" };
+const ModelOptionDef OPT_MDPsaveNonInterestingEvents =
+  { MODOPT_FLAG, "OPT_MDPsaveNonInterestingEvents", &MOC_MBARI, OPTEXP_MRV,
+    "Save non-interesting events. Default is to remove non-interesting events, set to true to save",
+    "mbari-save-non-interesting-events", '\1', "", "false" };
 // ####################
 
 // #################### Version options:

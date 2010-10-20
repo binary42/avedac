@@ -57,7 +57,6 @@ extern const ModelOptionDef OPT_MRVshowEventLabels;
 extern const ModelOptionDef OPT_MRVrescaleDisplay;
 extern const ModelOptionDef OPT_MRVsaveEventNums;
 extern const ModelOptionDef OPT_MRVsaveSummaryEventsName;
-extern const ModelOptionDef OPT_MRVsaveNonInterestingEvents;
 extern const ModelOptionDef OPT_MRVsaveXMLEventSet;
 extern const ModelOptionDef OPT_MRVmetadataSource;
 extern const ModelOptionDef OPT_MDPBenthicVideo;
@@ -72,6 +71,7 @@ extern const ModelOptionDef OPT_MDPsegmentAlgorithmInputImage;
 extern const ModelOptionDef OPT_MDPsegmentAlgorithm;
 extern const ModelOptionDef OPT_MDPmaxEvolveTime;
 extern const ModelOptionDef OPT_MDPmaxWTAPoints;
+extern const ModelOptionDef OPT_MDPsaveNonInterestingEvents;
 extern const ModelOptionDef OPT_MDPkeepBoringWTAPoints;
 extern const ModelOptionDef OPT_MDPtrackingMode;
 extern const ModelOptionDef OPT_MDPsegmentSEType;
@@ -91,6 +91,7 @@ extern const ModelOptionDef OPT_MDPTimeLapseStills;
 extern const ModelOptionDef OPT_MDPTimeLapseRover;
 extern const ModelOptionDef OPT_MDPMidwaterVideo;
 extern const ModelOptionDef OPT_MDPBenthicVideo;
+
 //@}
 
 //! Command-line options for Version

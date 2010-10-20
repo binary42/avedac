@@ -295,11 +295,11 @@ protected:
 
   OModelParam<string> itsSaveEventNumString;
   OModelParam<string> itsSaveSummaryEventsName;
-  OModelParam<bool> itsSaveNonInterestingEvents; //!<whether the non-interesting events are saved or not
   OModelParam<string> itsSaveXMLEventSetName;
   OModelParam<string> itsMetadataSource;
-	
+  
 private:
+  bool itsSaveNonInterestingEvents; //!<whether the non-interesting events are saved or not
 	
   MbariXMLParser* itsXMLParser;
   std::vector<string> itsResultNames;

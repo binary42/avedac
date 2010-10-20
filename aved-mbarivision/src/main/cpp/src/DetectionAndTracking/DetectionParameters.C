@@ -89,6 +89,7 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     os << "\tmaxcost:" << itsMaxCost;
     os << "\tmaxevolvetime(msecs):" << itsMaxEvolveTime;
     os << "\tmaxwtapoints:" << itsMaxWTAPoints;
+    os << "\tsavenoninteresting:" << itsSaveNonInteresting;
 
     if (itsMaskPath.length() > 0) {
         os << "\tmaskpath:" << itsMaskPath;
@@ -116,6 +117,7 @@ DetectionParameters &DetectionParameters::operator=(const DetectionParameters& p
     this->itsSaliencyInputType = p.itsSaliencyInputType;
     this->itsSaliencyFrameDist = p.itsSaliencyFrameDist;
     this->itsKeepWTABoring = p.itsKeepWTABoring;
+    this->itsSaveNonInteresting = p.itsSaveNonInteresting;
     this->itsMaskPath = p.itsMaskPath;
     this->itsMaskXPosition = p.itsMaskXPosition;
     this->itsMaskYPosition = p.itsMaskYPosition;
@@ -191,7 +193,8 @@ itsMaxEventArea(&OPT_MDPmaxEventArea, this),
 itsMinEventFrames(&OPT_MDPminEventFrames, this),
 itsMaxEventFrames(&OPT_MDPmaxEventFrames, this),
 itsSaliencyFrameDist(&OPT_MDPsaliencyFrameDist, this),
-itsKeepWTABoring(&OPT_MDPkeepBoringWTAPoints, this) { 
+itsKeepWTABoring(&OPT_MDPkeepBoringWTAPoints, this),
+itsSaveNonInteresting(&OPT_MDPsaveNonInterestingEvents, this){
 };
 // ######################################################################
 
@@ -242,5 +245,6 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
     if (itsSaliencyFrameDist.getVal() > 0)
         p->itsSaliencyFrameDist = itsSaliencyFrameDist.getVal();
 
-    p->itsKeepWTABoring = itsKeepWTABoring.getVal();   
+    p->itsKeepWTABoring = itsKeepWTABoring.getVal();
+    p->itsSaveNonInteresting = itsSaveNonInteresting.getVal();
 }

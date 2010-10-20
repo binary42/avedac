@@ -83,7 +83,6 @@ itsLoadPropertiesName(&OPT_MRVloadProperties, this),
 itsSavePositionsName(&OPT_MRVsavePositions, this),
 itsSaveEventNumString(&OPT_MRVsaveEventNums, this),
 itsSaveSummaryEventsName(&OPT_MRVsaveSummaryEventsName, this),
-itsSaveNonInterestingEvents(&OPT_MRVsaveNonInterestingEvents, this),
 itsSaveXMLEventSetName(&OPT_MRVsaveXMLEventSet, this),
 itsMetadataSource(&OPT_MRVmetadataSource, this),
 resFrameWindow(NULL),
@@ -100,6 +99,8 @@ appendEventsXML(false),
 appendProperties(false),
 itsSaveEventNumsAll(false) {
     itsXMLParser = new MbariXMLParser(binDir);
+    DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
+    itsSaveNonInterestingEvents = p.itsSaveNonInteresting;
 }
 
 void MbariResultViewer::updateNext() {
@@ -122,10 +123,10 @@ void MbariResultViewer::paramChanged(ModelParamBase * const param,
     // if the param is out itsMarkCandidate set the color accordingly
     // if the param is set to Save all non-interesting events, mark candidates
     // the same as interesting to be less confusing
-    if (param == &itsMarkCandidate || param == &itsSaveNonInterestingEvents) {
-        if (itsMarkCandidate.getVal() && itsSaveNonInterestingEvents.getVal()) 
+    if (param == &itsMarkCandidate) {
+        if (itsMarkCandidate.getVal() && itsSaveNonInterestingEvents) 
   	  colCandidate = COL_INTERESTING;
-	else if (itsMarkCandidate.getVal() && !itsSaveNonInterestingEvents.getVal()) 
+	else if (itsMarkCandidate.getVal() && !itsSaveNonInterestingEvents) 
 	  colCandidate = COL_CANDIDATE;
         else colCandidate = COL_TRANSPARENT;
     }
@@ -236,7 +237,7 @@ void MbariResultViewer::outputResultFrame(MbariImage< PixRGB<byte> >& resultImg,
                 colInteresting, colCandidate, colPrediction,
                 colFOE,
                 itsShowEventLabels.getVal(),
-                itsSaveNonInterestingEvents.getVal());
+                itsSaveNonInterestingEvents);
     }
 
     // get timecode string
@@ -590,7 +591,7 @@ void MbariResultViewer::saveVisualEventSummary(string versionString,
         // if this is a non-interesting(boring) event and we are saving boring events
         if ( (*i)->getCategory() == MbariVisualEvent::VisualEvent::INTERESTING ||
            ( (*i)->getCategory() == MbariVisualEvent::VisualEvent::BORING &&
-                itsSaveNonInterestingEvents.getVal() == true ) ) {
+                itsSaveNonInterestingEvents ) ) {
             ofs << (*i)->getEventNum() << "\t";
 
             if ((*i)->getStartTimecode().length() > 0)
@@ -738,7 +739,7 @@ void MbariResultViewer::saveVisualEventSetToXML(std::list<MbariVisualEvent::Visu
     if (!XMLfileCreated)
         LFATAL("Error: Create an XML document first with createXMLDocument()");
     else {
-        itsXMLParser->add(itsSaveNonInterestingEvents.getVal(), eventList, eventframe, eventframetimecode);
+        itsXMLParser->add(itsSaveNonInterestingEvents, eventList, eventframe, eventframetimecode);
         itsXMLParser->writeDocument(itsSaveXMLEventSetName.getVal().c_str());
     }
 
