@@ -66,7 +66,8 @@ CachePreprocessStage::~CachePreprocessStage()
 void CachePreprocessStage::runStage()
 {
   DetectionParameters detectionParms = DetectionParametersSingleton::instance()->itsParameters;
-  Image< PixRGB<byte> > img, img2runsaliency,img2segment;
+  Image< PixRGB<byte> > img, img2runsaliency;
+  Image<byte> img2segment;
   MPI_Status s;
   MPI_Request r;	
   int curFrame = itsFrameRange.getFirst();
@@ -97,11 +98,11 @@ void CachePreprocessStage::runStage()
         }
         else
           {	
-            if (itsifs->frame() > itsFrameRange.getLast())
-              {
-                LERROR("Premature end of frame sequence - bailing out.");
-                break;
-              }	
+            if (itsifs->frame() >= itsFrameRange.getLast()) {
+	      LERROR("Less input frames than necessary for sliding average - "
+		     "using all the frames for caching.");
+		break;
+	    }	
             itsifs->updateNext();
             img = itsifs->readRGB();
 
@@ -114,6 +115,7 @@ void CachePreprocessStage::runStage()
            else
              itsAvgCache.push_back(img);
  
+	   // Get the MBARI metadata from the frame if it exists
             mbariImg.updateData(img, curFrame);
             tc = mbariImg.getMetaData().getTC();			
             
@@ -121,23 +123,41 @@ void CachePreprocessStage::runStage()
               LINFO("Caching frame %06d timecode: %s", curFrame, tc.c_str());
             else
               LINFO("Caching frame %06d", curFrame);
-            
           }
         
-        // subtract the running average from the image to get the saliency image
-        img2runsaliency = itsAvgCache.clampedDiffMean(img);
-        
-        if (detectionParms.itsTrackingMode == TMKalmanFilter) 
-          img2segment = itsAvgCache.absDiffMean(img);
-        else  
-          img2segment = img;
-        
+	// Create the binary image to segment 
+ 	if (detectionParms.itsSegmentAlgorithmInputType == SAIMaxRGB) {
+          img2segment = maxRGB(itsAvgCache.absDiffMean(img));  
+	}
+        else if (detectionParms.itsSegmentAlgorithmInputType == SAILuminance) {
+	  img2segment = luminance(img); 
+	}
+        else {  
+          img2segment = maxRGB(itsAvgCache.absDiffMean(img));  
+	}
+       
+ 	// Get the saliency input images
+        if ( detectionParms.itsSaliencyInputType == SIDiffMean) {
+            if (detectionParms.itsSizeAvgCache > 1)
+              img2runsaliency = itsAvgCache.clampedDiffMean(img);
+            else
+              LFATAL("ERROR - must specify an imaging cache size "
+                      "to use the DiffMean option. Try setting the"
+                      "--mbari-cache-size option to something > 1");
+        }
+        else if (detectionParms.itsSaliencyInputType == SIRaw) {
+             img2runsaliency = img;
+        }
+        else {
+             img2runsaliency = itsAvgCache.clampedDiffMean(img);
+        } 
+       
         MPE_Log_event(2,0,"");		
         
         //every frame send diffed data to segment stage
         LDEBUG("%s sending message MSG_DATAREADY to: %s", Stage::name(), stageName(Stages::SG_STAGE));        
-        if(sendRGBByteImage(img2segment, curFrame, Stages::SG_STAGE,  Stage::MSG_DATAREADY, Stage::mastercomm()) == -1) {
-          LINFO("Error sendingRGBByteImage to %s", stageName(Stages::SG_STAGE));
+        if(sendByteImage(img2segment, curFrame, Stages::SG_STAGE,  Stage::MSG_DATAREADY, Stage::mastercomm()) == -1) {
+          LINFO("Error sendingByteImage to %s", stageName(Stages::SG_STAGE));
           break;		
         }	
         
