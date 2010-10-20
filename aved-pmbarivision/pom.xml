@@ -21,7 +21,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <!-- Generates the mbarivision makefile -->
+                        <!-- Generates the pmbarivision makefile -->
                         <id>exec-compile-one</id>
                         <phase>compile</phase>
                         <goals>
@@ -31,7 +31,7 @@
                             <workingDirectory>${basedir}/src/main/cpp</workingDirectory>
                             <executable>${basedir}/src/main/scripts/execute</executable>
                             <arguments>
-                                <cmdlineArguments>./configure --prefix=${installPath} --with-saliency=${saliencyRoot} --with-xercesc=${xercesRoot}</cmdlineArguments>
+                                <cmdlineArguments>./configure --with-mbarivision=${project.parent.basedir}/aved-mbarivision --prefix=${installPath} --with-saliency=${saliencyRoot} --with-xercesc=${xercesRoot}</cmdlineArguments>
                             </arguments>
                         </configuration>
                     </execution>
