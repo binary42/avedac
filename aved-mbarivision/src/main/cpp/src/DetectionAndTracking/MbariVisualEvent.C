@@ -579,7 +579,7 @@ namespace MbariVisualEvent {
     // extract all the BitObjects from the region
     // extract as small as 1/2 of the last occurance of this event
     std::list<BitObject> objs = extractBitObjects(binMap, region, evtToken.bitObject.getArea()/2, itsDetectionParms.itsMaxEventArea);
-    LDEBUG("pred. location: %s; region: %s; Number of extracted objects: %i",
+    LINFO("pred. location: %s; region: %s; Number of extracted objects: %i",
            toStr(pred).data(),toStr(region).data(),objs.size());
 	  
     // now look which one fits best
@@ -613,7 +613,7 @@ namespace MbariVisualEvent {
           {
             lCost = cost;
             lObj = cObj;
-            LDEBUG("best cost: %f maxCost: %f areadiff: %d change:%f",lCost, 
+            LINFO("best cost: %f maxCost: %f areadiff: %d change:%f",lCost, 
                    itsDetectionParms.itsMaxCost,areadiff, percentdiff); 
             areapercentdiff =  percentdiff;
           }
@@ -622,7 +622,8 @@ namespace MbariVisualEvent {
     // cost too high no fitting object found? -> close event
     if ((lCost > itsDetectionParms.itsMaxCost) || areapercentdiff > 3.F || lCost == -1.0 || lObj == objs.end()) {
       currEvent->close();
-      LINFO("Event %i - no token found, closing event",currEvent->getEventNum());
+      LINFO("Event %i - no token found, closing event cost: %f maxCost: %f areaDiffPercent: %f ",
+		currEvent->getEventNum(), lCost, itsDetectionParms.itsMaxCost, areapercentdiff);
     }
     else    {
       // associate the best fitting guy
