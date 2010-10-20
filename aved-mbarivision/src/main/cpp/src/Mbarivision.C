@@ -125,6 +125,12 @@ int main(const int argc, const char** argv) {
     REQUEST_OPTIONALIAS_NEURO(manager);
 
     // Initialize brain defaults
+    manager.setOptionValString(&OPT_OriInteraction,"SubtractMean"); 
+    manager.setOptionValString(&OPT_OrientComputeType,"Steerable");
+    manager.setOptionValString(&OPT_VisualCortexType,"O:5IC");
+    manager.setOptionValString(&OPT_UseRandom,"false");
+    manager.setOptionValString(&OPT_ShapeEstimatorMode,"ConspicuityMap");
+    manager.setOptionValString(&OPT_ShapeEstimatorSmoothMethod,"None");
     manager.setOptionValString(&OPT_SVdisplayFOA, "true");
     manager.setOptionValString(&OPT_SVdisplayPatch, "false");
     manager.setOptionValString(&OPT_SVdisplayFOALinks, "false");
@@ -262,6 +268,7 @@ int main(const int argc, const char** argv) {
            mbariImg.updateData(img, ifs->frame());
            tc = mbariImg.getMetaData().getTC();
            metadata = mbariImg.getMetaData();
+
            if (tc.length() > 0)
              LINFO("Caching frame %06d timecode: %s", ifs->frame(), tc.c_str());
            else
@@ -301,16 +308,17 @@ int main(const int argc, const char** argv) {
                     LINFO("Caching frame %06d", curFrame);
              }
 
-	    // Set the segment input type
+	    // Create the binary image to segment
             if (detectionParms.itsSegmentAlgorithmInputType == SAIMaxRGB) {
                	 img2segment = maxRGB(avgCache.absDiffMean(img));
 	    }
-            else if (detectionParms.itsSegmentAlgorithmInputType == SAILuminance)
+            else if (detectionParms.itsSegmentAlgorithmInputType == SAILuminance) {
                 img2segment = luminance(img);
+            }
             else {	
                 img2segment = maxRGB(avgCache.absDiffMean(img));
 	    }
-	    // Set the saliency input type
+	    // Get the saliency input image
             if ( detectionParms.itsSaliencyInputType == SIDiffMean) {
             	if (detectionParms.itsSizeAvgCache > 1)
                   img2runsaliency = avgCache.clampedDiffMean(img);
@@ -341,33 +349,34 @@ int main(const int argc, const char** argv) {
             const Image <PixRGB <byte> > background = avgCache.mean();
 
             //  Run selected segmentation algorithm
-            if (detectionParms.itsSegmentAlgorithm == SABackgroundCanny)
-                bitImg = segmentation.runBackgroundCanny(img2segment, segmentAlgorithmType(SABackgroundCanny));
-            else if (detectionParms.itsSegmentAlgorithm == SAHomomorphicCanny)
-                bitImg = segmentation.runHomomorphicCanny(img2segment, segmentAlgorithmType(SAHomomorphicCanny));
-            else if (detectionParms.itsSegmentAlgorithm == SAAdaptiveThreshold)
-                bitImg = segmentation.runAdaptiveThreshold(img2segment, segmentAlgorithmType(SAAdaptiveThreshold));
-            else if (detectionParms.itsSegmentAlgorithm == SAExtractForegroundBW) {
-                rv->output(background, curFrame, "Graphcut_mean_background");
-                rv->output(img, curFrame, "Graphcut_segment_input");
-               bitImg = segmentation.runGraphCut(img2segment, background, segmentAlgorithmType(SAExtractForegroundBW));
+            if (detectionParms.itsSegmentAlgorithm == SABackgroundCanny){
+              bitImg = segmentation.runBackgroundCanny(img2segment, segmentAlgorithmType(SABackgroundCanny));
+            }else if (detectionParms.itsSegmentAlgorithm == SAHomomorphicCanny){
+              bitImg = segmentation.runHomomorphicCanny(img2segment, segmentAlgorithmType(SAHomomorphicCanny));
+            }else if (detectionParms.itsSegmentAlgorithm == SAAdaptiveThreshold){
+              bitImg = segmentation.runAdaptiveThreshold(img2segment, segmentAlgorithmType(SAAdaptiveThreshold));
+            }else if (detectionParms.itsSegmentAlgorithm == SAExtractForegroundBW) {
+              rv->output(background, curFrame, "Graphcut_mean_background");
+              rv->output(img, curFrame, "Graphcut_segment_input");
+              bitImg = segmentation.runGraphCut(img2segment, background, segmentAlgorithmType(SAExtractForegroundBW));
             }
             else if (detectionParms.itsSegmentAlgorithm == SABinaryAdaptive) {
-            if (detectionParms.itsSizeAvgCache > 1)
+              if (detectionParms.itsSizeAvgCache > 1) {
                 bitImg = segmentation.runBinaryAdaptive(bwAvgCache.clampedDiffMean(img2segment),
-                        img2segment, detectionParms.itsTrackingMode);
+                                                        img2segment, detectionParms.itsTrackingMode);
+              }
 	    else
-                bitImg = segmentation.runBinaryAdaptive(img2segment,
-                        img2segment, detectionParms.itsTrackingMode);
-
-            } else
-            if (detectionParms.itsSizeAvgCache > 1)
+              bitImg = segmentation.runBinaryAdaptive(img2segment,
+                                                      img2segment, detectionParms.itsTrackingMode);
+            }
+            else {
+              if (detectionParms.itsSizeAvgCache > 1)
                 bitImg = segmentation.runBinaryAdaptive(bwAvgCache.clampedDiffMean(img2segment), img2segment,
-                    detectionParms.itsTrackingMode);
-	    else
+                                                        detectionParms.itsTrackingMode);
+              else
                 bitImg = segmentation.runBinaryAdaptive(img2segment, img2segment,
-                    detectionParms.itsTrackingMode);
-        
+                                                        detectionParms.itsTrackingMode);
+            }
             // If we are averaging frames, subtract from the average of the background,
             // otherwise, just use the input image
             if (detectionParms.itsSizeAvgCache > 1)
@@ -388,7 +397,7 @@ int main(const int argc, const char** argv) {
             rv->output(colorBitImg, curFrame, "Segment_color_output");
             rv->output(bitImg, curFrame, "Segment_output");
 
-            // update the events with the segmented images
+            // update the events with the segmented binary image
             eventSet.updateEvents(bitImg, curFOE, mbariImg.getFrameNum(), metadata);
 
             // is counter at 0?
@@ -404,7 +413,7 @@ int main(const int argc, const char** argv) {
                         img2runsaliency, brain, seq, maxEvolveTime, maxNumSalSpots,
                         mbariImg.getFrameNum());
 
-                list<BitObject> sobjs = getSalientObjects(bitImg, colorBitImg, winlist);
+                list<BitObject> sobjs = getSalientObjects(bitImg,colorBitImg, winlist);
 
                 if (sobjs.size() > 0) rv->output(showAllObjects(sobjs), curFrame, "Salient_Objects");
 
@@ -414,8 +423,7 @@ int main(const int argc, const char** argv) {
 
             // last frame? -> close everyone
             if (mbariImg.getFrameNum() == frameRange.getLast()) {
-			LDEBUG("closing events");
-			eventSet.closeAll();
+              eventSet.closeAll();
             }
 
             // clean up small events, and those needing deletion.
