@@ -29,11 +29,14 @@
 #include "Stages/SegmentStage.H"
 #include "PipelineControl/PipelineController.H"
 #include "DetectionAndTracking/MbariFunctions.H"
+#include "DetectionAndTracking/Segmentation.H"
 #include "Image/FilterOps.H"
 #include "Image/MathOps.H"
 #include "Image/ColorOps.H"
 #include "Image/Transforms.H"
 #include "Image/ImageCache.H"
+#include "Image/MbariImage.H"
+
 #include "Raster/RasterFileFormat.H"
 #include "MessagePassing/Mpidef.H"
 #include <stdlib.h>
@@ -44,10 +47,18 @@
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
-SegmentStage::SegmentStage(MPI_Comm mastercomm, const char *name)
-  :Stage(mastercomm,name),
-   itsbwAvgCache(ImageCacheAvg< byte > (DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache))
-{				
+SegmentStage::SegmentStage(MPI_Comm mastercomm, const char *name, 
+	               nub::soft_ref<InputFrameSeries> &ifs,
+                       const FrameRange framerange,
+                       const std::string& inputFileStem)
+  :Stage(mastercomm,name), 
+   itsbwAvgCache(ImageCacheAvg< byte > (DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache)),
+   itsifs(ifs),
+   itsFrameRange(framerange),
+   itsAvgCache(ImageCacheAvg< PixRGB<byte> > (DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache)),
+   itsInputFileStem(inputFileStem)
+{	
+			
 }
 
 SegmentStage::~SegmentStage()
@@ -59,15 +70,18 @@ void SegmentStage::runStage()
   int flag = 1;
   MPI_Status status;	
   MPI_Request request;
-  Image< PixRGB<byte> > *img2segment; 
+  Image< byte > *img2segment; 
   BitObject obj;
   int framenum = -1;	
-  DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
+  DetectionParameters detectionParms = DetectionParametersSingleton::instance()->itsParameters;
+  Segmentation segmentation;
 	
-  LINFO("Running stage %s", Stage::name());
-   	
+  LINFO("Running stage %s", Stage::name()); 
+   
+  preload();
+	
   do {   
-    framenum = receiveData((void**)&img2segment, RGBBYTEIMAGE, Stages::CP_STAGE, MPI_ANY_TAG, Stage::mastercomm(), &status, &request);
+    framenum = receiveData((void**)&img2segment, BYTEIMAGE, Stages::CP_STAGE, MPI_ANY_TAG, Stage::mastercomm(), &status, &request);
     Stages::stageID id = static_cast<Stages::stageID>(status.MPI_SOURCE);				
     LDEBUG("%s received frame: %d MSG_DATAREADY from: %s", Stage::name(), framenum, Stages::stageName(Stages::CP_STAGE));
             
@@ -79,35 +93,67 @@ void SegmentStage::runStage()
     case(Stage::MSG_DATAREADY):
       MPE_Log_event(3,0,"");
       if(framenum != -1)  {
-        Image<byte> bwImg;
-              
-        // create bw and binary versions of the img					
-        if(dp.itsTrackingMode == TMKalmanFilter)
-          bwImg = maxRGB(*img2segment);
+  
+        if (framenum < itsAvgCache.size()) {
+          // we have cached this guy already
+        }
         else
-          bwImg = luminance(*img2segment);
-        
-        itsbwAvgCache.push_back(bwImg);
+          {
+            if (itsifs->frame() > itsFrameRange.getLast())
+              {
+                LERROR("Premature end of frame sequence - bailing out.");
+                break;
+              }
+            itsifs->updateNext();
+            Image< PixRGB<byte> > img = itsifs->readRGB();
+
+           // if there is no deviation do not add to the average cache
+           // TODO: put a check here for all white/black pixels
+           if (stdev(luminance(img)) == 0.f){
+             LINFO("No standard deviation in frame %d. Is this frame all black ? Not including this image in the average cache", itsifs->frame());
+             itsAvgCache.push_back(itsAvgCache.mean());
+           }
+           else
+             itsAvgCache.push_back(img);
+
+	LINFO("Caching frame %06d", framenum);
+        }
             
-        // create a binary image for the segmentation
+        itsbwAvgCache.push_back(*img2segment);
+
+	 // create a binary image for the segmentation
         Image<byte> bitImg;
+	const Image <PixRGB <byte> > background = itsAvgCache.mean();
 
         //  Run selected segmentation algorithm
-	  if (dp.itsSegmentAlgorithm == SABackgroundCanny)          
-            bitImg = itsSegmentation.runBackgroundCanny(itsbwAvgCache.clampedDiffMean(bwImg), segmentAlgorithmType(SABackgroundCanny));
-	  else if (dp.itsSegmentAlgorithm == SAHomomorphicCanny)
-            bitImg = itsSegmentation.runHomomorphicCanny(itsbwAvgCache.clampedDiffMean(bwImg),segmentAlgorithmType(SAHomomorphicCanny));
-	  else if (dp.itsSegmentAlgorithm == SAAdaptiveThreshold)
-            bitImg = itsSegmentation.runAdaptiveThreshold(itsbwAvgCache.clampedDiffMean(bwImg),segmentAlgorithmType(SAAdaptiveThreshold)); 
-	  else if (dp.itsSegmentAlgorithm == SAExtractForegroundBW)        
-            bitImg = itsSegmentation.runGraphCut(itsbwAvgCache.clampedDiffMean(bwImg), bwImg, segmentAlgorithmType(SAExtractForegroundBW)); 
-          else if (dp.itsSegmentAlgorithm == SABinaryAdaptive)       
-	    bitImg = itsSegmentation.runBinaryAdaptive(itsbwAvgCache.clampedDiffMean(bwImg), bwImg, dp.itsTrackingMode);
-          else 
-	    bitImg = itsSegmentation.runBinaryAdaptive(itsbwAvgCache.clampedDiffMean(bwImg), bwImg, dp.itsTrackingMode);
-        
-	//TODO: insert average cache size > 1 logis here 
-        //send byte image to UpdateEvents stage to start work
+        if (detectionParms.itsSegmentAlgorithm == SABackgroundCanny)
+            bitImg = segmentation.runBackgroundCanny(*img2segment, segmentAlgorithmType(SABackgroundCanny));
+        else if (detectionParms.itsSegmentAlgorithm == SAHomomorphicCanny)
+            bitImg = segmentation.runHomomorphicCanny(*img2segment, segmentAlgorithmType(SAHomomorphicCanny));
+        else if (detectionParms.itsSegmentAlgorithm == SAAdaptiveThreshold)
+            bitImg = segmentation.runAdaptiveThreshold(*img2segment, segmentAlgorithmType(SAAdaptiveThreshold));
+        else if (detectionParms.itsSegmentAlgorithm == SAExtractForegroundBW) {
+            bitImg = segmentation.runGraphCut(*img2segment, background, segmentAlgorithmType(SAExtractForegroundBW)); 
+	} 
+	else if (detectionParms.itsSegmentAlgorithm == SABinaryAdaptive) { 
+	if (detectionParms.itsSizeAvgCache > 1) {
+	  LDEBUG("####### DELEME PMBARIVISION ####");
+	  bitImg = segmentation.runBinaryAdaptive(itsbwAvgCache.clampedDiffMean(*img2segment),
+						  *img2segment, detectionParms.itsTrackingMode); 
+           }
+        else 
+	  bitImg = segmentation.runBinaryAdaptive(*img2segment,
+						  *img2segment, detectionParms.itsTrackingMode); 
+	} 
+	else {
+	  if (detectionParms.itsSizeAvgCache > 1)
+	    bitImg = segmentation.runBinaryAdaptive(itsbwAvgCache.clampedDiffMean(*img2segment), *img2segment,
+						    detectionParms.itsTrackingMode);
+	  else
+	    bitImg = segmentation.runBinaryAdaptive(*img2segment, *img2segment,
+						    detectionParms.itsTrackingMode);
+	}
+	//send byte image to UpdateEvents stage to start work
         sendByteImage(bitImg, framenum, Stages::UE_STAGE, MSG_DATAREADY, Stage::mastercomm());
           
         delete img2segment;	
@@ -127,3 +173,24 @@ void SegmentStage::runStage()
 void SegmentStage::shutdown()
 {
 }
+void SegmentStage::preload()
+{
+  Image< PixRGB<byte> > img;
+  DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
+ 
+  // pre-load a few frames to get a valid average
+  while(itsAvgCache.size() < dp.itsSizeAvgCache) {
+    if (itsifs->frame() >= itsFrameRange.getLast())
+      {
+        LERROR("Less input frames than necessary for sliding average - "
+               "using all the frames for caching.");
+        break;
+      }
+    itsifs->updateNext();
+    img = itsifs->readRGB();
+    itsAvgCache.push_back(img); 
+    LINFO("Caching frame %06d", itsifs->frame());
+  } 
+}
+
+

@@ -31,6 +31,7 @@
 #include "Stages/Stage.H"
 #include "Image/Image.H"
 #include "Image/ImageCache.H"
+#include "Media/FrameSeries.H"
 #include "DetectionAndTracking/Segmentation.H"
 #include "DetectionAndTracking/DetectionParameters.H"
 
@@ -41,8 +42,10 @@ class SegmentStage: public Stage
 public:		
 
   // !Constructor
-  SegmentStage(MPI_Comm mastercomm, const char *name);
-
+  SegmentStage(MPI_Comm mastercomm, const char *name,
+		       nub::soft_ref<InputFrameSeries> &ifs,
+                       const FrameRange framerange,
+                       const std::string& inputFileStem);
   // !Destructor
   virtual ~SegmentStage();
 	
@@ -51,9 +54,18 @@ public:
 
   // !custom shutdown. Sends MSG_EXIT to stages pending on this data
   virtual void shutdown();
+
+  // preloads images to get valid average
+  void preload();
+
 private:
   ImageCacheAvg< byte > itsbwAvgCache;
+  ImageCacheAvg< PixRGB<byte> > itsAvgCache;
   Segmentation itsSegmentation;
+  nub::soft_ref<InputFrameSeries> itsifs;
+  FrameRange itsFrameRange;
+  std::string itsInputFileStem;
+
 };
 
 #endif // !defined(SEGMENT_H)
