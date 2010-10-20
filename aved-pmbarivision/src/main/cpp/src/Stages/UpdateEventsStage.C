@@ -240,28 +240,30 @@ void UpdateEventsStage::updateEvents()
                 
     //pop off frames from oldest to newest    
     mbariImg = itsOutCache.front();
-    LINFO("Processing frame %d lastseed:%d", mbariImg.getFrameNum(), itsLastEventSeedFrameNum);
     
     if(itsOutCache.front().initialized()) {
-      //update FOE and event set if valid image
-      Vector2D curFOE = itsFOEEst.updateFOE(mbariImg);
-      
+      LINFO("Processing frame %d lastseed:%d", mbariImg.getFrameNum(), itsLastEventSeedFrameNum);
+
       Image<byte> bitImg = itsOutCache.front();
+   
+      //update FOE and event set if valid image
+      Vector2D curFOE = itsFOEEst.updateFOE(bitImg);
         
-      const Image<byte> se = twofiftyfives(3);
+      const Image<byte> se = twofiftyfives(2);
       bitImg = erodeImg(dilateImg(bitImg,se),se);
       
       // mask special area in the frame we don't care
       bitImg = maskArea(bitImg, &dp);        
           
-      //update the events using the eroded binary version  
+      //update the events using with the segmented binary image  
       itsEventSet.updateEvents(bitImg, curFOE, mbariImg.getFrameNum(), mbariImg.getMetaData());    
       
       //if at next frame number for event seed, initiate events using cached winners
       if (mbariImg.getFrameNum() == itsLastEventSeedFrameNum) {
         initiateEvents(mbariImg.getFrameNum(), bitImg);  
       }    
-      
+           
+      // last frame? -> close everyone
       if (mbariImg.getFrameNum() == itsFrameRange.getLast()) 
         itsEventSet.closeAll();
       
@@ -397,15 +399,15 @@ void UpdateEventsStage::initiateEvents(int frameNum, Image< byte > bitImg )
 	      
       // convert SalientWinner to WTAWinner object	    
       std::list<SalientWinner>::const_iterator i = winners->begin();
-      std::list<WTAwinner> wtawinner;
+      std::list<WTAwinner> wtawinners;
       while(i != winners->end()) {
-        wtawinner.push_back(WTAwinner(i->itsWinner, SimTime::ZERO(), i->itsWinnerSMV, false));
+        wtawinners.push_back(WTAwinner(i->itsWinner, SimTime::ZERO(), i->itsWinnerSMV, false));
         i++;
       }
       
       // extract salient BitObjects          
-      LINFO("Extracing salient BitObjects");
-      list<BitObject> sobjs = getSalientObjects(bitImg, wtawinner);      
+      LINFO("Extracting salient BitObjects for frame: %d number", frameNum);
+      list<BitObject> sobjs = getSalientObjects(bitImg, wtawinners);      
       
       // initiate events with these objects
       LINFO("Initiating events for frame %d number of objects found %d number winners: %d", frameNum, sobjs.size(),winners->size());
