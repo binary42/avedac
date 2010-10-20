@@ -137,7 +137,6 @@ void SegmentStage::runStage()
 	} 
 	else if (detectionParms.itsSegmentAlgorithm == SABinaryAdaptive) { 
 	if (detectionParms.itsSizeAvgCache > 1) {
-	  LDEBUG("####### DELEME PMBARIVISION ####");
 	  bitImg = segmentation.runBinaryAdaptive(itsbwAvgCache.clampedDiffMean(*img2segment),
 						  *img2segment, detectionParms.itsTrackingMode); 
            }
