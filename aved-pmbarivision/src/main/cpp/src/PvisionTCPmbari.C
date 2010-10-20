@@ -128,6 +128,19 @@ int main(const int argc, const char **argv)
   nub::ref<StdBrain> brain(new StdBrain(manager));
   manager.addSubComponent(brain);
 
+  manager.setOptionValString(&OPT_OriInteraction,"SubtractMean");
+  manager.setOptionValString(&OPT_OrientComputeType,"Steerable");
+  manager.setOptionValString(&OPT_VisualCortexType,"O:5IC");
+  manager.setOptionValString(&OPT_UseRandom,"false");
+  manager.setOptionValString(&OPT_ShapeEstimatorMode,"ConspicuityMap");
+  manager.setOptionValString(&OPT_ShapeEstimatorSmoothMethod,"None");
+  manager.setOptionValString(&OPT_SVdisplayFOA,"true");
+  manager.setOptionValString(&OPT_SVdisplayPatch,"false");
+  manager.setOptionValString(&OPT_SVdisplayFOALinks,"false");
+  manager.setOptionValString(&OPT_SVdisplayAdditive,"true");
+  manager.setOptionValString(&OPT_SVdisplayTime,"false");
+  manager.setOptionValString(&OPT_SVdisplayBoring,"false");
+
   // Parse command-line:
   if (manager.parseCommandLine(argc, argv, "", 0, 0) == false) return(1);
 
