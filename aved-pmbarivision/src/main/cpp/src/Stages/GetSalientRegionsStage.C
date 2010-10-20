@@ -81,7 +81,7 @@ GetSalientRegionsStage::GetSalientRegionsStage(MPI_Comm mastercomm, const char *
    itsBoringmv(boringmv),
    itsBoringDelay(boringDelay),
    itsWeights(wts),
-   itsTestGrayscale(false),
+   itsTestGrayscale(true),
    itsGrayscaleCompute(false),
    itsFastBeoSaliency(fastBeoSaliency)
 {
@@ -123,9 +123,9 @@ void GetSalientRegionsStage::runStage()
       if(framenum != -1) {
         MPE_Log_event(5,0,"");	 
         
-	if(itsTestGrayscale == false) {
+	if(itsTestGrayscale == true) {
 	  itsGrayscaleCompute = isGrayscale(*img);
-	  itsTestGrayscale = true;
+	  itsTestGrayscale = false;
 	}
 	
         if(itsFastBeoSaliency == true)
@@ -227,7 +227,7 @@ std::list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte
       LDEBUG("Orientation final range [%f .. %f]", mi, ma);    	
       ori *= itsWeights.chanOw;
       getMinMax(ori, mi, ma);
-      LDEBUG("Orientation final weighted range [%f .. %f]", mi, ma);
+      LDEBUG("Orientation final %f weighted range [%f .. %f]", itsWeights.chanOw, mi, ma);
     }
          
     // add in the r/g b/w color map computations if a color image
@@ -239,7 +239,7 @@ std::list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte
       LDEBUG("Color final range [%f .. %f]", mi, ma);    	
       color *= itsWeights.chanCw;
       getMinMax(color, mi, ma);
-      LDEBUG("Color final weighted range [%f .. %f]", mi, ma);
+      LDEBUG("Color final %f weighted range [%f .. %f]", itsWeights.chanCw, mi, ma);
     
     }
     
@@ -251,7 +251,7 @@ std::list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte
       LDEBUG("Intensity final range [%f .. %f]", mi, ma);
       intensity *= itsWeights.chanIw;
       getMinMax(intensity, mi, ma);
-      LDEBUG("Intensity final weighted range [%f .. %f]", mi, ma);            	
+      LDEBUG("Intensity final %f weighted range [%f .. %f]", itsWeights.chanIw, mi, ma);            	
    
     }
     // build our current saliency map
@@ -333,6 +333,9 @@ list<WTAwinner> GetSalientRegionsStage::getSalientWinnersMaxFast(int sml,
               numSpots, newwin.p.i, newwin.p.j, (newwin.sv/0.001), (maxval/0.001), newwin.t.msecs(),
               newwin.boring ? "[boring] ":"" );
         winners.push_back(newwin);	   
+      }
+      else {
+	LINFO("##### winner #%d invalid !! #####", numSpots);
       }
       
       numSpots++;
@@ -450,12 +453,15 @@ bool GetSalientRegionsStage::isGrayscale(const Image<PixRGB<T> >& src)
   typename Image< PixRGB<T> >::const_iterator aptr = src.begin();
   typename Image< PixRGB<T> >::const_iterator stop = src.end();
   
-  while ( (aptr != stop) && (aptr->red() == aptr->green() == aptr->blue())) 
-    ++aptr;
+  while ( (aptr != stop) ) {
+   int color = aptr->red();
+   if ( aptr->green() != color || aptr->blue() != color ) 
+	break;   
+   ++aptr;
+  }
 
   // reached the end, and all rgb channels were equal
-  if(aptr == stop)
-	return true;
+  if(aptr == stop) return true;
 
   return false;
 }
