@@ -127,7 +127,7 @@ AC_ARG_WITH([xercesc],
 # makefile variables
 if test -d "$with_xercesc" ; then
 
-   xercesc_incdir="$with_xercesc/src/xercesc"
+   xercesc_incdir="$with_xercesc/src"
    xercesc_libdir="$with_xercesc/lib"
 
    cppflags_save="$CPPFLAGS"

@@ -1,7 +1,7 @@
 ##### Mbarivision Makefile
-PREFIX      := /home/aved
-SALIENCYROOT := /root/aved/saliency
-XERCESCROOT  := /root/aved/Xerces-C_2_7_0
+PREFIX      := /home/shared/aved
+SALIENCYROOT := /usr/local/saliency
+XERCESCROOT  := /home/shared/Xerces-C_2_7_0
 SRCDIR      := src/
 OBJDIR	    := target/build/obj/
 BINDIR	    := target/build/bin/
