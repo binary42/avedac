@@ -574,7 +574,7 @@ void MbariResultViewer::saveVisualEventSummary(string versionString,
         ofs << "startXY" << "\t";
         ofs << "endXY" << "\t";
         ofs << "maxArea" << "\t";
-        ofs << "isInterestingFlag" << "\n";
+        ofs << "isInteresting" << "\n";
         appendEventSummary = true;
     } else //otherwise write to append events and skip header
         ofs.open(itsSaveSummaryEventsName.getVal().data(), std::ofstream::out | std::ofstream::app);
