@@ -188,7 +188,21 @@ extern "C" {
     // add a brain here so we can get the command options
     nub::ref<StdBrain> brain(new StdBrain(manager));
     manager.addSubComponent(brain); 
-    
+  
+    // initialize some defaults 
+    manager.setOptionValString(&OPT_OriInteraction,"SubtractMean"); 
+    manager.setOptionValString(&OPT_OrientComputeType,"Steerable");
+    manager.setOptionValString(&OPT_VisualCortexType,"O:5IC");
+    manager.setOptionValString(&OPT_UseRandom,"false");
+    manager.setOptionValString(&OPT_ShapeEstimatorMode,"ConspicuityMap");
+    manager.setOptionValString(&OPT_ShapeEstimatorSmoothMethod,"None");
+    manager.setOptionValString(&OPT_SVdisplayFOA, "true");
+    manager.setOptionValString(&OPT_SVdisplayPatch, "false");
+    manager.setOptionValString(&OPT_SVdisplayFOALinks, "false");
+    manager.setOptionValString(&OPT_SVdisplayAdditive, "true");
+    manager.setOptionValString(&OPT_SVdisplayTime, "false");
+    manager.setOptionValString(&OPT_SVdisplayBoring, "false");
+ 
     //create master Beowulf component
     nub::soft_ref<Beowulf> beowulf(new Beowulf(manager, "Beowulf", "Beowulf", true));
     beowulf->exportOptions(OPTEXP_ALL);
@@ -285,7 +299,10 @@ extern "C" {
                                             inputFileStem);
       break;
     case(Stages::SG_STAGE):
-      s = (Stage *)new SegmentStage(master, Stages::stageName(id));
+      s = (Stage *)new SegmentStage(master, Stages::stageName(id),
+					    ifs,
+                                            frameRange,
+                                            inputFileStem);
       break;		
     case(Stages::GSR_STAGE):	     
       s = (Stage *)new GetSalientRegionsStage(master, Stages::stageName(id), 
