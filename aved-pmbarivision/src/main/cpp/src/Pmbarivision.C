@@ -223,15 +223,33 @@ extern "C" {
     // get image dimensions and set a few parameters that depend on it
     detectionParmsModel->reset(&detectionParms);
     const Dims dims = ifs->peekDims();	
-    manager.setOptionValString(&OPT_InputFrameDims, convertToString(dims));
-    const int circleRadius = dims.w() / circleRadiusRatio;
+    manager.setOptionValString(&OPT_InputFrameDims, convertToString(dims)); 
     const int maxDist = dims.w() / maxDistRatio;
     const int foaSize = dims.w() / foaSizeRatio;
-    char str[256]; sprintf(str,"%d",foaSize);	
-    manager.setOptionValString(&OPT_FOAradius,str);
+    const int foveaSize = dims.w() / foaSizeRatio;
     const int minSize = foaSize;
     const int maxSize = minSize * maxSizeFactor;	
-	
+
+    int foaRadius;
+    const string foar = manager.getOptionValString(&OPT_FOAradius);
+    convertFromString(foar, foaRadius);
+
+    // A zero foa radius indicates to set defaults from input image dims
+    if (foaRadius == 0) {
+      char str[256]; sprintf(str,"%d",foaSize);
+      manager.setOptionValString(&OPT_FOAradius,str);
+    }
+
+    int foveaRadius;
+    const string fovear = manager.getOptionValString(&OPT_FoveaRadius);
+    convertFromString(fovear, foveaRadius);
+
+    // A zero fovea radius indicates to set defaults from input image dims
+    if (foveaRadius == 0) {
+      char str[256]; sprintf(str,"%d",foveaSize);
+      manager.setOptionValString(&OPT_FoveaRadius,str);
+    } 
+    
     // initialize derived detection parameters
     detectionParms.itsMaxDist = maxDist; //pixels
 

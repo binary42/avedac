@@ -32,13 +32,13 @@
 namespace PVersion
 {
   void printversion() {
-    fprintf(stderr, "%s v%s (C) 2003-2007 MBARI built %s at %s \n", PACKAGE, VERSION, __DATE__, __TIME__);
+    fprintf(stderr, "%s v%s (C) 2003-2010 MBARI built %s at %s \n", PACKAGE, VERSION, __DATE__, __TIME__);
   }
 
   std::string versionString() {
     std::stringbuf sb;
     std::ostream  os(&sb);  
-    os << PACKAGE  << " v" << VERSION  << " (C) 2003-2004 MBARI built " << __DATE__ << " at " << __TIME__  << "\n";
+    os << PACKAGE  << " v" << VERSION  << " (C) 2003-2010 MBARI built " << __DATE__ << " at " << __TIME__  << "\n";
     os.flush();  
     return sb.str();
   }
