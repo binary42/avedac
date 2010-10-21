@@ -56,6 +56,7 @@ UpdateEventsStage::UpdateEventsStage(MPI_Comm mastercomm, const char *name, \
                                      const std::string& inputFileStem, \
                                      const FrameRange &framerange)
   :Stage(mastercomm,name),
+   itsAvgCache(DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache),
    itsOutCache(DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache),
    itsEventSet(DetectionParametersSingleton::instance()->itsParameters,inputFileStem),
    itsInputFileStem(inputFileStem),
@@ -64,7 +65,8 @@ UpdateEventsStage::UpdateEventsStage(MPI_Comm mastercomm, const char *name, \
    itsFOEEst(20,0),
    itsLastEventSeedFrameNum(-1),
    itsifs(ifs),
-   itsrv(rv)
+   itsrv(rv),
+   itsGrayscale(false)
 {
   
 }
@@ -91,7 +93,9 @@ void UpdateEventsStage::initStage()
     rep->setFrameNumber(itsFrameRange.getFirst());
     tmpimg = rep->readRGB();
     mstart.updateData(tmpimg, itsFrameRange.getFirst());
-    
+
+    itsGrayscale = isGrayscale(tmpimg);
+
     rep->setFrameNumber(itsFrameRange.getLast());
     tmpimg = rep->readRGB();
     mend.updateData(tmpimg, itsFrameRange.getLast());
@@ -166,8 +170,7 @@ void UpdateEventsStage::runStage()
       case(Stage::MSG_DATAREADY):
         if(frameNum != -1)		{           
           MbariImage< PixRGB<byte> > mbariRGBImg(itsInputFileStem);
-          Image< PixRGB<byte> > rgbimg;           
-          MbariMetaData metadata;
+          Image< PixRGB<byte> > rgbimg;        
           MbariImage<byte> mbariBitImg(itsInputFileStem);
           MPE_Log_event(7,0,"");		          
           
@@ -192,6 +195,9 @@ void UpdateEventsStage::runStage()
             
             // store input RGB image in itsRGBOutCache to use for video overlay
             itsRGBOutCache.push_back(mbariRGBImg);
+
+            // store input RGB image ing itsAvgCache for use in color segmentation
+            itsAvgCache.push_back(mbariRGBImg);
             
             // store received segmented bit image from Stages::SG_STAGE in itsOutCache
             mbariBitImg.updateData(*img, frameNum);
@@ -244,32 +250,49 @@ void UpdateEventsStage::updateEvents()
     if(itsOutCache.front().initialized()) {
       LINFO("Processing frame %d lastseed:%d", mbariImg.getFrameNum(), itsLastEventSeedFrameNum);
 
-      Image<byte> bitImg = itsOutCache.front();
-   
-      //update FOE and event set if valid image
-      Vector2D curFOE = itsFOEEst.updateFOE(bitImg);
-        
-      const Image<byte> se = twofiftyfives(2);
-      bitImg = erodeImg(dilateImg(bitImg,se),se);
-      
-      // mask special area in the frame we don't care
-      bitImg = maskArea(bitImg, &dp);        
-          
-      //update the events using with the segmented binary image  
-      itsEventSet.updateEvents(bitImg, curFOE, mbariImg.getFrameNum(), mbariImg.getMetaData());    
-      
-      //if at next frame number for event seed, initiate events using cached winners
-      if (mbariImg.getFrameNum() == itsLastEventSeedFrameNum) {
-        initiateEvents(mbariImg.getFrameNum(), bitImg);  
-      }    
-           
-      // last frame? -> close everyone
-      if (mbariImg.getFrameNum() == itsFrameRange.getLast()) 
-        itsEventSet.closeAll();
-      
-      // weed out migit events (e.g. too few frames)        
-      itsEventSet.cleanUp(mbariImg.getFrameNum());					
-    }
+            Image<byte> bitImg = itsOutCache.front();
+            Image< PixRGB<byte> > colorBitImg;
+            Image< PixRGB<byte> > colorImg = itsRGBOutCache.front();
+
+            //TODO: Test this - this is untested code
+            // If we are averaging frames, subtract from the average of the background,
+            // for the color segmentation, otherwise, just use the input image
+            if (itsGrayscale == false) {
+                Segmentation segmentation;
+                
+                if (dp.itsSizeAvgCache > 1)
+                    colorBitImg = segmentation.test(itsAvgCache.clampedDiffMean(colorImg));
+                else
+                    colorBitImg = segmentation.test(colorImg);
+                
+                // mask special area in the frame we don't care 
+                colorBitImg = maskArea(colorBitImg, &dp);
+            }
+
+            //update FOE and event set if valid image
+            Vector2D curFOE = itsFOEEst.updateFOE(bitImg);
+
+            const Image<byte> se = twofiftyfives(2);
+            bitImg = erodeImg(dilateImg(bitImg, se), se);
+
+            // mask special area in the frame we don't care
+            bitImg = maskArea(bitImg, &dp);
+
+            //update the events using with the segmented binary image
+            itsEventSet.updateEvents(bitImg, curFOE, mbariImg.getFrameNum(), mbariImg.getMetaData());
+
+            //if at next frame number for event seed, initiate events using cached winners
+            if (mbariImg.getFrameNum() == itsLastEventSeedFrameNum) {
+                initiateEvents(mbariImg.getFrameNum(), bitImg, colorBitImg);
+            }
+
+            // last frame? -> close everyone
+            if (mbariImg.getFrameNum() == itsFrameRange.getLast())
+                itsEventSet.closeAll();
+
+            // weed out migit events (e.g. too few frames)
+            itsEventSet.cleanUp(mbariImg.getFrameNum());
+        }
     // are we loading the event structure from a file?
     const bool loadedEvents = itsrv->isLoadEventsNameSet();
     // are we loading the set of property vectors from a file?
@@ -279,7 +302,7 @@ void UpdateEventsStage::updateEvents()
     // initialize a few variables
     list<VisualEvent *> eventFrameList;
     list<VisualEvent *> eventListToSave; 
-    PropertyVectorSet pvs, pvsToSave;
+    PropertyVectorSet pvs;
     
     if(!loadedEvents) {           
       // get event frame list for this frame and those events that are ready to be saved
@@ -383,9 +406,8 @@ void UpdateEventsStage::updateEvents()
   }
 }
 
-void UpdateEventsStage::initiateEvents(int frameNum, Image< byte > bitImg )
-{  				 
-  DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
+void UpdateEventsStage::initiateEvents(int frameNum, Image< byte > bitImg, Image< PixRGB<byte> > colorBitImg )
+{  				  
   int index = frameNum - itsLastEventSeedFrameNum;
   
   if( !itsSalientFrameCache.empty() && index < itsSalientFrameCache.size()) {
@@ -404,10 +426,14 @@ void UpdateEventsStage::initiateEvents(int frameNum, Image< byte > bitImg )
         wtawinners.push_back(WTAwinner(i->itsWinner, SimTime::ZERO(), i->itsWinnerSMV, false));
         i++;
       }
-      
+
       // extract salient BitObjects          
-      LINFO("Extracting salient BitObjects for frame: %d number", frameNum);
-      list<BitObject> sobjs = getSalientObjects(bitImg, wtawinners);      
+      LINFO("Extracting salient BitObjects for frame: %d", frameNum);
+      list<BitObject> sobjs;
+      if (itsGrayscale == false)
+          sobjs = getSalientObjects(bitImg, colorBitImg, wtawinners);
+      else
+          sobjs = getSalientObjects(bitImg, wtawinners);
       
       // initiate events with these objects
       LINFO("Initiating events for frame %d number of objects found %d number winners: %d", frameNum, sobjs.size(),winners->size());

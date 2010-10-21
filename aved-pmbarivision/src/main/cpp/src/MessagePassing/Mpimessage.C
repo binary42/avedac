@@ -50,7 +50,6 @@ int sendRGBByteImage(const Image< PixRGB<byte> >& image, int framenum, int dest,
   int maxsize;
   int metaData[4];  
   int mpierr = MPI_SUCCESS;
-  int exit = 0;
   MPI_Status status;	
 
   maxsize = sizeof(sndPackBuf);  
@@ -83,7 +82,6 @@ int sendByteImage(const Image<byte>& image, int framenum, int dest, int tag, MPI
   int maxsize;
   int metaData[4];  
   int mpierr = MPI_SUCCESS;
-  int exit = 0;
   MPI_Status status;
 
   maxsize = sizeof(sndPackBuf);  
@@ -116,7 +114,6 @@ int sendVisualEventSet(MbariVisualEvent::VisualEventSet &set, int framenum, int 
   int maxsize;
   int metaData[4];  
   int mpierr;
-  int exit = 0;
   MPI_Status status;
 
   //initialize metadata
@@ -163,7 +160,6 @@ int sendList(list<T> &l, dataType type, int framenum, int dest, int tag, MPI_Com
   int maxsize;
   int metaData[4];  
   int mpierr;
-  int exit = 0;
   MPI_Status status;
   typename list<T>::iterator i;
 
@@ -206,8 +202,7 @@ int receiveData(void **data, dataType type, int source, int tag, MPI_Comm comm, 
   int packsize;
   int metaData[4];  
   int position = 0; 
-  int mpierr = 0;
-  int exit = 0;
+  int mpierr = 0; 
   MPI_Status masterstatus;
 
   packsize = sizeof(rcvPackBuf);

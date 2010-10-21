@@ -47,6 +47,7 @@
 #include "Image/Transforms.H"
 #include "Image/ImageSet.H"
 #include "Raster/RasterFileFormat.H"
+#include "DetectionAndTracking/MbariFunctions.H"
 #include "Image/colorDefs.H"
 #include "Stages/SalientWinner.H"
 #include "Utils/Const.H"
@@ -174,8 +175,7 @@ void GetSalientRegionsStage::shutdown()
 
 
 std::list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &img, int framenum)
-{
-  Point2D<int> winner(-1,-1);
+{ 
   std::list<WTAwinner> winners;   
   Image<float> cmap[NBCMAP];       // array of conspicuity maps
   int32 cmapframe[NBCMAP];         // array of cmap frame numbers  
@@ -443,29 +443,6 @@ void GetSalientRegionsStage::sendImage(const Image< PixRGB<byte> >& img, int fra
    smsg.addImage(b); smsg.addImage(y); itsBeo->send(smsg);
  }
 }
-
-// ######################################################################
-template <class T>
-bool GetSalientRegionsStage::isGrayscale(const Image<PixRGB<T> >& src)
-{
-  ASSERT(src.initialized());
-
-  typename Image< PixRGB<T> >::const_iterator aptr = src.begin();
-  typename Image< PixRGB<T> >::const_iterator stop = src.end();
-  
-  while ( (aptr != stop) ) {
-   int color = aptr->red();
-   if ( aptr->green() != color || aptr->blue() != color ) 
-	break;   
-   ++aptr;
-  }
-
-  // reached the end, and all rgb channels were equal
-  if(aptr == stop) return true;
-
-  return false;
-}
-
 // ######################################################################
 int GetSalientRegionsStage::receiveCMAPS(nub::soft_ref<Beowulf>& beo, Image<float> *cmap,
                                          int32 *cmapframe)

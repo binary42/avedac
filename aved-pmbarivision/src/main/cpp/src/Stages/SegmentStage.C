@@ -70,8 +70,7 @@ void SegmentStage::runStage()
   int flag = 1;
   MPI_Status status;	
   MPI_Request request;
-  Image< byte > *img2segment; 
-  BitObject obj;
+  Image< byte > *img2segment;  
   int framenum = -1;	
   DetectionParameters detectionParms = DetectionParametersSingleton::instance()->itsParameters;
   Segmentation segmentation;
@@ -136,7 +135,7 @@ void SegmentStage::runStage()
             bitImg = segmentation.runGraphCut(*img2segment, background, segmentAlgorithmType(SAExtractForegroundBW)); 
 	} 
 	else if (detectionParms.itsSegmentAlgorithm == SABinaryAdaptive) { 
-	if (detectionParms.itsSizeAvgCache > 1) {
+	if (detectionParms.itsSizeAvgCache > 1) { 
 	  bitImg = segmentation.runBinaryAdaptive(itsbwAvgCache.clampedDiffMean(*img2segment),
 						  *img2segment, detectionParms.itsTrackingMode); 
            }

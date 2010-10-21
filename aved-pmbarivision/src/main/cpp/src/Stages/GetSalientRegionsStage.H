@@ -69,15 +69,8 @@ public:
   virtual void shutdown();
 
 private:
-  
-  //! A method to test if an image is grayscale or not
-  //! returns true if grayscale, otherwise false
-  /* !@param src the image to test
-   */
-  template <class T>
-  bool isGrayscale(const Image<PixRGB<T> >& src);
-
-  //! A fast method to scan iteratively for winning locations
+ 
+   //! A fast method to scan iteratively for winning locations
   //! returns list of SalientWinners of the most salient points
   /*! @param sml pyramid level of the saliency map
    * @param boringmv saliency map level (in mV) below which attention shifts will be considered 'boring'

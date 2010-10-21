@@ -175,39 +175,45 @@ void CachePreprocessStage::runStage()
        	
       } //end while ( curFrame <=  itsFrameRange.getLast() )
   }// end do
-  while (!probeMasterForExit());	
-  
-  int flag =1;
-  //GSR, CP may be pending on message from CP stage; send EXIT message to interrupt 
-  MPI_Isend( &flag, 1, MPI_INT, Stages::SG_STAGE, Stage::MSG_EXIT, Stage::mastercomm(), &r );
-  MPI_Isend( &flag, 1, MPI_INT, Stages::GSR_STAGE, Stage::MSG_EXIT, Stage::mastercomm(), &r );
+    while (!probeMasterForExit());
+
+    int flag = 1;
+    //GSR, CP may be pending on message from CP stage; send EXIT message to interrupt
+    MPI_Isend(&flag, 1, MPI_INT, Stages::SG_STAGE, Stage::MSG_EXIT, Stage::mastercomm(), &r);
+    MPI_Isend(&flag, 1, MPI_INT, Stages::GSR_STAGE, Stage::MSG_EXIT, Stage::mastercomm(), &r);
 }
 
-void CachePreprocessStage::shutdown()
-{
+void CachePreprocessStage::shutdown() {
 }
 
-void CachePreprocessStage::preload()
-{	
-  MbariImage< PixRGB<byte> > mbariImg(itsInputFileStem);
-  Image< PixRGB<byte> > img;
-  DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
-  
-  // pre-load a few frames to get a valid average
-  while(itsAvgCache.size() < dp.itsSizeAvgCache) {
-    if (itsifs->frame() >= itsFrameRange.getLast())
-      {
-        LERROR("Less input frames than necessary for sliding average - "
-               "using all the frames for caching.");
-	break;
-      }			 
-    itsifs->updateNext();
-    img = itsifs->readRGB();
-    itsAvgCache.push_back(img);
-    mbariImg.updateData(img, itsifs->frame());
-    if(mbariImg.getMetaData().getTC().length() > 0) 
-      LINFO("Caching frame %06d timecode: %s", itsifs->frame(), mbariImg.getMetaData().getTC().c_str());
-    else
-      LINFO("Caching frame %06d", itsifs->frame());			
-  }  
+void CachePreprocessStage::preload() {
+    MbariImage< PixRGB<byte> > mbariImg(itsInputFileStem);
+    Image< PixRGB<byte> > img;
+    DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
+
+    // pre-load a few frames to get a valid average
+    while (itsAvgCache.size() < dp.itsSizeAvgCache) {
+        if (itsifs->frame() >= itsFrameRange.getLast()) {
+            LERROR("Less input frames than necessary for sliding average - "
+                    "using all the frames for caching.");
+            break;
+        }
+        itsifs->updateNext();
+        img = itsifs->readRGB();
+
+        // get the standard deviation in the input image
+        // if there is no deviation do not add to the average cache
+        // TODO: put a check here for all white/black pixels
+        if (stdev(luminance(img)) == 0.f) {
+            LINFO("No standard deviation in frame %d. Is this frame all black ? Not including this image in the average cache", itsifs->frame());
+            itsAvgCache.push_back(itsAvgCache.mean());
+        } else
+            itsAvgCache.push_back(img);
+
+        mbariImg.updateData(img, itsifs->frame());
+        if (mbariImg.getMetaData().getTC().length() > 0)
+            LINFO("Caching frame %06d timecode: %s", itsifs->frame(), mbariImg.getMetaData().getTC().c_str());
+        else
+            LINFO("Caching frame %06d", itsifs->frame());
+    }
 }

@@ -32,6 +32,7 @@
 #include "MessagePassing/Mpidef.H"
 #include "Stages/Stage.H"
 #include "DetectionAndTracking/MbariVisualEvent.H"
+#include "DetectionAndTracking/Segmentation.H"
 #include "Image/MbariImageCache.H"
 #include "Data/MbariMetaData.H"
 #include "Media/FrameSeries.H"
@@ -73,19 +74,21 @@ private:
   
   // !initiate events for frameNum. Uses itsSalientFrameCache and itsWinner cache
   // to seed events
-  void initiateEvents(int frameNum, Image< byte > bitImg );
+  void initiateEvents(int frameNum, Image< byte > bitImg, Image< PixRGB<byte> > colorBitImg );
 
   MbariVisualEvent::VisualEventSet itsEventSet;	
   MbariImageCache< byte > itsOutCache;	
   MbariImageCache< byte > itsSalientFrameCache;
-  MbariImageCache< PixRGB<byte> > itsRGBOutCache;  
+  MbariImageCache< PixRGB<byte> > itsRGBOutCache;
+  ImageCacheAvg< PixRGB<byte> > itsAvgCache;
   std::map<int, std::list<SalientWinner>* > itsWinners;    
   nub::soft_ref<InputFrameSeries> itsifs;
   nub::soft_ref<MbariResultViewer> itsrv;
   std::string itsInputFileStem;
   FrameRange itsFrameRange; 
   FOEestimator itsFOEEst;
-  int itsLastEventSeedFrameNum;
+  int itsLastEventSeedFrameNum; 
+  bool itsGrayscale; //! flag to indicate whether processing color or grayscale images
 };
 
 #endif // !defined(UPDATEEVENTS_H)
