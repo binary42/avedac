@@ -60,9 +60,17 @@ namespace nub {
 
 using namespace std;
 
+
 //! compute input filename for current frame
 std::string getInputFileName(const std::string& stem,
         const int framenumber);
+
+ //! A method to test if an image is grayscale
+ /*! or not by checking whether r = g = b for every pixel
+  * returns true if grayscale, otherwise false
+  * !@param src the image to test
+  */
+ bool isGrayscale(const Image<PixRGB<byte> >& src);
 
 //! extract a set of BitObjects from bitImg, which intersect region
 /*! bitImg is flooded starting from each point within region,

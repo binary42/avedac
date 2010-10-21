@@ -70,16 +70,17 @@ using namespace std;
 int main(const int argc, const char** argv) {
 
     // ######## Initialization of variables, reading of parameters etc.
-    // a few constants
     DetectionParameters detectionParms;
     MbariMetaData metadata;
     Segmentation segmentation;
+    int grayscale = false;
 
     const int maxSizeFactor = 200;
     const int maxDistRatio = 40;
     const int foaSizeRatio = 19;
     const int circleRadiusRatio = 40;
     const Image<byte> se = twofiftyfives(2);
+    
     //initialize a few things
     ModelManager manager("MBARI Automated Visual Event Detection Program");
 
@@ -223,12 +224,14 @@ int main(const int argc, const char** argv) {
         MbariImage< PixRGB<byte> > mend(manager.getOptionValString(&OPT_InputFrameSource).c_str());
 
         // get the starting and ending timecodes from the frames
+        // and check if the images are grayscale or color
         nub::ref<FrameIstream> rep = ifs->getFrameSource();
 
         rep->setFrameNumber(frameRange.getFirst());
         tmpimg = rep->readRGB();
         mstart.updateData(tmpimg, frameRange.getFirst());
 
+        grayscale = isGrayscale(tmpimg);
         rep->setFrameNumber(frameRange.getLast());
         tmpimg = rep->readRGB();
         mend.updateData(tmpimg, frameRange.getLast());
@@ -298,7 +301,17 @@ int main(const int argc, const char** argv) {
               
 		ifs->updateNext();	
                 img = ifs->readRGB();
-                avgCache.push_back(img);
+
+                // get the standard deviation in the input image
+                // if  there is no deviation do not add to the average cache
+                // TODO: put a check here for all white/black pixels
+                if (stdev(luminance(img)) == 0.f) {
+                    LINFO("No standard deviation in frame %d. Is this frame all black ? Not including this image in the average cache", ifs->frame());
+                    avgCache.push_back(avgCache.mean());
+                } else
+                    avgCache.push_back(img);
+
+                // Get the MBARI metadata from the frame if it exists
                 mbariImg.updateData(img, curFrame);
                 tc = mbariImg.getMetaData().getTC();
                 metadata = mbariImg.getMetaData();
@@ -345,7 +358,6 @@ int main(const int argc, const char** argv) {
 
             // create a binary image for the segmentation
             Image<byte> bitImg;
-            Image< PixRGB<byte> > colorBitImg;
             const Image <PixRGB <byte> > background = avgCache.mean();
 
             //  Run selected segmentation algorithm
@@ -377,12 +389,20 @@ int main(const int argc, const char** argv) {
                 bitImg = segmentation.runBinaryAdaptive(img2segment, img2segment,
                                                         detectionParms.itsTrackingMode);
             }
+            Image< PixRGB<byte> > colorBitImg;
+            
             // If we are averaging frames, subtract from the average of the background,
-            // otherwise, just use the input image
-            if (detectionParms.itsSizeAvgCache > 1)
-                colorBitImg = segmentation.test(avgCache.clampedDiffMean(img));
-            else
-                colorBitImg = segmentation.test(img);
+            // for the color segmentation, otherwise, just use the input image
+            if (grayscale == false) {
+                if (detectionParms.itsSizeAvgCache > 1)
+                    colorBitImg = segmentation.test(avgCache.clampedDiffMean(img));
+                else
+                    colorBitImg = segmentation.test(img);
+                
+                // mask special area in the frame we don't care
+                colorBitImg = maskArea(colorBitImg, &detectionParms); 
+                rv->output(colorBitImg, curFrame, "Segment_color_output");
+            }
 
             // update the focus of expansion
             Vector2D curFOE = foeEst.updateFOE(bitImg);
@@ -391,10 +411,8 @@ int main(const int argc, const char** argv) {
             bitImg = erodeImg(dilateImg(bitImg, se), se);
 
             // mask special area in the frame we don't care
-            bitImg = maskArea(bitImg, &detectionParms);
-            colorBitImg = maskArea(colorBitImg, &detectionParms);
+            bitImg = maskArea(bitImg, &detectionParms); 
 
-            rv->output(colorBitImg, curFrame, "Segment_color_output");
             rv->output(bitImg, curFrame, "Segment_output");
 
             // update the events with the segmented binary image
@@ -412,8 +430,12 @@ int main(const int argc, const char** argv) {
                 list<WTAwinner> winlist = getSalientWinners(simofs,
                         img2runsaliency, brain, seq, maxEvolveTime, maxNumSalSpots,
                         mbariImg.getFrameNum());
-
-                list<BitObject> sobjs = getSalientObjects(bitImg,colorBitImg, winlist);
+                
+                list<BitObject> sobjs;
+                if (grayscale)
+                    sobjs = getSalientObjects(bitImg, winlist);
+                else
+                    sobjs = getSalientObjects(bitImg, colorBitImg, winlist);
 
                 if (sobjs.size() > 0) rv->output(showAllObjects(sobjs), curFrame, "Salient_Objects");
 

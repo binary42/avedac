@@ -54,13 +54,32 @@
 #include "Util/Timer.H"
 #include "Util/Pause.H" 
 #include "rutz/shared_ptr.h"
-
 #include "Image/BitObject.H"
 #include "DetectionAndTracking/DetectionParameters.H"
-
-
+ 
 // ######################################################################
 template <class T> class MbariImage;
+
+bool isGrayscale(const Image<PixRGB<byte> >& src)
+{
+  ASSERT(src.initialized());
+
+  Image< PixRGB<byte> >::const_iterator aptr = src.begin();
+  Image< PixRGB<byte> >::const_iterator stop = src.end();
+
+  while ( (aptr != stop) ) {
+   int color = aptr->red();
+   if ( aptr->green() != color || aptr->blue() != color )
+	break;
+   ++aptr;
+  }
+
+  // reached the end, and all rgb channels were equal
+  if(aptr == stop) return true;
+
+  return false;
+}
+// ######################################################################
 std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
         const Point2D<int> seed,
         Rectangle region,
