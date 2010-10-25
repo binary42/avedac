@@ -105,7 +105,7 @@ public:
     //! Consructor
     DetectionParameters();
 
-    //! @param itsMaxEolveTime = maximum time to evolve the brain model for every frame
+    //! @param itsMaxEvolveTime = maximum time to evolve the brain model for every frame
     int itsMaxEvolveTime;
     //! @param itsMaxWTAPoints = maximum winner-take-all points to collect ifrom the brain model every frame
     int itsMaxWTAPoints;

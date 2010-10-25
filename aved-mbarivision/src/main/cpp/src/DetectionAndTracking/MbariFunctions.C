@@ -137,11 +137,11 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
 
             // if the object is in range, keep it
             if (obj.getArea() > minSize && obj.getArea() < maxSize) {
-                LINFO("found object size: %d", obj.getArea());
+                LDEBUG("found object size: %d", obj.getArea());
                 bos.push_back(obj);
             }
             else
-                LINFO("found object but out of range in size %d minsize: %d maxsize: %d ",\
+                LDEBUG("found object but out of range in size %d minsize: %d maxsize: %d ",\
 		 obj.getArea(), minSize, maxSize);
         }
     return bos;
@@ -353,7 +353,7 @@ list<WTAwinner> getSalientWinners(nub::ref<SimOutputFrameSeries> simofs,
         return winners;
 
     // initialize the max time to simulate
-    const SimTime simMaxEvolveTime = seq->now() + SimTime::MSECS(maxEvolveTime);
+    const SimTime simMaxEvolveTime = seq->now().msecs() + SimTime::MSECS(maxEvolveTime);
 
     rutz::shared_ptr<SimEventInputFrame>
             eif(new SimEventInputFrame(/* event source = */ NULL,
@@ -391,8 +391,8 @@ list<WTAwinner> getSalientWinners(nub::ref<SimOutputFrameSeries> simofs,
                 seq->post(e);
             }
 
-            if (seq->now() >= simMaxEvolveTime) {
-                LINFO("##### time limit reached time now:%f  max evolve time:%f#####", seq->now().secs(), simMaxEvolveTime.secs());
+            if (seq->now().msecs() >= simMaxEvolveTime.msecs()) {
+                LINFO("##### time limit reached time now:%f msecs max evolve time:%f msecs#####", seq->now().msecs(), simMaxEvolveTime.msecs());
                 rutz::shared_ptr<SimEventBreak>
                         e(new SimEventBreak(0, "##### time limit reached #####"));
                 seq->post(e);
