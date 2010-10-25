@@ -127,31 +127,43 @@ void GetSalientRegionsStage::runStage()
       exit = 1;
       break;									
     case(Stage::MSG_DATAREADY):
+        
       // get saliency winners and send list of winners to the Stages::UE_STAGE
       if(framenum != -1) {
         MPE_Log_event(5,0,"");	 
-        
+
+        // test for grayscale or color image. this is later used to
+        // remove the r/g b/w color map computations for speedup
 	if(itsTestGrayscale == true) {
 	  itsGrayscaleCompute = isGrayscale(*img);
 	  itsTestGrayscale = false;
 	}
-        
+
+        // send the image to the beowulf worker nodes
         sendImage(*img, framenum);
-	
+
+        // get the winners back
         std::list<WTAwinner> winners = getWinners(*img, framenum);
-		
+	std::list<SalientWinner> salwinners;
+
+        // initialize salwinners list for sending through mpi message to US_STAGE
         if(winners.size() > 0) {
-          // initialize salwinners list for sending through mpi message to US_STAGE
-          std::list<SalientWinner> salwinners;		
           std::list<WTAwinner>::iterator i;
           
           for (i = winners.begin(); i != winners.end(); ++i)
-            salwinners.push_back(SalientWinner(i->p, i->sv)); 
-          
+            salwinners.push_back(SalientWinner(i->p, i->sv));
+
+
           // send winner list to Stages::UE_STAGE
           sendSalientWinnerList(salwinners, framenum, Stages::UE_STAGE, MSG_DATAREADY, Stage::mastercomm());
           salwinners.clear();
-        }        	                        
+        }
+        else
+        {
+          // send empty winner list to Stages::UE_STAGE
+          sendSalientWinnerList(salwinners, -1, Stages::UE_STAGE, MSG_DATAREADY, Stage::mastercomm());
+        }
+         
         delete img;	
 	winners.clear();
 	MPE_Log_event(6,0,"");	

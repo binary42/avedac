@@ -127,7 +127,7 @@ void UpdateEventsStage::runStage()
   do {
 
     if(probeMasterForExit())
-        break;
+        exit=1;
     
     status.MPI_SOURCE= -1; 
     status.MPI_TAG = -1;  
@@ -154,7 +154,15 @@ void UpdateEventsStage::runStage()
           
           updateEvents();
           
-        }//end if frameNum != -1          
+        }//end if frameNum != -1
+        else {
+            // skip to the next seed number
+            DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
+
+            itsLastEventSeedFrameNum += dp.itsSaliencyFrameDist;
+
+            updateEvents();
+        }
       }//end status.MPI_TAG      
     }//end if status.MPI_SOURCE==GSR_STAGE
     
@@ -184,7 +192,8 @@ void UpdateEventsStage::runStage()
           
           // if send a frame number within range
           if(frameNum <= itsFrameRange.getLast()) {
-            
+
+    LDEBUG("####0");
             // store rgb image in cache; sometimes this fails due to NFS error so retry a few times
             int ntrys=0;
             do{ 
@@ -234,17 +243,22 @@ void UpdateEventsStage::runStage()
 
 void UpdateEventsStage::updateEvents()
 {
+  // If a valid seed frame not yet initialized
   if(itsLastEventSeedFrameNum < 0) return;
   
   DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
-  
-  //only process numFrameDist past last seeded frame  
   int numFrameDist = dp.itsSaliencyFrameDist;  
+  if(!itsOutCache.empty())
+      LDEBUG("####1  outcacheframenum%d lasteventseed%d numframedist%d", itsOutCache.front().getFrameNum(), itsLastEventSeedFrameNum, numFrameDist  );
   MbariImage< byte > mbariImg(itsInputFileStem.c_str());
   MbariImage< PixRGB<byte> > mbariRGBImg(itsInputFileStem.c_str());
-  
-  while(!itsOutCache.empty() && !itsRGBOutCache.empty() && (itsOutCache.front().getFrameNum() < (itsLastEventSeedFrameNum + numFrameDist))) {
-  	
+
+  // keep updating events as long as within the range of seeded frames
+  while(!itsOutCache.empty() && !itsRGBOutCache.empty() && 
+          ( (itsOutCache.front().getFrameNum() < (itsLastEventSeedFrameNum + numFrameDist)) ||
+            (itsOutCache.front().getFrameNum() == itsFrameRange.getLast())) ) {
+
+    LDEBUG("####2");
     // update the MbariResultsViewer one frame - this assumes we are receiving sequential frames to process
     itsrv->updateNext();
                 
@@ -381,20 +395,22 @@ void UpdateEventsStage::updateEvents()
                 itsrv->saveSingleEventFrame(itsRGBOutCache.front(),itsRGBOutCache.front().getFrameNum(), event);              
             }
         }// end of saving enumerated list of events  
-	
+
+        LINFO("########## %d  ##### %d", mbariImg.getFrameNum(), itsFrameRange.getLast());
+
         // if last frame, send exit signal to controller
-        if(itsOutCache.front().getFrameNum() == itsFrameRange.getLast())  { 
+        if(mbariImg.getFrameNum() == itsFrameRange.getLast()) {
           int flag = 1;
           LINFO("SHUTDOWN %s sending message MASTER_SHUTDOWN to Controller", Stage::name());
           MPI_Send( &flag, 1, MPI_INT, Stages::CONTROLLER, MASTER_SHUTDOWN, Stage::mastercomm());
-        }              	       
+        }
         // clean up Caches and vector sets
         if(!itsOutCache.empty())
           itsOutCache.pop_front();
         if(!itsRGBOutCache.empty())
           itsRGBOutCache.pop_front();           
       }// end if need frames
-    
+
     if(!loadedEvents)      {
       // flag events that have been saved for delete otherwise takes too much memory
       list<VisualEvent *>::iterator i;
