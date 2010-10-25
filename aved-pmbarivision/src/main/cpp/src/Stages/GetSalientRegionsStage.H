@@ -34,6 +34,7 @@
 #include "Image/Point2D.H"
 #include "Beowulf/Beowulf.H"
 #include "Neuro/StdBrain.H"
+#include "Neuro/WinnerTakeAllStdMbari.H"
 #include "Image/fancynorm.H"
 #include "Image/Geometry2D.H"
 #include "DetectionAndTracking/MbariFunctions.H"
@@ -49,6 +50,8 @@ public:
   GetSalientRegionsStage(MPI_Comm mastercomm, const char *name, \
 			 const int argc, const char **argv,
 			 nub::soft_ref<Beowulf> &beo,
+			 nub::soft_ref<WinnerTakeAll> &wta,
+		         nub::soft_ref<SimEventQueue> &seq,			 
                          const LevelSpec &levelSpec,
                          const float boringmv,
                          const SimTime &boringDelay,
@@ -70,6 +73,22 @@ public:
 
 private:
  
+  //! A method to scan iteratively for winning locations
+  //! returns list of SalientWinners of the most salient points
+  /*! @param sml pyramid level of the saliency map
+   * @param boringmv saliency map level (in mV) below which attention shifts will be considered 'boring'
+   * @param boringdelay attention shifts that come after an interval longer than this will be considered 'boring'
+   * @param sm the float scaled down saliency map  to scan for winners
+   * @param color intensity map
+   @param color conspicuity map  	
+   @param orientation conspicuity map  	 */
+  std::list<WTAwinner> getSalientWinnersNew(const Image< PixRGB<byte> > &img, 
+					    int framenum,
+					    int sml,
+					    Image<float> &sm,
+					    Image<float> &intensity,
+					    Image<float> &color,
+					    Image<float> &orientation);
    //! A fast method to scan iteratively for winning locations
   //! returns list of SalientWinners of the most salient points
   /*! @param sml pyramid level of the saliency map
@@ -79,7 +98,7 @@ private:
    * @param color intensity map
    @param color conspicuity map  	
    @param orientation conspicuity map  	 */
-  list<WTAwinner> getSalientWinnersMaxFast(int sml,
+  std::list<WTAwinner> getSalientWinnersMaxFast(int sml,
 					   Image<float> &sm,
 					   Image<float> &intensity,
 					   Image<float> &color,
@@ -97,6 +116,8 @@ private:
   void sendImage(const Image< PixRGB<byte> >& img, int framenum);
   
   nub::soft_ref<Beowulf> itsBeo; 
+  nub::soft_ref<WinnerTakeAll> itsWta;
+  nub::soft_ref<SimEventQueue> itsSeq;
   bool itsFastBeoSaliency;
   const char **itsArgv;
   const int itsArgc;

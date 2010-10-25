@@ -34,10 +34,13 @@
 #include "MessagePassing/Mpidef.H"
 #include "Channels/ChannelOpts.H"
 #include "Component/GlobalOpts.H"
+#include "Component/JobServerConfigurator.H"
 #include "Neuro/NeuroOpts.H"
 #include "Neuro/VisualCortex.H"
 #include "Neuro/VisualCortexWeights.H"
+#include "Neuro/WinnerTakeAllConfigurator.H"
 #include "Component/ModelManager.H"
+#include "Neuro/WinnerTakeAllStdMbari.H"
 #include "Data/MbariOpts.H"
 #include "Stages/SegmentStage.H"
 #include "Stages/GetSalientRegionsStage.H"
@@ -161,7 +164,14 @@ extern "C" {
     LINFO("Creating stage:%s id: %d", Stages::stageName(id), id);
 
     DetectionParameters detectionParms;
-    
+    nub::soft_ref<WinnerTakeAllConfigurator>  wtac(new WinnerTakeAllConfigurator(manager));
+    manager.addSubComponent(wtac);
+    nub::soft_ref<JobServerConfigurator>
+            jsc(new JobServerConfigurator(manager));
+    manager.addSubComponent(jsc);
+    nub::soft_ref<SimEventQueueConfigurator>
+            seqc(new SimEventQueueConfigurator(manager));
+    manager.addSubComponent(seqc);
     nub::soft_ref<InputFrameSeries> ifs(new InputFrameSeries(manager));
     manager.addSubComponent(ifs);			
     nub::soft_ref<OutputFrameSeries> ofs(new OutputFrameSeries(manager));
@@ -175,7 +185,7 @@ extern "C" {
    
     nub::soft_ref<MbariResultViewer> rv(new MbariResultViewer(manager, evtofs, ofs, exe.substr(0,found)));
     manager.addSubComponent(rv);
-
+    
     nub::soft_ref<DetectionParametersModelComponent> detectionParmsModel(new DetectionParametersModelComponent(manager));
     manager.addSubComponent(detectionParmsModel);
 
@@ -186,7 +196,7 @@ extern "C" {
     REQUEST_OPTIONALIAS_NEURO(manager);
  
     // add a brain here so we can get the command options
-    nub::ref<StdBrain> brain(new StdBrain(manager));
+    nub::soft_ref<StdBrain> brain(new StdBrain(manager));
     manager.addSubComponent(brain); 
   
     // initialize some defaults 
@@ -206,7 +216,10 @@ extern "C" {
     //create master Beowulf component
     nub::soft_ref<Beowulf> beowulf(new Beowulf(manager, "Beowulf", "Beowulf", true));
     beowulf->exportOptions(OPTEXP_ALL);
- 
+
+    // get reference to the SimEventQueue
+    nub::soft_ref<SimEventQueue> seq = seqc->getQ();
+
     // parse the command line
     if(manager.parseCommandLine(argc, argv, "", 0, -1) == false) 
  	LFATAL("Invalid command line argument. Aborting program now !");
@@ -215,11 +228,6 @@ extern "C" {
     FrameRange fr = ifs->getModelParamVal<FrameRange>("InputFrameRange");
     ofs->setModelParamVal(string("OutputFrameRange"), fr);
  
-    // remove the brain - we don't use a brain here, but we needed to add it 
-    // as a simple way to advertise the command options that are then passed to
-    // getSalientWinners() where the StdBrain is actually created and used
-    manager.removeSubComponent(*brain);        
-   
     // get image dimensions and set a few parameters that depend on it
     detectionParmsModel->reset(&detectionParms);
     const Dims dims = ifs->peekDims();	
@@ -272,7 +280,13 @@ extern "C" {
   
     // start all our ModelComponent instances  
     manager.start();
+    
+    //nub::soft_ref<WinnerTakeAllStdMbari> wta(new WinnerTakeAllStdMbari(manager));
+    //manager.addSubComponent(wta);
      
+ 
+    nub::soft_ref<WinnerTakeAll> wta = wtac->getWTA();
+
     // initialize detection parameters
     DetectionParametersSingleton::initialize(detectionParms);
 
@@ -326,6 +340,8 @@ extern "C" {
       s = (Stage *)new GetSalientRegionsStage(master, Stages::stageName(id), 
                                               argc, argv,
                                               beowulf,
+					      wta,
+					      seq,
 					      levelSpec,
                                               boringmv,
                                               boringDelay,

@@ -129,32 +129,7 @@ void SegmentStage::runStage()
 	//send byte image to UpdateEvents stage to start work
         sendByteImage(bitImg, framenum, Stages::UE_STAGE, MSG_DATAREADY, Stage::mastercomm());
           
-        delete img2segment;
-
-         if (framenum < itsAvgCache.size()) {
-          // we have cached this guy already
-        }
-        else
-          {
-            if (itsifs->frame() >= itsFrameRange.getLast())
-              {
-                LERROR("Premature end of frame sequence - bailing out.");
-                break;
-              }
-            itsifs->updateNext();
-            Image< PixRGB<byte> > img = itsifs->readRGB();
-
-           // if there is no deviation do not add to the average cache
-           // TODO: put a check here for all white/black pixels
-           if (stdev(luminance(img)) == 0.f){
-             LINFO("No standard deviation in frame %d. Is this frame all black ? Not including this image in the average cache", itsifs->frame());
-             itsAvgCache.push_back(itsAvgCache.mean());
-           }
-           else
-             itsAvgCache.push_back(img);
-
-	LINFO("Caching frame %06d", framenum);
-        }
+        delete img2segment;	
         MPE_Log_event(4,0,"");        
       } 
       break;
