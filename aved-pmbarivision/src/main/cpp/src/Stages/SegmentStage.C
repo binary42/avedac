@@ -58,11 +58,12 @@ SegmentStage::SegmentStage(MPI_Comm mastercomm, const char *name,
    itsAvgCache(ImageCacheAvg< PixRGB<byte> > (DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache)),
    itsInputFileStem(inputFileStem)
 {	
-			
+    preload();
 }
 
 SegmentStage::~SegmentStage()
 {
+   
 }
 void SegmentStage::runStage()
 {	
@@ -70,17 +71,17 @@ void SegmentStage::runStage()
   int flag = 1;
   MPI_Status status;	
   MPI_Request request;
-  Image< byte > *img2segment;  
+  Image< byte > *img;
+  Image< byte > img2segment;
+
   int framenum = -1;	
   DetectionParameters detectionParms = DetectionParametersSingleton::instance()->itsParameters;
   Segmentation segmentation;
 	
   LINFO("Running stage %s", Stage::name()); 
-   
-  preload();
 	
   do {   
-    framenum = receiveData((void**)&img2segment, BYTEIMAGE, Stages::CP_STAGE, MPI_ANY_TAG, Stage::mastercomm(), &status, &request);
+    framenum = receiveData((void**)&img, RGBBYTEIMAGE, Stages::CP_STAGE, MPI_ANY_TAG, Stage::mastercomm(), &status, &request);
     Stages::stageID id = static_cast<Stages::stageID>(status.MPI_SOURCE);				
     LDEBUG("%s received frame: %d MSG_DATAREADY from: %s", Stage::name(), framenum, Stages::stageName(Stages::CP_STAGE));
             
@@ -91,9 +92,20 @@ void SegmentStage::runStage()
       break;									
     case(Stage::MSG_DATAREADY):
       MPE_Log_event(3,0,"");
-      if(framenum != -1)  {
-              
-        itsbwAvgCache.push_back(*img2segment);
+
+      if(framenum != -1)  { 
+          	// Create the binary image to segment
+ 	if (detectionParms.itsSegmentAlgorithmInputType == SAIMaxRGB) {
+          img2segment = maxRGB(itsAvgCache.absDiffMean(*img));
+	}
+        else if (detectionParms.itsSegmentAlgorithmInputType == SAILuminance) {
+	  img2segment = luminance(*img);
+	}
+        else {
+          img2segment = maxRGB(itsAvgCache.absDiffMean(*img));
+	}
+
+        itsbwAvgCache.push_back(img2segment);
 
 	 // create a binary image for the segmentation
         Image<byte> bitImg;
@@ -101,35 +113,35 @@ void SegmentStage::runStage()
 
         //  Run selected segmentation algorithm
         if (detectionParms.itsSegmentAlgorithm == SABackgroundCanny)
-            bitImg = segmentation.runBackgroundCanny(*img2segment, segmentAlgorithmType(SABackgroundCanny));
+            bitImg = segmentation.runBackgroundCanny(img2segment, segmentAlgorithmType(SABackgroundCanny));
         else if (detectionParms.itsSegmentAlgorithm == SAHomomorphicCanny)
-            bitImg = segmentation.runHomomorphicCanny(*img2segment, segmentAlgorithmType(SAHomomorphicCanny));
+            bitImg = segmentation.runHomomorphicCanny(img2segment, segmentAlgorithmType(SAHomomorphicCanny));
         else if (detectionParms.itsSegmentAlgorithm == SAAdaptiveThreshold)
-            bitImg = segmentation.runAdaptiveThreshold(*img2segment, segmentAlgorithmType(SAAdaptiveThreshold));
+            bitImg = segmentation.runAdaptiveThreshold(img2segment, segmentAlgorithmType(SAAdaptiveThreshold));
         else if (detectionParms.itsSegmentAlgorithm == SAExtractForegroundBW) {
-            bitImg = segmentation.runGraphCut(*img2segment, background, segmentAlgorithmType(SAExtractForegroundBW)); 
+            bitImg = segmentation.runGraphCut(img2segment, background, segmentAlgorithmType(SAExtractForegroundBW));
 	} 
 	else if (detectionParms.itsSegmentAlgorithm == SABinaryAdaptive) { 
 	if (detectionParms.itsSizeAvgCache > 1) { 
-	  bitImg = segmentation.runBinaryAdaptive(itsbwAvgCache.clampedDiffMean(*img2segment),
-						  *img2segment, detectionParms.itsTrackingMode); 
+	  bitImg = segmentation.runBinaryAdaptive(itsbwAvgCache.clampedDiffMean(img2segment),
+						  img2segment, detectionParms.itsTrackingMode);
            }
         else 
-	  bitImg = segmentation.runBinaryAdaptive(*img2segment,
-						  *img2segment, detectionParms.itsTrackingMode); 
+	  bitImg = segmentation.runBinaryAdaptive(img2segment,
+						  img2segment, detectionParms.itsTrackingMode);
 	} 
 	else {
 	  if (detectionParms.itsSizeAvgCache > 1)
-	    bitImg = segmentation.runBinaryAdaptive(itsbwAvgCache.clampedDiffMean(*img2segment), *img2segment,
+	    bitImg = segmentation.runBinaryAdaptive(itsbwAvgCache.clampedDiffMean(img2segment), img2segment,
 						    detectionParms.itsTrackingMode);
 	  else
-	    bitImg = segmentation.runBinaryAdaptive(*img2segment, *img2segment,
+	    bitImg = segmentation.runBinaryAdaptive(img2segment, img2segment,
 						    detectionParms.itsTrackingMode);
 	}
 	//send byte image to UpdateEvents stage to start work
         sendByteImage(bitImg, framenum, Stages::UE_STAGE, MSG_DATAREADY, Stage::mastercomm());
           
-        delete img2segment;	
+        delete img;	
         MPE_Log_event(4,0,"");        
       } 
       break;

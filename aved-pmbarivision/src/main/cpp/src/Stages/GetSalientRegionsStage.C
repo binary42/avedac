@@ -78,8 +78,7 @@ GetSalientRegionsStage::GetSalientRegionsStage(MPI_Comm mastercomm, const char *
                                                const float boringmv,
                                                const SimTime &boringDelay,
                                                const MaxNormType &maxNormType,
-                                               const VisualCortexWeights &wts,
-                                               bool &fastBeoSaliency)
+                                               const VisualCortexWeights &wts)
   :Stage(mastercomm,name),
    itsArgc(argc),
    itsArgv(argv),
@@ -92,8 +91,7 @@ GetSalientRegionsStage::GetSalientRegionsStage(MPI_Comm mastercomm, const char *
    itsBoringDelay(boringDelay),
    itsWeights(wts),
    itsTestGrayscale(true),
-   itsGrayscaleCompute(false),
-   itsFastBeoSaliency(fastBeoSaliency)
+   itsGrayscaleCompute(false)
 {
  
 }
@@ -103,7 +101,7 @@ GetSalientRegionsStage::~GetSalientRegionsStage()
 
 void GetSalientRegionsStage::initStage()
 {
-  if(itsFastBeoSaliency == true && !itsBeo->started())
+  if(!itsBeo->started())
     itsBeo->start();     
 }
 
@@ -137,9 +135,8 @@ void GetSalientRegionsStage::runStage()
 	  itsGrayscaleCompute = isGrayscale(*img);
 	  itsTestGrayscale = false;
 	}
-	
-        if(itsFastBeoSaliency == true)
-          sendImage(*img, framenum);
+        
+        sendImage(*img, framenum);
 	
         std::list<WTAwinner> winners = getWinners(*img, framenum);
 		
@@ -178,7 +175,7 @@ void GetSalientRegionsStage::shutdown()
   //Stages::UE_STAGE may be pending on message from GSR stage; send EXIT message to interrupt 
   MPI_Isend( &flag, 1, MPI_INT, Stages::UE_STAGE, Stage::MSG_EXIT, Stage::mastercomm(), &request );	      
 
-  if(itsFastBeoSaliency == true && itsBeo->started())
+  if(itsBeo->started())
     itsBeo->stop();
 }
 
@@ -327,9 +324,7 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
   int numcmaps = NBCMAP;	
   Timer masterclock;                // master clock for simulations
   masterclock.reset();
-  float mi,ma;
-
-  if(itsFastBeoSaliency == true) {
+  float mi,ma;  
   
      // remove the r/g b/w color map computations if gray scale image
     if (itsGrayscaleCompute == true)
@@ -420,7 +415,7 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
       LINFO("ERROR: SENDING FRAMES TOO FAST framenum: %d minframe:%d", framenum, minframe);
     
     winners = getSalientWinnersNew(img, framenum, sml, sm, intensity,color,ori);
-  }
+  
   return winners;
 }
 

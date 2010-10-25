@@ -155,11 +155,7 @@ extern "C" {
     // turn down log messages until after initialzation
     MYLOGVERB = LOG_NOTICE;
 
-    Stage *s = 0;
-    // by default we only use the fast beo version, but for comparing
-    // the results of the fast and slow beo, we can change this to false which will use the slower
-    // saliency computation.     
-    bool fastBeoSaliency = true;
+    Stage *s = 0; 
 
     LINFO("Creating stage:%s id: %d", Stages::stageName(id), id);
 
@@ -280,10 +276,6 @@ extern "C" {
   
     // start all our ModelComponent instances  
     manager.start();
-    
-    //nub::soft_ref<WinnerTakeAllStdMbari> wta(new WinnerTakeAllStdMbari(manager));
-    //manager.addSubComponent(wta);
-     
  
     nub::soft_ref<WinnerTakeAll> wta = wtac->getWTA();
 
@@ -326,7 +318,7 @@ extern "C" {
     switch(id)	{
     case(Stages::CP_STAGE):            
       s = (Stage *)new CachePreprocessStage(master, Stages::stageName(id), 
-                                            ifs,  
+                                            ifs,
                                             frameRange,
                                             inputFileStem);
       break;
@@ -336,7 +328,7 @@ extern "C" {
                                             frameRange,
                                             inputFileStem);
       break;		
-    case(Stages::GSR_STAGE):	     
+    case(Stages::GSR_STAGE):
       s = (Stage *)new GetSalientRegionsStage(master, Stages::stageName(id), 
                                               argc, argv,
                                               beowulf,
@@ -346,8 +338,7 @@ extern "C" {
                                               boringmv,
                                               boringDelay,
                                               normType,
-                                              wts,
-                                              fastBeoSaliency);
+                                              wts);
       break;
     case(Stages::UE_STAGE):    
       s = (Stage *)new UpdateEventsStage(master, Stages::stageName(id), 

@@ -56,8 +56,7 @@ public:
                          const float boringmv,
                          const SimTime &boringDelay,
                          const MaxNormType &maxNormType,
-                         const VisualCortexWeights &wts,
-			 bool &fastBeoSaliency);
+                         const VisualCortexWeights &wts);
 
   // !destructor
   virtual ~GetSalientRegionsStage();
@@ -118,7 +117,6 @@ private:
   nub::soft_ref<Beowulf> itsBeo; 
   nub::soft_ref<WinnerTakeAll> itsWta;
   nub::soft_ref<SimEventQueue> itsSeq;
-  bool itsFastBeoSaliency;
   const char **itsArgv;
   const int itsArgc;
   LevelSpec itsLevelSpec;
