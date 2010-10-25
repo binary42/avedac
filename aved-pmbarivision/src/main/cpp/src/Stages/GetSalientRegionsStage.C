@@ -216,20 +216,20 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinnersNew(const Image< P
   }
 
   // initialize the max time to simulate
-  const SimTime simMaxEvolveTime = itsSeq->now() + SimTime::MSECS(p.itsMaxEvolveTime);
+  const SimTime simMaxEvolveTime = itsSeq->now().msecs() + SimTime::MSECS(p.itsMaxEvolveTime);
   
   rutz::shared_ptr<SimEventAttentionGuidanceMapOutput>
     agm(new SimEventAttentionGuidanceMapOutput(NULL, sm));
     itsSeq->post(agm); 
   
   while (status == SIM_CONTINUE) {
+
+    LINFO("######Evolve time now: %f msecs max evolve time: %f msecs", itsSeq->now().msecs(), simMaxEvolveTime.msecs());
  
-     itsWta->evolve(*itsSeq); 
+    itsWta->evolve(*itsSeq); 
  
     // switch to next time step:
     status = itsSeq->evolve();
-    
-    LINFO("######Evolve time now: %f secs", itsSeq->now().secs());
     
     if (SeC<SimEventWTAwinner> e = itsSeq->check<SimEventWTAwinner > (0)) {
       WTAwinner newwin = e->winner();
@@ -298,19 +298,20 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinnersNew(const Image< P
     else {
     LINFO("######No winner found time now %f", itsSeq->now().secs());
     }
-      if (numSpots >= p.itsMaxWTAPoints) {
-          LINFO("#### found maximum number of saliency spots %d", p.itsMaxWTAPoints);
+
+    if (numSpots >= p.itsMaxWTAPoints) {
+        LINFO("#### found maximum number of saliency spots %d", p.itsMaxWTAPoints);
 	rutz::shared_ptr<SimEventBreak>
 	  e(new SimEventBreak(0, "##### found maximum number of salient spots #####"));
 	itsSeq->post(e);
-      }
+    }
 
-      if (itsSeq->now().msecs() >= simMaxEvolveTime.msecs()) {
-	LINFO("##### time limit reached time now:%f sec  max evolve time:%f sec #####", itsSeq->now().secs(), simMaxEvolveTime.secs());
+    if (itsSeq->now().msecs() >= simMaxEvolveTime.msecs()) {
+	LINFO("##### time limit reached time now:%f msecs max evolve time:%f msecs #####", itsSeq->now().msecs(), simMaxEvolveTime.msecs());
 	rutz::shared_ptr<SimEventBreak>
 	  e(new SimEventBreak(0, "##### time limit reached #####"));
 	itsSeq->post(e);
-      } 
+    } 
   }
 
   // print final memory allocation stats
