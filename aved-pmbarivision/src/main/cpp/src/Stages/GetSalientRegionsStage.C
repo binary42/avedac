@@ -217,7 +217,7 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinnersNew(const Image< P
     // switch to next time step:
     status = itsSeq->evolve();
     
-    LINFO("######Evolve time now: %f secs", status, itsSeq->now().secs());
+    LINFO("######Evolve time now: %f secs", itsSeq->now().secs());
     
     if (SeC<SimEventWTAwinner> e = itsSeq->check<SimEventWTAwinner > (0)) {
       WTAwinner newwin = e->winner();

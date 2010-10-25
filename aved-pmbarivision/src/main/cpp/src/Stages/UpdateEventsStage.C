@@ -125,6 +125,10 @@ void UpdateEventsStage::runStage()
   LINFO( "Running stage %s", Stage::name());
   
   do {
+
+    if(probeMasterForExit())
+        break;
+    
     status.MPI_SOURCE= -1; 
     status.MPI_TAG = -1;  
     
@@ -379,10 +383,9 @@ void UpdateEventsStage::updateEvents()
         }// end of saving enumerated list of events  
 	
         // if last frame, send exit signal to controller
-        if(itsOutCache.front().getFrameNum() == itsFrameRange.getLast())  {
-          MPI_Request request;	
+        if(itsOutCache.front().getFrameNum() == itsFrameRange.getLast())  { 
           int flag = 1;
-          LINFO("%s sending message MSG_EXIT to Controller", Stage::name());
+          LINFO("SHUTDOWN %s sending message MASTER_SHUTDOWN to Controller", Stage::name());
           MPI_Send( &flag, 1, MPI_INT, Stages::CONTROLLER, MASTER_SHUTDOWN, Stage::mastercomm());
         }              	       
         // clean up Caches and vector sets

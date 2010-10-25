@@ -82,8 +82,6 @@ void CachePreprocessStage::runStage()
 
     while ( curFrame <=  itsFrameRange.getLast() )
       {
-        if(probeMasterForExit()) break;
-        
         MPE_Log_event(1,0,"");
         
         cacheFrameNum = curFrame - itsFrameRange.getFirst();
@@ -96,7 +94,7 @@ void CachePreprocessStage::runStage()
         else
           {	
             if (itsifs->frame() >= itsFrameRange.getLast()) {
-	      LERROR("Less input frames than necessary for sliding average - "
+	        LERROR("Less input frames than necessary for sliding average - "
 		     "using all the frames for caching.");
 		break;
 	    }	

@@ -85,7 +85,7 @@ void Controller::run()
     if(MPI_Iprobe( Stages::UE_STAGE, MASTER_SHUTDOWN, mastercomm, &exitflags, &s) == MPI_SUCCESS) {
       if(s.MPI_SOURCE == Stages::UE_STAGE && s.MPI_TAG == MASTER_SHUTDOWN &&
          MPI_Recv(&exitflags, 1, MPI_INT, Stages::UE_STAGE, MASTER_SHUTDOWN, mastercomm, &s) == MPI_SUCCESS){    
-        LDEBUG("Received MSG_EXIT from  %s stage", stageName(Stages::UE_STAGE));  
+        LDEBUG("Received MASTER_SHUTDOWN from  %s stage", stageName(Stages::UE_STAGE));
         break;
       }
     }
