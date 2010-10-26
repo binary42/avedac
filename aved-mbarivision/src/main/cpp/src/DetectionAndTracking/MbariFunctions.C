@@ -353,7 +353,7 @@ list<WTAwinner> getSalientWinners(nub::ref<SimOutputFrameSeries> simofs,
         return winners;
 
     // initialize the max time to simulate
-    const SimTime simMaxEvolveTime = seq->now().msecs() + SimTime::MSECS(maxEvolveTime);
+    const SimTime simMaxEvolveTime = seq->now() + SimTime::MSECS(maxEvolveTime);
 
     rutz::shared_ptr<SimEventInputFrame>
             eif(new SimEventInputFrame(/* event source = */ NULL,
