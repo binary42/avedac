@@ -128,7 +128,6 @@ int main(const int argc, const char** argv) {
     // Initialize brain defaults
     manager.setOptionValString(&OPT_OriInteraction,"SubtractMean"); 
     manager.setOptionValString(&OPT_OrientComputeType,"Steerable");
-    manager.setOptionValString(&OPT_VisualCortexType,"O:5IC");
     manager.setOptionValString(&OPT_UseRandom,"false");
     manager.setOptionValString(&OPT_ShapeEstimatorMode,"ConspicuityMap");
     manager.setOptionValString(&OPT_ShapeEstimatorSmoothMethod,"None");
