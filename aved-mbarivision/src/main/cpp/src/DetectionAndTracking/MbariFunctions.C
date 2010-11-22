@@ -192,7 +192,7 @@ std::list<BitObject> extractBitObjects(const Image<byte>& bImg,
 std::list<BitObject> getSalientObjects(const Image< byte >& bitImg,
         const Image< PixRGB<byte> >& colorbitImg, const list<WTAwinner> &winners) {
     // this should be 2^(smlev - 1)
-    const int rectRad = 20; //8;
+    const int rectRad = 8;
     DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
     std::list<WTAwinner>::const_iterator iter = winners.begin();
     std::list<BitObject> bos;
@@ -269,7 +269,7 @@ std::list<BitObject> getSalientObjects(const Image< byte >& bitImg,
 
 std::list<BitObject> getSalientObjects(const Image<byte>& bitImg, const list<WTAwinner> &winners) {
     // this should be 2^(smlev - 1)
-    const int rectRad = 20; //8;
+    const int rectRad = 8;
     DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
     std::list<WTAwinner>::const_iterator iter = winners.begin();
     std::list<BitObject> bos;
@@ -340,7 +340,9 @@ list<WTAwinner> getSalientWinners(nub::ref<SimOutputFrameSeries> simofs,
         nub::ref<SimEventQueue> seq,
         float maxEvolveTime,
         int maxNumSalSpots,
-        int framenum) {
+        int framenum,
+        float scaleW,
+        float scaleH) {
     std::list<WTAwinner> winners;
     int numSpots = 0;
     SimStatus status = SIM_CONTINUE;
@@ -351,6 +353,9 @@ list<WTAwinner> getSalientWinners(nub::ref<SimOutputFrameSeries> simofs,
     // will have no saliency so return empty winners
     if (stdev(luminance(img)) == 0.f)
         return winners;
+
+    // reset the brain
+    brain->reset(MC_RECURSE);
 
     // initialize the max time to simulate
     const SimTime simMaxEvolveTime = seq->now() + SimTime::MSECS(maxEvolveTime);
@@ -372,6 +377,8 @@ list<WTAwinner> getSalientWinners(nub::ref<SimOutputFrameSeries> simofs,
 
         if (SeC<SimEventWTAwinner> e = seq->check<SimEventWTAwinner > (0)) {
             WTAwinner win = e->winner();
+	    win.p.i = (int) ( (float) win.p.i*scaleW);
+	    win.p.j = (int) ( (float) win.p.j*scaleH); 
             LINFO("##### winner #%d found at [%d; %d] with %f voltage frame: %d#####",
                     numSpots, win.p.i, win.p.j, win.sv, framenum);
 
