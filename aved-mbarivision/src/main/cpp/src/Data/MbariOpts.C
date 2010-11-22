@@ -365,6 +365,10 @@ const ModelOptionDef OPT_MDPsaveNonInterestingEvents =
   { MODOPT_FLAG, "OPT_MDPsaveNonInterestingEvents", &MOC_MBARI, OPTEXP_MRV,
     "Save non-interesting events. Default is to remove non-interesting events, set to true to save",
     "mbari-save-non-interesting-events", '\1', "", "false" };
+const ModelOptionDef OPT_MDPsaveOriginalFrameSpec =
+  { MODOPT_FLAG, "OPT_MDPsaveOriginalFrameSpec", &MOC_MBARI, OPTEXP_MRV,
+    "Save events in original frame size specs. This does nothing if the frames are not resized with the --rescale-input option. Default is set to false",
+    "mbari-save-original-frame-spec", '\0', "", "false" };
 // ####################
 
 // #################### Version options:
