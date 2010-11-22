@@ -96,6 +96,9 @@ parameters*/
 // or events that don't last longer than the
 // minimum event frames (see DEFAULT_MIN_EVENT_FRAMES)
 #define DEFAULT_SAVE_NON_INTERESTING false
+// Default way to handle saving events in the original
+// frame size specification
+#define DEFAULT_SAVE_ORG_FRAME_SPEC false
 
 // ######################################################################
 //! Class that contains event detection parameters used to filter and track events 
@@ -111,6 +114,8 @@ public:
     int itsMaxWTAPoints;
     //! @param  itsSaveNonInteresting = true if want to keep non-interesting events 
     bool itsSaveNonInteresting;
+    //! @param  itsSaveOriginalFrameSpec = true if want to save events in original frame size
+    bool itsSaveOriginalFrameSpec;;
     //! @param mode = tracking mode used to find event
     TrackingMode itsTrackingMode;
     //! @param itsMaxDist = maximum distance in pixels predicted centroid must be within
@@ -212,6 +217,7 @@ private:
     OModelParam<int> itsSaliencyFrameDist; 
     OModelParam<bool> itsKeepWTABoring;
     OModelParam<bool> itsSaveNonInteresting;
+    OModelParam<bool> itsSaveOriginalFrameSpec;;
 };
 
 #endif

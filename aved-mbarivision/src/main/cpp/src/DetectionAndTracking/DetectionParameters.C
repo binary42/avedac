@@ -48,6 +48,7 @@ DetectionParameters::DetectionParameters()
 : itsMaxEvolveTime(DEFAULT_MAX_EVOLVE_TIME),
 itsMaxWTAPoints(DEFAULT_MAX_WTA_POINTS),
 itsSaveNonInteresting(DEFAULT_SAVE_NON_INTERESTING),
+itsSaveOriginalFrameSpec(DEFAULT_SAVE_ORG_FRAME_SPEC),
 itsTrackingMode(DEFAULT_TRACKING_MODE),
 itsMaxDist(40),
 itsMaxEventFrames(DEFAULT_MAX_EVENT_FRAMES),
@@ -90,6 +91,7 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     os << "\tmaxevolvetime(msecs):" << itsMaxEvolveTime;
     os << "\tmaxwtapoints:" << itsMaxWTAPoints;
     os << "\tsavenoninteresting:" << itsSaveNonInteresting;
+    os << "\tsaveoriginalframespec:" << itsSaveOriginalFrameSpec;
 
     if (itsMaskPath.length() > 0) {
         os << "\tmaskpath:" << itsMaskPath;
@@ -118,6 +120,7 @@ DetectionParameters &DetectionParameters::operator=(const DetectionParameters& p
     this->itsSaliencyFrameDist = p.itsSaliencyFrameDist;
     this->itsKeepWTABoring = p.itsKeepWTABoring;
     this->itsSaveNonInteresting = p.itsSaveNonInteresting;
+    this->itsSaveOriginalFrameSpec = p.itsSaveOriginalFrameSpec;
     this->itsMaskPath = p.itsMaskPath;
     this->itsMaskXPosition = p.itsMaskXPosition;
     this->itsMaskYPosition = p.itsMaskYPosition;
@@ -194,7 +197,8 @@ itsMinEventFrames(&OPT_MDPminEventFrames, this),
 itsMaxEventFrames(&OPT_MDPmaxEventFrames, this),
 itsSaliencyFrameDist(&OPT_MDPsaliencyFrameDist, this),
 itsKeepWTABoring(&OPT_MDPkeepBoringWTAPoints, this),
-itsSaveNonInteresting(&OPT_MDPsaveNonInterestingEvents, this){
+itsSaveNonInteresting(&OPT_MDPsaveNonInterestingEvents, this),
+itsSaveOriginalFrameSpec(&OPT_MDPsaveOriginalFrameSpec, this){
 };
 // ######################################################################
 
@@ -247,4 +251,5 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
 
     p->itsKeepWTABoring = itsKeepWTABoring.getVal();
     p->itsSaveNonInteresting = itsSaveNonInteresting.getVal();
+    p->itsSaveOriginalFrameSpec = itsSaveOriginalFrameSpec.getVal();
 }
