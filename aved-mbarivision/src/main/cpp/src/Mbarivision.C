@@ -34,6 +34,7 @@
 #include "Image/Kernels.H"      // for twofiftyfives()
 #include "Image/ColorOps.H"
 #include "Image/MorphOps.H"
+#include "Image/ShapeOps.H"   // for rescale()
 #include "Raster/GenericFrame.H"
 #include "Media/FrameRange.H"
 #include "Media/FrameSeries.H"
@@ -149,17 +150,36 @@ int main(const int argc, const char** argv) {
 
     // unset the rescaling in the event output frame series in case it is set
     evtofs->setModelParamVal(string("OutputFrameDims"), Dims(0,0));
-
+    
     // get image dimensions and set a few paremeters that depend on it
     detectionParmsModel->reset(&detectionParms);
-    const Dims dims = ifs->peekDims();
+ 
+    // get a reference to our original frame source
+    const nub::ref<FrameIstream> ref = ifs->getFrameSource();
+
+    // get the dimensions of the input frames
+    Dims dims = ifs->peekDims();
+    float scaleW = 1.0f;
+    float scaleH = 1.0f;
+    
+    // if the user has selected to retain the original dimensions in the events
+    // get the scaling factors, and unset the resizing in the input frame series
+    if (detectionParms.itsSaveOriginalFrameSpec) { 
+      const Dims origDims = ref->peekDims();
+      scaleW = (float) origDims.w() / (float) dims.w();
+      scaleH = (float) origDims.h() / (float) dims.h();
+      ifs->setModelParamVal(string("InputFrameDims"), Dims(0,0), MC_RECURSE);
+      ifs->peekDims();
+    }
+
+    // calculate the foa size and default min/max event size based on the image size
     const int circleRadius = dims.w() / circleRadiusRatio;
     const int maxDist = dims.w() / maxDistRatio;
     const int foaSize = dims.w() / foaSizeRatio;
     char str[256];
     sprintf(str, "%d", foaSize);
     manager.setOptionValString(&OPT_FOAradius, str);
-    const int minSize = foaSize;
+    const int minSize = (int) (foaSize*scaleW);
     const int maxSize = minSize * maxSizeFactor;
 
     // initialize derived detection parameters
@@ -173,7 +193,7 @@ int main(const int argc, const char** argv) {
     if (detectionParms.itsMaxEventArea == DEFAULT_MAX_EVENT_AREA)
         detectionParms.itsMaxEventArea = maxSize; //sq pizels
 
-    // calculate cost parameter from other parameters
+    // calculate cost parameter from other derived values
     float maxDistFloat = (float) maxDist;
     float maxAreaDiff = pow((double) maxDistFloat, 2) / (double) 4.0;
     detectionParms.itsMaxCost = (float) maxDist / 2 * maxAreaDiff;
@@ -234,7 +254,8 @@ int main(const int argc, const char** argv) {
         rep->setFrameNumber(frameRange.getLast());
         tmpimg = rep->readRGB();
         mend.updateData(tmpimg, frameRange.getLast());
-        // Creat the XML document with header information
+
+        // create the XML document with header information
         rv->createXMLDocument(Version::versionString(),
                 frameRange,
                 mstart.getMetaData().getTC(),
@@ -332,18 +353,19 @@ int main(const int argc, const char** argv) {
 	    }
 	    // Get the saliency input image
             if ( detectionParms.itsSaliencyInputType == SIDiffMean) {
-            	if (detectionParms.itsSizeAvgCache > 1)
-                  img2runsaliency = avgCache.clampedDiffMean(img);
+            	if (detectionParms.itsSizeAvgCache > 1) {
+                     img2runsaliency = maxRGB(rescale(avgCache.clampedDiffMean(img), dims));
+		  }
 		else
 		  LFATAL("ERROR - must specify an imaging cache size "
                           "to use the DiffMean option. Try setting the"
                           "--mbari-cache-size option to something > 1");
 	    }
             else if (detectionParms.itsSaliencyInputType == SIRaw) {
-                 img2runsaliency = img;
+                 img2runsaliency = maxRGB(rescale(img, dims));
             }
             else {
-	         img2runsaliency = avgCache.clampedDiffMean(img);
+	         img2runsaliency = maxRGB(rescale(avgCache.clampedDiffMean(img), dims));
 	    }
 
         } // end if needFrames
@@ -428,7 +450,7 @@ int main(const int argc, const char** argv) {
                 const uint maxNumSalSpots = detectionParms.itsMaxWTAPoints;
                 list<WTAwinner> winlist = getSalientWinners(simofs,
                         img2runsaliency, brain, seq, maxEvolveTime, maxNumSalSpots,
-                        mbariImg.getFrameNum());
+                        mbariImg.getFrameNum(), scaleW, scaleH);
                 
                 list<BitObject> sobjs;
                 if (grayscale)
@@ -495,12 +517,12 @@ int main(const int argc, const char** argv) {
             eventFrameList = eventSet.getEventsForFrame(mbariImg.getFrameNum());
 
             // write out eventSet to XML?
-            if (rv->isSaveXMLEventsNameSet())
+            if (rv->isSaveXMLEventsNameSet()) {
                 rv->saveVisualEventSetToXML(eventFrameList,
                     mbariImg.getFrameNum(),
                     mbariImg.getMetaData().getTC(),
                     frameRange);
-
+	    }
 
             rv->outputResultFrame(mbariImg,
                     eventSet,
