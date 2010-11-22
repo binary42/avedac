@@ -279,6 +279,12 @@ void MbariXMLParser::addDetectionParameters(DetectionParameters params) {
   XMLString::release(&savenoninteresting);
   XMLString::release(&savenoninterestingxmlstring);
 
+  XMLCh* saveoriginalframespec = XMLString::transcode("SaveOriginalFrameSpec");
+  XMLCh* saveoriginalframespecxmlstring =  XMLString::transcode(params.itsSaveOriginalFrameSpec ? "1" :"0");
+  eventsroot->setAttribute(saveoriginalframespec,saveoriginalframespecxmlstring);
+  XMLString::release(&saveoriginalframespec);
+  XMLString::release(&saveoriginalframespecxmlstring);
+  
   XMLCh* keepWTAboring = XMLString::transcode("KeepWTABoring");
   XMLCh* keepWTAboringxmlstring =  XMLString::transcode(params.itsKeepWTABoring ? "1" :"0");
   eventsroot->setAttribute(keepWTAboring,keepWTAboringxmlstring);
