@@ -41,7 +41,7 @@
                 For system-wide use change this to e.g. /usr/local and rerun
                 maven install (or the make install from cmd-line) as an
                 administrative user with e.g. the sudo command.-->
-                <installPath>/home/aved</installPath>
+                <installPath>/usr/local/aved</installPath>
 
                 <!-- The path to the Apache Xerces code  -->
                 <xercesRoot>${env.XERCESC_ROOT}</xercesRoot>
@@ -95,7 +95,7 @@
                 For system-wide use change this to e.g. /usr/local and rerun
                 maven install (or the make install from cmd-line) as an
                 administrative user with e.g. the sudo command.-->
-                <installPath>${env.HOME}/aved</installPath>
+                <installPath>/usr/local/aved</installPath>
 
                 <!-- The path to the Apache Xerces code  -->
                 <xercesRoot>${env.XERCESC_ROOT}</xercesRoot>

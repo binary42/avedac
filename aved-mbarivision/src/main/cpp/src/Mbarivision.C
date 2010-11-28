@@ -130,7 +130,6 @@ int main(const int argc, const char** argv) {
     manager.setOptionValString(&OPT_OriInteraction,"SubtractMean"); 
     manager.setOptionValString(&OPT_OrientComputeType,"Steerable");
     manager.setOptionValString(&OPT_UseRandom,"false");
-    manager.setOptionValString(&OPT_ShapeEstimatorMode,"ConspicuityMap");
     manager.setOptionValString(&OPT_ShapeEstimatorSmoothMethod,"None");
     manager.setOptionValString(&OPT_SVdisplayFOA, "true");
     manager.setOptionValString(&OPT_SVdisplayPatch, "false");
@@ -312,6 +311,7 @@ int main(const int argc, const char** argv) {
                 LINFO("Processing frame %06d from cache.", curFrame);
                 img = avgCache[cacheFrameNum];
                 mbariImg = outCache[cacheFrameNum];
+                metadata = mbariImg.getMetaData();
             } else {
                 // This means we are out of input
                 if (ifs->frame() > frameRange.getLast()) {
@@ -354,7 +354,7 @@ int main(const int argc, const char** argv) {
 	    // Get the saliency input image
             if ( detectionParms.itsSaliencyInputType == SIDiffMean) {
             	if (detectionParms.itsSizeAvgCache > 1) {
-                     img2runsaliency = maxRGB(rescale(avgCache.clampedDiffMean(img), dims));
+                     img2runsaliency = rescale(avgCache.clampedDiffMean(img), dims);
 		  }
 		else
 		  LFATAL("ERROR - must specify an imaging cache size "
@@ -362,10 +362,10 @@ int main(const int argc, const char** argv) {
                           "--mbari-cache-size option to something > 1");
 	    }
             else if (detectionParms.itsSaliencyInputType == SIRaw) {
-                 img2runsaliency = maxRGB(rescale(img, dims));
+                 img2runsaliency = rescale(img, dims);
             }
             else {
-	         img2runsaliency = maxRGB(rescale(avgCache.clampedDiffMean(img), dims));
+	         img2runsaliency = rescale(avgCache.clampedDiffMean(img), dims);
 	    }
 
         } // end if needFrames

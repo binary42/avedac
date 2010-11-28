@@ -51,7 +51,7 @@
                             <workingDirectory>${basedir}/src/main/cpp</workingDirectory>
                             <executable>${basedir}/src/main/scripts/execute</executable>
                             <arguments>
-                                <cmdlineArguments>make -f Makefile</cmdlineArguments>
+                                <cmdlineArguments>make -j3 -f Makefile</cmdlineArguments>
                             </arguments>
                         </configuration>
                     </execution>
