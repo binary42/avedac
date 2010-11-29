@@ -230,7 +230,6 @@ extern "C" {
     manager.setOptionValString(&OPT_InputFrameDims, convertToString(dims)); 
     const int maxDist = dims.w() / maxDistRatio;
     const int foaSize = dims.w() / foaSizeRatio;
-    const int foveaSize = dims.w() / foaSizeRatio;
     const int minSize = foaSize;
     const int maxSize = minSize * maxSizeFactor;	
 
@@ -243,16 +242,6 @@ extern "C" {
       char str[256]; sprintf(str,"%d",foaSize);
       manager.setOptionValString(&OPT_FOAradius,str);
     }
-
-    int foveaRadius;
-    const string fovear = manager.getOptionValString(&OPT_FoveaRadius);
-    convertFromString(fovear, foveaRadius);
-
-    // A zero fovea radius indicates to set defaults from input image dims
-    if (foveaRadius == 0) {
-      char str[256]; sprintf(str,"%d",foveaSize);
-      manager.setOptionValString(&OPT_FoveaRadius,str);
-    } 
     
     // initialize derived detection parameters
     detectionParms.itsMaxDist = maxDist; //pixels
