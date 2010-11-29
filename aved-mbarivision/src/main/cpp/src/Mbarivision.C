@@ -175,11 +175,18 @@ int main(const int argc, const char** argv) {
     const int circleRadius = dims.w() / circleRadiusRatio;
     const int maxDist = dims.w() / maxDistRatio;
     const int foaSize = dims.w() / foaSizeRatio;
-    char str[256];
-    sprintf(str, "%d", foaSize);
-    manager.setOptionValString(&OPT_FOAradius, str);
     const int minSize = (int) (foaSize*scaleW);
     const int maxSize = minSize * maxSizeFactor;
+
+    int foaRadius;
+    const string foar = manager.getOptionValString(&OPT_FOAradius);
+    convertFromString(foar, foaRadius);
+
+    // A zero foa radius indicates to set defaults from input image dims
+    if (foaRadius == 0) {
+      char str[256]; sprintf(str,"%d",foaSize);
+      manager.setOptionValString(&OPT_FOAradius,str);
+    }
 
     // initialize derived detection parameters
     detectionParms.itsMaxDist = maxDist; //pixels 
