@@ -85,7 +85,7 @@ const ModelOptionDef OPT_MDPMosaicBenthicStills =
     "--mbari-segment-algorithm-input-image=MaxRGB "
     "--mbari-saliency-input-image=Raw --mbari-cache-size=2 "
     "--mbari-max-WTA-points=15 --mbari-max-evolve-msec=15000 "
-    "--vc-type=OIC --use-random=false --test-mode=true "
+    "--vc-type=OIC --use-random=false  "
     "--oricomp-type=Steerable "
     "--mbari-cache-size=2 --use-random=false --use-older-version=false "
     "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst "  };
@@ -96,7 +96,7 @@ const ModelOptionDef OPT_MDPBenthicVideo =
     "mbari-benthic-video", '\0',"",
     "--mbari-saliency-dist=5 --mbari-tracking-mode=NearestNeighbor "
     "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=MaxRGB "
-    "--vc-type=O:5IC --use-random=false --test-mode=true "
+    "--vc-type=O:5IC --use-random=false  "
     "--ori-interaction=None --oricomp-type=Steerable "
     "--mbari-cache-size=15 --use-random=false --use-older-version=false "
     "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst "  };
@@ -108,7 +108,7 @@ const ModelOptionDef OPT_MDPMidwaterVideo =
     "mbari-midwater-video", '\0',"",
     "--mbari-saliency-dist=5 --mbari-tracking-mode=KalmanFilter "
     "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=MaxRGB "
-    "--vc-type=O:5IC --use-random=false --test-mode=true "
+    "--vc-type=O:5IC --use-random=false  "
     "--mbari-cache-size=10 --use-random=false --use-older-version=false "
     "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst  "  };
 
