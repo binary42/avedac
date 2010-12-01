@@ -92,15 +92,15 @@ int main(const int argc, const char** argv) {
             jsc(new JobServerConfigurator(manager));
     manager.addSubComponent(jsc);
 
-    nub::ref<SimEventQueueConfigurator>
+    nub::soft_ref<SimEventQueueConfigurator>
             seqc(new SimEventQueueConfigurator(manager));
     manager.addSubComponent(seqc);
 
-    nub::soft_ref<SimOutputFrameSeries> simofs(new SimOutputFrameSeries(manager));
-    manager.addSubComponent(simofs);
-
     nub::soft_ref<InputFrameSeries> ifs(new InputFrameSeries(manager));
     manager.addSubComponent(ifs);
+
+    nub::soft_ref<SimOutputFrameSeries> simofs(new SimOutputFrameSeries(manager));
+    manager.addSubComponent(simofs);
 
     nub::soft_ref<OutputFrameSeries> ofs(new OutputFrameSeries(manager));
     manager.addSubComponent(ofs);
@@ -108,7 +108,7 @@ int main(const int argc, const char** argv) {
     nub::soft_ref<OutputFrameSeries> evtofs(new OutputFrameSeries(manager));
     manager.addSubComponent(evtofs);
 
-    // Get the binary directory of this executable
+    // Get the directory of this executable
     string exe(argv[0]);
     size_t found = exe.find_last_of("/\\");
     nub::soft_ref<MbariResultViewer> rv(new MbariResultViewer(manager, evtofs, ofs, exe.substr(0,found)));
@@ -117,7 +117,7 @@ int main(const int argc, const char** argv) {
     nub::soft_ref<DetectionParametersModelComponent> detectionParmsModel(new DetectionParametersModelComponent(manager));
     manager.addSubComponent(detectionParmsModel);
 
-    nub::ref<StdBrain> brain(new StdBrain(manager));
+    nub::soft_ref<StdBrain> brain(new StdBrain(manager));
     manager.addSubComponent(brain);
 
     // Request mbari specific option aliases
@@ -127,16 +127,7 @@ int main(const int argc, const char** argv) {
     REQUEST_OPTIONALIAS_NEURO(manager);
 
     // Initialize brain defaults
-    manager.setOptionValString(&OPT_OriInteraction,"SubtractMean"); 
-    manager.setOptionValString(&OPT_OrientComputeType,"Steerable");
     manager.setOptionValString(&OPT_UseRandom,"false");
-    manager.setOptionValString(&OPT_ShapeEstimatorSmoothMethod,"None");
-    manager.setOptionValString(&OPT_SVdisplayFOA, "true");
-    manager.setOptionValString(&OPT_SVdisplayPatch, "false");
-    manager.setOptionValString(&OPT_SVdisplayFOALinks, "false");
-    manager.setOptionValString(&OPT_SVdisplayAdditive, "true");
-    manager.setOptionValString(&OPT_SVdisplayTime, "false");
-    manager.setOptionValString(&OPT_SVdisplayBoring, "false");
 
     // parse the command line
     if (manager.parseCommandLine(argc, argv, "",0,-1) == false)
@@ -454,11 +445,11 @@ int main(const int argc, const char** argv) {
                 LINFO("Getting salient regions for frame: %06d", mbariImg.getFrameNum());
 
                 const float maxEvolveTime = detectionParms.itsMaxEvolveTime;
-                const uint maxNumSalSpots = detectionParms.itsMaxWTAPoints;
+                const uint maxNumSalSpots = detectionParms.itsMaxWTAPoints; 
                 list<WTAwinner> winlist = getSalientWinners(simofs,
                         img2runsaliency, brain, seq, maxEvolveTime, maxNumSalSpots,
                         mbariImg.getFrameNum(), scaleW, scaleH);
-                
+ 
                 list<BitObject> sobjs;
                 if (grayscale)
                     sobjs = getSalientObjects(bitImg, winlist);

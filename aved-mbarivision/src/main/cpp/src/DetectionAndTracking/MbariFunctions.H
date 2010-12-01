@@ -107,16 +107,15 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
  *conditions are met, this function will return.s
  */
 list<WTAwinner> getSalientWinners(
-        nub::ref<SimOutputFrameSeries> simofs,
+        nub::soft_ref<SimOutputFrameSeries> simofs,
         const Image< PixRGB<byte> > &img,
-        nub::ref<StdBrain> brain,
-        nub::ref<SimEventQueue> seq,
+        nub::soft_ref<StdBrain> brain,
+        nub::soft_ref<SimEventQueue> seq,
         float maxEvolveTime,
         int maxNumSalSpots,
         int framenum,
         float scaleW,
         float scaleH);
-
 
 //! returns the BitObjects at the most winning locations points
 /*!*@param bitImg a binary image used for extracting BitObjects at the

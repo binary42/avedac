@@ -318,7 +318,6 @@ std::list<BitObject> getSalientObjects(const Image<byte>& bitImg, const list<WTA
 
 // ######################################################################
 list<WTAwinner> getSalientWinners(
-	nub::soft_ref<SimInputFrameSeries> simifs,
 	nub::soft_ref<SimOutputFrameSeries> simofs,
         const Image< PixRGB<byte> > &img,
         nub::soft_ref<StdBrain> brain,
