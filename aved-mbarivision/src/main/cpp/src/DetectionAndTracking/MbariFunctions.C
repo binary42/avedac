@@ -47,6 +47,7 @@
 #include "Neuro/StdBrain.H"
 #include "Neuro/NeuroOpts.H"
 #include "Neuro/NeuroSimEvents.H"
+#include "Neuro/SimulationViewer.H"
 #include "Neuro/VisualCortex.H"
 #include "Raster/Raster.H"
 #include "Simulation/SimEventQueue.H"
@@ -107,23 +108,6 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
     // get the bit object(s) in this region
     for (int ry = region.top(); ry <= region.bottomO(); ++ry)
         for (int rx = region.left(); rx <= region.rightO(); ++rx) {
-            //if found a new color - this is a new object
-            if (color != bImg.getVal(rx, ry)) {
-                color = bImg.getVal(rx, ry);
-
-                // if the color is black then this is considered
-                // a mask point so skip this point
-                if (color == black) continue;
-
-                // Otherwise, create a binary representation of this image
-                // with everything matching the color around this region
-                // point as 1 and everything else 0
-                Image< PixRGB<byte> >::const_iterator sptr = bImg.begin();
-                Image<byte>::iterator rptr = bitImg.beginw();
-                while (sptr != bImg.end())
-                    *rptr++ = (*sptr++ == color) ? 1 : 0;
-            }
-
             // this location doesn't have anything -> never mind
             if (bitImg.getVal(rx, ry) == 0) continue;
 
@@ -192,7 +176,7 @@ std::list<BitObject> extractBitObjects(const Image<byte>& bImg,
 std::list<BitObject> getSalientObjects(const Image< byte >& bitImg,
         const Image< PixRGB<byte> >& colorbitImg, const list<WTAwinner> &winners) {
     // this should be 2^(smlev - 1)
-    const int rectRad = 8;
+    const int rectRad = 20;
     DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
     std::list<WTAwinner>::const_iterator iter = winners.begin();
     std::list<BitObject> bos;
@@ -221,8 +205,8 @@ std::list<BitObject> getSalientObjects(const Image< byte >& bitImg,
         if (sobjscolor.size() + sobjsbin.size() > 0) {
 
             // Combine the objects from both segment images
-            sobjs.merge(sobjscolor);
             sobjs.merge(sobjsbin);
+            sobjs.merge(sobjscolor);
 
             bool keepGoing = true;
             // loop until we find a new object that doesn't overlap with anything
@@ -269,7 +253,7 @@ std::list<BitObject> getSalientObjects(const Image< byte >& bitImg,
 
 std::list<BitObject> getSalientObjects(const Image<byte>& bitImg, const list<WTAwinner> &winners) {
     // this should be 2^(smlev - 1)
-    const int rectRad = 8;
+    const int rectRad = 20;
     DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
     std::list<WTAwinner>::const_iterator iter = winners.begin();
     std::list<BitObject> bos;
@@ -333,11 +317,12 @@ std::list<BitObject> getSalientObjects(const Image<byte>& bitImg, const list<WTA
 }
 
 // ######################################################################
-
-list<WTAwinner> getSalientWinners(nub::ref<SimOutputFrameSeries> simofs,
+list<WTAwinner> getSalientWinners(
+	nub::soft_ref<SimInputFrameSeries> simifs,
+	nub::soft_ref<SimOutputFrameSeries> simofs,
         const Image< PixRGB<byte> > &img,
-        nub::ref<StdBrain> brain,
-        nub::ref<SimEventQueue> seq,
+        nub::soft_ref<StdBrain> brain,
+        nub::soft_ref<SimEventQueue> seq,
         float maxEvolveTime,
         int maxNumSalSpots,
         int framenum,
@@ -347,6 +332,8 @@ list<WTAwinner> getSalientWinners(nub::ref<SimOutputFrameSeries> simofs,
     int numSpots = 0;
     SimStatus status = SIM_CONTINUE;
     DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
+    nub::soft_ref<Brain>  mbrain = dynCastWeak<Brain>(brain);
+    bool keepGoing = true;
 
     // get the standard deviation in the input image
     // if there is no deviation, this image is uniform and
@@ -354,36 +341,39 @@ list<WTAwinner> getSalientWinners(nub::ref<SimOutputFrameSeries> simofs,
     if (stdev(luminance(img)) == 0.f)
         return winners;
 
-    // reset the brain
+    // reset the brain 
     brain->reset(MC_RECURSE);
 
-    // initialize the max time to simulate
+    // initialize the max time to smulate
     const SimTime simMaxEvolveTime = seq->now() + SimTime::MSECS(maxEvolveTime);
 
     rutz::shared_ptr<SimEventInputFrame>
-            eif(new SimEventInputFrame(/* event source = */ NULL,
+            eif(new SimEventInputFrame(mbrain.get(),
             GenericFrame(img),
             framenum));
+
     seq->post(eif);
 
     // main loop:
-    while (status == SIM_CONTINUE) {
+    while (status == SIM_CONTINUE) { 
+  
+      // evolve brain:
+      brain->evolve(*seq); 
+      
+      // switch to next time step:
+      status = seq->evolve();
+ 
+      if (SeC<SimEventWTAwinner> e = seq->check<SimEventWTAwinner > (0) ) {
 
-        // evolve the brain
-        brain->evolve(*seq);
-
-        // switch to next time step:
-        status = seq->evolve();
-
-        if (SeC<SimEventWTAwinner> e = seq->check<SimEventWTAwinner > (0)) {
             WTAwinner win = e->winner();
 	    win.p.i = (int) ( (float) win.p.i*scaleW);
 	    win.p.j = (int) ( (float) win.p.j*scaleH); 
+            
             LINFO("##### winner #%d found at [%d; %d] with %f voltage frame: %d#####",
                     numSpots, win.p.i, win.p.j, win.sv, framenum);
 
             // if a boring event detected, and not keeping boring WTA points then break simulation
-            if (win.boring && p.itsKeepWTABoring == false) {
+            if (win.boring && p.itsKeepWTABoring == false) { 
                 rutz::shared_ptr<SimEventBreak>
                         e(new SimEventBreak(0, "Boring event detected"));
                 seq->post(e);
@@ -404,9 +394,12 @@ list<WTAwinner> getSalientWinners(nub::ref<SimOutputFrameSeries> simofs,
                         e(new SimEventBreak(0, "##### time limit reached #####"));
                 seq->post(e);
             }
-
-            simofs->evolve(*seq);
+      // Evolve output frame series. It will trigger a save() on our
+      // modules as needed, before we start loading new inputs and
+      // processing them for the new time step.
+      simofs->evolve(*seq);
         }
+ 
     }
 
     // print final memory allocation stats
