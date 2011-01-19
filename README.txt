@@ -59,8 +59,8 @@ you need:
 
     1.6. A Matlab installation on your machine that includes a license for:
 
-        a.  The Matlab Image Processing Toolkit version: 4.10 (R2009a)
-        b.  The Matlab Compiler version: 4.10 (R2009a)
+        a.  The Matlab Image Processing Toolkit version: 4.11 (R2010b)
+        b.  The Matlab Compiler version: 4.11 (R2010b)
 
 
         Matlab is required to build the aved-classifier module
@@ -107,19 +107,24 @@ David and Lucile Packard Foundation.
 -----------------------------------------------------------------------------
 
 Currently aved-mbarivision and aved-pmbarivision will not build on MacOSX.
-However, the graphical interface and classifier code will build fine on MacOSX.
-To build: 
+However, the graphical interface and classifier code will build on MacOSX.
+This means that you can run the event detection and tracking on a non-Mac
+machine, e.g. a Linux Box, and edit the results and run the classifier  
+on a Mac.  This is a workflow that works well for MBARI.
 
-   	4.1. Modify the environment variables
+To build the GUI and classifier: 
 
-	     Edit aved-classifier/setup
- 	     Modify the following property to suit your installation:
+   	4.1. Modify the environment variables for your Matlab installation
 	     
 	     export MATLAB_ROOT=/Applications/MATLAB_R2009a.app
 	     export MCR_ROOT=/Applications/MATLAB/MATLAB_Compiler_Runtime/v710
 
 	4.2. Run the setup script. This will install the necessary environment
-	     variables to your ~/Info.plist
+	     variables to your ~/.bash_profile
+
+	     $ cd aved-classifier
+	     $ ./setup  
+ 
 
 	4.3. (optional) Modify the pom.xml to change the install path 
 

@@ -6,12 +6,14 @@ Table of Contents
 
 3. Installation on Linux or MacOSX
 
-4. Developer Notes
+4. Installation on Linux or MacOSX
+
+5. Developer Notes
 
 
 1. Overview
 -----------------------------------------------------------------------------
-The AVED Classifier is simply Matlab code, but to simplify its use
+The AVEDac Classifier is simply Matlab code, but to simplify its use
 a graphical interface to run it. The following describes
 how to build the graphical interface
 
@@ -50,26 +52,36 @@ To build the this module, you need:
 
     1.2.  A Matlab installation on your machine that includes a license for:
 
-        a.  The Matlab Image Processing Toolkit version: 4.10 (R2009a)
-        b.  The Matlab Compiler version: 4.10 (R2009a)
+        a.  The Matlab Image Processing Toolkit version: 4.11 (R2010b)
+        b.  The Matlab Compiler version: 4.11 (R2010b)
 
 
         Matlab is required to build the aved-classifier module
 	which is used in the graphical interface module aved-ui.
 
 
-3.  Installation on Linux or Mac
+3.  Installation on Linux 
 -----------------------------------------------------------------------------
 
 To compile this, you need Matlab, the Matlab Image Processing Toolbox,
-and the Matlab compiler. See the README.txt in the root folder for 
+and the Matlab compiler for Linux. See the README.txt in the root folder for 
 instructions. 
 
 
-4.  Developer Notes
+4.  Installation on Mac
 -----------------------------------------------------------------------------
 
-    4.1 Setup the correct environment for command-line build
+To compile this, you need Matlab, the Matlab Image Processing Toolbox,
+and the Matlab compiler for Mac OSX. See the README.txt in the root folder for 
+instructions.  You also need the Apple Developer Tools. See:
+http://www.apple.com/developer/
+
+
+
+5.  Developer Notes
+-----------------------------------------------------------------------------
+
+    5.1 Setup the correct environment for command-line build
 
         If you are getting a message similar to the following :
 
@@ -79,7 +91,7 @@ instructions.
         Your environment variables are not set correctly.
         The environment variables needed are in the file called setup.
 
-    4.2 Determining MATLAB_ROOT location
+    5.2 Determining MATLAB_ROOT location
 
         If you have installed Matlab in a non-standard location, you
         need to change the environment variables MATLAB_ROOT, where
@@ -90,7 +102,7 @@ instructions.
 
         On Mac OS X, MATLAB_ROOT is typically /Applications/MATLAB_R2009a.app
 
-    4.3 Missing cdefs.h file
+    5.3 Missing cdefs.h file
 
         The cdefs.h file is missing in Mac OS X 10.5.8 and causes the build
         to fail, so it copy it to the SDK directory first:
@@ -98,14 +110,14 @@ instructions.
 	>> sudo cp /usr/include/sys/cdefs.h /Developer/SDKs/MacOSX10.5.sdk/usr/include/sys/cdefs.h
 
 
-    4.4 DYLD_LIBRARY_PATH/LD_LIBRARY_PATH path order when running compiled Matlab on Linux
+    5.4 DYLD_LIBRARY_PATH/LD_LIBRARY_PATH path order when running compiled Matlab on Linux
 
         To run deployed components on Linux, the $MCR_ROOT/runtime
         directory must appear on your DYLD_LIBRARY_PATH/LD_LIBRARY_PATH
         *before* $MATLAB_ROOT/bin/maci, and XAPPLRESDIR should point
         $MCR_ROOT/X11/app-defaults.
 
-    4.5 NetBeans 6.8 or later
+    5.5 NetBeans 6.8 or later
 
         This code can be compiled on NetBeans 6.8 or higher.
 
@@ -125,10 +137,10 @@ instructions.
 
             IMPORTANT NOTE:
             A separate nbactions file is needed for each Maven module,
-            so you will need to propagate the nbactions-Mac/Linux.xml
+            so you will need to copy the nbactions-Mac/Linux.xml
             to *every* module directory it's needed in.
 
-   4.6  Modifications to the Matlab library
+   5.6  Modifications to the Matlab library
 
         If you make any changes to the Matlab .m files, to rebuild only the
         matlab shared library from command-line
