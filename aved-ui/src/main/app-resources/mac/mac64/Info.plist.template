@@ -23,9 +23,9 @@
     <key>LSEnvironment</key>
             <dict>
                 <key>DYLD_LIBRARY_PATH</key>
-                <string>/Applications/AVEDac/lib:/Applications/MATLAB/MATLAB_Compiler_Runtime/v713/runtime/maci64:/Applications/MATLAB/MATLAB_Compiler_Runtime/v713/sys/os/maci64:/Applications/MATLAB/MATLAB_Compiler_Runtime/v713/bin/maci64:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries:/lib:/usr/lib</string>
+                <string>/Applications/AVEDac/lib:/Applications/MATLAB/MATLAB_Compiler_Runtime/v714/runtime/maci64:/Applications/MATLAB/MATLAB_Compiler_Runtime/v714/sys/os/maci64:/Applications/MATLAB/MATLAB_Compiler_Runtime/v714/bin/maci64:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries:/lib:/usr/lib</string>
                 <key>XAPPLRESDIR</key>
-                <string>/Applications/MATLAB/MATLAB_Compiler_Runtime/v713/X11/app-defaults</string>
+                <string>/Applications/MATLAB/MATLAB_Compiler_Runtime/v714/X11/app-defaults</string>
             </dict>  
     <key>Java</key>
     <dict>
