@@ -4,58 +4,74 @@
 # Date: December 28, 2009 - Created
 #
 if [ ! "$MATLAB_ROOT" ]; then
-    echo "Error - set MATLAB_ROOT enviroment variable"
-    exit -1
+  echo "Error - set MATLAB_ROOT enviroment variable"
+  exit -1
 fi
 if [ ! "$MCR_ROOT" ]; then
-    echo "Error - set MCR_ROOT enviroment variable"
-    exit -1
+  echo "Error - set MCR_ROOT enviroment variable"
+  exit -1
 fi
-if [ `uname | grep Linux` ]; then
-if [ ! "$JAVA_HOME" ]; then
+
+out=~/.bash_profile
+
+if [ `uname | grep Linux` ]; then   
+
+  if [ ! "$JAVA_HOME" ]; then
     echo "Error - set JAVA_HOME environment variable"
     exit -1
+  fi
+
+cat >$out <<_ACEOF 
+if [ -f ~/.bashrc ]; then
+   source ~/.bashrc
 fi
-  echo "export XAPPLRESDIR=$MCR_ROOT/X11/app-defaults" >> ~/.bashrc
-  #echo "export XAPPLRESDIR=$MCR_ROOT/X11/app-defaults" >> /etc/profile
-  echo "export MATLAB_JAVA=$JAVA_HOME/jre" >> ~/.bashrc
-  #echo "export MATLAB_JAVA=$JAVA_HOME/jre" >> /etc/profile
-  echo "export MCR_ROOT=$MCR_ROOT" >> ~/.bashrc
-  #echo "export MCR_ROOT=$MCR_ROOT" >> /etc/profile
-  echo "export MATLAB_ROOT=$MATLAB_ROOT" >> ~/.bashrc
-  #echo "export MATLAB_ROOT=$MATLAB_ROOT" >> /etc/profile
-  echo "export JAVA_HOME=$JAVA_HOME" >> ~/.bashrc
-  #echo "export JAVA_HOME=$JAVA_HOME" >> /etc/profile
- 
+export XAPPLRESDIR=$MCR_ROOT/X11/app-defaults
+export MATLAB_JAVA=$JAVA_HOME/jre
+export MCR_ROOT=$MCR_ROOT
+export MATLAB_ROOT=$MATLAB_ROOT
+export JAVA_HOME=$JAVA_HOME
+_ACEOF
+
   a=`uname -a | grep 64`
   if [ ! "$a" ] ;then 
-    echo "Setting 32-bit Linux environment variables"
-    echo "export LD_LIBRARY_PATH=$MCR_ROOT/runtime/glnx86:$MCR_ROOT/bin/glnx86:$MCR_ROOT/sys/os/glnx86:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/native_threads:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/server:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386" >> ~/.bashrc
-    #echo "export LD_LIBRARY_PATH=$MCR_ROOT/runtime/glnx86:$MCR_ROOT/bin/glnx86:$MCR_ROOT/sys/os/glnx86:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/native_threads:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/server:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386" >> /etc/profile
+   echo "Setting 32-bit Linux environment variables"
+   echo "export LD_LIBRARY_PATH=$MCR_ROOT/runtime/glnx86:$MCR_ROOT/bin/glnx86:$MCR_ROOT/sys/os/glnx86:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/native_threads:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/server:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386" >> $out
   else 
-    echo "Setting 64-bit Linux environment variables"
-    echo "export LD_LIBRARY_PATH=$MATLAB_ROOT/runtime/glnxa64:$MATLAB_ROOT/bin/glnxa64:$MATLAB_ROOT/sys/os/glnxa64:$JAVA_HOME/jre/lib/i386" >> ~/.bashrc
-    #echo "export LD_LIBRARY_PATH=$MATLAB_ROOT/runtime/glnxa64:$MATLAB_ROOT/bin/glnxa64:$MATLAB_ROOT/sys/os/glnxa64:$JAVA_HOME/jre/lib/i386" >> /etc/profile
+    echo "Setting 64-bit Linux environment variables" 
+    echo "export LD_LIBRARY_PATH=$MATLAB_ROOT/runtime/glnxa64:$MATLAB_ROOT/bin/glnxa64:$MATLAB_ROOT/sys/os/glnxa64:$JAVA_HOME/jre/lib/i386" >> $out
   fi 
-  source ~/.bashrc
+
 else
-maci="maci"
-ioreg="`/usr/sbin/ioreg -l -p IODeviceTree | grep firmware-abi`"
+
+cat >$out <<_ACEOF 
+if [ -f ~/.bashrc ]; then
+  source ~/.bashrc
+fi
+export XAPPLRESDIR=$MCR_ROOT/X11/app-defaults
+export MCR_ROOT=$MCR_ROOT
+export MATLAB_ROOT=$MATLAB_ROOT
+_ACEOF
+
+  maci="maci"
+  ioreg="`/usr/sbin/ioreg -l -p IODeviceTree | grep firmware-abi`"
   if [ "`echo $ioreg | grep EFI64`" ]; then
    echo "Mac has 64-bit firmware"
     if [ "`echo $uname | grep x86_64`" ]; then
-	maci="maci64"
+      maci="maci64"
     fi
   fi
+  
+  if [ "$maci" = "maci64" ]; then
+      echo "Setting MacOSX 64-bit environment variables"
+  else
+      echo "Setting MacOSX 32-bit environment variables"
+  fi
 
-  echo "Setting MacOSX environment variables"
-  echo "export DYLD_LIBRARY_PATH=$MCR_ROOT/runtime/$maci:$MCR_ROOT/bin/glnx86:$MCR_ROOT/sys/os/$maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries" >> ~/.bash_profile
-  echo "export XAPPLRESDIR=$MCR_ROOT/X11/app-defaults" >> ~/.bash_profile
-  echo "export MCR_ROOT=$MCR_ROOT" >> ~/.bash_profile
-  echo "export MATLAB_ROOT=$MATLAB_ROOT" >> ~/.bash_profile
-  source ~/.bash_profile
+  echo "export DYLD_LIBRARY_PATH=$MCR_ROOT/runtime/$maci:$MCR_ROOT/bin/glnx86:$MCR_ROOT/sys/os/$maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries" >> $out
 fi
 
-echo "Required environment variables are now set in your ~/.bashrc or ~/.bash_profile file."
-echo "You may need to modify these if you change your matlab installation"
-echo "upgrade matlab, or change the location of the Matlab Compiler Runtime path"
+source $out
+echo "Required environment variables are now set in your ~/.bash_profile file."
+echo "You may need to modify these if you change your Matlab installation"
+echo "upgrade Matlab, or change the location of the Matlab Compiler Runtime (MCR) path"
+
