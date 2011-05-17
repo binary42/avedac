@@ -56,7 +56,8 @@ public:
                          const float boringmv,
                          const SimTime &boringDelay,
                          const MaxNormType &maxNormType,
-                         const VisualCortexWeights &wts);
+                         const VisualCortexWeights &wts, 
+			float scaleW, float scaleH);
 
   // !destructor
   virtual ~GetSalientRegionsStage();
@@ -126,6 +127,7 @@ private:
   bool itsGrayscaleCompute;
   float itsBoringmv;
   SimTime itsBoringDelay;
+  float itsScaleW, itsScaleH;
 };
 
 #endif // !defined(GETSALIENTREGIONS_H)

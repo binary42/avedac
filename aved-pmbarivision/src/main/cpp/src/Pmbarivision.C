@@ -227,11 +227,30 @@ extern "C" {
     // get image dimensions and set a few parameters that depend on it
     detectionParmsModel->reset(&detectionParms);
     const Dims dims = ifs->peekDims();	
-    manager.setOptionValString(&OPT_InputFrameDims, convertToString(dims)); 
+    manager.setOptionValString(&OPT_InputFrameDims, convertToString(dims));
+    
+    float scaleW = 1.0f;
+    float scaleH = 1.0f;
+
+    // if the user has selected to retain the original dimensions in the events
+    // get the scaling factors, and unset the resizing in the input frame series
+    if (detectionParms.itsSaveOriginalFrameSpec) {
+      // get a reference to our original frame source
+      const nub::ref<FrameIstream> ref = ifs->getFrameSource();
+      const Dims origDims = ref->peekDims();
+      scaleW = (float) origDims.w() / (float) dims.w();
+      scaleH = (float) origDims.h() / (float) dims.h();
+      LINFO("--------> scale: %fx%f", scaleW, scaleH);
+      ifs->setModelParamVal(string("InputFrameDims"), Dims(0,0), MC_RECURSE);
+      ifs->peekDims();
+    }
+
+ // calculate the foa size and default min/max event size based on the image size
+    const int circleRadius = dims.w() / circleRadiusRatio;
     const int maxDist = dims.w() / maxDistRatio;
     const int foaSize = dims.w() / foaSizeRatio;
-    const int minSize = foaSize;
-    const int maxSize = minSize * maxSizeFactor;	
+    const int minSize = (int) (foaSize*scaleW);
+    const int maxSize = minSize * maxSizeFactor;
 
     int foaRadius;
     const string foar = manager.getOptionValString(&OPT_FOAradius);
@@ -327,7 +346,7 @@ extern "C" {
                                               boringmv,
                                               boringDelay,
                                               normType,
-                                              wts);
+                                              wts, scaleW, scaleH);
       break;
     case(Stages::UE_STAGE):    
       s = (Stage *)new UpdateEventsStage(master, Stages::stageName(id), 

@@ -2665,11 +2665,11 @@ echo "${ECHO_T}yes" >&6
 echo "${ECHO_T}no" >&6
 	    { { echo "$as_me:$LINENO: error: iLab Neuromorphic Vision C++ Toolkit
                         Error finding saliency root directory here: \"$with_saliency\".
-                        Set the correct root path with --with-saliency-root=DIR
+                        Set the correct root path with --with-saliency=DIR
                         For more information about getting the toolkit see http://ilab.usc.edu/toolkit/." >&5
 echo "$as_me: error: iLab Neuromorphic Vision C++ Toolkit
                         Error finding saliency root directory here: \"$with_saliency\".
-                        Set the correct root path with --with-saliency-root=DIR
+                        Set the correct root path with --with-saliency=DIR
                         For more information about getting the toolkit see http://ilab.usc.edu/toolkit/." >&2;}
    { (exit 1); exit 1; }; }
 
@@ -2677,11 +2677,11 @@ echo "$as_me: error: iLab Neuromorphic Vision C++ Toolkit
    else
       { { echo "$as_me:$LINENO: error: iLab Neuromorphic Vision C++ Toolkit
                         Error finding saliency root directory here: \"$with_saliency\".
-                        Set the correct root path with --with-saliency-root=DIR
+                        Set the correct root path with --with-saliency=DIR
                         For more information about getting the toolkit see http://ilab.usc.edu/toolkit/." >&5
 echo "$as_me: error: iLab Neuromorphic Vision C++ Toolkit
                         Error finding saliency root directory here: \"$with_saliency\".
-                        Set the correct root path with --with-saliency-root=DIR
+                        Set the correct root path with --with-saliency=DIR
                         For more information about getting the toolkit see http://ilab.usc.edu/toolkit/." >&2;}
    { (exit 1); exit 1; }; }
    fi

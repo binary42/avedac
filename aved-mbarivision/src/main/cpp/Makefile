@@ -1,20 +1,20 @@
 ##### Mbarivision Makefile
-PREFIX      := /usr/local/aved
-SALIENCYROOT := /home/aved/saliency
-XERCESCROOT  := /home/aved/Xerces-C_2_7_0
+PREFIX      := /home/aved
+SALIENCYROOT := /root/aved/saliency
+XERCESCROOT  := /root/aved/Xerces-C_2_7_0
 SRCDIR      := src/
 OBJDIR	    := target/build/obj/
 BINDIR	    := target/build/bin/
 LIBDIR      := target/build/lib/
 SCHEMADIR   := schema/
-CXX         := /opt/gcc-3.4.3/bin/g++
+CXX         := g++
 CXXFLAGS    := -g -O2 
 DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1
 CPPFLAGS    :=   -I/usr/include/libxml2 -I./lib -I$(SALIENCYROOT)/src -I $(XERCESCROOT)/src -I$(SRCDIR) -I$(LIBDIR) -include $(SALIENCYROOT)/config.h
 LDFLAGS     :=  -L/usr/lib -L./lib -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib -lpthread -lxerces-c -lz -lbz2 -lpng -ljpeg -lXext -lpthread  -lavcodec -lavformat -lavutil -lxml2 -lSDL
 DEPFILE	    := alldepends
 COMPILE1    := @echo 
-COMPILE2    := @
+COMPILE2    := @	
 COMPILE3    := 
 CDEPS	    := $(BINDIR)cdeps
 

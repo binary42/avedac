@@ -78,7 +78,9 @@ GetSalientRegionsStage::GetSalientRegionsStage(MPI_Comm mastercomm, const char *
                                                const float boringmv,
                                                const SimTime &boringDelay,
                                                const MaxNormType &maxNormType,
-                                               const VisualCortexWeights &wts)
+                                               const VisualCortexWeights &wts,
+					       const float scaleW,
+					       const float scaleH)
   :Stage(mastercomm,name),
    itsArgc(argc),
    itsArgv(argv),
@@ -93,6 +95,15 @@ GetSalientRegionsStage::GetSalientRegionsStage(MPI_Comm mastercomm, const char *
    itsTestGrayscale(true),
    itsGrayscaleCompute(false)
 {
+   if (scaleW > 0.f)
+   	itsScaleW = scaleW;
+   else
+   	itsScaleW = 1.0f;
+
+   if (scaleH > 0.f)
+   	itsScaleH = scaleH;
+   else
+   	itsScaleH = 1.0f;
  
 }
 GetSalientRegionsStage::~GetSalientRegionsStage()
@@ -216,7 +227,7 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinnersNew(const Image< P
   }
 
   // initialize the max time to simulate
-  const SimTime simMaxEvolveTime = itsSeq->now().msecs() + SimTime::MSECS(p.itsMaxEvolveTime);
+  const SimTime simMaxEvolveTime = SimTime::MSECS(itsSeq->now().msecs()) + SimTime::MSECS(p.itsMaxEvolveTime);
   
   rutz::shared_ptr<SimEventAttentionGuidanceMapOutput>
     agm(new SimEventAttentionGuidanceMapOutput(NULL, sm));
@@ -233,9 +244,17 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinnersNew(const Image< P
     
     if (SeC<SimEventWTAwinner> e = itsSeq->check<SimEventWTAwinner > (0)) {
       WTAwinner newwin = e->winner();
-      LINFO("##### winner #%d found at [%d; %d] with %f voltage frame: %d#####",
+      currwin.i = (int) ( newwin.p.i >> sml );
+      currwin.j = (int) ( newwin.p.j >> sml );
+      newwin.p.i = (int) ( (float) newwin.p.i*itsScaleW) >> sml;
+      newwin.p.j = (int) ( (float) newwin.p.j*itsScaleH) >> sml;
+      const Dims d = intensity.getDims();  
+      LINFO("------> Size of intensity image: [%d; %d] winning point: [%d; %d]", d.w(), d.h(), currwin.i, currwin.j);
+          
+      LINFO("------>##### winner #%d found at [%d; %d] with %f voltage frame: %d#####",
 	    numSpots, newwin.p.i, newwin.p.j, newwin.sv, framenum);
-      
+     
+ 
       // if a boring event detected, and not keeping boring WTA points then break simulation
       if (newwin.boring && p.itsKeepWTABoring == false) { 
 	rutz::shared_ptr<SimEventBreak>
