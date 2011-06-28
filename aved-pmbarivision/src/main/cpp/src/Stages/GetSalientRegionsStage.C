@@ -145,6 +145,7 @@ void GetSalientRegionsStage::runStage()
         MPE_Log_event(5,0,"");	 
 
 	// scale if needed
+        LDEBUG("---->Rescaling image size: %dx%d using scale factor: %f %f ", img->getWidth(), img->getHeight(), itsScaleW, itsScaleH);
 	img2runsaliency = rescale(*img, Dims((int) (img->getWidth()/itsScaleW), (int) (img->getHeight()/itsScaleH)));
 
         // test for grayscale or color image. this is later used to
@@ -442,7 +443,7 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
     // if there is little deviation, this image is uniform and
     // will have no saliency so return empty winners    
     float stdevlum = stdev(luminance(img));
-    if (stdevlum <= 3.f) {
+    if (stdevlum <= 5.f) {
       LINFO("######luminance standard deviation %f too small -  no winners will be found in frame %d ####", stdevlum, framenum );
       return std::list<WTAwinner>() ;   
     }

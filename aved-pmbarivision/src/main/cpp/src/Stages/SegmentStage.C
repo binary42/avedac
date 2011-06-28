@@ -180,7 +180,7 @@ void SegmentStage::preload()
 	   // get the standard deviation in the input image
            // if there is little deviation do not add to the average cache
 	   // TODO: put a check here for all white/black pixels
-    	   if (stdev(luminance(img)) <= 5.f){ 
+    	   if (stdev(luminance(img)) <= 5.f && itsAvgCache.size() > 0){ 
     		itsAvgCache.push_back(itsAvgCache.mean()); 
 	   }
 	   else {

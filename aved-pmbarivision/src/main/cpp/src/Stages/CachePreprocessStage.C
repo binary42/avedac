@@ -190,8 +190,9 @@ void CachePreprocessStage::preload() {
 
         // get the standard deviation in the input image
         // if there is little deviation do not add to the average cache
-        if (stdev(luminance(img)) <= 5.0f) {
-            LINFO("No standard deviation in frame %d. Is this frame all black ? Not including this image in the average cache", itsifs->frame());
+	float imgstdev = stdev(luminance(img));
+        if (imgstdev <= 5.0f && itsAvgCache.size() > 0) {
+            LINFO("Standard deviation %f in frame %d. Is this frame all black ? Not including this image in the average cache", imgstdev, itsifs->frame());
             itsAvgCache.push_back(itsAvgCache.mean());
         } else
             itsAvgCache.push_back(img);
