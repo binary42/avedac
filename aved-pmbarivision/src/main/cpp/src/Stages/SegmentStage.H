@@ -32,6 +32,7 @@
 #include "Image/Image.H"
 #include "Image/ImageCache.H"
 #include "Media/FrameSeries.H"
+#include "Media/MbariResultViewer.H"
 #include "DetectionAndTracking/Segmentation.H"
 #include "DetectionAndTracking/DetectionParameters.H"
 
@@ -44,6 +45,7 @@ public:
   // !Constructor
   SegmentStage(MPI_Comm mastercomm, const char *name,
 		       nub::soft_ref<InputFrameSeries> &ifs,
+		       nub::soft_ref<MbariResultViewer> &rv,
                        const FrameRange framerange,
                        const std::string& inputFileStem);
   // !Destructor
@@ -63,6 +65,7 @@ private:
   ImageCacheAvg< PixRGB<byte> > itsAvgCache;
   Segmentation itsSegmentation;
   nub::soft_ref<InputFrameSeries> itsifs;
+  nub::soft_ref<MbariResultViewer> itsRv;
   FrameRange itsFrameRange;
   std::string itsInputFileStem;
 

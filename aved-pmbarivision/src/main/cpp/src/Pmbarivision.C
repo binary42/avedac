@@ -66,8 +66,6 @@ void initModelComponents(int argc, const char **argv);
 const int maxSizeFactor = 200;
 const float maxEvolveTime = 0.5F;
 const uint maxNumSalSpots = 20;
-// get image dimensions and set a few paremeters that depend on it
-const int minSizeRatio = 10000;
 const int maxDistRatio = 40;
 const int foaSizeRatio = 19;
 const int circleRadiusRatio = 40; 
@@ -195,20 +193,6 @@ extern "C" {
     nub::soft_ref<StdBrain> brain(new StdBrain(manager));
     manager.addSubComponent(brain); 
   
-    // initialize some defaults 
-    manager.setOptionValString(&OPT_OriInteraction,"SubtractMean"); 
-    manager.setOptionValString(&OPT_OrientComputeType,"Steerable");
-    manager.setOptionValString(&OPT_VisualCortexType,"O:5IC");
-    manager.setOptionValString(&OPT_UseRandom,"false");
-    manager.setOptionValString(&OPT_ShapeEstimatorMode,"ConspicuityMap");
-    manager.setOptionValString(&OPT_ShapeEstimatorSmoothMethod,"None");
-    manager.setOptionValString(&OPT_SVdisplayFOA, "true");
-    manager.setOptionValString(&OPT_SVdisplayPatch, "false");
-    manager.setOptionValString(&OPT_SVdisplayFOALinks, "false");
-    manager.setOptionValString(&OPT_SVdisplayAdditive, "true");
-    manager.setOptionValString(&OPT_SVdisplayTime, "false");
-    manager.setOptionValString(&OPT_SVdisplayBoring, "false");
- 
     //create master Beowulf component
     nub::soft_ref<Beowulf> beowulf(new Beowulf(manager, "Beowulf", "Beowulf", true));
     beowulf->exportOptions(OPTEXP_ALL);
@@ -240,12 +224,11 @@ extern "C" {
       const Dims origDims = ref->peekDims();
       scaleW = (float) origDims.w() / (float) dims.w();
       scaleH = (float) origDims.h() / (float) dims.h();
-      LINFO("--------> scale: %fx%f", scaleW, scaleH);
       ifs->setModelParamVal(string("InputFrameDims"), Dims(0,0), MC_RECURSE);
       ifs->peekDims();
     }
 
- // calculate the foa size and default min/max event size based on the image size
+    // calculate the foa size and default min/max event size based on the image size
     const int circleRadius = dims.w() / circleRadiusRatio;
     const int maxDist = dims.w() / maxDistRatio;
     const int foaSize = dims.w() / foaSizeRatio;
@@ -327,12 +310,14 @@ extern "C" {
     case(Stages::CP_STAGE):            
       s = (Stage *)new CachePreprocessStage(master, Stages::stageName(id), 
                                             ifs,
+					    rv,
                                             frameRange,
                                             inputFileStem);
       break;
     case(Stages::SG_STAGE):
       s = (Stage *)new SegmentStage(master, Stages::stageName(id),
 					    ifs,
+					    rv,
                                             frameRange,
                                             inputFileStem);
       break;		

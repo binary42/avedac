@@ -49,11 +49,13 @@
 //////////////////////////////////////////////////////////////////////
 SegmentStage::SegmentStage(MPI_Comm mastercomm, const char *name, 
 	               nub::soft_ref<InputFrameSeries> &ifs,
+	               nub::soft_ref<MbariResultViewer> &rv,
                        const FrameRange framerange,
                        const std::string& inputFileStem)
   :Stage(mastercomm,name), 
    itsbwAvgCache(ImageCacheAvg< byte > (DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache)),
    itsifs(ifs),
+   itsRv(rv),
    itsFrameRange(framerange),
    itsAvgCache(ImageCacheAvg< PixRGB<byte> > (DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache)),
    itsInputFileStem(inputFileStem)
@@ -71,7 +73,7 @@ void SegmentStage::runStage()
   int flag = 1;
   MPI_Status status;	
   MPI_Request request;
-  Image< byte > *img;
+  Image< PixRGB<byte> > *img;
   Image< byte > img2segment;
 
   int framenum = -1;	
@@ -104,6 +106,8 @@ void SegmentStage::runStage()
         else {
           img2segment = maxRGB(itsAvgCache.absDiffMean(*img));
 	}
+
+ 	itsRv->output(img2segment, framenum, "Segment_input"); 
 
         itsbwAvgCache.push_back(img2segment);
 
@@ -162,7 +166,7 @@ void SegmentStage::preload()
 {
   Image< PixRGB<byte> > img;
   DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
- 
+
   // pre-load a few frames to get a valid average
   while(itsAvgCache.size() < dp.itsSizeAvgCache) {
     if (itsifs->frame() >= itsFrameRange.getLast())
@@ -173,7 +177,16 @@ void SegmentStage::preload()
       }
     itsifs->updateNext();
     img = itsifs->readRGB();
-    itsAvgCache.push_back(img); 
+	   // get the standard deviation in the input image
+           // if there is little deviation do not add to the average cache
+	   // TODO: put a check here for all white/black pixels
+    	   if (stdev(luminance(img)) <= 5.f){ 
+    		itsAvgCache.push_back(itsAvgCache.mean()); 
+	   }
+	   else {
+    		itsAvgCache.push_back(img);
+	   } 
+         
     LINFO("Caching frame %06d", itsifs->frame());
   } 
 }

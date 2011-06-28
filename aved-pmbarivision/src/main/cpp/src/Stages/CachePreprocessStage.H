@@ -35,6 +35,7 @@
 #include "Image/ImageCache.H"
 #include "DetectionAndTracking/DetectionParameters.H"
 #include "Media/FrameRange.H"
+#include "Media/MbariResultViewer.H"
 
 // ######################################################################
 //! Handles caching images and minor preprocessing before sending them to the SegmentStage
@@ -46,6 +47,7 @@ public:
   CachePreprocessStage(MPI_Comm mastercomm, 
 		       const char *name,
 		       nub::soft_ref<InputFrameSeries> &ifs,
+		       nub::soft_ref<MbariResultViewer> &rv,
 		       const FrameRange framerange,
 		       const std::string& inputFileStem);
 
@@ -63,6 +65,7 @@ public:
 private:	
   ImageCacheAvg< PixRGB<byte> > itsAvgCache;
   nub::soft_ref<InputFrameSeries> itsifs;
+  nub::soft_ref<MbariResultViewer> itsRv;
   FrameRange itsFrameRange; 
   std::string itsInputFileStem;
 };

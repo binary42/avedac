@@ -120,6 +120,7 @@ void GetSalientRegionsStage::runStage()
 {
   int exit = 0;  
   Image< PixRGB<byte> > *img; 	
+  Image< PixRGB<byte> > img2runsaliency; 	
   MPI_Status status;
   MPI_Request request;
   int framenum = -1;
@@ -143,18 +144,20 @@ void GetSalientRegionsStage::runStage()
       if(framenum != -1) {
         MPE_Log_event(5,0,"");	 
 
+	// scale if needed
+	img2runsaliency = rescale(*img, Dims((int) (img->getWidth()/itsScaleW), (int) (img->getHeight()/itsScaleH)));
+
         // test for grayscale or color image. this is later used to
         // remove the r/g b/w color map computations for speedup
 	if(itsTestGrayscale == true) {
-	  itsGrayscaleCompute = isGrayscale(*img);
+	  itsGrayscaleCompute = isGrayscale(img2runsaliency);
 	  itsTestGrayscale = false;
 	}
-
         // send the image to the beowulf worker nodes
-        sendImage(*img, framenum);
+        sendImage(img2runsaliency, framenum);
 
         // get the winners back
-        std::list<WTAwinner> winners = getWinners(*img, framenum);
+        std::list<WTAwinner> winners = getWinners(img2runsaliency, framenum);
 	std::list<SalientWinner> salwinners;
 
         // initialize salwinners list for sending through mpi message to US_STAGE
@@ -218,17 +221,11 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinnersNew(const Image< P
   SimStatus status = SIM_CONTINUE;
   DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
     
-  // get the standard deviation in the input image
-  // if there is no deviation, this image is uniform and
-  // will have no saliency so return empty winners    
-  if (stdev(luminance(img)) == 0.f) {
-    LINFO("######no standard deviation in luminance so no winners will be found in frame %d ####", framenum );
-    return winners;
-  }
-
   // initialize the max time to simulate
-  const SimTime simMaxEvolveTime = SimTime::MSECS(itsSeq->now().msecs()) + SimTime::MSECS(p.itsMaxEvolveTime);
-  
+  const SimTime simMaxEvolveTime = SimTime::MSECS(itsSeq->now().msecs()) + SimTime::MSECS(p.itsMaxEvolveTime); 
+
+  LINFO("######Inputting saliency into attention guidance map. Map size: %dx%d", sm.getWidth(), sm.getHeight());
+ 
   rutz::shared_ptr<SimEventAttentionGuidanceMapOutput>
     agm(new SimEventAttentionGuidanceMapOutput(NULL, sm));
     itsSeq->post(agm); 
@@ -244,16 +241,12 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinnersNew(const Image< P
     
     if (SeC<SimEventWTAwinner> e = itsSeq->check<SimEventWTAwinner > (0)) {
       WTAwinner newwin = e->winner();
-      currwin.i = (int) ( newwin.p.i >> sml );
-      currwin.j = (int) ( newwin.p.j >> sml );
-      newwin.p.i = (int) ( (float) newwin.p.i*itsScaleW) >> sml;
-      newwin.p.j = (int) ( (float) newwin.p.j*itsScaleH) >> sml;
-      const Dims d = intensity.getDims();  
-      LINFO("------> Size of intensity image: [%d; %d] winning point: [%d; %d]", d.w(), d.h(), currwin.i, currwin.j);
-          
-      LINFO("------>##### winner #%d found at [%d; %d] with %f voltage frame: %d#####",
+      newwin.p.i = (int) ( (float) newwin.p.i*itsScaleW);
+      newwin.p.j = (int) ( (float) newwin.p.j*itsScaleH);
+      const Dims d = intensity.getDims();
+  
+      LINFO("#### winner #%d found at [%d; %d] with %f voltage frame: %d ",
 	    numSpots, newwin.p.i, newwin.p.j, newwin.sv, framenum);
-     
  
       // if a boring event detected, and not keeping boring WTA points then break simulation
       if (newwin.boring && p.itsKeepWTABoring == false) { 
@@ -403,7 +396,6 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
       color *= itsWeights.chanCw;
       getMinMax(color, mi, ma);
       LDEBUG("Color final %f weighted range [%f .. %f]", itsWeights.chanCw, mi, ma);
-    
     }
     
     if (itsWeights.chanIw != 0.f ) {
@@ -415,13 +407,13 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
       intensity *= itsWeights.chanIw;
       getMinMax(intensity, mi, ma);
       LDEBUG("Intensity final %f weighted range [%f .. %f]", itsWeights.chanIw, mi, ma);            	
-   
     }
+
     // build our current saliency map
     Image<float> sminput = ori + color + intensity;
     
     getMinMax(sminput, mi, ma);         
-    LDEBUG("Raw output range is [%f .. %f]", mi, ma);     
+    LDEBUG("Raw input range is [%f .. %f]", mi, ma);     
     sminput = maxNormalize(sminput, 0.f, 2.f, itsMaxNormType);
     
     // output is     now typically in the (0.0..8.0) range;
@@ -446,7 +438,17 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
     if( (framenum - minframe) > 10)
       LINFO("ERROR: SENDING FRAMES TOO FAST framenum: %d minframe:%d", framenum, minframe);
     
-    winners = getSalientWinnersNew(img, framenum, sml, sm, intensity,color,ori);
+    // get the standard deviation in the input image
+    // if there is little deviation, this image is uniform and
+    // will have no saliency so return empty winners    
+    float stdevlum = stdev(luminance(img));
+    if (stdevlum <= 3.f) {
+      LINFO("######luminance standard deviation %f too small -  no winners will be found in frame %d ####", stdevlum, framenum );
+      return std::list<WTAwinner>() ;   
+    }
+
+    //winners = getSalientWinnersNew(img, framenum, sml, sm, intensity,color,ori);
+    winners = getSalientWinnersMaxFast(sml, sm, intensity,color,ori);
   
   return winners;
 }
@@ -465,23 +467,22 @@ list<WTAwinner> GetSalientRegionsStage::getSalientWinnersMaxFast(int sml,
   std::list<WTAwinner> winners;
   Timer masterclock;                // master clock for simulations
   masterclock.reset(); 
-
+  
   DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters; 
   
-  //itsWta->input(sm);
-
   do {
     
     // initialize a new winner
     findMax(sm, currwin, maxval);
-    //itsWta->doEvolve(masterclock.getSimTime(), currwin);
-    //maxval = itsWta->getMaxVal();
  
     //rescale coordinate system
     if (currwin.i != -1) {
       newwin =   WTAwinner::buildFromSMcoords(currwin, sml, true,
                                               masterclock.getSimTime(),
                                               maxval, false);
+
+      newwin.p.i = (int) ( (float) newwin.p.i*itsScaleW);
+      newwin.p.j = (int) ( (float) newwin.p.j*itsScaleH);
       
       // if the last covert attention shift was slower than boring Delay(msecs)
       // or the SM voltage was less than (default 3mV), mark the covert attention shift as boring:

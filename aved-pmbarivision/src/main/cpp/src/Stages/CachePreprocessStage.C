@@ -48,13 +48,15 @@ using namespace std;
 CachePreprocessStage::CachePreprocessStage(MPI_Comm mastercomm, 
                                            const char *name,
                                            nub::soft_ref<InputFrameSeries> &ifs,
+                                           nub::soft_ref<MbariResultViewer> &rv,
                                            const FrameRange framerange,
                                            const std::string& inputFileStem )
   :Stage(mastercomm,name),
    itsifs(ifs),
    itsFrameRange(framerange),
    itsAvgCache(ImageCacheAvg< PixRGB<byte> > (DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache)),
-   itsInputFileStem(inputFileStem)
+   itsInputFileStem(inputFileStem),
+   itsRv(rv)
 {
   preload();	
 }
@@ -101,9 +103,8 @@ void CachePreprocessStage::runStage()
             itsifs->updateNext();
             img = itsifs->readRGB();
 
-	   // if there is no deviation do not add to the average cache
-           // TODO: put a check here for all white/black pixels
-           if (stdev(luminance(img)) == 0.f){
+	   // if there is little deviation do not add to the average cache
+           if (stdev(luminance(img)) <= 5.0f){
              LINFO("No standard deviation in frame %d. Is this frame all black ? Not including this image in the average cache", itsifs->frame());
              itsAvgCache.push_back(itsAvgCache.mean());
            }
@@ -135,7 +136,9 @@ void CachePreprocessStage::runStage()
         else {
              img2runsaliency = itsAvgCache.clampedDiffMean(img);
         } 
-       
+
+        itsRv->output(img, curFrame, "Input"); 
+        itsRv->output(img2runsaliency, curFrame, "Saliency_input"); 
         MPE_Log_event(2,0,"");		
         
         //every frame send diffed data to segment stage
@@ -186,9 +189,8 @@ void CachePreprocessStage::preload() {
         img = itsifs->readRGB();
 
         // get the standard deviation in the input image
-        // if there is no deviation do not add to the average cache
-        // TODO: put a check here for all white/black pixels
-        if (stdev(luminance(img)) == 0.f) {
+        // if there is little deviation do not add to the average cache
+        if (stdev(luminance(img)) <= 5.0f) {
             LINFO("No standard deviation in frame %d. Is this frame all black ? Not including this image in the average cache", itsifs->frame());
             itsAvgCache.push_back(itsAvgCache.mean());
         } else

@@ -66,7 +66,8 @@ UpdateEventsStage::UpdateEventsStage(MPI_Comm mastercomm, const char *name, \
    itsLastEventSeedFrameNum(-1),
    itsifs(ifs),
    itsrv(rv),
-   itsGrayscale(false)
+   itsGrayscale(false),
+   itsTestGrayscale(true)
 {
   
 }
@@ -94,7 +95,12 @@ void UpdateEventsStage::initStage()
     tmpimg = rep->readRGB();
     mstart.updateData(tmpimg, itsFrameRange.getFirst());
 
-    itsGrayscale = isGrayscale(tmpimg);
+        // test for grayscale or color image. this is later used to
+        // remove the r/g b/w color map computations for speedup
+	if(itsTestGrayscale == true) { 
+	  itsGrayscale = isGrayscale(tmpimg);
+	  itsTestGrayscale = false;
+	}
 
     rep->setFrameNumber(itsFrameRange.getLast());
     tmpimg = rep->readRGB();
@@ -192,8 +198,6 @@ void UpdateEventsStage::runStage()
           
           // if send a frame number within range
           if(frameNum <= itsFrameRange.getLast()) {
-
-    LDEBUG("####0");
             // store rgb image in cache; sometimes this fails due to NFS error so retry a few times
             int ntrys=0;
             do{ 
@@ -249,7 +253,7 @@ void UpdateEventsStage::updateEvents()
   DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
   int numFrameDist = dp.itsSaliencyFrameDist;  
   if(!itsOutCache.empty())
-      LDEBUG("####1  outcacheframenum%d lasteventseed%d numframedist%d", itsOutCache.front().getFrameNum(), itsLastEventSeedFrameNum, numFrameDist  );
+      LDEBUG(" outcacheframenum%d lasteventseed%d numframedist%d", itsOutCache.front().getFrameNum(), itsLastEventSeedFrameNum, numFrameDist  );
   MbariImage< byte > mbariImg(itsInputFileStem.c_str());
   MbariImage< PixRGB<byte> > mbariRGBImg(itsInputFileStem.c_str());
 
@@ -258,7 +262,6 @@ void UpdateEventsStage::updateEvents()
           ( (itsOutCache.front().getFrameNum() < (itsLastEventSeedFrameNum + numFrameDist)) ||
             (itsOutCache.front().getFrameNum() == itsFrameRange.getLast())) ) {
 
-    LDEBUG("####2");
     // update the MbariResultsViewer one frame - this assumes we are receiving sequential frames to process
     itsrv->updateNext();
                 
@@ -295,6 +298,8 @@ void UpdateEventsStage::updateEvents()
 
             // mask special area in the frame we don't care
             bitImg = maskArea(bitImg, &dp);
+
+	    itsrv->output(bitImg, mbariImg.getFrameNum(), "Segment_output");
 
             //update the events using with the segmented binary image
             itsEventSet.updateEvents(bitImg, curFOE, mbariImg.getFrameNum(), mbariImg.getMetaData());
@@ -434,7 +439,7 @@ void UpdateEventsStage::initiateEvents(int frameNum, Image< byte > bitImg, Image
     
     // if itsWinners map list has valid winner
     if(iter != itsWinners.end()) {
-      
+     
       // get list of winners for this frameNum
       list<SalientWinner>* winners = itsWinners[frameNum];       	     
 	      
@@ -447,12 +452,15 @@ void UpdateEventsStage::initiateEvents(int frameNum, Image< byte > bitImg, Image
       }
 
       // extract salient BitObjects          
-      LINFO("Extracting salient BitObjects for frame: %d", frameNum);
+      LINFO("Extracting salient BitObjects for frame: %d number of potential winners: %d", frameNum, wtawinners.size());
       list<BitObject> sobjs;
-      if (itsGrayscale == false)
-          sobjs = getSalientObjects(bitImg, colorBitImg, wtawinners);
-      else
+      if (itsGrayscale == true) {
           sobjs = getSalientObjects(bitImg, wtawinners);
+      }
+      else {
+            //TODO: Test this - this is untested code
+          sobjs = getSalientObjects(bitImg, colorBitImg, wtawinners);
+      }
       
       // initiate events with these objects
       LINFO("Initiating events for frame %d number of objects found %d number winners: %d", frameNum, sobjs.size(),winners->size());
