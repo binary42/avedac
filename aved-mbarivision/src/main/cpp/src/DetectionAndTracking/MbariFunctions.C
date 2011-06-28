@@ -337,7 +337,9 @@ list<WTAwinner> getSalientWinners(
     // get the standard deviation in the input image
     // if there is no deviation, this image is uniform and
     // will have no saliency so return empty winners
-    if (stdev(luminance(img)) == 0.f)
+    float stddevlum = stdev(luminance(img));
+    LDEBUG("Standard deviation in luminance: %f", stddevlum);
+    if (stddevlum <= 5.0f)
         return winners;
 
     // reset the brain 
@@ -542,7 +544,7 @@ float getMax(const Image<float> matrix) {
 Image< PixRGB<byte> > getImageToAddToTheBackground(bool needIt, const Image< PixRGB<byte> > &img,
         const Image< PixRGB<byte> > &currentBackgroundMean, Image< PixRGB<byte> > savePreviousPicture,
         const list<BitObject> &bitObjectFrameList, const DetectionParameters &params) {
-    // If the graphCut based segmentation has been choosen, the background model is computed diferently
+    // If the graphCut based segmentation has been choosen, the background model is computed differently
     if (params.itsSegmentAlgorithm != SAExtractForegroundBW) {
         if (!needIt && !bitObjectFrameList.empty()) {
             Image<byte> bgMask = showAllObjects(bitObjectFrameList);

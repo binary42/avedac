@@ -321,10 +321,10 @@ int main(const int argc, const char** argv) {
                 img = ifs->readRGB();
 
                 // get the standard deviation in the input image
-                // if  there is no deviation do not add to the average cache
+                // if  there is little deviation do not add to the average cache
                 // TODO: put a check here for all white/black pixels
-                if (stdev(luminance(img)) == 0.f) {
-                    LINFO("No standard deviation in frame %d. Is this frame all black ? Not including this image in the average cache", ifs->frame());
+                if (stdev(luminance(img)) <= 5.0f) {
+                    LINFO("Standard deviation low in frame %d. Is this frame all black or just noise ? Not including this image in the average cache", ifs->frame());
                     avgCache.push_back(avgCache.mean());
                 } else
                     avgCache.push_back(img);
@@ -396,8 +396,8 @@ int main(const int argc, const char** argv) {
                 bitImg = segmentation.runBinaryAdaptive(bwAvgCache.clampedDiffMean(img2segment),
                                                         img2segment, detectionParms.itsTrackingMode);
               }
-	    else
-              bitImg = segmentation.runBinaryAdaptive(img2segment,
+	      else
+                  bitImg = segmentation.runBinaryAdaptive(img2segment,
                                                       img2segment, detectionParms.itsTrackingMode);
             }
             else {
