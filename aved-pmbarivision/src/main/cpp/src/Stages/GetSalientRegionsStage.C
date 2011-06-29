@@ -443,7 +443,7 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
     // if there is little deviation, this image is uniform and
     // will have no saliency so return empty winners    
     float stdevlum = stdev(luminance(img));
-    if (stdevlum <= 5.f) {
+    if (stdevlum == 0.f) {
       LINFO("######luminance standard deviation %f too small -  no winners will be found in frame %d ####", stdevlum, framenum );
       return std::list<WTAwinner>() ;   
     }

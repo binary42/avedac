@@ -104,7 +104,7 @@ void CachePreprocessStage::runStage()
             img = itsifs->readRGB();
 
 	   // if there is little deviation do not add to the average cache
-           if (stdev(luminance(img)) <= 5.0f){
+           if (stdev(luminance(img)) <= 5.0f && itsAvgCache.size() > 0){
              LINFO("No standard deviation in frame %d. Is this frame all black ? Not including this image in the average cache", itsifs->frame());
              itsAvgCache.push_back(itsAvgCache.mean());
            }
