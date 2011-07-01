@@ -154,6 +154,13 @@ public:
 
   //! check if the LoadEventsName is set
   bool isLoadEventsNameSet() const;
+  
+  //! check if the Save Ouput is set
+  bool isSaveOutputSet() const;
+
+  //! check if the Display Ouput is set
+  bool isDisplayOutputSet() const;
+
 
   //! load the VisualEventSet from the file LoadEventsName
   void loadVisualEventSet(MbariVisualEvent::VisualEventSet& ves) const;

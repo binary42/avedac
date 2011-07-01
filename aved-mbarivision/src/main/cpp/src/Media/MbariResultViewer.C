@@ -290,11 +290,23 @@ void MbariResultViewer::outputResultFrame(MbariImage< PixRGB<byte> >& resultImg,
     if (itsSaveOutput.getVal())
         itsOfs->writeFrame(GenericFrame(final_image), "results", FrameInfo("results", SRC_POS));
 }
-
 // #############################################################################
 
 bool MbariResultViewer::isLoadEventsNameSet() const {
     return (itsLoadEventsName.getVal().length() > 0);
+}
+
+// #############################################################################
+
+bool MbariResultViewer::isDisplayOutputSet() const {
+    return (itsDisplayOutput.getVal() > 0);
+}
+
+
+// #############################################################################
+
+bool MbariResultViewer::isSaveOutputSet() const {
+    return (itsSaveOutput.getVal() > 0);
 }
 
 

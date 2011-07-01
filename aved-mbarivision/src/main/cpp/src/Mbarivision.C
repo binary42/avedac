@@ -275,9 +275,8 @@ int main(const int argc, const char** argv) {
             img = ifs->readRGB();
 
 	   // get the standard deviation in the input image
-           // if there is no deviation do not add to the average cache
-	   // TODO: put a check here for all white/black pixels
-    	   if (stdev(luminance(img)) == 0.f){ 
+           // if there is little deviation do not add to the average cache
+    	   if (stdev(luminance(img)) <= 5.f && avgCache.size() > 0){ 
              LINFO("No standard deviation in frame %d. Is this frame all black ? Not including this image in the average cache", ifs->frame());
 	     avgCache.push_back(avgCache.mean());
 	   }
@@ -322,8 +321,7 @@ int main(const int argc, const char** argv) {
 
                 // get the standard deviation in the input image
                 // if  there is little deviation do not add to the average cache
-                // TODO: put a check here for all white/black pixels
-                if (stdev(luminance(img)) <= 5.0f) {
+                if (stdev(luminance(img)) <= 5.0f && avgCache.size() > 0) {
                     LINFO("Standard deviation low in frame %d. Is this frame all black or just noise ? Not including this image in the average cache", ifs->frame());
                     avgCache.push_back(avgCache.mean());
                 } else
@@ -522,9 +520,12 @@ int main(const int argc, const char** argv) {
                     frameRange);
 	    }
 
+	    // display or write results  ?
+	    if (rv->isDisplayOutputSet() || rv->isSaveOutputSet()) {
             rv->outputResultFrame(mbariImg,
                     eventSet,
                     circleRadius);
+	    }
 
             // need to save any event clips?
             if (rv->isSaveAllEventClips()) {
