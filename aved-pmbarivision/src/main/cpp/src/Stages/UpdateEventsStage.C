@@ -373,12 +373,14 @@ void UpdateEventsStage::updateEvents()
                                          mbariRGBImg.getFrameNum(), 
                                          mbariRGBImg.getMetaData().getTC(),
                                          itsFrameRange); 	
-        
-        LINFO("Writing results for frame :%d", mbariRGBImg.getFrameNum());
-        itsrv->outputResultFrame(mbariRGBImg,                         
+        // write results  ? 
+	if (itsrv->isSaveOutputSet()) { 
+        	LINFO("Writing results for frame :%d", mbariRGBImg.getFrameNum());
+        	itsrv->outputResultFrame(mbariRGBImg,                         
                                  itsEventSet,
                                  circleRadius);
-        
+        }
+ 
         // need to save any event clips?
         if(itsrv->isSaveAllEventClips()) {        	
           //save all events
