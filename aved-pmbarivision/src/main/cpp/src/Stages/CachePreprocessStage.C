@@ -69,6 +69,7 @@ void CachePreprocessStage::runStage()
 {
   DetectionParameters detectionParms = DetectionParametersSingleton::instance()->itsParameters;
   Image< PixRGB<byte> > img, img2runsaliency; 
+  Image< byte > img2segment; 
   MPI_Status s;
   MPI_Request r;	
   int curFrame = itsFrameRange.getFirst();
@@ -121,6 +122,19 @@ void CachePreprocessStage::runStage()
               LINFO("Caching frame %06d", curFrame);
           }
         
+	// Create the binary image to segment
+ 	if (detectionParms.itsSegmentAlgorithmInputType == SAIMaxRGB) {
+          img2segment = maxRGB(itsAvgCache.absDiffMean(img));
+	}
+        else if (detectionParms.itsSegmentAlgorithmInputType == SAILuminance) {
+	  img2segment = luminance(img);
+	}
+        else {
+          img2segment = maxRGB(itsAvgCache.absDiffMean(img));
+	}
+
+ 	itsRv->output(img2segment, curFrame, "Segment_input"); 
+
  	// Get the saliency input image
         if ( detectionParms.itsSaliencyInputType == SIDiffMean) {
             if (detectionParms.itsSizeAvgCache > 1)
@@ -143,7 +157,7 @@ void CachePreprocessStage::runStage()
         
         //every frame send diffed data to segment stage
         LDEBUG("%s sending message MSG_DATAREADY to: %s", Stage::name(), stageName(Stages::SG_STAGE));        
-        if(sendRGBByteImage(img, curFrame, Stages::SG_STAGE,  Stage::MSG_DATAREADY, Stage::mastercomm()) == -1) {
+        if(sendByteImage(img2segment, curFrame, Stages::SG_STAGE,  Stage::MSG_DATAREADY, Stage::mastercomm()) == -1) {
           LINFO("Error sendingByteImage to %s", stageName(Stages::SG_STAGE));
           break;		
         }	

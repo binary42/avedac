@@ -89,7 +89,6 @@ private:
   FOEestimator itsFOEEst;
   int itsLastEventSeedFrameNum; 
   bool itsGrayscale; //! flag to indicate whether processing color or grayscale images
-  bool itsTestGrayscale; 
 };
 
 #endif // !defined(UPDATEEVENTS_H)

@@ -92,7 +92,6 @@ GetSalientRegionsStage::GetSalientRegionsStage(MPI_Comm mastercomm, const char *
    itsBoringmv(boringmv),
    itsBoringDelay(boringDelay),
    itsWeights(wts),
-   itsTestGrayscale(true),
    itsGrayscaleCompute(false)
 {
    if (scaleW > 0.f)
@@ -145,16 +144,19 @@ void GetSalientRegionsStage::runStage()
         MPE_Log_event(5,0,"");	 
 
 	// scale if needed
-        LDEBUG("---->Rescaling image size: %dx%d using scale factor: %f %f ", img->getWidth(), img->getHeight(), itsScaleW, itsScaleH);
-	img2runsaliency = rescale(*img, Dims((int) (img->getWidth()/itsScaleW), (int) (img->getHeight()/itsScaleH)));
-
-        // test for grayscale or color image. this is later used to
-        // remove the r/g b/w color map computations for speedup
-	if(itsTestGrayscale == true) {
-	  itsGrayscaleCompute = isGrayscale(img2runsaliency);
-	  itsTestGrayscale = false;
+	if (itsScaleW != 1.0f && itsScaleH != 1.0f) {
+          LDEBUG("Rescaling image size: %dx%d using scale factor: %f %f ", img->getWidth(), img->getHeight(), itsScaleW, itsScaleH);
+	  img2runsaliency = rescale(*img, Dims((int) (img->getWidth()/itsScaleW), (int) (img->getHeight()/itsScaleH)));
 	}
-        // send the image to the beowulf worker nodes
+	else {
+	  img2runsaliency = *img;
+	}
+
+	// test for grayscale or color image. this is later used to
+        // remove the r/g b/w color map computations for speedup
+	itsGrayscaleCompute = isGrayscale(img2runsaliency);
+        
+	// send the image to the beowulf worker nodes
         sendImage(img2runsaliency, framenum);
 
         // get the winners back
@@ -583,13 +585,15 @@ void GetSalientRegionsStage::sendImage(const Image< PixRGB<byte> >& img, int fra
   TCPmessage smsg;                  
 
   // remove the r/g b/w color map computations if gray scale image
-  if (itsGrayscaleCompute == true)
+  if (itsGrayscaleCompute == true) {
     itsWeights.chanCw = 0.f;
+  }
 
   // compute luminance and send it off:
   Image<byte> lum = luminance(img);
      
   if (itsWeights.chanOw != 0.f ){
+    LDEBUG("######## sending luminance to BEO_45,BEO_90,BEO_135");
     // first, send off luminance to orientation slaves:
     smsg.reset(framenum, BEO_ORI0); smsg.addImage(lum); itsBeo->send(smsg);
     smsg.setAction(BEO_ORI45); itsBeo->send(smsg);
@@ -598,11 +602,13 @@ void GetSalientRegionsStage::sendImage(const Image< PixRGB<byte> >& img, int fra
   }
      
   if (itsWeights.chanIw != 0.f) {
+    LDEBUG("####### sending luminance to BEO_LUMINANCE");
     // finally, send to luminance slave:
     smsg.setAction(BEO_LUMINANCE); itsBeo->send(smsg);
   }
 
  if (itsWeights.chanCw != 0.f) {
+    LDEBUG("######### sending luminance to BEO_REDGREEN BEO_BLUEYELLOW");
    // compute RG and BY and send them off:
    Image<byte> r, g, b, y; getRGBY(img, r, g, b, y, (byte)25);
    smsg.reset(framenum, BEO_REDGREEN);

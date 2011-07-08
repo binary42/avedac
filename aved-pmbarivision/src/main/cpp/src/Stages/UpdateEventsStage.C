@@ -66,8 +66,7 @@ UpdateEventsStage::UpdateEventsStage(MPI_Comm mastercomm, const char *name, \
    itsLastEventSeedFrameNum(-1),
    itsifs(ifs),
    itsrv(rv),
-   itsGrayscale(false),
-   itsTestGrayscale(true)
+   itsGrayscale(false)
 {
   
 }
@@ -95,12 +94,9 @@ void UpdateEventsStage::initStage()
     tmpimg = rep->readRGB();
     mstart.updateData(tmpimg, itsFrameRange.getFirst());
 
-        // test for grayscale or color image. this is later used to
-        // remove the r/g b/w color map computations for speedup
-	if(itsTestGrayscale == true) { 
-	  itsGrayscale = isGrayscale(tmpimg);
-	  itsTestGrayscale = false;
-	}
+    // test for grayscale or color image. this is later used to
+    // remove the r/g b/w color map computations for speedup
+    itsGrayscale = isGrayscale(tmpimg);
 
     rep->setFrameNumber(itsFrameRange.getLast());
     tmpimg = rep->readRGB();

@@ -123,7 +123,6 @@ private:
   LevelSpec itsLevelSpec;
   MaxNormType itsMaxNormType;
   VisualCortexWeights itsWeights;
-  bool itsTestGrayscale;
   bool itsGrayscaleCompute;
   float itsBoringmv;
   SimTime itsBoringDelay;
