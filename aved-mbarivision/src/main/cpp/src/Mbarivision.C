@@ -513,7 +513,7 @@ int main(const int argc, const char** argv) {
             eventFrameList = eventSet.getEventsForFrame(mbariImg.getFrameNum());
 
             // write out eventSet to XML?
-            if (rv->isSaveXMLEventsNameSet()) {
+            if (rv->isSaveXMLEventsNameSet() && eventFrameList.size() > 0) {
                 rv->saveVisualEventSetToXML(eventFrameList,
                     mbariImg.getFrameNum(),
                     mbariImg.getMetaData().getTC(),
