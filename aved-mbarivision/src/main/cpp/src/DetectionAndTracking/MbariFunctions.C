@@ -70,8 +70,9 @@ bool isGrayscale(const Image<PixRGB<byte> >& src)
 
   while ( (aptr != stop) ) {
    int color = aptr->red();
-   if ( aptr->green() != color || aptr->blue() != color )
+   if ( aptr->green() != color || aptr->blue() != color ) {
 	break;
+     }
    ++aptr;
   }
 
