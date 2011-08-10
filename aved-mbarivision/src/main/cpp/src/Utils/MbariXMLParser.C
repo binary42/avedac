@@ -216,7 +216,7 @@ void MbariXMLParser::addDetectionParameters(DetectionParameters params) {
   DOMElement* eventsroot = itsXMLdoc->createElement(detectionparameters);
   std::ostringstream cachesizevalue, mineventareavalue, maxeventareavalue, \
     maskxposvalue, maskyposvalue, maskwidthvalue, maskheightvalue,maxWTApointsvalue, \
-  maxevolvetimevalue, maxframeseventvalue, minframeseventvalue, maxcostvalue;
+  maxevolvetimevalue, maxframeseventvalue, minframeseventvalue, maxcostvalue, minvariancevalue;
 
   // This is actually better to put into DetectionParameters.C for maintenance purposes
   //...but we will leave them here for now. These should be all the model options
@@ -234,6 +234,14 @@ void MbariXMLParser::addDetectionParameters(DetectionParameters params) {
     eventsroot->setAttribute(mineventarea, mineventareaxmlstring);
     XMLString::release(&mineventarea);
     XMLString::release(&mineventareaxmlstring);
+  }
+
+  if(minvariancevalue << params.itsMinVariance) {
+    XMLCh* minvariance = XMLString::transcode("MinVariance");
+    XMLCh* minvariancexmlstring = XMLString::transcode(minvariancevalue.str().c_str());
+    eventsroot->setAttribute(minvariance, minvariancexmlstring);
+    XMLString::release(&minvariance);
+    XMLString::release(&minvariancexmlstring);
   }
   if(maxeventareavalue << params.itsMaxEventArea) {
     XMLCh* maxeventarea = XMLString::transcode("MaxEventArea");
@@ -264,6 +272,14 @@ void MbariXMLParser::addDetectionParameters(DetectionParameters params) {
   eventsroot->setAttribute(segmentalgorithmtype, segmentalgorithmtypexmlstring);
   XMLString::release(&segmentalgorithmtype);
   XMLString::release(&segmentalgorithmtypexmlstring);
+
+  ColorSpaceType cstype= params.itsColorSpaceType;
+  std::string cstring = colorSpaceType(cstype);
+  XMLCh* colorspacetype = XMLString::transcode("ColorSpaceType");
+  XMLCh* colorspacetypexmlstring = XMLString::transcode(cstring.c_str());
+  eventsroot->setAttribute(colorspacetype, colorspacetypexmlstring);
+  XMLString::release(&colorspacetype);
+  XMLString::release(&colorspacetypexmlstring);
 
   SaliencyInputImageType sitype= params.itsSaliencyInputType;
   std::string sistring = saliencyInputImageType(sitype);
