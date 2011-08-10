@@ -66,6 +66,8 @@ itsSegmentAlgorithm(DEFAULT_SEGMENTATION_ALGORITHM),
 itsSegmentAlgorithmInputType(DEFAULT_SEGMENTATION_ALGORITHM_TYPE),
 itsSegmentSEType(DEFAULT_SE_TYPE),
 itsSaliencyInputType(DEFAULT_SALIENCY_INPUT_TYPE),
+itsMinVariance(DEFAULT_MIN_VARIANCE),
+itsColorSpaceType(DEFAULT_COLOR_SPACE),
 itsKeepWTABoring(DEFAULT_KEEP_WTA_BORING){
     //initialize with some defaults
     float maxDist = itsMaxDist;
@@ -92,6 +94,8 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     os << "\tmaxwtapoints:" << itsMaxWTAPoints;
     os << "\tsavenoninteresting:" << itsSaveNonInteresting;
     os << "\tsaveoriginalframespec:" << itsSaveOriginalFrameSpec;
+    os << "\tcolorspace:" << colorSpaceType(itsColorSpaceType);
+    os << "\tminvariance:" << itsMinVariance;
 
     if (itsMaskPath.length() > 0) {
         os << "\tmaskpath:" << itsMaskPath;
@@ -121,6 +125,8 @@ DetectionParameters &DetectionParameters::operator=(const DetectionParameters& p
     this->itsKeepWTABoring = p.itsKeepWTABoring;
     this->itsSaveNonInteresting = p.itsSaveNonInteresting;
     this->itsSaveOriginalFrameSpec = p.itsSaveOriginalFrameSpec;
+    this->itsColorSpaceType = p.itsColorSpaceType;
+    this->itsMinVariance = p.itsMinVariance; 
     this->itsMaskPath = p.itsMaskPath;
     this->itsMaskXPosition = p.itsMaskXPosition;
     this->itsMaskYPosition = p.itsMaskYPosition;
@@ -198,6 +204,8 @@ itsMaxEventFrames(&OPT_MDPmaxEventFrames, this),
 itsSaliencyFrameDist(&OPT_MDPsaliencyFrameDist, this),
 itsKeepWTABoring(&OPT_MDPkeepBoringWTAPoints, this),
 itsSaveNonInteresting(&OPT_MDPsaveNonInterestingEvents, this),
+itsMinVariance(&OPT_MDPminVariance, this),
+itsColorSpaceType(&OPT_MDPcolorSpace, this),
 itsSaveOriginalFrameSpec(&OPT_MDPsaveOriginalFrameSpec, this){
 };
 // ######################################################################
@@ -245,6 +253,10 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
         p->itsMaxEventFrames = itsMaxEventFrames.getVal();
     else
         p->itsMaxEventFrames = DEFAULT_MAX_EVENT_FRAMES;
+    if (itsMinVariance.getVal() > 0.f)
+        p->itsMinVariance = itsMinVariance.getVal();
+    else
+        p->itsMinVariance = DEFAULT_MIN_VARIANCE;
 
     if (itsSaliencyFrameDist.getVal() > 0)
         p->itsSaliencyFrameDist = itsSaliencyFrameDist.getVal();
@@ -252,4 +264,5 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
     p->itsKeepWTABoring = itsKeepWTABoring.getVal();
     p->itsSaveNonInteresting = itsSaveNonInteresting.getVal();
     p->itsSaveOriginalFrameSpec = itsSaveOriginalFrameSpec.getVal();
+    p->itsColorSpaceType = itsColorSpaceType.getVal();
 }

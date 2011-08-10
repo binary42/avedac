@@ -39,6 +39,7 @@ parameters*/
 #include "DetectionAndTracking/TrackingModes.H"
 #include "DetectionAndTracking/SaliencyTypes.H"
 #include "DetectionAndTracking/SegmentTypes.H"
+#include "DetectionAndTracking/ColorSpaceTypes.H"
 
 #include <cstdio>
 #include <iostream>
@@ -99,6 +100,11 @@ parameters*/
 // Default way to handle saving events in the original
 // frame size specification
 #define DEFAULT_SAVE_ORG_FRAME_SPEC false
+// Default color space for computing saliency
+#define DEFAULT_COLOR_SPACE SAColorGray
+// Default minimum frame variance for processing. Anything below
+// this will be skipped
+#define DEFAULT_MIN_VARIANCE 0.f
 
 // ######################################################################
 //! Class that contains event detection parameters used to filter and track events 
@@ -116,8 +122,12 @@ public:
     bool itsSaveNonInteresting;
     //! @param  itsSaveOriginalFrameSpec = true if want to save events in original frame size
     bool itsSaveOriginalFrameSpec;;
-    //! @param mode = tracking mode used to find event
+    //! @param itsTrackingMode = tracking mode used to find event
     TrackingMode itsTrackingMode;
+    //! @param itsColorSpaceType = color space used to determine saliency computation
+    ColorSpaceType itsColorSpaceType;
+    //! @param mode = color space used to determine saliency computation
+    float itsMinVariance;
     //! @param itsMaxDist = maximum distance in pixels predicted centroid must be within
     int itsMaxDist;
     //! @param itsMaxEventFrames = maximum number of frames any event can be
@@ -200,6 +210,8 @@ private:
     OModelParam<int> itsMaxWTAPoints;
     OModelParam<int> itsMaxEvolveTime;
     OModelParam<TrackingMode> itsTrackingMode;
+    OModelParam<ColorSpaceType> itsColorSpaceType;
+    OModelParam<float> itsMinVariance;
     OModelParam<SegmentAlgorithmType> itsSegmentAlgorithm;
     OModelParam<SegmentAlgorithmInputImageType> itsSegmentAlgorithmInputType;
     OModelParam<std::string> itsSegmentSEType;
