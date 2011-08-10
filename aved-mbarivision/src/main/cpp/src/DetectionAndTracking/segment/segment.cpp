@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 #include <image.h>
 #include <misc.h>
 #include <pnmfile.h>
+#define TEST_CODE
 #include "segment-image.h"
 
 int main(int argc, char **argv) {

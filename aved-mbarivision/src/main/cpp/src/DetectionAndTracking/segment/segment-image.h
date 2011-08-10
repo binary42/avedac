@@ -20,10 +20,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 #define SEGMENT_IMAGE
 
 #include <cstdlib>
-#include "DetectionAndTracking/segment/image.h"
-#include "DetectionAndTracking/segment/misc.h"
-#include "DetectionAndTracking/segment/filter.h"
-#include "DetectionAndTracking/segment/segment-graph.h"
+#include "image.h"
+#include "misc.h"
+#include "filter.h"
+#include "segment-graph.h"
+//#include "DetectionAndTracking/segment/image.h"
+//#include "DetectionAndTracking/segment/misc.h"
+//#include "DetectionAndTracking/segment/filter.h"
+//#include "DetectionAndTracking/segment/segment-graph.h"
 
 // random color
 rgb random_rgb(){ 
