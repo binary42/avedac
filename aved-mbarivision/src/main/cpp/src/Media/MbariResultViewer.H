@@ -210,7 +210,7 @@ public:
 
   //! save the VisualEventList to the file SaveEventsName
   void saveVisualEvent(MbariVisualEvent::VisualEventSet& ves,
-		       std::list<MbariVisualEvent::VisualEvent *> &ves);
+		       std::list<MbariVisualEvent::VisualEvent *> &lves);
 						 
   //! check if the SaveEventsSummaryName is set
   bool isSaveEventSummaryNameSet() const;
