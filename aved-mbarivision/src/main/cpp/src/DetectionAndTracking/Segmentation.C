@@ -59,7 +59,7 @@ Image<byte> Segmentation::runBinaryAdaptive(const Image<byte> &diff, const Image
 Image< PixRGB<byte> > Segmentation::test(const Image < PixRGB<byte> >&input) {
   //printf("processing\n");
   int num_ccs;
-  float sigma = 0.5;
+  float sigma = 0.75;
   int k = 500;
   int min_size = 20;
 
