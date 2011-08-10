@@ -59,8 +59,6 @@ extern const ModelOptionDef OPT_MRVsaveEventNums;
 extern const ModelOptionDef OPT_MRVsaveSummaryEventsName;
 extern const ModelOptionDef OPT_MRVsaveXMLEventSet;
 extern const ModelOptionDef OPT_MRVmetadataSource;
-extern const ModelOptionDef OPT_MDPBenthicVideo;
-extern const ModelOptionDef OPT_MDPMidwaterVideo;
 //@}
 
 //! Command-line options for DetectionParametersModelComponent
@@ -72,7 +70,11 @@ extern const ModelOptionDef OPT_MDPsegmentAlgorithm;
 extern const ModelOptionDef OPT_MDPmaxEvolveTime;
 extern const ModelOptionDef OPT_MDPmaxWTAPoints;
 extern const ModelOptionDef OPT_MDPsaveNonInterestingEvents;
-extern const ModelOptionDef OPT_MDPsaveOriginalFrameSpec;;
+extern const ModelOptionDef OPT_MDPsaveOriginalFrameSpec;
+extern const ModelOptionDef OPT_MDPBenthicVideo;
+extern const ModelOptionDef OPT_MDPMidwaterVideo;
+extern const ModelOptionDef OPT_MDPcolorSpace;
+extern const ModelOptionDef OPT_MDPminVariance;
 
 extern const ModelOptionDef OPT_MDPkeepBoringWTAPoints;
 extern const ModelOptionDef OPT_MDPtrackingMode;

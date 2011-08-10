@@ -34,6 +34,7 @@
 #include "DetectionAndTracking/TrackingModes.H"
 #include "DetectionAndTracking/SaliencyTypes.H"
 #include "DetectionAndTracking/SegmentTypes.H"
+#include "DetectionAndTracking/ColorSpaceTypes.H"
 #include "DetectionAndTracking/Segmentation.H"
 #include "Image/BitObjectDrawModes.H"
 
@@ -62,7 +63,9 @@ const ModelOptionCateg MOC_MBARI = {
 const ModelOptionType MODOPT_ARG_INT = {
   MOK_ARG, &(typeid(int))
 };
-
+const ModelOptionType MODOPT_ARG_FLOAT = {
+  MOK_ARG, &(typeid(float))
+};
 void REQUEST_OPTIONALIAS_MBARI(OptionManager& m)
 {
   m.requestOptionAlias(&OPT_MDPMosaicBenthicStills);
@@ -295,7 +298,7 @@ const ModelOptionDef OPT_MDPsegmentAlgorithmInputImage = {
 const ModelOptionDef OPT_MDPsaliencyInputImage = {
       MODOPT_ARG(SaliencyInputImageType), "MDPsaliencyInputImage", &MOC_MBARI, OPTEXP_MRV,
     "Saliency input image type",
-    "mbari-saliency-input-image", '\0', "<Raw|DiffMean>",
+    "mbari-saliency-input-image", '\0', "<Raw|DiffMean|None>",
     "DiffMean" };
 const ModelOptionDef OPT_MDPsegmentSEType =    
   { MODOPT_ARG_STRING, "MDPsegmentationSEType", &MOC_MBARI, OPTEXP_MRV,
@@ -367,8 +370,18 @@ const ModelOptionDef OPT_MDPsaveNonInterestingEvents =
     "mbari-save-non-interesting-events", '\1', "", "false" };
 const ModelOptionDef OPT_MDPsaveOriginalFrameSpec =
   { MODOPT_FLAG, "OPT_MDPsaveOriginalFrameSpec", &MOC_MBARI, OPTEXP_MRV,
-    "Save events in original frame size specs. This does nothing if the frames are not resized with the --rescale-input option. Default is set to false",
+    "Save events in original frame size specs, but run saliency computation on reduced frame size. This does nothing if the frames are not resized with the --rescale-input option. Default is set to false",
     "mbari-save-original-frame-spec", '\0', "", "false" };
+const ModelOptionDef OPT_MDPminVariance =
+  { MODOPT_ARG_FLOAT, "OPT_MDPminVariance", &MOC_MBARI, OPTEXP_MRV,
+    "Minimum variance of input image required for processing. This is useful to remove black frames, or frames with high visual noise",
+    "mbari-min-variance", '\0.', "<float>", "0."};
+const ModelOptionDef OPT_MDPcolorSpace = {
+   MODOPT_ARG(ColorSpaceType), "MDPcolorSpace", &MOC_MBARI, OPTEXP_MRV,
+   "Input image color space. Used to determine whether to compute saliency on color channels or not",
+    "mbari-color-space", '\0', "<RGB|YCBCR|Gray>",
+    "Gray" };
+
 // ####################
 
 // #################### Version options:
