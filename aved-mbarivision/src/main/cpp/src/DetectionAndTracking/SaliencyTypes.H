@@ -34,17 +34,18 @@
     // ! Segment algorithm used for extracting the foreground objects
 enum SaliencyInputImageType {
   SIDiffMean= 0,
-  SIRaw = 1
+  SIRaw = 1,
+  SINone = 2,
   // if you add a new type here, also update the names in the function below!
 };
 //! number of algorithm type
-#define NSALIENCY_INPUT_IMAGE_TYPES 2
+#define NSALIENCY_INPUT_IMAGE_TYPES 3
 
 //! Returns name of segment algorithm
 inline const char* saliencyInputImageType(const SaliencyInputImageType p)
 {
   static const char n[NSALIENCY_INPUT_IMAGE_TYPES][15] = {
-    "DiffMean", "Raw"};
+    "DiffMean", "Raw", "None"};
   return n[int(p)];
 }
 
