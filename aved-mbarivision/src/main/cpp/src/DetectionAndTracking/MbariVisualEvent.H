@@ -271,7 +271,7 @@ namespace MbariVisualEvent {
     //! returns the maximum dimensions of the tracked object in any of the frames
     Dims getMaxObjectDims() const;
 	
-    typedef enum Category {
+    enum Category {
       BORING,
       INTERESTING
     };
