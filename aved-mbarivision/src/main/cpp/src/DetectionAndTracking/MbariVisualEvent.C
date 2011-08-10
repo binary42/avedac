@@ -208,7 +208,7 @@ namespace MbariVisualEvent {
       maxsize_framenr(tk.frame_nr),
       itsState(VisualEvent::OPEN),
       xTracker(tk.location.x(),0.1F,10.0F),
-      yTracker(tk.location.y(),0.1F,1.0F),  
+      yTracker(tk.location.y(),0.1F,1.0F),
       itsDetectionParms(parms)
   {
     LDEBUG("tk.location = (%g, %g); area: %i",tk.location.x(),tk.location.y(),
@@ -300,7 +300,7 @@ namespace MbariVisualEvent {
   // ######################################################################
   bool VisualEvent::isTokenOk(const Token& tk) const
   {
-    LDEBUG("tk.frame_nr %d startframe %d endframe %d itsState: %i", tk.frame_nr, startframe, endframe, (int) itsState);
+    LINFO("tk.frame_nr %d startframe %d endframe %d itsState: %i", tk.frame_nr, startframe, endframe, (int) itsState);
     return ((tk.frame_nr - endframe) >= 1) && (itsState != CLOSED);
   }
 	
@@ -312,7 +312,7 @@ namespace MbariVisualEvent {
     float cost = (xTracker.getCost(tk.location.x()) +
                   yTracker.getCost(tk.location.y()));
 	
-    LDEBUG("Event no. %i; obj location: %g, %g; predicted location: %g, %g; cost: %g",
+    LINFO("Event no. %i; obj location: %g, %g; predicted location: %g, %g; cost: %g",
            myNum, tk.location.x(), tk.location.y(), xTracker.getEstimate(), 
            yTracker.getEstimate(), cost);
     return cost;
