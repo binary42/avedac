@@ -82,30 +82,31 @@ bool isGrayscale(const Image<PixRGB<byte> >& src)
   return false;
 }
 // ######################################################################
-std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
+std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& colorImg,
         const Point2D<int> seed,
         Rectangle region,
         const int minSize,
         const int maxSize) {
 
     std::list<BitObject> bos;
-    Dims d = bImg.getDims();
+    Dims d = colorImg.getDims();
     region = region.getOverlap(Rectangle(Point2D<int>(0, 0), d - 1));
-    Image<byte> labelImg(bImg.getDims(), ZEROS);
-    Image<byte> bitImg(bImg.getDims(), ZEROS);
-    PixRGB<byte> color = bImg.getVal(seed);
+    Image<byte> labelImg(colorImg.getDims(), ZEROS);
+    Image<byte> bitImg(colorImg.getDims(), ZEROS);
+    PixRGB<byte> color = colorImg.getVal(seed);
     const PixRGB<byte> black = PixRGB<byte>(0,0,0);
 
     // if this isn't a masked point,
     // create a binary representation of this image
     // with the color at the center of the seed
     // as 1 and everything else 0
-    Image< PixRGB<byte> >::const_iterator sptr = bImg.begin();
+    Image< PixRGB<byte> >::const_iterator sptr = colorImg.begin();
     Image<byte>::iterator rptr = bitImg.beginw();
     if (color != black) {
-        while (sptr != bImg.end())
+        while (sptr != colorImg.end())
             *rptr++ = (*sptr++ == color) ? 1 : 0;
     }
+    
     // get the bit object(s) in this region
     for (int ry = region.top(); ry <= region.bottomO(); ++ry)
         for (int rx = region.left(); rx <= region.rightO(); ++rx) {
@@ -131,7 +132,6 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
         }
     return bos;
 }
-
 
 // ######################################################################
 
@@ -190,11 +190,11 @@ std::list<BitObject> getSalientObjects(const Image< byte >& bitImg,
         Rectangle region = Rectangle::tlbrI(winner.j - rectRad, winner.i - rectRad,
                 winner.j + rectRad, winner.i + rectRad);
 
-        LINFO("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
-       winner.i, winner.j, convertToString(region).c_str(), p.itsMinEventArea, p.itsMaxEventArea);
-
         Dims d = bitImg.getDims();
         region = region.getOverlap(Rectangle(Point2D<int>(0, 0), d - 1));
+
+        LINFO("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
+        winner.i, winner.j, convertToString(region).c_str(), p.itsMinEventArea, p.itsMaxEventArea);
 
         std::list<BitObject> sobjscolor, sobjsbin;
         sobjscolor = extractBitObjects(colorbitImg, winner, region, p.itsMinEventArea, p.itsMaxEventArea);
@@ -205,7 +205,7 @@ std::list<BitObject> getSalientObjects(const Image< byte >& bitImg,
         // if no objects found so need to look for them so skip to the next winner
         if (sobjscolor.size() + sobjsbin.size() > 0) {
 
-            // Combine the objects from both segment images
+            // Combine the objects from both segmented images
             sobjs.merge(sobjsbin);
             sobjs.merge(sobjscolor);
 
@@ -252,6 +252,122 @@ std::list<BitObject> getSalientObjects(const Image< byte >& bitImg,
 
 // ######################################################################
 
+std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& colorbitImg,
+    const list<WTAwinner> &winners) {
+    // this should be 2^(smlev - 1)
+    const int rectRad = 20;
+    DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
+    std::list<WTAwinner>::const_iterator iter = winners.begin();
+    std::list<BitObject> bos;
+    Dims d = colorbitImg.getDims();
+
+    //go through each winner and extract salient regions
+    while (iter != winners.end()) {
+        Point2D<int> winner = (*iter).p;
+
+        // extract all the bitObjects at the salient location
+        Rectangle region = Rectangle::tlbrI(winner.j - rectRad, winner.i - rectRad,
+                winner.j + rectRad, winner.i + rectRad);
+
+        region = region.getOverlap(Rectangle(Point2D<int>(0, 0), d - 1));
+
+        LINFO("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
+        winner.i, winner.j, convertToString(region).c_str(), p.itsMinEventArea, p.itsMaxEventArea);
+
+        std::list<BitObject> sobjscolor = extractBitObjects(colorbitImg, winner, region, p.itsMinEventArea, p.itsMaxEventArea); 
+
+        // if no objects found so need to look for them so skip to the next winner
+        if (sobjscolor.size() > 0) { 
+
+            bool keepGoing = true;
+            // loop until we find a new object that doesn't overlap with anything
+            // that we have found so far, or until we run out of objects
+            while (keepGoing) {
+                // no object left -> go to the next salient point
+                if (sobjscolor.empty()) break;
+
+                std::list<BitObject>::iterator biter, siter, largest;
+
+                // find the largest object
+                largest = sobjscolor.begin();
+                int maxSize = 0;
+                for (siter = sobjscolor.begin(); siter != sobjscolor.end(); ++siter)
+                    if (siter->getArea() > maxSize) {
+                        maxSize = siter->getArea();
+                        largest = siter;
+                    }
+                // does the largest objects intersect with any of the already stored guys?
+                keepGoing = false;
+                for (biter = bos.begin(); biter != bos.end(); ++biter)
+                    if (largest->isValid() && biter->isValid() && biter->doesIntersect(*largest)) {
+                        // no need to store intersecting objects -> get rid of largest
+                        // and look for the next largest
+                        sobjscolor.erase(largest);
+                        keepGoing = true;
+                        break;
+                    }
+
+                // so, did we end up finding a BitObject that we can store?
+                if (!keepGoing) {
+                    (*largest).setSMV((*iter).sv);
+                    bos.push_back(*largest);
+                }
+            } // end while keepGoing
+        } // end if found objects
+        iter++;
+        sobjscolor.clear();
+    }// end while iter != winners.end()
+    return bos;
+}
+
+// ######################################################################
+
+std::list<WTAwinner> getWinners(const Image< PixRGB<byte> >& colorbitImg,
+        int framenum,
+        float scaleW,
+        float scaleH) {
+
+    std::list<PixRGB<byte> > colors; 
+    list<WTAwinner> winners;
+    PixRGB<byte> seedColor;
+    const int w = colorbitImg.getWidth();
+    const int h = colorbitImg.getHeight();
+    int numSpots = 0;
+    bool found;
+
+    for (int i = 0; i < w; i++) {
+        for (int j = 0; j < h; j++) { 
+            seedColor = colorbitImg.getVal(i, j);
+            found = false;
+            // add new colors to the list
+            std::list<PixRGB<byte> >::const_iterator iter = colors.begin();
+            while (iter != colors.end()) {
+                PixRGB<byte> color = (*iter);
+                if (color == seedColor) { 
+                    found = true;
+                    break;
+                }
+            iter++;
+            }
+            if (found == false) {
+                colors.push_back(seedColor);
+                WTAwinner win = WTAwinner::NONE();
+                win.p.i = (int) ( (float) i/scaleW);
+                win.p.j = (int) ( (float) j/scaleH);
+                win.sv = 0.f;
+                numSpots++;
+                LINFO("##### winner #%d found at [%d; %d]  frame: %d#####",
+                        numSpots, win.p.i, win.p.j, framenum);
+                winners.push_back(win);
+            }
+        }
+    }
+
+    return winners;
+}
+
+// ######################################################################
+
 std::list<BitObject> getSalientObjects(const Image<byte>& bitImg, const list<WTAwinner> &winners) {
     // this should be 2^(smlev - 1)
     const int rectRad = 20;
@@ -263,9 +379,6 @@ std::list<BitObject> getSalientObjects(const Image<byte>& bitImg, const list<WTA
     while (iter != winners.end()) {
         Point2D<int> winner = (*iter).p;
 
-        LINFO("Extracting bit objects from region: %d %d minSize %d maxSize %d",             \
-        winner.i, winner.j, p.itsMinEventArea, p.itsMaxEventArea);
-
         // extract all the bitObjects at the salient location
         Rectangle region = Rectangle::tlbrI(winner.j - rectRad, winner.i - rectRad,
                 winner.j + rectRad, winner.i + rectRad);
@@ -273,6 +386,9 @@ std::list<BitObject> getSalientObjects(const Image<byte>& bitImg, const list<WTA
         Dims d = bitImg.getDims();
         region = region.getOverlap(Rectangle(Point2D<int>(0, 0), d - 1));
 
+        LINFO("Extracting bit objects from region: %d %d minSize %d maxSize %d",
+        winner.i, winner.j, p.itsMinEventArea, p.itsMaxEventArea);
+        
         std::list<BitObject> sobjs = extractBitObjects(bitImg, region, p.itsMinEventArea, p.itsMaxEventArea);
 
         bool keepGoing = true;
@@ -332,21 +448,22 @@ list<WTAwinner> getSalientWinners(
     int numSpots = 0;
     SimStatus status = SIM_CONTINUE;
     DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
-    nub::soft_ref<Brain>  mbrain = dynCastWeak<Brain>(brain);
-    bool keepGoing = true;
+    nub::soft_ref<Brain>  mbrain = dynCastWeak<Brain>(brain); 
 
-    // get the standard deviation in the input image
-    // if there is no deviation, this image is uniform and
-    // will have no saliency so return empty winners
-    float stddevlum = stdev(luminance(img));
-    LDEBUG("Standard deviation in luminance: %f", stddevlum);
-    if (stddevlum <= 5.0f)
-        return winners;
+    if (p.itsMinVariance > 0.f) { 
+        // get the standard deviation in the input image
+        // if there is no deviation, this image is uniform and
+        // will have no saliency so return empty winners
+        float stddevlum = stdev(luminance(img));
+        LDEBUG("Standard deviation in luminance: %f", stddevlum);
+        if (stddevlum <= p.itsMinVariance)
+            return winners;
+    }
 
     // reset the brain 
     brain->reset(MC_RECURSE);
 
-    // initialize the max time to smulate
+    // initialize the max time to simulate
     const SimTime simMaxEvolveTime = seq->now() + SimTime::MSECS(maxEvolveTime);
 
     rutz::shared_ptr<SimEventInputFrame>
@@ -396,6 +513,9 @@ list<WTAwinner> getSalientWinners(
                         e(new SimEventBreak(0, "##### time limit reached #####"));
                 seq->post(e);
             }
+  	    else {
+                LINFO("##### time now:%f msecs max evolve time:%f msecs#####", seq->now().msecs(), simMaxEvolveTime.msecs());
+      		}
       // Evolve output frame series. It will trigger a save() on our
       // modules as needed, before we start loading new inputs and
       // processing them for the new time step.

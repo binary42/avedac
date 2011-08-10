@@ -117,8 +117,18 @@ list<WTAwinner> getSalientWinners(
         float scaleW,
         float scaleH);
 
+
+//! returns the winners in the color bit image
+/*!*@param colorbitImg a binary image used for extracting BitObjects*/
+std::list<WTAwinner> getWinners(const Image<PixRGB<byte> >& colorbitImg,
+        int framenum,
+        float scaleW,
+        float scaleH);
+
 //! returns the BitObjects at the most winning locations points
 /*!*@param bitImg a binary image used for extracting BitObjects at the
+ * winner locations
+ * /*!*@param colorbitImg a color coded image used for extracting BitObjects at the
  * winner locations
  @param winners list of Salient winners*/
 std::list<BitObject> getSalientObjects(
@@ -132,6 +142,14 @@ std::list<BitObject> getSalientObjects(
  @param winners list of Salient winners*/
 std::list<BitObject> getSalientObjects(const Image<byte>& bitImg,
         const list<WTAwinner> &winners);
+
+//! returns the BitObjects at the most winning locations points
+/*!*@param colorbitImg a color coded image used for extracting BitObjects at the
+ * winner locations
+ @param winners list of Salient winners*/
+std::list<BitObject> getSalientObjects(const Image<PixRGB<byte> >& colorbitImg,
+        const list<WTAwinner> &winners);
+
 
 //! all BitObjects in objs are drawninto the return image
 Image<byte> showAllObjects(const std::list<BitObject>& objs);
