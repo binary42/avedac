@@ -161,7 +161,7 @@ int main(const int argc, const char** argv) {
       scaleH = (float) origDims.h() / (float) dims.h();
       ifs->setModelParamVal(string("InputFrameDims"), Dims(0,0), MC_RECURSE);
       ifs->peekDims();
-    }
+    } 
 
     // calculate the foa size and default min/max event size based on the image size
     const int circleRadius = dims.w() / circleRadiusRatio;
@@ -226,13 +226,12 @@ int main(const int argc, const char** argv) {
     if (loadedProperties) rv->loadProperties(pvs);
 
     // initialize some more
-    FrameRange frameRange = FrameRange::fromString(manager.getOptionValString(&OPT_InputFrameRange));
-    ImageCacheAvg< PixRGB<byte> > avgCache(detectionParms.itsSizeAvgCache);
-    ImageCacheAvg< byte > bwAvgCache(detectionParms.itsSizeAvgCache);
+    FrameRange frameRange = FrameRange::fromString(manager.getOptionValString(&OPT_InputFrameRange));  
+    ImageCacheAvg< PixRGB<byte> > avgCache(detectionParms.itsSizeAvgCache); 
     MbariImageCache< PixRGB<byte> > outCache(detectionParms.itsSizeAvgCache);
     Image< PixRGB<byte> > img, img2runsaliency;
-    Image< byte> img2segment;
     MbariImage< PixRGB<byte> > mbariImg(manager.getOptionValString(&OPT_InputFrameSource).c_str());
+    Image< PixRGB<byte> >savePreviousPicture (img.getDims(), ZEROS);
 
     // initialize the XML if requested to save event set to XML
     if (rv->isSaveXMLEventsNameSet()) {
@@ -277,15 +276,14 @@ int main(const int argc, const char** argv) {
                 // get the standard deviation in the input image
                 // if there is little deviation do not add to the average cache
                 if (stdev(luminance(img)) <= detectionParms.itsMinVariance && avgCache.size() > 0) {
-                    LINFO("Standard deviation in frame %d too low. Is this frame all black ? Not including this image in the average cache", ifs->frame());
-                    avgCache.push_back(avgCache.mean());
+                    LINFO("Standard deviation in frame %d too low. Is this frame all black ? Not including this image in the cache", ifs->frame());
+                    avgCache.push_back(avgCache.mean()); 
                 } else
-                    avgCache.push_back(img);
-            } else {
-
-                avgCache.push_back(img);
+                    avgCache.push_back(img); 
+            } else { 
+                avgCache.push_back(img); 
             }
-           
+ 
 	   // Get the MBARI metadata from the frame if it exists
            mbariImg.updateData(img, ifs->frame());
            tc = mbariImg.getMetaData().getTC();
@@ -300,6 +298,7 @@ int main(const int argc, const char** argv) {
         }
     } // end if needFrames 
 
+
     // ######## loop over frames ####################
     for (int curFrame = frameRange.getFirst(); curFrame <= frameRange.getLast(); ++curFrame) {       
         rv->updateNext();
@@ -311,27 +310,52 @@ int main(const int argc, const char** argv) {
                 LINFO("Processing frame %06d from cache.", curFrame);
                 img = avgCache[cacheFrameNum];
                 mbariImg = outCache[cacheFrameNum];
-                metadata = mbariImg.getMetaData();
+                metadata = mbariImg.getMetaData(); 
+
+               const list<BitObject> bitObjectFrameList = eventSet.getBitObjectsForFrame(curFrame - 1);
+                if (!bitObjectFrameList.empty() && curFrame <= avgCache.size()) {
+                    Image< PixRGB<byte> > imgToAddToTheBackground = getImageToAddToTheBackground(
+                            mbariImg, avgCache.mean(),
+                            savePreviousPicture,
+                            bitObjectFrameList);
+                    avgCache.push_back(imgToAddToTheBackground);
+                rv->output(imgToAddToTheBackground, curFrame - 1, "Background_input");
+                }
+                savePreviousPicture = mbariImg; // save the current frame for the next loop
+
             } else {
                 // This means we are out of input
                 if (ifs->frame() > frameRange.getLast()) {
                     LERROR("%d > %d Premature end of frame sequence - bailing out.", ifs->frame(), frameRange.getLast());
                     break;
                 }
-              
-		ifs->updateNext();	
+
+               const list<BitObject> bitObjectFrameList = eventSet.getColorBitObjectsForFrame(curFrame - 1);
+                if (!bitObjectFrameList.empty()) {
+                    Image< PixRGB<byte> > imgToAddToTheBackground = getImageToAddToTheBackground(
+                            img, avgCache.mean(),
+                            savePreviousPicture,
+                            bitObjectFrameList); 
+                    avgCache.push_back(imgToAddToTheBackground);
+                    rv->output(imgToAddToTheBackground, curFrame - 1, "Background_input");
+                }
+
+                savePreviousPicture = img; // save the current frame for the next loop
+
+                ifs->updateNext();
                 img = ifs->readRGB();
 
                 if (detectionParms.itsMinVariance > 0.f ) {
                     // get the standard deviation in the input image
                     // if there is little deviation do not add to the average cache
                     if (stdev(luminance(img)) <= detectionParms.itsMinVariance && avgCache.size() > 0) {
-                        LINFO("Standard deviation low in frame %d. Is this frame all black or just noise ? Not including this image in the average cache", ifs->frame());
-                        avgCache.push_back(avgCache.mean());
-                    } else
-                        avgCache.push_back(img);
+                        LINFO("Standard deviation low in frame %d. Is this frame all black or just noise ? Not including this image in the caches", ifs->frame());
+                        avgCache.push_back(avgCache.mean()); 
+                    } else {
+                        avgCache.push_back(img); 
+                    }
                 } else {
-                    avgCache.push_back(img);
+                     avgCache.push_back(img); 
                 }
 
                 // Get the MBARI metadata from the frame if it exists
@@ -342,24 +366,12 @@ int main(const int argc, const char** argv) {
                     LINFO("Caching frame %06d timecode: %s", curFrame, tc.c_str());
                 else
                     LINFO("Caching frame %06d", curFrame);
-             }
-
-	    // Create the binary image to segment
-            if (detectionParms.itsSegmentAlgorithmInputType == SAIMaxRGB) {
-               	 img2segment = maxRGB(avgCache.absDiffMean(img));
-	    }
-            else if (detectionParms.itsSegmentAlgorithmInputType == SAILuminance) {
-                img2segment = luminance(img);
-            }
-            else {	
-                img2segment = maxRGB(avgCache.absDiffMean(img));
-	    }
-            
+                }
+ 
 	    // Get the saliency input image
             if ( detectionParms.itsSaliencyInputType == SIDiffMean) {
             	if (detectionParms.itsSizeAvgCache > 1) {
-                     img2runsaliency = rescale(avgCache.clampedDiffMean(img), dims);
-                     rv->output(img2runsaliency, curFrame, "Saliency_input");
+                     img2runsaliency = rescale(maxRGB(avgCache.clampedDiffMean(mbariImg)),dims);
 		  }
 		else
 		  LFATAL("ERROR - must specify an imaging cache size "
@@ -367,72 +379,95 @@ int main(const int argc, const char** argv) {
                           "--mbari-cache-size option to something > 1");
 	    }
             else if (detectionParms.itsSaliencyInputType == SIRaw) {
-                 img2runsaliency = rescale(img, dims);
-                 rv->output(img2runsaliency, curFrame, "Saliency_input");
-            } 
-            else { //assume none
-                LINFO("Empty saliency input - saliency will not be computed. Winning points based on segmented image only.");
-            }
-
-        } // end if needFrames
-        rv->output(img, curFrame, "Input");
-        rv->output(img2segment, curFrame, "Segment_input");
-
-        if (!loadedEvents) {
-
-            bwAvgCache.push_back(img2segment);
-
-            // create a binary image for the segmentation
-            Image<byte> bitImg;
-            const Image <PixRGB <byte> > background = avgCache.mean();
-
-            //  Run selected segmentation algorithm
-            if (detectionParms.itsSegmentAlgorithm == SABackgroundCanny){
-              bitImg = segmentation.runBackgroundCanny(img2segment, segmentAlgorithmType(SABackgroundCanny));
-            }else if (detectionParms.itsSegmentAlgorithm == SAHomomorphicCanny){
-              bitImg = segmentation.runHomomorphicCanny(img2segment, segmentAlgorithmType(SAHomomorphicCanny));
-            }else if (detectionParms.itsSegmentAlgorithm == SAAdaptiveThreshold){
-              bitImg = segmentation.runAdaptiveThreshold(img2segment, segmentAlgorithmType(SAAdaptiveThreshold));
-            }else if (detectionParms.itsSegmentAlgorithm == SAExtractForegroundBW) {
-              rv->output(background, curFrame, "Graphcut_mean_background");
-              rv->output(img, curFrame, "Graphcut_segment_input");
-              bitImg = segmentation.runGraphCut(img2segment, background, segmentAlgorithmType(SAExtractForegroundBW));
-            }
-            else if (detectionParms.itsSegmentAlgorithm == SABinaryAdaptive) {
-              if (detectionParms.itsSizeAvgCache > 1) {
-                bitImg = segmentation.runBinaryAdaptive(bwAvgCache.clampedDiffMean(img2segment),
-                                                        img2segment, detectionParms.itsTrackingMode);
-              }
-	      else
-                  bitImg = segmentation.runBinaryAdaptive(img2segment,
-                                                      img2segment, detectionParms.itsTrackingMode);
+                 img2runsaliency = rescale(mbariImg,dims);
             }
             else {
-              if (detectionParms.itsSizeAvgCache > 1)
-                bitImg = segmentation.runBinaryAdaptive(bwAvgCache.clampedDiffMean(img2segment), img2segment,
-                                                        detectionParms.itsTrackingMode);
-              else
-                bitImg = segmentation.runBinaryAdaptive(img2segment, img2segment,
-                                                        detectionParms.itsTrackingMode);
+                img2runsaliency = rescale(mbariImg,dims);
             }
-            Image< PixRGB<byte> > colorBitImg;
 
-            // If we are averaging frames, subtract from the average of the background,
-            // for the color segmentation, otherwise, just use the input image
-            if (detectionParms.itsSizeAvgCache > 1)
-                colorBitImg = segmentation.test(avgCache.clampedDiffMean(img));
-            else
-                colorBitImg = segmentation.test(img);
+            rv->output(img2runsaliency, curFrame, "Saliency_input");
 
-            // mask special area in the frame we don't care
-            colorBitImg = maskArea(colorBitImg, &detectionParms);
-            rv->output(colorBitImg, curFrame, "Segment_graph_output");
+        } // end if needFrames
+
+        rv->output(mbariImg, mbariImg.getFrameNum(), "Input"); 
+        rv->output(luminance(avgCache.mean()), mbariImg.getFrameNum(), "Background_mean");
+
+        if (!loadedEvents) { 
+
+            // create a binary image for the segmentation
+            Image<byte> bitImg, bitImgShadow, bitImgHighlight, bitImgMasked;
+
+            Image< PixRGB<byte > > graphBitImg = segmentation.runGraph(maxRGB(avgCache.clampedDiffMean(mbariImg)));
+            rv->output(graphBitImg, mbariImg.getFrameNum(), "Graph_segment"); 
+
+            if(detectionParms.itsSegmentAlgorithmType == SAMeanAdaptiveThreshold) {
+
+               if (detectionParms.itsSegmentAlgorithmInputType == SAILuminance) {
+                    bitImgShadow = segmentation.mean_thresh(luminance(mbariImg), maxDist, 10);
+                } else {
+                    bitImgShadow = segmentation.mean_thresh(maxRGB(avgCache.clampedDiffMean(mbariImg)), maxDist, 0);
+                }
+
+                rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_shadow");
+
+                std::list<WTAwinner> winlist2 = getGraphWinners(graphBitImg, mbariImg.getFrameNum(), scaleW, scaleH);
+                list<BitObject> sobjs = getSalientObjects(graphBitImg, winlist2);
+
+                if (sobjs.size() > 0) {
+                    bitImgHighlight = showAllObjects(sobjs);
+                    rv->output(bitImgHighlight, mbariImg.getFrameNum(), "Segment_highlight");
+                    bitImg = bitImgHighlight + bitImgShadow;
+                } else {
+                    bitImg = bitImgShadow;
+                }
+	    }
+            if (detectionParms.itsSegmentAlgorithmType == SAMedianAdaptiveThreshold) { 
+             if (detectionParms.itsSegmentAlgorithmInputType == SAILuminance) {
+                    bitImgShadow = segmentation.median_thresh(luminance(mbariImg), maxDist, 10);
+                } else {
+                    bitImgShadow = segmentation.median_thresh(maxRGB(avgCache.clampedDiffMean(mbariImg)), maxDist, 0);
+                }
+
+                rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_shadow");
+
+                std::list<WTAwinner> winlist2 = getGraphWinners(graphBitImg, mbariImg.getFrameNum(), scaleW, scaleH);
+                list<BitObject> sobjs = getSalientObjects(graphBitImg, winlist2);
+
+                if (sobjs.size() > 0) {
+                    bitImgHighlight = showAllObjects(sobjs);
+                    rv->output(bitImgHighlight, mbariImg.getFrameNum(), "Segment_highlight");
+                    bitImg = bitImgHighlight + bitImgShadow;
+                } else {
+                    bitImg = bitImgShadow;
+                } 
+            }
+            if(detectionParms.itsSegmentAlgorithmType == SAMeanMinMaxAdaptiveThreshold) {
+
+              if (detectionParms.itsSegmentAlgorithmInputType == SAILuminance) {
+                    bitImgShadow = segmentation.meanMaxMin_thresh(luminance(mbariImg), maxDist, 10);
+                } else {
+                    bitImgShadow = segmentation.meanMaxMin_thresh(maxRGB(avgCache.clampedDiffMean(mbariImg)), maxDist, 0);
+                }
+
+                rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_shadow");
+
+                std::list<WTAwinner> winlist2 = getGraphWinners(graphBitImg, mbariImg.getFrameNum(), scaleW, scaleH);
+                list<BitObject> sobjs = getSalientObjects(graphBitImg, winlist2);
+
+                if (sobjs.size() > 0) {
+                    bitImgHighlight = showAllObjects(sobjs);
+                    rv->output(bitImgHighlight, mbariImg.getFrameNum(), "Segment_highlight");
+                    bitImg = bitImgHighlight + bitImgShadow;
+                } else {
+                    bitImg = bitImgShadow;
+                }
+	    }
 
             // update the focus of expansion
             Vector2D curFOE = foeEst.updateFOE(bitImg);
 
 	    // cleanup image noise and display
-	    const string benthicStr = "benthic";
+	    const string benthicStr = "benthic"; 
 	    if(detectionParms.itsSegmentSEType.c_str() == benthicStr) {
     	      const Image<byte> se = twofiftyfives(2);
               bitImg = erodeImg(dilateImg(bitImg, se), se);
@@ -443,43 +478,60 @@ int main(const int argc, const char** argv) {
 	    }
 
             // mask special area in the frame we don't care
-            bitImg = maskArea(bitImg, &detectionParms); 
+            bitImgMasked = maskArea(bitImg, &detectionParms);
 
-            rv->output(bitImg, curFrame, "Segment_binary_output");
+            rv->output(bitImgMasked, mbariImg.getFrameNum(), "Segment_output");
 
-            // update the events with the segmented binary image
-            eventSet.updateEvents(bitImg, curFOE, mbariImg.getFrameNum(), metadata);
-
+            // update the events with the segmented  images
+            eventSet.updateEvents(bitImgMasked,
+                    curFOE, mbariImg.getFrameNum(), metadata);
+	 
             // is counter at 0?
             --countFrameDist;
             if (countFrameDist == 0) {
                 countFrameDist = detectionParms.itsSaliencyFrameDist;
 
                 LINFO("Getting salient regions for frame: %06d", mbariImg.getFrameNum());
-                list<WTAwinner> winlist;
-                if (detectionParms.itsSaliencyInputType != SINone) {
+                std::list<WTAwinner> winlist, winlist1, winlist2; 
 
-                    const float maxEvolveTime = detectionParms.itsMaxEvolveTime;
-                    const uint maxNumSalSpots = detectionParms.itsMaxWTAPoints;
-                    winlist = getSalientWinners(simofs,
-                            img2runsaliency, brain, seq, maxEvolveTime, maxNumSalSpots,
-                            mbariImg.getFrameNum(), scaleW, scaleH);
+                const float maxEvolveTime = detectionParms.itsMaxEvolveTime;
+                const uint maxNumSalSpots = detectionParms.itsMaxWTAPoints;
+                winlist1 = getSalientWinners(simofs,
+                        img2runsaliency, brain, seq, maxEvolveTime, maxNumSalSpots,
+                        mbariImg.getFrameNum(), scaleW, scaleH);
 
-                } else {
-                    if (detectionParms.itsColorSpaceType == SAColorGray) {
-                        LFATAL("ERROR - must specify a RGB/YCBCR color space"
-                                "to exclude saliency computation. Try setting the"
-                                "--mbari-color-space to RGB");
+                // add all winners into one list
+                list<WTAwinner>::iterator iter = winlist1.begin();
+                if (winlist1.size() > 0) {
+
+                    while (iter != winlist1.end()) {
+                        winlist.push_back(*iter);
+                        iter++;
                     }
-                    winlist = getWinners(colorBitImg, mbariImg.getFrameNum(), scaleW, scaleH);
                 }
+                // add in graph winners
+                if (detectionParms.itsAddGraphWinners) {
+                    winlist2 = getGraphWinners(rescale(graphBitImg, dims), mbariImg.getFrameNum(), scaleW, scaleH);
 
-                list<BitObject> sobjs = getSalientObjects(bitImg, colorBitImg, winlist); 
+                    if (winlist2.size() > 0) {
+                        iter = winlist2.begin();
 
-                if (sobjs.size() > 0) rv->output(showAllObjects(sobjs), curFrame, "Salient_Objects");
+                        while (iter != winlist2.end()) {
+                            winlist.push_back(*iter);
+                            iter++;
+                        }
+                    }
+                }            
+ 
+                rv->output(showAllWinners(winlist, mbariImg, detectionParms.itsMaxDist),  mbariImg.getFrameNum(), "Winners");
+
+                list<BitObject> sobjs = getSalientObjects(bitImg, winlist);
+ 
+                if (sobjs.size() > 0) rv->output(showAllObjects(sobjs),  mbariImg.getFrameNum(), "Salient_Objects");
 
                 // initiate events with these objects
                 eventSet.initiateEvents(sobjs, mbariImg.getFrameNum(), metadata);
+
             }
 
             // last frame? -> close everyone
@@ -544,7 +596,7 @@ int main(const int argc, const char** argv) {
 
 	    // display or write results  ?
 	    if (rv->isDisplayOutputSet() || rv->isSaveOutputSet()) {
-            rv->outputResultFrame(mbariImg,
+                    rv->outputResultFrame(mbariImg,
                     eventSet,
                     circleRadius);
 	    }
@@ -568,7 +620,7 @@ int main(const int argc, const char** argv) {
                 }
             }
         }
-
+ 
         if (!loadedEvents) {
             //flag events that have been saved for delete otherwise takes too much memory
             list<VisualEvent *>::iterator i;

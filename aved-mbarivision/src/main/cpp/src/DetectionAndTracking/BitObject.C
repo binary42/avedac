@@ -165,6 +165,26 @@ int BitObject::reset(const Image<byte>& img)
 }
 
 // ######################################################################
+BitObject &BitObject::operator=(const BitObject& bitObj) {
+    this->itsObjectMask = bitObj.itsObjectMask;
+    this->itsBoundingBox = bitObj.itsBoundingBox;
+    this->itsCentroidXY = bitObj.itsCentroidXY;
+    this->itsArea = bitObj.itsArea;
+    this->itsUxx = bitObj.itsUxx;
+    this->itsUyy = bitObj.itsUyy;
+    this->itsUxy = bitObj.itsUxy;
+    this->itsMajorAxis = bitObj.itsMajorAxis;
+    this->itsMinorAxis = bitObj.itsMinorAxis;
+    this->itsElongation = bitObj.itsElongation;
+    this->itsOriAngle = bitObj.itsOriAngle;
+    this->itsImageDims = bitObj.itsImageDims;
+    this->itsMaxIntensity = bitObj.itsMaxIntensity;
+    this->itsMinIntensity = bitObj.itsMinIntensity;
+    this->itsAvgIntensity = bitObj.itsAvgIntensity;
+    this->haveSecondMoments = bitObj.haveSecondMoments;
+    this->itsSMV = bitObj.itsSMV;
+}
+// ######################################################################
 void BitObject::computeSecondMoments()
 {
   ASSERT(isValid());

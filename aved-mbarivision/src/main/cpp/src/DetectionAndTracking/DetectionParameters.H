@@ -66,12 +66,10 @@ parameters*/
 #define DEFAULT_MASK_Y_POSITION 1
 #define DEFAULT_MASK_HEIGHT 1
 #define DEFAULT_MASK_WIDTH 1
-// Default segmentation algorithm to remove background from foreground event objects
-// Should be one of the following per the MbariOpts.C OPT_MDPsegmentationAlgorithm options
-// BinaryAdaptive|AdaptiveThreshold|BackgroundCanny|HomomorphicCanny|GraphCut
-#define DEFAULT_SEGMENTATION_ALGORITHM SABinaryAdaptive
 // Default segmentation algorithm input type
-#define DEFAULT_SEGMENTATION_ALGORITHM_TYPE SAIMaxRGB
+#define DEFAULT_SEGMENT_ALGORITHM_INPUT_TYPE SAIMaxRGB
+// Default segmentation algorithm type
+#define DEFAULT_SEGMENT_ALGORITHM_TYPE SAMedianAdaptiveThreshold
 // Default saliency input image type which is the difference
 // in the mean. This is only meaningful if there are cached
 // images to find a mean. TODO: put check for this and
@@ -121,7 +119,12 @@ public:
     //! @param  itsSaveNonInteresting = true if want to keep non-interesting events 
     bool itsSaveNonInteresting;
     //! @param  itsSaveOriginalFrameSpec = true if want to save events in original frame size
-    bool itsSaveOriginalFrameSpec;;
+    bool itsSaveOriginalFrameSpec;
+    //! @param itsAddGraphWinners = true if computing winners based on the graph segmentation colorized output
+    bool itsAddGraphWinners;
+    //! @param itsEventExpirationFrames= How long to keep an event in memory before removing it if no bit objects
+    // found to combine with the event. Useful for noisy video or reduced frame rate video where tracking problems occur
+    int itsEventExpirationFrames;
     //! @param itsTrackingMode = tracking mode used to find event
     TrackingMode itsTrackingMode;
     //! @param itsColorSpaceType = color space used to determine saliency computation
@@ -152,9 +155,9 @@ public:
     int itsMaskWidth;
    //! @param itsMaskHeight = mask height
     int itsMaskHeight;
-   // @param itsSegmentALgorithm = segmentat algorithm to find foreground objects
-    SegmentAlgorithmType itsSegmentAlgorithm;
-   // @param itsSegmentALgorithmInputType = segment algorithm input image type
+   // @param itsSegmentAlgorithmType = segment algorithm type
+    SegmentAlgorithmType itsSegmentAlgorithmType;
+   // @param itsSegmentAlgorithmInputType = segment algorithm input image type
     SegmentAlgorithmInputImageType itsSegmentAlgorithmInputType;
     // @param itsSegmentSEType = structure element used for cleaning up segmented image
     std::string itsSegmentSEType;
@@ -211,9 +214,9 @@ private:
     OModelParam<int> itsMaxEvolveTime;
     OModelParam<TrackingMode> itsTrackingMode;
     OModelParam<ColorSpaceType> itsColorSpaceType;
-    OModelParam<float> itsMinVariance;
-    OModelParam<SegmentAlgorithmType> itsSegmentAlgorithm;
+    OModelParam<float> itsMinVariance; 
     OModelParam<SegmentAlgorithmInputImageType> itsSegmentAlgorithmInputType;
+    OModelParam<SegmentAlgorithmType> itsSegmentAlgorithmType;
     OModelParam<std::string> itsSegmentSEType;
     OModelParam<SaliencyInputImageType> itsSaliencyInputType;
     OModelParam<std::string> itsMaskPath;
@@ -226,10 +229,12 @@ private:
     OModelParam<int> itsMaxEventArea;
     OModelParam<int> itsMinEventFrames;
     OModelParam<int> itsMaxEventFrames;
-    OModelParam<int> itsSaliencyFrameDist; 
+    OModelParam<int> itsSaliencyFrameDist;
+    OModelParam<int> itsEventExpirationFrames;
     OModelParam<bool> itsKeepWTABoring;
     OModelParam<bool> itsSaveNonInteresting;
-    OModelParam<bool> itsSaveOriginalFrameSpec;;
+    OModelParam<bool> itsSaveOriginalFrameSpec;
+    OModelParam<bool> itsAddGraphWinners;
 };
 
 #endif

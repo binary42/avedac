@@ -61,14 +61,16 @@ itsSizeAvgCache(DEFAULT_SIZE_AVG_CACHE),
 itsMaskXPosition(DEFAULT_MASK_X_POSITION),
 itsMaskYPosition(DEFAULT_MASK_Y_POSITION),
 itsMaskWidth(DEFAULT_MASK_HEIGHT),
-itsMaskHeight(DEFAULT_MASK_WIDTH),
-itsSegmentAlgorithm(DEFAULT_SEGMENTATION_ALGORITHM),
-itsSegmentAlgorithmInputType(DEFAULT_SEGMENTATION_ALGORITHM_TYPE),
+itsMaskHeight(DEFAULT_MASK_WIDTH), 
+itsSegmentAlgorithmInputType(DEFAULT_SEGMENT_ALGORITHM_INPUT_TYPE),
+itsSegmentAlgorithmType(DEFAULT_SEGMENT_ALGORITHM_TYPE),
 itsSegmentSEType(DEFAULT_SE_TYPE),
 itsSaliencyInputType(DEFAULT_SALIENCY_INPUT_TYPE),
 itsMinVariance(DEFAULT_MIN_VARIANCE),
 itsColorSpaceType(DEFAULT_COLOR_SPACE),
-itsKeepWTABoring(DEFAULT_KEEP_WTA_BORING){
+itsKeepWTABoring(DEFAULT_KEEP_WTA_BORING),
+itsAddGraphWinners(false),
+itsEventExpirationFrames(0){
     //initialize with some defaults
     float maxDist = itsMaxDist;
     float maxAreaDiff = pow((double) maxDist, 2) / (double) 4.0;
@@ -80,9 +82,9 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     // these are the options that a user can set
     os << "\tcachesize:" << itsSizeAvgCache;
     os << "\tminarea:" << itsMinEventArea << "\tmaxarea:" << itsMaxEventArea;
-    os << "\ttrackingmode:" << trackingModeName(itsTrackingMode);
-    os << "\tsegmentalgorithm:" << segmentAlgorithmType(itsSegmentAlgorithm);
+    os << "\ttrackingmode:" << trackingModeName(itsTrackingMode); 
     os << "\tsegmentalgorithminputimagetype:" << segmentAlgorithmInputImageType(itsSegmentAlgorithmInputType);
+    os << "\tsegmentalgorithmtype:" << segmentAlgorithmType(itsSegmentAlgorithmType);
     os << "\tsaliencyinputimagetype:" << saliencyInputImageType(itsSaliencyInputType);
     os << "\tstructureelementtype:" << itsSegmentSEType;
     os << "\tminframes:" << itsMinEventFrames;
@@ -96,6 +98,8 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     os << "\tsaveoriginalframespec:" << itsSaveOriginalFrameSpec;
     os << "\tcolorspace:" << colorSpaceType(itsColorSpaceType);
     os << "\tminvariance:" << itsMinVariance;
+    os << "\taddGraphWinners:" << itsAddGraphWinners;
+    os << "\teventExpirationFrames:" << itsEventExpirationFrames;
 
     if (itsMaskPath.length() > 0) {
         os << "\tmaskpath:" << itsMaskPath;
@@ -116,9 +120,9 @@ DetectionParameters &DetectionParameters::operator=(const DetectionParameters& p
     this->itsMinEventFrames = p.itsMinEventFrames;
     this->itsMinEventArea = p.itsMinEventArea;
     this->itsMaxEventArea = p.itsMaxEventArea;
-    this->itsTrackingMode = p.itsTrackingMode;
-    this->itsSegmentAlgorithm = p.itsSegmentAlgorithm;
+    this->itsTrackingMode = p.itsTrackingMode; 
     this->itsSegmentAlgorithmInputType = p.itsSegmentAlgorithmInputType;
+    this->itsSegmentAlgorithmType = p.itsSegmentAlgorithmType;
     this->itsSegmentSEType = p.itsSegmentSEType;
     this->itsSaliencyInputType = p.itsSaliencyInputType;
     this->itsSaliencyFrameDist = p.itsSaliencyFrameDist;
@@ -134,6 +138,7 @@ DetectionParameters &DetectionParameters::operator=(const DetectionParameters& p
     this->itsMaskHeight = p.itsMaskHeight;
     this->itsSizeAvgCache = p.itsSizeAvgCache; 
     this->itsMaxCost = p.itsMaxCost;
+    this->itsAddGraphWinners = p.itsAddGraphWinners;
     return *this;
 }
 // ######################################################################
@@ -186,9 +191,9 @@ DetectionParametersModelComponent::DetectionParametersModelComponent(ModelManage
 : ModelComponent(mgr, std::string("DetectionParameters"), std::string("DetectionParameters")),
 itsMaxWTAPoints(&OPT_MDPmaxWTAPoints, this),
 itsMaxEvolveTime(&OPT_MDPmaxEvolveTime, this),
-itsTrackingMode(&OPT_MDPtrackingMode, this),
-itsSegmentAlgorithm(&OPT_MDPsegmentAlgorithm, this),
+itsTrackingMode(&OPT_MDPtrackingMode, this), 
 itsSegmentAlgorithmInputType(&OPT_MDPsegmentAlgorithmInputImage, this),
+itsSegmentAlgorithmType(&OPT_MDPsegmentAlgorithmType, this),
 itsSegmentSEType(&OPT_MDPsegmentSEType, this),
 itsSaliencyInputType(&OPT_MDPsaliencyInputImage, this),
 itsMaskPath(&OPT_MDPmaskPath, this),
@@ -201,8 +206,10 @@ itsMinEventArea(&OPT_MDPminEventArea, this),
 itsMaxEventArea(&OPT_MDPmaxEventArea, this),
 itsMinEventFrames(&OPT_MDPminEventFrames, this),
 itsMaxEventFrames(&OPT_MDPmaxEventFrames, this),
+itsEventExpirationFrames(&OPT_MDPeventExpirationFrames, this),
 itsSaliencyFrameDist(&OPT_MDPsaliencyFrameDist, this),
 itsKeepWTABoring(&OPT_MDPkeepBoringWTAPoints, this),
+itsAddGraphWinners(&OPT_MDPaddGraphWinners, this),
 itsSaveNonInteresting(&OPT_MDPsaveNonInterestingEvents, this),
 itsMinVariance(&OPT_MDPminVariance, this),
 itsColorSpaceType(&OPT_MDPcolorSpace, this),
@@ -217,12 +224,8 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
         p->itsMaxWTAPoints = itsMaxWTAPoints.getVal();
     if (itsTrackingMode.getVal() >= TMKalmanFilter)
         p->itsTrackingMode = itsTrackingMode.getVal();
-    if (itsSegmentAlgorithmInputType.getVal() > 0)
-        p->itsSegmentAlgorithmInputType = itsSegmentAlgorithmInputType.getVal();
-    if (itsSaliencyInputType.getVal() > 0)
+     if (itsSaliencyInputType.getVal() > 0)
         p->itsSaliencyInputType = itsSaliencyInputType.getVal();
-    if (itsSegmentAlgorithm.getVal() > 0)
-        p->itsSegmentAlgorithm = itsSegmentAlgorithm.getVal();
     if (itsSegmentSEType.getVal().length() > 0)
         p->itsSegmentSEType = itsSegmentSEType.getVal().data();
     if (itsMaskPath.getVal().length() > 0)
@@ -261,8 +264,14 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
     if (itsSaliencyFrameDist.getVal() > 0)
         p->itsSaliencyFrameDist = itsSaliencyFrameDist.getVal();
 
+    if (itsEventExpirationFrames.getVal() >= 0)
+        p->itsEventExpirationFrames = itsEventExpirationFrames.getVal();
+
+    p->itsAddGraphWinners = itsAddGraphWinners.getVal();
     p->itsKeepWTABoring = itsKeepWTABoring.getVal();
     p->itsSaveNonInteresting = itsSaveNonInteresting.getVal();
     p->itsSaveOriginalFrameSpec = itsSaveOriginalFrameSpec.getVal();
     p->itsColorSpaceType = itsColorSpaceType.getVal();
+    p->itsSegmentAlgorithmInputType = itsSegmentAlgorithmInputType.getVal();
+    p->itsSegmentAlgorithmType = itsSegmentAlgorithmType.getVal();
 }

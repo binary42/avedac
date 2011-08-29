@@ -195,6 +195,9 @@ float opacity = 1.0F);
   // compute the second moments and values derived from them
   void computeSecondMoments();
 
+  //! copy operator
+  BitObject & operator=(const BitObject& bitObj);
+
 private:
 
   Image<byte> itsObjectMask;

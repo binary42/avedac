@@ -118,24 +118,15 @@ list<WTAwinner> getSalientWinners(
         float scaleH);
 
 
-//! returns the winners in the color bit image
-/*!*@param colorbitImg a binary image used for extracting BitObjects*/
-std::list<WTAwinner> getWinners(const Image<PixRGB<byte> >& colorbitImg,
+//! returns the winners in the graph based segmented color bit image
+/*!*@param graphBitImg a colorized image for extracting BitObjects;
+ * here we use it to extract winners based on colorized values
+ */
+std::list<WTAwinner> getGraphWinners(const Image<PixRGB<byte> >& graphBitImg,
         int framenum,
         float scaleW,
         float scaleH);
-
-//! returns the BitObjects at the most winning locations points
-/*!*@param bitImg a binary image used for extracting BitObjects at the
- * winner locations
- * /*!*@param colorbitImg a color coded image used for extracting BitObjects at the
- * winner locations
- @param winners list of Salient winners*/
-std::list<BitObject> getSalientObjects(
-        const Image<byte>& bitImg,
-        const Image<PixRGB<byte> >& colorbitImg,
-        const list<WTAwinner> &winners);
-
+ 
 //! returns the BitObjects at the most winning locations points
 /*!*@param bitImg a binary image used for extracting BitObjects at the 
  * winner locations
@@ -144,15 +135,18 @@ std::list<BitObject> getSalientObjects(const Image<byte>& bitImg,
         const list<WTAwinner> &winners);
 
 //! returns the BitObjects at the most winning locations points
-/*!*@param colorbitImg a color coded image used for extracting BitObjects at the
+/*!*@param graphBitImg a color coded image used for extracting BitObjects at the
  * winner locations
  @param winners list of Salient winners*/
-std::list<BitObject> getSalientObjects(const Image<PixRGB<byte> >& colorbitImg,
+std::list<BitObject> getSalientObjects(const Image<PixRGB<byte> >& graphBitImg,
         const list<WTAwinner> &winners);
 
 
 //! all BitObjects in objs are drawninto the return image
 Image<byte> showAllObjects(const std::list<BitObject>& objs);
+
+//! Draw circle around winning point in image and return annotated image
+Image< PixRGB<byte > > showAllWinners(const list<WTAwinner> winlist, const Image< PixRGB<byte > > & img, int maxDist);
 
 // ! Run mask option: flag the area specified as background after the segmentation
 Image< byte > maskArea( const Image<byte>& img, DetectionParameters *parms);
@@ -165,10 +159,9 @@ float getMax(const Image<float> matrix);
 
 // ! Return the picture to add to the background Model: take in consideration if it's a fixedCam then 
 // objects detected are not included into it
-Image< PixRGB<byte> > getImageToAddToTheBackground(bool needIt, const Image< PixRGB<byte> > &img,
+Image< PixRGB<byte> > getImageToAddToTheBackground(const Image< PixRGB<byte> > &img,
         const Image< PixRGB<byte> > &currentBackgroundMean,
         Image< PixRGB<byte> > savePreviousPicture,
-        const list<BitObject> &bitObjectFrameList,
-        const DetectionParameters &params);
+        const list<BitObject> &bitObjectFrameList);
 
 #endif

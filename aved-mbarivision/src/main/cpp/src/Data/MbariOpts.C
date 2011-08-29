@@ -285,11 +285,11 @@ const ModelOptionDef OPT_MDPtrackingMode =
     "Way to mark interesting events in output of MBARI programs",
     "mbari-tracking-mode", '\0', "<KalmanFilter|NearestNeighbor|None>",
     "KalmanFilter" };
-const ModelOptionDef OPT_MDPsegmentAlgorithm =
+const ModelOptionDef OPT_MDPsegmentAlgorithmType =
   { MODOPT_ARG(SegmentAlgorithmType), "MDPsegmentAlgorithm", &MOC_MBARI, OPTEXP_MRV,
     "Segment algorithm to find foreground objects",
-    "mbari-segment-algorithm", '\0', "<BinaryAdaptive|AdaptiveThreshold|BackgroundCanny|HomomorphicCanny|ExtractForegroundBW>", 
-    "BinaryAdaptive" };
+    "mbari-segment-algorithm", '\0', "<MeanAdaptive|MedianAdaptive|MeanMinMaxAdapative>", 
+    "MedianAdaptive" };
 const ModelOptionDef OPT_MDPsegmentAlgorithmInputImage = {
    MODOPT_ARG(SegmentAlgorithmInputImageType), "MDPsegmentInputImage", &MOC_MBARI, OPTEXP_MRV,
    "Segment algorithm input images type",
@@ -381,6 +381,16 @@ const ModelOptionDef OPT_MDPcolorSpace = {
    "Input image color space. Used to determine whether to compute saliency on color channels or not",
     "mbari-color-space", '\0', "<RGB|YCBCR|Gray>",
     "Gray" };
+const ModelOptionDef OPT_MDPaddGraphWinners = {
+   MODOPT_FLAG, "MDPaddGraphWinner", &MOC_MBARI, OPTEXP_MRV,
+   "Used to determine whether to compute winners based on the graph segmentation colorized output",
+    "mbari-add-graph-winners", '\0', "",
+    "false" };
+const ModelOptionDef OPT_MDPeventExpirationFrames = {
+   MODOPT_ARG_INT, "MDPeventExpirationFrames", &MOC_MBARI, OPTEXP_MRV,
+   "How long to keep an event in memory before removing it if no bit objects found to combine with the event. Useful for noisy video or reduced frame rate video where tracking problems occur.",
+    "mbari-event-expiration-frames", '\0', "<int>",
+    "0" }; 
 
 // ####################
 

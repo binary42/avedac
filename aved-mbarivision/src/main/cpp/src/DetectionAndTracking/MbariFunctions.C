@@ -40,7 +40,10 @@
 #include "Image/Image.H"
 #include "Image/MathOps.H"
 #include "Image/DrawOps.H"
-#include "Image/Transforms.H"
+#include "Image/CutPaste.H"  
+#include "Image/ShapeOps.H"
+#include "Image/Transforms.H" 
+#include "Image/Geometry2D.H"
 #include "Media/MediaSimEvents.H"
 #include "Media/SimFrameSeries.H"
 #include "Media/MediaOpts.H"
@@ -56,6 +59,7 @@
 #include "Util/Pause.H" 
 #include "rutz/shared_ptr.h"
 #include "Image/BitObject.H"
+#include "Image/DrawOps.H"
 #include "DetectionAndTracking/DetectionParameters.H"
  
 // ######################################################################
@@ -82,28 +86,28 @@ bool isGrayscale(const Image<PixRGB<byte> >& src)
   return false;
 }
 // ######################################################################
-std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& colorImg,
+std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& graphBitImg,
         const Point2D<int> seed,
         Rectangle region,
         const int minSize,
         const int maxSize) {
 
     std::list<BitObject> bos;
-    Dims d = colorImg.getDims();
+    Dims d = graphBitImg.getDims();
     region = region.getOverlap(Rectangle(Point2D<int>(0, 0), d - 1));
-    Image<byte> labelImg(colorImg.getDims(), ZEROS);
-    Image<byte> bitImg(colorImg.getDims(), ZEROS);
-    PixRGB<byte> color = colorImg.getVal(seed);
+    Image<byte> labelImg(graphBitImg.getDims(), ZEROS);
+    Image<byte> bitImg(graphBitImg.getDims(), ZEROS);
+    PixRGB<byte> color = graphBitImg.getVal(seed);
     const PixRGB<byte> black = PixRGB<byte>(0,0,0);
 
     // if this isn't a masked point,
     // create a binary representation of this image
     // with the color at the center of the seed
     // as 1 and everything else 0
-    Image< PixRGB<byte> >::const_iterator sptr = colorImg.begin();
+    Image< PixRGB<byte> >::const_iterator sptr = graphBitImg.begin();
     Image<byte>::iterator rptr = bitImg.beginw();
     if (color != black) {
-        while (sptr != colorImg.end())
+        while (sptr != graphBitImg.end())
             *rptr++ = (*sptr++ == color) ? 1 : 0;
     }
     
@@ -174,14 +178,14 @@ std::list<BitObject> extractBitObjects(const Image<byte>& bImg,
 
 // ######################################################################
 
-std::list<BitObject> getSalientObjects(const Image< byte >& bitImg,
-        const Image< PixRGB<byte> >& colorbitImg, const list<WTAwinner> &winners) {
+std::list<BitObject> getSalientObjects(const Image< byte >& bitImg, const list<WTAwinner> &winners) {
     // this should be 2^(smlev - 1)
     const int rectRad = 20;
     DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
     std::list<WTAwinner>::const_iterator iter = winners.begin();
     std::list<BitObject> bos;
-
+    Dims d = bitImg.getDims();
+    
     //go through each winner and extract salient regions
     while (iter != winners.end()) {
         Point2D<int> winner = (*iter).p;
@@ -190,24 +194,18 @@ std::list<BitObject> getSalientObjects(const Image< byte >& bitImg,
         Rectangle region = Rectangle::tlbrI(winner.j - rectRad, winner.i - rectRad,
                 winner.j + rectRad, winner.i + rectRad);
 
-        Dims d = bitImg.getDims();
         region = region.getOverlap(Rectangle(Point2D<int>(0, 0), d - 1));
 
-        LINFO("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
+        LDEBUG("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
         winner.i, winner.j, convertToString(region).c_str(), p.itsMinEventArea, p.itsMaxEventArea);
 
-        std::list<BitObject> sobjscolor, sobjsbin;
-        sobjscolor = extractBitObjects(colorbitImg, winner, region, p.itsMinEventArea, p.itsMaxEventArea);
-        sobjsbin = extractBitObjects(bitImg, winner, region, p.itsMinEventArea, p.itsMaxEventArea);
+        std::list<BitObject> sobjs = extractBitObjects(bitImg, winner, region, \
+        p.itsMinEventArea, p.itsMaxEventArea);
 
-        std::list<BitObject> sobjs;
-
+	LDEBUG("Found bitobject(s) in bitImg: %d", sobjs.size());
+        
         // if no objects found so need to look for them so skip to the next winner
-        if (sobjscolor.size() + sobjsbin.size() > 0) {
-
-            // Combine the objects from both segmented images
-            sobjs.merge(sobjsbin);
-            sobjs.merge(sobjscolor);
+        if (sobjs.size() > 0) {
 
             bool keepGoing = true;
             // loop until we find a new object that doesn't overlap with anything
@@ -236,7 +234,7 @@ std::list<BitObject> getSalientObjects(const Image< byte >& bitImg,
                         keepGoing = true;
                         break;
                     }
-
+ 
                 // so, did we end up finding a BitObject that we can store?
                 if (!keepGoing) {
                     (*largest).setSMV((*iter).sv);
@@ -252,14 +250,14 @@ std::list<BitObject> getSalientObjects(const Image< byte >& bitImg,
 
 // ######################################################################
 
-std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& colorbitImg,
+std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg,
     const list<WTAwinner> &winners) {
     // this should be 2^(smlev - 1)
     const int rectRad = 20;
     DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
     std::list<WTAwinner>::const_iterator iter = winners.begin();
     std::list<BitObject> bos;
-    Dims d = colorbitImg.getDims();
+    Dims d = graphBitImg.getDims();
 
     //go through each winner and extract salient regions
     while (iter != winners.end()) {
@@ -271,27 +269,30 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& colorbitImg,
 
         region = region.getOverlap(Rectangle(Point2D<int>(0, 0), d - 1));
 
-        LINFO("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
+        LDEBUG("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
         winner.i, winner.j, convertToString(region).c_str(), p.itsMinEventArea, p.itsMaxEventArea);
 
-        std::list<BitObject> sobjscolor = extractBitObjects(colorbitImg, winner, region, p.itsMinEventArea, p.itsMaxEventArea); 
+        std::list<BitObject> sobjsgraph = extractBitObjects(graphBitImg, winner, region, \
+        p.itsMinEventArea,  p.itsMaxEventArea);
+ 
+	LDEBUG("Found bitobject(s) in graphBitImg: %d", sobjsgraph.size());
 
         // if no objects found so need to look for them so skip to the next winner
-        if (sobjscolor.size() > 0) { 
+        if (sobjsgraph.size() > 0) {
 
             bool keepGoing = true;
             // loop until we find a new object that doesn't overlap with anything
             // that we have found so far, or until we run out of objects
             while (keepGoing) {
                 // no object left -> go to the next salient point
-                if (sobjscolor.empty()) break;
+                if (sobjsgraph.empty()) break;
 
                 std::list<BitObject>::iterator biter, siter, largest;
 
                 // find the largest object
-                largest = sobjscolor.begin();
+                largest = sobjsgraph.begin();
                 int maxSize = 0;
-                for (siter = sobjscolor.begin(); siter != sobjscolor.end(); ++siter)
+                for (siter = sobjsgraph.begin(); siter != sobjsgraph.end(); ++siter)
                     if (siter->getArea() > maxSize) {
                         maxSize = siter->getArea();
                         largest = siter;
@@ -302,7 +303,7 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& colorbitImg,
                     if (largest->isValid() && biter->isValid() && biter->doesIntersect(*largest)) {
                         // no need to store intersecting objects -> get rid of largest
                         // and look for the next largest
-                        sobjscolor.erase(largest);
+                        sobjsgraph.erase(largest);
                         keepGoing = true;
                         break;
                     }
@@ -315,14 +316,14 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& colorbitImg,
             } // end while keepGoing
         } // end if found objects
         iter++;
-        sobjscolor.clear();
+        sobjsgraph.clear();
     }// end while iter != winners.end()
     return bos;
 }
 
 // ######################################################################
 
-std::list<WTAwinner> getWinners(const Image< PixRGB<byte> >& colorbitImg,
+std::list<WTAwinner> getGraphWinners(const Image< PixRGB<byte> >& graphBitImg,
         int framenum,
         float scaleW,
         float scaleH) {
@@ -330,14 +331,14 @@ std::list<WTAwinner> getWinners(const Image< PixRGB<byte> >& colorbitImg,
     std::list<PixRGB<byte> > colors; 
     list<WTAwinner> winners;
     PixRGB<byte> seedColor;
-    const int w = colorbitImg.getWidth();
-    const int h = colorbitImg.getHeight();
+    const int w = graphBitImg.getWidth();
+    const int h = graphBitImg.getHeight();
     int numSpots = 0;
     bool found;
 
     for (int i = 0; i < w; i++) {
         for (int j = 0; j < h; j++) { 
-            seedColor = colorbitImg.getVal(i, j);
+            seedColor = graphBitImg.getVal(i, j);
             found = false;
             // add new colors to the list
             std::list<PixRGB<byte> >::const_iterator iter = colors.begin();
@@ -352,11 +353,11 @@ std::list<WTAwinner> getWinners(const Image< PixRGB<byte> >& colorbitImg,
             if (found == false) {
                 colors.push_back(seedColor);
                 WTAwinner win = WTAwinner::NONE();
-                win.p.i = (int) ( (float) i/scaleW);
-                win.p.j = (int) ( (float) j/scaleH);
+                win.p.i = (int) ( (float) i*scaleW);
+                win.p.j = (int) ( (float) j*scaleH);
                 win.sv = 0.f;
                 numSpots++;
-                LINFO("##### winner #%d found at [%d; %d]  frame: %d#####",
+                LDEBUG("##### winner #%d found at [%d; %d]  frame: %d#####",
                         numSpots, win.p.i, win.p.j, framenum);
                 winners.push_back(win);
             }
@@ -364,73 +365,6 @@ std::list<WTAwinner> getWinners(const Image< PixRGB<byte> >& colorbitImg,
     }
 
     return winners;
-}
-
-// ######################################################################
-
-std::list<BitObject> getSalientObjects(const Image<byte>& bitImg, const list<WTAwinner> &winners) {
-    // this should be 2^(smlev - 1)
-    const int rectRad = 20;
-    DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
-    std::list<WTAwinner>::const_iterator iter = winners.begin();
-    std::list<BitObject> bos;
-
-    //go through each winner and extract salient regions
-    while (iter != winners.end()) {
-        Point2D<int> winner = (*iter).p;
-
-        // extract all the bitObjects at the salient location
-        Rectangle region = Rectangle::tlbrI(winner.j - rectRad, winner.i - rectRad,
-                winner.j + rectRad, winner.i + rectRad);
-
-        Dims d = bitImg.getDims();
-        region = region.getOverlap(Rectangle(Point2D<int>(0, 0), d - 1));
-
-        LINFO("Extracting bit objects from region: %d %d minSize %d maxSize %d",
-        winner.i, winner.j, p.itsMinEventArea, p.itsMaxEventArea);
-        
-        std::list<BitObject> sobjs = extractBitObjects(bitImg, region, p.itsMinEventArea, p.itsMaxEventArea);
-
-        bool keepGoing = true;
-        // loop until we find a new object that doesn't overlap with anything
-        // that we have found so far, or until we run out of objects
-        while (keepGoing) {
-            // no object left -> go to the next salient point
-            if (sobjs.empty()) break;
-
-            std::list<BitObject>::iterator biter, siter, largest;
-
-            // find the largest object
-            largest = sobjs.begin();
-            int maxSize = 0;
-            for (siter = sobjs.begin(); siter != sobjs.end(); ++siter)
-                if (siter->getArea() > maxSize) {
-                    maxSize = siter->getArea();
-                    largest = siter;
-                }
-
-            // does the largest objects intersect with any of the already stored guys?
-            keepGoing = false;
-            for (biter = bos.begin(); biter != bos.end(); ++biter)
-                if (biter->doesIntersect(*largest)) {
-                    // no need to store intersecting objects -> get rid of largest
-                    // and look for the next largest
-                    sobjs.erase(largest);
-                    keepGoing = true;
-                    break;
-                }
-
-            // so, did we end up finding a BitObject that we can store?
-            if (!keepGoing) {
-                (*largest).setSMV((*iter).sv);
-                bos.push_back(*largest);
-            }
-        } // end while keepGoing
-        iter++;
-        sobjs.clear();
-
-    }// end while iter != winners.end()
-    return bos;
 }
 
 // ######################################################################
@@ -450,14 +384,18 @@ list<WTAwinner> getSalientWinners(
     DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
     nub::soft_ref<Brain>  mbrain = dynCastWeak<Brain>(brain); 
 
-    if (p.itsMinVariance > 0.f) { 
+    float stddevlum = stdev(luminance(img));
+    if (p.itsMinVariance > 0.f || stddevlum == 0) {
         // get the standard deviation in the input image
         // if there is no deviation, this image is uniform and
         // will have no saliency so return empty winners
-        float stddevlum = stdev(luminance(img));
-        LDEBUG("Standard deviation in luminance: %f", stddevlum);
-        if (stddevlum <= p.itsMinVariance)
+        if (stddevlum <= p.itsMinVariance) {
+            LINFO("##### standard deviation in luminance: %f less than or equal to minimum variance: %f. No winners will be computed !!#####", stddevlum, p.itsMinVariance);
             return winners;
+        }
+        else {
+            LINFO("##### standard deviation in luminance: %f#####", stddevlum);
+        }
     }
 
     // reset the brain 
@@ -494,7 +432,7 @@ list<WTAwinner> getSalientWinners(
             // if a boring event detected, and not keeping boring WTA points then break simulation
             if (win.boring && p.itsKeepWTABoring == false) { 
                 rutz::shared_ptr<SimEventBreak>
-                        e(new SimEventBreak(0, "Boring event detected"));
+                        e(new SimEventBreak(0, "##### boring event detected #####"));
                 seq->post(e);
             } else {
                 winners.push_back(win);
@@ -530,6 +468,19 @@ list<WTAwinner> getSalientWinners(
     return winners;
 }
 
+// ######################################################################
+
+Image< PixRGB<byte > > showAllWinners(const list<WTAwinner> winlist, const Image< PixRGB<byte > > & img, int maxDist) {
+    Image< PixRGB<byte > > result = img;
+    std::list<WTAwinner>::const_iterator currWinner;
+    const PixRGB<byte> red = PixRGB<byte > (255, 0, 0);
+
+    for (currWinner = winlist.begin(); currWinner != winlist.end(); ++currWinner) {
+        Point2D<int> ctr = (*currWinner).p;
+        drawCircle(result, ctr, maxDist, red);
+    }
+    return result;
+}
 
 // ######################################################################
 
@@ -662,37 +613,33 @@ float getMax(const Image<float> matrix) {
 
 // ##################################################################
 
-Image< PixRGB<byte> > getImageToAddToTheBackground(bool needIt, const Image< PixRGB<byte> > &img,
+Image< PixRGB<byte> > getImageToAddToTheBackground(const Image< PixRGB<byte> > &img,
         const Image< PixRGB<byte> > &currentBackgroundMean, Image< PixRGB<byte> > savePreviousPicture,
-        const list<BitObject> &bitObjectFrameList, const DetectionParameters &params) {
-    // If the graphCut based segmentation has been choosen, the background model is computed differently
-    if (params.itsSegmentAlgorithm != SAExtractForegroundBW) {
-        if (!needIt && !bitObjectFrameList.empty()) {
-            Image<byte> bgMask = showAllObjects(bitObjectFrameList);
-            if (bgMask.getWidth() > 0) {
-                Image< PixRGB<byte> > imgToAddToTheCache(img.getDims(), ZEROS);
-                PixRGB<byte> val;
-                for (int i = 0; i < currentBackgroundMean.getWidth(); i++) {
-                    for (int j = 0; j < currentBackgroundMean.getHeight(); j++) {
-                        if (bgMask.getVal(i, j) > 125) {
-                            // if the pixel is included in an event -> take the current backgroundValue
-                            val = currentBackgroundMean.getVal(i, j);
-                        } else { // if the pixel is really a background pixel
-                            val = savePreviousPicture.getVal(i, j);
-                        }
-                        imgToAddToTheCache.setVal(i, j, val);
+        const list<BitObject> &bitObjectFrameList) {
+    if (!bitObjectFrameList.empty()) {
+        Image<byte> bgMask = showAllObjects(bitObjectFrameList);
+        if (bgMask.getWidth() > 0) {
+            Image< PixRGB<byte> > imgToAddToTheCache(img.getDims(), ZEROS);
+            PixRGB<byte> val;
+            for (int i = 0; i < currentBackgroundMean.getWidth(); i++) {
+                for (int j = 0; j < currentBackgroundMean.getHeight(); j++) {
+                    if (bgMask.getVal(i, j) > 125) {
+                        // if the pixel is included in an event -> take the current backgroundValue
+                        val = currentBackgroundMean.getVal(i, j);
+                    } else { // if the pixel is really a background pixel
+                        val = savePreviousPicture.getVal(i, j);
                     }
+                    imgToAddToTheCache.setVal(i, j, val);
                 }
-                return imgToAddToTheCache;
-            } else {
-                return savePreviousPicture;
-            } // if no event found in the frame just add the complete frame
-        }
-    } else {
-        return img;
+            }
+            return imgToAddToTheCache;
+        } else {
+            return savePreviousPicture;
+        } // if no event found in the frame just add the complete frame
     }
     return img;
 }
+
 
 // ######################################################################
 //! compute input filename for current frame

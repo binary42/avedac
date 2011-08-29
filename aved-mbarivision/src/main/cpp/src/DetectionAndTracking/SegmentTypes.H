@@ -32,22 +32,19 @@
 
   // ! Segment algorithm used for extracting the foreground objects
 enum SegmentAlgorithmType {
-  SABinaryAdaptive = 0,
-  SAAdaptiveThreshold = 1,
-  SABackgroundCanny = 2,
-  SAHomomorphicCanny = 3,
-  SAExtractForegroundBW  = 4 //! graphcut
+  SAMeanAdaptiveThreshold = 0,
+  SAMedianAdaptiveThreshold = 1,
+  SAMeanMinMaxAdaptiveThreshold = 2
   // if you add a new type here, also update the names in the function below!
 };
 //! number of algorithm type
-#define NSEGMENT_ALGORITHMS 5
+#define NSEGMENT_ALGORITHMS 3
 
 //! Returns name of segment algorithm
 inline const char* segmentAlgorithmType(const SegmentAlgorithmType p)
 {
   static const char n[NSEGMENT_ALGORITHMS][25] = {
-    "BinaryAdaptive", "AdaptiveThreshold", "BackgroundCanny",
-   "HomomorphicCanny", "ExtractForegroundBW"};
+    "MeanAdaptive", "MedianAdaptive", "MeanMinMaxAdaptive"};
   return n[int(p)];
 }
 

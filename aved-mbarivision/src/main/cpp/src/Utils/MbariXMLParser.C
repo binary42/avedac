@@ -257,14 +257,6 @@ void MbariXMLParser::addDetectionParameters(DetectionParameters params) {
   XMLString::release(&trackingmode);
   XMLString::release(&trackingmodexmlstring);
 
-  SegmentAlgorithmType satype= params.itsSegmentAlgorithm;
-  std::string sastring = segmentAlgorithmType(satype);
-  XMLCh* segmentationalgorithm = XMLString::transcode("SegmentAlgorithm");
-  XMLCh* segmentationalgorithmxmlstring = XMLString::transcode(sastring.c_str());
-  eventsroot->setAttribute(segmentationalgorithm, segmentationalgorithmxmlstring);
-  XMLString::release(&segmentationalgorithm);
-  XMLString::release(&segmentationalgorithmxmlstring);
-
   SegmentAlgorithmInputImageType saitype= params.itsSegmentAlgorithmInputType;
   std::string saistring = segmentAlgorithmInputImageType(saitype);
   XMLCh* segmentalgorithmtype = XMLString::transcode("SegmentAlgorithmInputImageType");

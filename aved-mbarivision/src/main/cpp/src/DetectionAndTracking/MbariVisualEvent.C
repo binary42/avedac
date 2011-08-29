@@ -71,11 +71,20 @@ namespace MbariVisualEvent {
       angle(0.0F),
       foe(0.0F,0.0F),
       frame_nr(frame),
-      written(false)
-  {}
-	
-  // ######################################################################
-  Token::Token (BitObject bo, uint frame, const MbariMetaData& m)
+      written(false) {
+    }
+    // ######################################################################
+    Token &Token::operator=(const Token& tk) {
+        this->angle = tk.angle;
+        this->foe = tk.foe;
+        this->line = tk.line;
+        this->bitObject = tk.bitObject;
+        this->location = tk.location;
+        this->prediction = tk.prediction;
+        this->written = tk.written;
+    }    
+    // ######################################################################
+    Token::Token(BitObject bo, uint frame, const MbariMetaData& m)
     : bitObject(bo),
       location(bo.getCentroidXY()),
       prediction(),
@@ -300,7 +309,8 @@ namespace MbariVisualEvent {
   // ######################################################################
   bool VisualEvent::isTokenOk(const Token& tk) const
   {
-    LINFO("tk.frame_nr %d startframe %d endframe %d itsState: %i", tk.frame_nr, startframe, endframe, (int) itsState);
+    LINFO("tk.frame_nr %d startframe %d endframe %d validendframe: %d itsState: %i", \
+            tk.frame_nr, startframe, endframe, validendframe, (int) itsState);
     return ((tk.frame_nr - endframe) >= 1) && (itsState != CLOSED);
   }
 	
@@ -317,9 +327,50 @@ namespace MbariVisualEvent {
            yTracker.getEstimate(), cost);
     return cost;
   }
-	
+
+   // ######################################################################
+  void VisualEvent::assign_noprediction(const Token& tk, const Vector2D& foe, uint validendframe, uint expireFrames)
+  {
+    ASSERT(isTokenOk(tk));
+
+    double smv = tokens.back().bitObject.getSMV();
+
+    tokens.push_back(tk);
+
+    uint frameNum;
+    if (validendframe - getStartFrame() >= expireFrames)
+         frameNum = validendframe - expireFrames;
+    else
+        frameNum = validendframe;
+
+    Token t = getToken(frameNum);
+
+    tokens.back().prediction =  Vector2D(t.location.x(), t.location.y());
+    tokens.back().location = Vector2D(t.location.x(), t.location.y());
+    xTracker.update(t.location.x());
+    yTracker.update(t.location.y()); 
+
+    LINFO("Getting token for frame: %d actual location: %g %g", frameNum,
+            tokens.back().prediction.x(), tokens.back().prediction.y());
+
+    // initialize token SMV to last token SMV
+    // this is sort of a strange way to propogate values
+    // need a bitObject copy operator?
+    tokens.back().bitObject.setSMV(smv);
+    
+    tokens.back().foe = foe;
+ 
+    if (tk.bitObject.getArea() > (int) max_size)
+      {
+        max_size = tk.bitObject.getArea();
+        maxsize_framenr = tk.frame_nr;
+      }
+    endframe = tk.frame_nr;
+    this->validendframe = validendframe;
+  }
+
   // ######################################################################
-  void VisualEvent::assign(const Token& tk, const Vector2D& foe)
+  void VisualEvent::assign(const Token& tk, const Vector2D& foe, uint validendframe)
   {
     ASSERT(isTokenOk(tk));
 	
@@ -353,9 +404,9 @@ namespace MbariVisualEvent {
         max_size = tk.bitObject.getArea();
         maxsize_framenr = tk.frame_nr;
       }  
-    endframe = tk.frame_nr;  
-  }
-	
+    endframe = tk.frame_nr;
+    this->validendframe = validendframe;
+  } 
   // ######################################################################
   bool VisualEvent::doesIntersect(const BitObject& obj, int frameNum) const
   {
@@ -365,11 +416,9 @@ namespace MbariVisualEvent {
   // ######################################################################
   VisualEvent::Category VisualEvent::getCategory() const
   { 
-    // If between min and max area and has at least itsDetectionParms.itsMinFrameNum is INTERESTING
+    // If is at least itsDetectionParms.itsMinFrameNum is INTERESTING
     // otherwise BORING
-    return (getMaxSize() > itsDetectionParms.itsMinEventArea && \
-            getMaxSize() < itsDetectionParms.itsMaxEventArea && \
-            (int)  getNumberOfFrames() >=  itsDetectionParms.itsMinEventFrames ? \
+    return ((int)  getNumberOfFrames() >=  itsDetectionParms.itsMinEventFrames ? \
             (VisualEvent::Category)INTERESTING:(VisualEvent::Category)BORING);
   }	
   // ######################################################################
@@ -546,12 +595,12 @@ namespace MbariVisualEvent {
   void VisualEventSet::runKalmanTracker(VisualEvent *currEvent, \
                                         uint frameNum,
                                         const MbariMetaData &metadata,
-                                        const Image<byte>& binMap,
+                                        const Image<byte>& binMap, 
                                         const Vector2D& curFOE)
   {
 	
     // get the predicted location
-    Point2D<int> pred = currEvent->predictedLocation();
+    const Point2D<int> pred = currEvent->predictedLocation();
 	
     // get a copy of the last token in this event for prediction
     Token evtToken = currEvent->getToken(currEvent->getEndFrame());    
@@ -575,10 +624,12 @@ namespace MbariVisualEvent {
 											
     Dims d =  binMap.getDims();
     region = region.getOverlap(Rectangle(Point2D<int>(0,0), d - 1));
-	  
+
     // extract all the BitObjects from the region
-    // extract as small as 1/2 of the last occurance of this event
-    std::list<BitObject> objs = extractBitObjects(binMap, region, evtToken.bitObject.getArea()/2, itsDetectionParms.itsMaxEventArea);
+    // extract as small as 1/2 of the last occurance of this event 
+    // extract as large as 2x the the last occurance of this event
+    std::list<BitObject> objs = extractBitObjects(binMap, region, evtToken.bitObject.getArea()/2, evtToken.bitObject.getArea()*2);
+
     LINFO("pred. location: %s; region: %s; Number of extracted objects: %i",
            toStr(pred).data(),toStr(region).data(),objs.size());
 	  
@@ -621,18 +672,27 @@ namespace MbariVisualEvent {
 	   
     // cost too high no fitting object found? -> close event
     if ((lCost > itsDetectionParms.itsMaxCost) || areapercentdiff > 3.F || lCost == -1.0 || lObj == objs.end()) {
-      currEvent->close();
-      LINFO("Event %i - no token found, closing event cost: %f maxCost: %f areaDiffPercent: %f ",
-		currEvent->getEventNum(), lCost, itsDetectionParms.itsMaxCost, areapercentdiff);
+        if ( frameNum - currEvent->getValidEndFrame() > itsDetectionParms.itsEventExpirationFrames ) {
+            currEvent->close();
+            LINFO("Event %i - no token found, closing event cost: %f maxCost: %f size: %d areaDiffPercent: %f ",
+		currEvent->getEventNum(), lCost, itsDetectionParms.itsMaxCost, area1, areapercentdiff);
+        }
+        else {
+             LINFO("Event %i - no token found, keeping event open for expiration frames: %d",
+		currEvent->getEventNum(), itsDetectionParms.itsEventExpirationFrames); 
+            evtToken.frame_nr = frameNum;
+            currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(), itsDetectionParms.itsEventExpirationFrames);
+        }
     }
     else    {
       // associate the best fitting guy
       Token tk(*lObj, frameNum, metadata);
       tk.bitObject.computeSecondMoments();
-      currEvent->assign(tk, curFOE);
-      LINFO("Event %i - token found at %g, %g",currEvent->getEventNum(),
+      currEvent->assign(tk, curFOE, frameNum);
+      LINFO("Event %i - token found at %g, %g area: %d",currEvent->getEventNum(),
             currEvent->getToken(frameNum).location.x(), 
-            currEvent->getToken(frameNum).location.y());
+            currEvent->getToken(frameNum).location.y(),
+            tk.bitObject.getArea());
     }
 	    
     objs.clear();    
@@ -641,7 +701,8 @@ namespace MbariVisualEvent {
   void VisualEventSet::runNearestNeighborTracker(VisualEvent *currEvent,
                                              uint frameNum,
                                              const MbariMetaData &metadata,
-                                             const Image<byte>& binMap)
+                                             const Image<byte>& binMap,
+                                             const Vector2D& curFOE)
   {
     Dims d;
     Point2D<int> center;
@@ -673,12 +734,15 @@ namespace MbariVisualEvent {
         LINFO("Event %i out of bounds - closed",currEvent->getEventNum());
         return;
       }
-	
+ 
+
     // extract all the BitObjects from the region
     // extract as small as 1/2 of the last occurance of this event
-    std::list<BitObject> objs = extractBitObjects(binMap, region,evtToken.bitObject.getArea()/2, itsDetectionParms.itsMaxEventArea);
+    // extract as large as 2x the the last occurance of this event
+    std::list<BitObject> objs = extractBitObjects(binMap, region, evtToken.bitObject.getArea()/2, evtToken.bitObject.getArea()*2);
+
     LINFO("region: %s; Number of extracted objects: %i", toStr(region).data(),objs.size());
-	
+
     // now find which one fits best
     float lCost = -1.0F, cost = -1.0F, areapercentdiff = 0.F, percentdiff = 0.F;
     Rectangle d1 = evtToken.bitObject.getBoundingBox();
@@ -723,25 +787,34 @@ namespace MbariVisualEvent {
     // cost too high no fitting object found? -> close event
     if ( (lCost > itsDetectionParms.itsMaxCost) || (areapercentdiff > 3.0F) || (lCost == -1.0))
       {
-        currEvent->close();
-        LINFO("Event %i - no token found, closing event",currEvent->getEventNum());
+        if ( frameNum - currEvent->getValidEndFrame() > itsDetectionParms.itsEventExpirationFrames ) {
+            currEvent->close();
+            LINFO("Event %i - no token found, closing event",currEvent->getEventNum());
+        }
+        else {
+             LINFO("Event %i - no token found, keeping event open for expiration frames: %d event",
+		currEvent->getEventNum(), itsDetectionParms.itsEventExpirationFrames); 
+            evtToken.frame_nr = frameNum;
+            currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(),  itsDetectionParms.itsEventExpirationFrames);
+        }
       } 
     else {
       // associate this token to the best fitting guy
       Vector2D emtpy(0.F,0.F);
       Token tk(*lObj, frameNum, metadata);
       tk.bitObject.computeSecondMoments();
-      currEvent->assign(tk, emtpy);
-      LINFO("Event %i - token found at %g, %g",currEvent->getEventNum(),
+      currEvent->assign(tk, emtpy, frameNum);
+      LINFO("Event %i - token found at %g, %g area: %d",currEvent->getEventNum(),
             currEvent->getToken(frameNum).location.x(), 
-            currEvent->getToken(frameNum).location.y());      
+            currEvent->getToken(frameNum).location.y(),
+            area1);
     }    
 	   
     objs.clear();    
   }
 	
   // ######################################################################
-  void VisualEventSet::updateEvents(const Image<byte>& binMap, 
+  void VisualEventSet::updateEvents(const Image<byte>& binMap,  
                                     const Vector2D& curFOE, 
                                     int frameNum,
                                     const MbariMetaData &metadata)
@@ -755,17 +828,35 @@ namespace MbariVisualEvent {
       if ((*currEvent)->isOpen()) {
         switch(itsDetectionParms.itsTrackingMode) {
         case(TMKalmanFilter):
-          runKalmanTracker(*currEvent, frameNum, metadata, binMap, curFOE);      
+          runKalmanTracker(*currEvent, frameNum, metadata, binMap, curFOE);
           break;
         case(TMNearestNeighbor):
-          runNearestNeighborTracker(*currEvent, frameNum, metadata, binMap);
+          runNearestNeighborTracker(*currEvent, frameNum, metadata, binMap, curFOE);
           break;
         case(TMNone):
           break;
         default:
-          runKalmanTracker(*currEvent, frameNum, metadata, binMap, curFOE);      
+          runKalmanTracker(*currEvent, frameNum, metadata, binMap, curFOE);
           break;
         }
+      }
+  }
+	
+  // ######################################################################
+  void VisualEventSet::initiateEventsColor(std::list<BitObject>& bos, int frameNum, \
+                                      const MbariMetaData &metadata)
+  {
+    if (startframe == -1) {startframe = frameNum; endframe = frameNum;}
+    if (frameNum > endframe) endframe = frameNum;  
+	
+    std::list<BitObject>::iterator currObj;
+	
+    //  go through all the remaining BitObjects and create new events for them
+    for (currObj = bos.begin(); currObj != bos.end(); ++currObj)
+      {
+        itsColorEvents.push_back(new VisualEvent(Token(*currObj, frameNum, metadata), itsDetectionParms));
+        LINFO("assigning object of area: %i to new event %i",currObj->getArea(),
+              itsColorEvents.back()->getEventNum());
       }
   }
 	
@@ -927,6 +1018,7 @@ namespace MbariVisualEvent {
                                   PixRGB<byte> colorPred,
                                   PixRGB<byte> colorFOE,
                                   bool showEventLabels,
+                                  bool showCandidate,
                                   bool saveNonInterestingEvents)
   {
     // dimensions of the number text and location to put it at
@@ -942,7 +1034,8 @@ namespace MbariVisualEvent {
         // otherwise, save all INTERESTING events
         if( (*currEvent)->frameInRange(frameNum) &&
             ( (saveNonInterestingEvents && (*currEvent)->getCategory() == MbariVisualEvent::VisualEvent::BORING ) ||
-            (*currEvent)->getCategory() == MbariVisualEvent::VisualEvent::INTERESTING ))
+            (*currEvent)->getCategory() == MbariVisualEvent::VisualEvent::INTERESTING  || 
+            showCandidate ) ) 
           {
             PixRGB<byte> circleColor;            
             tk = (*currEvent)->getToken(frameNum);
@@ -978,6 +1071,7 @@ namespace MbariVisualEvent {
                   {
                     tk.bitObject.draw(mode, img, circleColor, opacity);
                     bbox = tk.bitObject.getBoundingBox(BitObject::IMAGE);
+                    bbox = bbox.getOverlap(img.getBounds());
                   }
                 else
                   {
@@ -1004,18 +1098,22 @@ namespace MbariVisualEvent {
             // now do the same for the predicted value
             if ((colorPred != COL_TRANSPARENT) && tk.prediction.isValid())
               {
-                Point2D<int> ctr = tk.prediction.getPoint2D();
-                drawCircle(img, ctr,10,colorPred);
+                Point2D<int> ctr = tk.prediction.getPoint2D();  
                 Rectangle ebox =
                   Rectangle::tlbrI(ctr.j - 10, ctr.i - 10, ctr.j + 10, ctr.i + 10);
-                ebox = ebox.getOverlap(img.getBounds());
-                if (showEventLabels)
-                  {
-                    Point2D<int> numLoc = getLabelPosition(img.getDims(), ebox, textImg.getDims());
-                    Image< PixRGB<byte> > textImg2 = replaceVals(textImg,COL_BLACK,colorPred);
-                    textImg2 = replaceVals(textImg2,COL_WHITE,COL_TRANSPARENT);
-                    pasteImage(img,textImg2,COL_TRANSPARENT, numLoc, opacity);
-                  }
+                    ebox = ebox.getOverlap(img.getBounds());
+
+                    // round the radius in case near the edges
+                    if (ebox.width() > 0 && ebox.height() > 0) {
+                        int radius = sqrt(pow((double) ebox.width(), 2.0) + pow((double) ebox.height(), 2.0));
+                        drawCircle(img, ctr, radius, colorPred);
+                        if (showEventLabels) { 
+                            Point2D<int> numLoc = getLabelPosition(img.getDims(), ebox, textImg.getDims());
+                            Image< PixRGB<byte> > textImg2 = replaceVals(textImg, COL_BLACK, colorPred);
+                            textImg2 = replaceVals(textImg2, COL_WHITE, COL_TRANSPARENT);
+                            pasteImage(img, textImg2, COL_TRANSPARENT, numLoc, opacity);
+                        }
+                    }
               }
 	
           }
@@ -1152,6 +1250,21 @@ namespace MbariVisualEvent {
     std::list<VisualEvent *>::iterator evt;
 	 
     for (evt = itsEvents.begin(); evt != itsEvents.end(); ++evt) 
+      if ((*evt)->frameInRange(framenum))
+        if((*evt)->getToken(framenum).bitObject.isValid())
+          result.push_back((*evt)->getToken(framenum).bitObject);
+	  
+    return result;
+  }
+	
+  // ######################################################################
+  std::list<BitObject>
+  VisualEventSet::getColorBitObjectsForFrame(uint framenum)
+  {
+    std::list<BitObject> result;
+    std::list<VisualEvent *>::iterator evt;
+	 
+    for (evt = itsColorEvents.begin(); evt != itsColorEvents.end(); ++evt) 
       if ((*evt)->frameInRange(framenum))
         if((*evt)->getToken(framenum).bitObject.isValid())
           result.push_back((*evt)->getToken(framenum).bitObject);

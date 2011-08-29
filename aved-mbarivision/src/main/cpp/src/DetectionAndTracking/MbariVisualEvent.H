@@ -106,6 +106,9 @@ namespace MbariVisualEvent {
 	
     //! write the Token's position to the output streeam os
     void writePosition(std::ostream& os) const;
+
+     //! copy operator
+    Token & operator=(const Token& tk);
   };
 	
   // ######################################################################
@@ -189,7 +192,10 @@ namespace MbariVisualEvent {
     float getCost(const Token& tk);
 	
     //! assign tk to this event, use foe as the focus of expansion
-    void assign(const Token& tk, const Vector2D& foe);
+    void assign(const Token& tk, const Vector2D& foe,  uint validendframe);
+
+    //! assign tk to this event, use foe as the focus of expansion, don't update the prediction
+    void assign_noprediction(const Token& tk, const Vector2D& foe,  uint validendframe,  uint expireFrames);
 	
     //! if the BitObject intersects with the one for this event at frameNum
     bool doesIntersect(const BitObject& obj, int frameNum) const;
@@ -234,6 +240,9 @@ namespace MbariVisualEvent {
 	
     //! return the frame number of the last token
     inline uint getEndFrame() const;
+
+    //! return the frame number of the last valid( non duplicated token)
+    inline uint getValidEndFrame() const;
 	
     //! return starting timecode string
     inline std::string getStartTimecode() const;
@@ -278,13 +287,14 @@ namespace MbariVisualEvent {
 	
     //! get category for this event returns INTERESTING OR BORING
     VisualEvent::Category getCategory() const;
-	
+
   private:
     static uint counter;  
     uint myNum;
     std::vector<Token> tokens;
     uint startframe;
     uint endframe;
+    uint validendframe;
     int max_size;
     uint maxsize_framenr;
     // ! VisualEvent state
@@ -332,13 +342,16 @@ namespace MbariVisualEvent {
       motion 
       @param frameNum current frame number
       @param metadata associated with current frame number*/
-    void updateEvents(const Image<byte>& binMap,\
+    void updateEvents(const Image<byte>& binMap, \
                       const Vector2D& curFOE, \
                       int frameNum, \
                       const MbariMetaData &m);
 	
     //! insert event into current list of event
     void insert(VisualEvent *event);
+	
+    //! initiate new events for all BitObjects in bos if they aren't tracked yet
+    void initiateEventsColor(std::list<BitObject>& bos, int frameNum, const MbariMetaData &metadata);
 	
     //! initiate new events for all BitObjects in bos if they aren't tracked yet
     void initiateEvents(std::list<BitObject>& bos, int frameNum, const MbariMetaData &metadata);
@@ -379,7 +392,9 @@ namespace MbariVisualEvent {
                     PixRGB<byte> colorPred,
                     PixRGB<byte> colorFOE,
                     bool showEventLabels,
+		    bool showCandidate,
                     bool saveNonInterestingEvents);
+    
     //! returns a PropertyVectorSet for this VisualEventSet
     PropertyVectorSet getPropertyVectorSet();
 	  
@@ -404,6 +419,9 @@ namespace MbariVisualEvent {
     //! Returns a list of all BitObject at framnum
     std::list<BitObject> getBitObjectsForFrame(uint framenum);
 	
+    //! Returns a list of all color segmented BitObject at framnum
+    std::list<BitObject> getColorBitObjectsForFrame(uint framenum);
+	
     //! Returns an iterator pointing to all (interesting or boring)
     // ready to be written for given framenum
     std::list<VisualEvent *> getEventsReadyToSave(uint framenum);
@@ -415,14 +433,14 @@ namespace MbariVisualEvent {
 	
     // runs the nearest neighbor tracking on @param event
     void runNearestNeighborTracker(VisualEvent *event, uint frameNum, const MbariMetaData &m,
-                               const Image<byte>& binMap);
+                               const Image<byte>& binMap,  const Vector2D& curFOE);
 	
     // runs the Kalman filter tracking on @param event
     void runKalmanTracker(VisualEvent *event, uint frameNum, const MbariMetaData &m,
-                          const Image<byte>& binMap,
-                          const Vector2D& curFOE);
+                          const Image<byte>& binMap, const Vector2D& curFOE);
 	
     std::list<VisualEvent *> itsEvents; 
+    std::list<VisualEvent *> itsColorEvents; 
     int startframe; 
     int endframe;
     std::string itsFileName;
@@ -469,10 +487,13 @@ namespace MbariVisualEvent {
 	
   // ######################################################################
   inline uint VisualEvent::getStartFrame() const
-  { return startframe; }
-	
+  { return startframe; }	
 	
   // ######################################################################
+  inline uint VisualEvent::getValidEndFrame() const
+  { return validendframe; }
+  
+    // ######################################################################
   inline uint VisualEvent::getEndFrame() const
   { return endframe; }
   // ######################################################################

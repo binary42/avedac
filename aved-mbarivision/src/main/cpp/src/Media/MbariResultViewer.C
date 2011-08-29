@@ -237,6 +237,7 @@ void MbariResultViewer::outputResultFrame(MbariImage< PixRGB<byte> >& resultImg,
                 colInteresting, colCandidate, colPrediction,
                 colFOE,
                 itsShowEventLabels.getVal(),
+	        itsMarkCandidate.getVal(),
                 itsSaveNonInterestingEvents);
     }
 
@@ -277,7 +278,6 @@ void MbariResultViewer::outputResultFrame(MbariImage< PixRGB<byte> >& resultImg,
             final_image.getHeight() - textImg.getHeight());
 
     pasteImage(final_image, textImg, COL_TRANSPARENT, low_right, itsOpacity.getVal());
-
 
     // display the frame?
     if (itsDisplayOutput.getVal()) {

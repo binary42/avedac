@@ -66,7 +66,7 @@ extern const ModelOptionDef OPT_MRVmetadataSource;
 extern const ModelOptionDef OPT_MDPsaliencyInputImage;
 extern const ModelOptionDef OPT_MDPsaliencyFrameDist;
 extern const ModelOptionDef OPT_MDPsegmentAlgorithmInputImage;
-extern const ModelOptionDef OPT_MDPsegmentAlgorithm;
+extern const ModelOptionDef OPT_MDPsegmentAlgorithmType; 
 extern const ModelOptionDef OPT_MDPmaxEvolveTime;
 extern const ModelOptionDef OPT_MDPmaxWTAPoints;
 extern const ModelOptionDef OPT_MDPsaveNonInterestingEvents;
@@ -75,6 +75,8 @@ extern const ModelOptionDef OPT_MDPBenthicVideo;
 extern const ModelOptionDef OPT_MDPMidwaterVideo;
 extern const ModelOptionDef OPT_MDPcolorSpace;
 extern const ModelOptionDef OPT_MDPminVariance;
+extern const ModelOptionDef OPT_MDPaddGraphWinners;
+extern const ModelOptionDef OPT_MDPeventExpirationFrames;
 
 extern const ModelOptionDef OPT_MDPkeepBoringWTAPoints;
 extern const ModelOptionDef OPT_MDPtrackingMode;
