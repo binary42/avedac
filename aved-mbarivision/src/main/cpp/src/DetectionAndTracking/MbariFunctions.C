@@ -383,8 +383,7 @@ list<WTAwinner> getSalientWinners(
     std::list<WTAwinner> winners;
     int numSpots = 0;
     SimStatus status = SIM_CONTINUE;
-    DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
-    nub::soft_ref<Brain> mbrain = dynCastWeak<Brain > (brain);
+    DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters; 
 
     float stddevlum = stdev(luminance(img));
     if (p.itsMinVariance > 0.f || stddevlum == 0) {
@@ -406,7 +405,7 @@ list<WTAwinner> getSalientWinners(
     const SimTime simMaxEvolveTime = seq->now() + SimTime::MSECS(maxEvolveTime);
 
     rutz::shared_ptr<SimEventInputFrame>
-            eif(new SimEventInputFrame(mbrain.get(),
+            eif(new SimEventInputFrame(brain.get(),
             GenericFrame(img),
             framenum));
 
