@@ -121,7 +121,7 @@ const ModelOptionDef OPT_MDPBenthicVideo =
     "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=Luminance "
     "--vc-type=OI --mbari-color-space=Gray --use-random=true  --mbari-se-size=4 "
     "--ori-interaction=None --oricomp-type=Steerable --boring-sm-mv=1.0 "
-    "--mbari-cache-size=60 --use-older-version=false "
+    "--mbari-cache-size=120 --use-older-version=false "
     "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst --maxnorm-type=Maxnorm"  };
 
 const ModelOptionDef OPT_MDPMidwaterVideo =
