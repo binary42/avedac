@@ -658,7 +658,7 @@ void BitObject::drawOutline(Image<T_or_RGB>& img,
   int b = itsBoundingBox.bottomI();
   int l = itsBoundingBox.left();
   int r = itsBoundingBox.rightI();
-
+  
   for (int y = t; y <= b; ++y)
     for (int x = l; x <= r; ++x)
       {
@@ -700,7 +700,7 @@ void BitObject::drawBoundingBox(Image<T_or_RGB>& img,
   int b = itsBoundingBox.bottomI();
   int l = itsBoundingBox.left();
   int r = itsBoundingBox.rightI();
-
+  
   for (int x = l; x <= r; ++x)
     {
       Point2D<int> p1(x,t), p2(x,b);

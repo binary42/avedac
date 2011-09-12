@@ -88,7 +88,7 @@ std::list<BitObject> extractBitObjects(const Image<byte>& bitImg,
  * minSize is stored in the list of BitObjects that is returned. */
 std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
         const Point2D<int> seed,
-        Rectangle region,
+        Rectangle region, 
         const int minSize,
         const int maxSize);
 
@@ -138,7 +138,7 @@ std::list<BitObject> getSalientObjects(const Image<byte>& bitImg,
 /*!*@param graphBitImg a color coded image used for extracting BitObjects at the
  * winner locations
  @param winners list of Salient winners*/
-std::list<BitObject> getSalientObjects(const Image<PixRGB<byte> >& graphBitImg,
+std::list<BitObject> getSalientObjects(const Image<PixRGB<byte> >& graphBitImg, 
         const list<WTAwinner> &winners);
 
 

@@ -64,7 +64,9 @@ itsMaskWidth(DEFAULT_MASK_HEIGHT),
 itsMaskHeight(DEFAULT_MASK_WIDTH), 
 itsSegmentAlgorithmInputType(DEFAULT_SEGMENT_ALGORITHM_INPUT_TYPE),
 itsSegmentAlgorithmType(DEFAULT_SEGMENT_ALGORITHM_TYPE),
-itsSegmentSEType(DEFAULT_SE_TYPE),
+itsSegmentAdaptiveOffset(DEFAULT_SEGMENT_ALGORITHM_OFFSET),
+itsSegmentGraphParameters(DEFAULT_SEGMENT_GRAPH_PARAMETERS),
+itsCleanupStructureElementSize(DEFAULT_SE_SIZE),
 itsSaliencyInputType(DEFAULT_SALIENCY_INPUT_TYPE),
 itsMinVariance(DEFAULT_MIN_VARIANCE),
 itsColorSpaceType(DEFAULT_COLOR_SPACE),
@@ -85,8 +87,10 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     os << "\ttrackingmode:" << trackingModeName(itsTrackingMode); 
     os << "\tsegmentalgorithminputimagetype:" << segmentAlgorithmInputImageType(itsSegmentAlgorithmInputType);
     os << "\tsegmentalgorithmtype:" << segmentAlgorithmType(itsSegmentAlgorithmType);
+    os << "\tsegmentadaptivemoffset:" << itsSegmentAdaptiveOffset;
     os << "\tsaliencyinputimagetype:" << saliencyInputImageType(itsSaliencyInputType);
-    os << "\tstructureelementtype:" << itsSegmentSEType;
+    os << "\tsegmentgraphparameters:" << itsSegmentGraphParameters;
+    os << "\tcleanupelementsize:" << itsCleanupStructureElementSize;
     os << "\tminframes:" << itsMinEventFrames;
     os << "\tmaxframes:" << itsMaxEventFrames;
     os << "\tmaxdist:" << itsMaxDist;
@@ -123,7 +127,9 @@ DetectionParameters &DetectionParameters::operator=(const DetectionParameters& p
     this->itsTrackingMode = p.itsTrackingMode; 
     this->itsSegmentAlgorithmInputType = p.itsSegmentAlgorithmInputType;
     this->itsSegmentAlgorithmType = p.itsSegmentAlgorithmType;
-    this->itsSegmentSEType = p.itsSegmentSEType;
+    this->itsSegmentAdaptiveOffset = p.itsSegmentAdaptiveOffset;
+    this->itsSegmentGraphParameters = p.itsSegmentGraphParameters;
+    this->itsCleanupStructureElementSize = p.itsCleanupStructureElementSize;
     this->itsSaliencyInputType = p.itsSaliencyInputType;
     this->itsSaliencyFrameDist = p.itsSaliencyFrameDist;
     this->itsKeepWTABoring = p.itsKeepWTABoring;
@@ -194,7 +200,9 @@ itsMaxEvolveTime(&OPT_MDPmaxEvolveTime, this),
 itsTrackingMode(&OPT_MDPtrackingMode, this), 
 itsSegmentAlgorithmInputType(&OPT_MDPsegmentAlgorithmInputImage, this),
 itsSegmentAlgorithmType(&OPT_MDPsegmentAlgorithmType, this),
-itsSegmentSEType(&OPT_MDPsegmentSEType, this),
+itsSegmentAdaptiveOffset(&OPT_MDPsegmentAdaptiveOffset, this),
+itsSegmentGraphParameters(&OPT_MDPsegmentGraphParameters, this),
+itsCleanupStructureElementSize(&OPT_MDPcleanupSESize, this),
 itsSaliencyInputType(&OPT_MDPsaliencyInputImage, this),
 itsMaskPath(&OPT_MDPmaskPath, this),
 itsMaskXPosition(&OPT_MDPmaskXPosition, this),
@@ -226,8 +234,8 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
         p->itsTrackingMode = itsTrackingMode.getVal();
      if (itsSaliencyInputType.getVal() > 0)
         p->itsSaliencyInputType = itsSaliencyInputType.getVal();
-    if (itsSegmentSEType.getVal().length() > 0)
-        p->itsSegmentSEType = itsSegmentSEType.getVal().data();
+    if (itsCleanupStructureElementSize.getVal() > 1)
+        p->itsCleanupStructureElementSize = itsCleanupStructureElementSize.getVal();
     if (itsMaskPath.getVal().length() > 0)
         p->itsMaskPath = itsMaskPath.getVal().data();
     if (itsMaskXPosition.getVal() >= 0)
@@ -274,4 +282,6 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
     p->itsColorSpaceType = itsColorSpaceType.getVal();
     p->itsSegmentAlgorithmInputType = itsSegmentAlgorithmInputType.getVal();
     p->itsSegmentAlgorithmType = itsSegmentAlgorithmType.getVal();
+    p->itsSegmentAdaptiveOffset = itsSegmentAdaptiveOffset.getVal();
+    p->itsSegmentGraphParameters = itsSegmentGraphParameters.getVal();
 }

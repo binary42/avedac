@@ -44,6 +44,7 @@
 #include "Image/ShapeOps.H"
 #include "Image/Transforms.H" 
 #include "Image/Geometry2D.H"
+#include "Image/MorphOps.H"
 #include "Media/MediaSimEvents.H"
 #include "Media/SimFrameSeries.H"
 #include "Media/MediaOpts.H"
@@ -60,6 +61,7 @@
 #include "rutz/shared_ptr.h"
 #include "Image/BitObject.H"
 #include "Image/DrawOps.H"
+#include "Image/Kernels.H"      // for twofiftyfives()
 #include "DetectionAndTracking/DetectionParameters.H"
  
 // ######################################################################
@@ -96,7 +98,7 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& graphBitImg,
     Dims d = graphBitImg.getDims();
     region = region.getOverlap(Rectangle(Point2D<int>(0, 0), d - 1));
     Image<byte> labelImg(graphBitImg.getDims(), ZEROS);
-    Image<byte> bitImg(graphBitImg.getDims(), ZEROS);
+    Image<byte> bitImg(graphBitImg.getDims(), ZEROS); 
     PixRGB<byte> color = graphBitImg.getVal(seed);
     const PixRGB<byte> black = PixRGB<byte>(0,0,0);
 
@@ -110,7 +112,7 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& graphBitImg,
         while (sptr != graphBitImg.end())
             *rptr++ = (*sptr++ == color) ? 1 : 0;
     }
-    
+ 
     // get the bit object(s) in this region
     for (int ry = region.top(); ry <= region.bottomO(); ++ry)
         for (int rx = region.left(); rx <= region.rightO(); ++rx) {
@@ -127,7 +129,7 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& graphBitImg,
 
             // if the object is in range, keep it
             if (obj.getArea() > minSize && obj.getArea() < maxSize) {
-                LDEBUG("found object size: %d", obj.getArea());
+                LDEBUG("found object sizeF: %d", obj.getArea());
                 bos.push_back(obj);
             }
             else
@@ -199,7 +201,7 @@ std::list<BitObject> getSalientObjects(const Image< byte >& bitImg, const list<W
         LDEBUG("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
         winner.i, winner.j, convertToString(region).c_str(), p.itsMinEventArea, p.itsMaxEventArea);
 
-        std::list<BitObject> sobjs = extractBitObjects(bitImg, winner, region, \
+        std::list<BitObject> sobjs = extractBitObjects(bitImg, region, \
         p.itsMinEventArea, p.itsMaxEventArea);
 
 	LDEBUG("Found bitobject(s) in bitImg: %d", sobjs.size());
@@ -250,7 +252,7 @@ std::list<BitObject> getSalientObjects(const Image< byte >& bitImg, const list<W
 
 // ######################################################################
 
-std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg,
+std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg, 
     const list<WTAwinner> &winners) {
     // this should be 2^(smlev - 1)
     const int rectRad = 20;
@@ -329,7 +331,7 @@ std::list<WTAwinner> getGraphWinners(const Image< PixRGB<byte> >& graphBitImg,
         float scaleH) {
 
     std::list<PixRGB<byte> > colors; 
-    list<WTAwinner> winners;
+    std::list<WTAwinner> winners;
     PixRGB<byte> seedColor;
     const int w = graphBitImg.getWidth();
     const int h = graphBitImg.getHeight();
@@ -369,7 +371,7 @@ std::list<WTAwinner> getGraphWinners(const Image< PixRGB<byte> >& graphBitImg,
 
 // ######################################################################
 list<WTAwinner> getSalientWinners(
-	nub::soft_ref<SimOutputFrameSeries> simofs,
+        nub::soft_ref<SimOutputFrameSeries> simofs,
         const Image< PixRGB<byte> > &img,
         nub::soft_ref<StdBrain> brain,
         nub::soft_ref<SimEventQueue> seq,
@@ -382,7 +384,7 @@ list<WTAwinner> getSalientWinners(
     int numSpots = 0;
     SimStatus status = SIM_CONTINUE;
     DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
-    nub::soft_ref<Brain>  mbrain = dynCastWeak<Brain>(brain); 
+    nub::soft_ref<Brain> mbrain = dynCastWeak<Brain > (brain);
 
     float stddevlum = stdev(luminance(img));
     if (p.itsMinVariance > 0.f || stddevlum == 0) {
@@ -392,8 +394,7 @@ list<WTAwinner> getSalientWinners(
         if (stddevlum <= p.itsMinVariance) {
             LINFO("##### standard deviation in luminance: %f less than or equal to minimum variance: %f. No winners will be computed !!#####", stddevlum, p.itsMinVariance);
             return winners;
-        }
-        else {
+        } else {
             LINFO("##### standard deviation in luminance: %f#####", stddevlum);
         }
     }
@@ -411,39 +412,58 @@ list<WTAwinner> getSalientWinners(
 
     seq->post(eif);
 
-    // main loop:
-    while (status == SIM_CONTINUE) { 
-  
-      // evolve brain:
-      brain->evolve(*seq); 
-      
-      // switch to next time step:
-      status = seq->evolve();
- 
-      if (SeC<SimEventWTAwinner> e = seq->check<SimEventWTAwinner > (0) ) {
+    try {
 
-            WTAwinner win = e->winner();
-	    win.p.i = (int) ( (float) win.p.i*scaleW);
-	    win.p.j = (int) ( (float) win.p.j*scaleH); 
-            
-            LINFO("##### winner #%d found at [%d; %d] with %f voltage frame: %d#####",
-                    numSpots, win.p.i, win.p.j, win.sv, framenum);
 
-            // if a boring event detected, and not keeping boring WTA points then break simulation
-            if (win.boring && p.itsKeepWTABoring == false) { 
-                rutz::shared_ptr<SimEventBreak>
-                        e(new SimEventBreak(0, "##### boring event detected #####"));
-                seq->post(e);
-            } else {
-                winners.push_back(win);
-                ++numSpots;
+        // main loop:
+        while (status == SIM_CONTINUE) {
+
+            // evolve brain:
+            brain->evolve(*seq);
+
+            // switch to next time step:
+            status = seq->evolve();
+
+            if (SeC<SimEventWTAwinner> e = seq->check<SimEventWTAwinner > (0)) {
+
+                WTAwinner win = e->winner();
+                win.p.i = (int) ((float) win.p.i * scaleW);
+                win.p.j = (int) ((float) win.p.j * scaleH);
+
+                LINFO("##### winner #%d found at [%d; %d] with %f voltage frame: %d#####",
+                        numSpots, win.p.i, win.p.j, win.sv, framenum);
+
+                // if a boring event detected, and not keeping boring WTA points then break simulation
+                if (win.boring && p.itsKeepWTABoring == false) {
+                    rutz::shared_ptr<SimEventBreak>
+                            e(new SimEventBreak(0, "##### boring event detected #####"));
+                    seq->post(e);
+                } else {
+                    winners.push_back(win);
+                    ++numSpots;
+                }
+
+                if (numSpots >= maxNumSalSpots) {
+                    rutz::shared_ptr<SimEventBreak>
+                            e(new SimEventBreak(0, "##### found maximum number of salient spots #####"));
+                    seq->post(e);
+                }
+
+                if (seq->now().msecs() >= simMaxEvolveTime.msecs()) {
+                    LINFO("##### time limit reached time now:%f msecs max evolve time:%f msecs#####", seq->now().msecs(), simMaxEvolveTime.msecs());
+                    rutz::shared_ptr<SimEventBreak>
+                            e(new SimEventBreak(0, "##### time limit reached #####"));
+                    seq->post(e);
+                } else {
+                    LINFO("##### time now:%f msecs max evolve time:%f msecs#####", seq->now().msecs(), simMaxEvolveTime.msecs());
+                }
+
             }
 
-            if (numSpots >= maxNumSalSpots) {
-                rutz::shared_ptr<SimEventBreak>
-                        e(new SimEventBreak(0, "##### found maximum number of salient spots #####"));
-                seq->post(e);
-            }
+            // Evolve output frame series. It will trigger a save() on our
+            // modules as needed, before we start loading new inputs and
+            // processing them for the new time step.
+            simofs->evolve(*seq);
 
             if (seq->now().msecs() >= simMaxEvolveTime.msecs()) {
                 LINFO("##### time limit reached time now:%f msecs max evolve time:%f msecs#####", seq->now().msecs(), simMaxEvolveTime.msecs());
@@ -451,17 +471,10 @@ list<WTAwinner> getSalientWinners(
                         e(new SimEventBreak(0, "##### time limit reached #####"));
                 seq->post(e);
             }
-  	    else {
-                LINFO("##### time now:%f msecs max evolve time:%f msecs#####", seq->now().msecs(), simMaxEvolveTime.msecs());
-      		}
-      // Evolve output frame series. It will trigger a save() on our
-      // modules as needed, before we start loading new inputs and
-      // processing them for the new time step.
-      simofs->evolve(*seq);
         }
- 
+    } catch (const exception& e) {
+        return winners;
     }
-
     // print final memory allocation stats
     LINFO("Simulation terminated. Found %d numspots", numSpots);
 

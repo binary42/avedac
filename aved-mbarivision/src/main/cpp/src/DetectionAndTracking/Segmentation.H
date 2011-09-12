@@ -33,8 +33,12 @@
 #include "Image/Image.H"
 #include "Image/PixelsTypes.H"
 #include "DetectionAndTracking/TrackingModes.H"
-
+#include "DetectionAndTracking/DetectionParameters.H"
 #include "Util/StringConversions.H"
+
+#include <vector>
+
+using namespace std;
 
 // ######################################################################
 //! Container class for running different segmentation algorithms
@@ -44,13 +48,15 @@ public:
 
   Segmentation();
   virtual ~Segmentation();
-  Image<byte> runBinaryAdaptive(const Image<byte>& mean, const Image<byte>& src);
-  Image<byte> runBinaryAdaptive(const Image<byte> &bwImg);
-  Image< PixRGB<byte> > runGraph(const Image < PixRGB<byte> > &image);
+  Image< PixRGB<byte> > runGraph(const float sigma, const int k, const int min_size, const Image < PixRGB<byte> > &image);
+  float getSigma(const vector< float > & v);
+  int getK(const vector< float > & v);
+  int getMinSize(const vector< float > & v);
+  vector< float > getFloatParameters(const string  &str);
   Image<byte> mean_thresh(const Image<byte>& src,  const int size, const int con);
   Image<byte> median_thresh(const Image<byte>& src, const int size, const int con);
   Image<byte> meanMaxMin_thresh(const Image<byte>& src, const int size, const int con);
-  
+    
 private:
 
   /* private functions related to the BinaryAdaptive algorithm */

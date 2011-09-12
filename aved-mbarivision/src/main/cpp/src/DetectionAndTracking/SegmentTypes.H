@@ -34,17 +34,18 @@
 enum SegmentAlgorithmType {
   SAMeanAdaptiveThreshold = 0,
   SAMedianAdaptiveThreshold = 1,
-  SAMeanMinMaxAdaptiveThreshold = 2
+  SAMeanMinMaxAdaptiveThreshold = 2,
+  SAGraphCutOnly = 3
   // if you add a new type here, also update the names in the function below!
 };
 //! number of algorithm type
-#define NSEGMENT_ALGORITHMS 3
+#define NSEGMENT_ALGORITHMS 4
 
 //! Returns name of segment algorithm
 inline const char* segmentAlgorithmType(const SegmentAlgorithmType p)
 {
   static const char n[NSEGMENT_ALGORITHMS][25] = {
-    "MeanAdaptive", "MedianAdaptive", "MeanMinMaxAdaptive"};
+    "MeanAdaptive", "MedianAdaptive", "MeanMinMaxAdaptive","GraphCutOnly"};
   return n[int(p)];
 }
 

@@ -489,9 +489,8 @@ void MbariResultViewer::saveSingleEventFrame(MbariImage< PixRGB<byte> >& img,
     // create the file stem
     string evnum(sformat("evt%04d_", event->getEventNum()));
 
-    const int pad = 10;
     Dims maxDims = event->getMaxObjectDims();
-    Dims d(maxDims.w() + 2 * pad, maxDims.h() + 2 * pad);
+    Dims d(maxDims.w(), maxDims.h());
 
     // compute the correct bounding box and cut it out
     Rectangle bbox = event->getToken(frameNum).bitObject.getBoundingBox();

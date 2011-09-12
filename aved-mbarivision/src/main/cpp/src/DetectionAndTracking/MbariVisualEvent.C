@@ -217,7 +217,7 @@ namespace MbariVisualEvent {
       maxsize_framenr(tk.frame_nr),
       itsState(VisualEvent::OPEN),
       xTracker(tk.location.x(),0.1F,10.0F),
-      yTracker(tk.location.y(),0.1F,1.0F),
+      yTracker(tk.location.y(),0.1F,0.0F),
       itsDetectionParms(parms)
   {
     LDEBUG("tk.location = (%g, %g); area: %i",tk.location.x(),tk.location.y(),
@@ -388,7 +388,7 @@ namespace MbariVisualEvent {
     tokens.back().location = Vector2D(xTracker.update(tk.location.x()),
                                       yTracker.update(tk.location.y()));
     tokens.back().foe = foe;
-	
+ 
     // update the straight line
     //Vector2D dir(xTracker.getSpeed(), yTracker.getSpeed());
     Vector2D dir = tokens.front().location - tokens.back().location;
@@ -678,7 +678,7 @@ namespace MbariVisualEvent {
 		currEvent->getEventNum(), lCost, itsDetectionParms.itsMaxCost, area1, areapercentdiff);
         }
         else {
-             LINFO("Event %i - no token found, keeping event open for expiration frames: %d",
+             LINFO("########## Event %i - no token found, keeping event open for expiration frames: %d ##########",
 		currEvent->getEventNum(), itsDetectionParms.itsEventExpirationFrames); 
             evtToken.frame_nr = frameNum;
             currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(), itsDetectionParms.itsEventExpirationFrames);
@@ -792,7 +792,7 @@ namespace MbariVisualEvent {
             LINFO("Event %i - no token found, closing event",currEvent->getEventNum());
         }
         else {
-             LINFO("Event %i - no token found, keeping event open for expiration frames: %d event",
+             LINFO("##########Event %i - no token found, keeping event open for expiration frames: %d event##########",
 		currEvent->getEventNum(), itsDetectionParms.itsEventExpirationFrames); 
             evtToken.frame_nr = frameNum;
             currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(),  itsDetectionParms.itsEventExpirationFrames);
@@ -1100,12 +1100,12 @@ namespace MbariVisualEvent {
               {
                 Point2D<int> ctr = tk.prediction.getPoint2D();  
                 Rectangle ebox =
-                  Rectangle::tlbrI(ctr.j - 10, ctr.i - 10, ctr.j + 10, ctr.i + 10);
+                  Rectangle::tlbrI(ctr.j - circleRadius, ctr.i - circleRadius, ctr.j + circleRadius, ctr.i + circleRadius);
                     ebox = ebox.getOverlap(img.getBounds());
 
-                    // round the radius in case near the edges
+                    // round down the radius in case near the edges
                     if (ebox.width() > 0 && ebox.height() > 0) {
-                        int radius = sqrt(pow((double) ebox.width(), 2.0) + pow((double) ebox.height(), 2.0));
+                        int radius = sqrt(pow((double) ebox.width(), 2.0) + pow((double) ebox.height(), 2.0))/2;
                         drawCircle(img, ctr, radius, colorPred);
                         if (showEventLabels) { 
                             Point2D<int> numLoc = getLabelPosition(img.getDims(), ebox, textImg.getDims());

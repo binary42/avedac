@@ -58,7 +58,7 @@ parameters*/
 // 10 minutes @ 30 fps = 18000
 #define DEFAULT_MAX_EVENT_FRAMES  -1
 // Default minimum number of frames an event can be before considered interesting
-#define DEFAULT_MIN_EVENT_FRAMES 5
+#define DEFAULT_MIN_EVENT_FRAMES 3
 // Default values for the mask. This is the mask that
 // masks out video overlays, equipment, etc.
 // By default there is no mask
@@ -69,7 +69,11 @@ parameters*/
 // Default segmentation algorithm input type
 #define DEFAULT_SEGMENT_ALGORITHM_INPUT_TYPE SAIMaxRGB
 // Default segmentation algorithm type
-#define DEFAULT_SEGMENT_ALGORITHM_TYPE SAMedianAdaptiveThreshold
+#define DEFAULT_SEGMENT_ALGORITHM_TYPE SAMeanAdaptiveThreshold
+// Default segmentation algorithm offset to subtract from the mean or median
+#define DEFAULT_SEGMENT_ALGORITHM_OFFSET 0
+// Default graph based segment parameters
+#define DEFAULT_SEGMENT_GRAPH_PARAMETERS "0.75,500,50"
 // Default saliency input image type which is the difference
 // in the mean. This is only meaningful if there are cached
 // images to find a mean. TODO: put check for this and
@@ -77,7 +81,7 @@ parameters*/
 #define DEFAULT_SALIENCY_INPUT_TYPE SIDiffMean
 // Default structure element type to use for cleaning
 // up segmented images
-#define DEFAULT_SE_TYPE "benthic"
+#define DEFAULT_SE_SIZE 2
 // Default tracking mode to track event objects
 #define DEFAULT_TRACKING_MODE TMKalmanFilter
 // Default maximum evolve time of the brain model in msecs
@@ -99,7 +103,7 @@ parameters*/
 // frame size specification
 #define DEFAULT_SAVE_ORG_FRAME_SPEC false
 // Default color space for computing saliency
-#define DEFAULT_COLOR_SPACE SAColorGray
+#define DEFAULT_COLOR_SPACE SAColorRGB
 // Default minimum frame variance for processing. Anything below
 // this will be skipped
 #define DEFAULT_MIN_VARIANCE 0.f
@@ -143,24 +147,28 @@ public:
     int itsMinEventArea;
     // ! every @param frames that saliency is run
     int itsSaliencyFrameDist;
-   //! @param itsMaskPath = path of the image which represent the mask (this one should be binair)
+    //! @param itsMaskPath = path of the image which represent the mask (this one should be binair)
     std::string itsMaskPath;
-     //! @param itsSizeAvgCache = size of running average cache
+    //! @param itsSizeAvgCache = size of running average cache
     uint itsSizeAvgCache;
-  //! @param itsMaskXPosition = the x position of the reference point
+    //! @param itsMaskXPosition = the x position of the reference point
     int itsMaskXPosition;
-      //! @param itsMaskYPosition = the y position of the reference point
+     //! @param itsMaskYPosition = the y position of the reference point
     int itsMaskYPosition;
     //! @param itsMaskWidth = mask width
     int itsMaskWidth;
-   //! @param itsMaskHeight = mask height
+    //! @param itsMaskHeight = mask height
     int itsMaskHeight;
-   // @param itsSegmentAlgorithmType = segment algorithm type
+    // @param itsSegmentAlgorithmType = segment algorithm type
     SegmentAlgorithmType itsSegmentAlgorithmType;
-   // @param itsSegmentAlgorithmInputType = segment algorithm input image type
+    // @param itsSegmentAlgorithmInputType = segment algorithm input image type
     SegmentAlgorithmInputImageType itsSegmentAlgorithmInputType;
-    // @param itsSegmentSEType = structure element used for cleaning up segmented image
-    std::string itsSegmentSEType;
+    // @param itsSegmenGraphParameters =  graph based segment algorithm parameters
+    std::string itsSegmentGraphParameters;
+    // @param size of the offset to subtract from the mean or median in the segment algorithm
+    int itsSegmentAdaptiveOffset;
+    //! @param itsCleanupStructureElementSIze = size of square structure element to erode/dilate clean-up
+    int itsCleanupStructureElementSize;
      // @param itsSaliencyInputImageType = type of image to input into saliency computation
     SaliencyInputImageType itsSaliencyInputType;    
     //! @param itsKeepWTABoring = true if want to keep WTA boring points as candidates for detections
@@ -217,7 +225,9 @@ private:
     OModelParam<float> itsMinVariance; 
     OModelParam<SegmentAlgorithmInputImageType> itsSegmentAlgorithmInputType;
     OModelParam<SegmentAlgorithmType> itsSegmentAlgorithmType;
-    OModelParam<std::string> itsSegmentSEType;
+    OModelParam<int> itsSegmentAdaptiveOffset;
+    OModelParam<std::string> itsSegmentGraphParameters;
+    OModelParam<int> itsCleanupStructureElementSize;
     OModelParam<SaliencyInputImageType> itsSaliencyInputType;
     OModelParam<std::string> itsMaskPath;
     OModelParam<int> itsMaskXPosition;

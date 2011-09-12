@@ -214,7 +214,7 @@ void MbariXMLParser::addDetectionParameters(DetectionParameters params) {
   // Add the DetectionParameters values
   XMLCh* detectionparameters = XMLString::transcode("EventDetectionParameters");
   DOMElement* eventsroot = itsXMLdoc->createElement(detectionparameters);
-  std::ostringstream cachesizevalue, mineventareavalue, maxeventareavalue, \
+  std::ostringstream cachesizevalue, mineventareavalue, maxeventareavalue, segmentadaptiveoffset, \
     maskxposvalue, maskyposvalue, maskwidthvalue, maskheightvalue,maxWTApointsvalue, \
   maxevolvetimevalue, maxframeseventvalue, minframeseventvalue, maxcostvalue, minvariancevalue;
 
@@ -257,13 +257,36 @@ void MbariXMLParser::addDetectionParameters(DetectionParameters params) {
   XMLString::release(&trackingmode);
   XMLString::release(&trackingmodexmlstring);
 
-  SegmentAlgorithmInputImageType saitype= params.itsSegmentAlgorithmInputType;
+  std::string sgpstring = params.itsSegmentGraphParameters;
+  XMLCh* sgpttype = XMLString::transcode("SegmentGraphParameters");
+  XMLCh* sgpxmlstring = XMLString::transcode(sgpstring.c_str());
+  eventsroot->setAttribute(sgpttype, sgpxmlstring);
+  XMLString::release(&sgpttype);
+  XMLString::release(&sgpxmlstring);
+
+  SegmentAlgorithmInputImageType saitype = params.itsSegmentAlgorithmInputType;
   std::string saistring = segmentAlgorithmInputImageType(saitype);
-  XMLCh* segmentalgorithmtype = XMLString::transcode("SegmentAlgorithmInputImageType");
-  XMLCh* segmentalgorithmtypexmlstring = XMLString::transcode(saistring.c_str());
-  eventsroot->setAttribute(segmentalgorithmtype, segmentalgorithmtypexmlstring);
-  XMLString::release(&segmentalgorithmtype);
-  XMLString::release(&segmentalgorithmtypexmlstring);
+  XMLCh* inputtype = XMLString::transcode("SegmentAlgorithmInputImageType");
+  XMLCh* inputtypexmlstring = XMLString::transcode(saistring.c_str());
+  eventsroot->setAttribute(inputtype, inputtypexmlstring);
+  XMLString::release(&inputtype);
+  XMLString::release(&inputtypexmlstring);
+
+  SegmentAlgorithmType satype= params.itsSegmentAlgorithmType;
+  std::string sastring = segmentAlgorithmType(satype);
+  XMLCh* algorithmtype = XMLString::transcode("SegmentAlgorithmType");
+  XMLCh* algorithmtypexmlstring = XMLString::transcode(sastring.c_str());
+  eventsroot->setAttribute(algorithmtype, algorithmtypexmlstring);
+  XMLString::release(&algorithmtype);
+  XMLString::release(&algorithmtypexmlstring);
+
+  if(segmentadaptiveoffset << params.itsSegmentAdaptiveOffset) {
+    XMLCh* offset = XMLString::transcode("SegmentAlgorithmOffset");
+    XMLCh* offsetxmlstring = XMLString::transcode(segmentadaptiveoffset.str().c_str());
+    eventsroot->setAttribute(offset, offsetxmlstring);
+    XMLString::release(&offset);
+    XMLString::release(&offsetxmlstring);
+  }
 
   ColorSpaceType cstype= params.itsColorSpaceType;
   std::string cstring = colorSpaceType(cstype);

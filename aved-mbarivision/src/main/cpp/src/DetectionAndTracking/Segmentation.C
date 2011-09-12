@@ -37,6 +37,9 @@
 #include "Raster/PngWriter.H"
 #include <cstdio>
 #include <cstdlib>
+#include <utility>
+#include <string>
+#include <sstream>
 
 Segmentation::Segmentation() {
 }
@@ -44,84 +47,53 @@ Segmentation::Segmentation() {
 Segmentation::~Segmentation() {
 }
 
-Image<byte> Segmentation::runBinaryAdaptive(const Image<byte> &meanBgnd, const Image<byte>& src) {
-    Image<byte> resultfinal(src.getDims(), ZEROS);
-    Image<float> meanimg(src.getDims(), ZEROS);
-    Image<byte>::const_iterator bptr = meanBgnd.begin();
-    const int w = src.getWidth(), h = src.getHeight();
-    float mymean, s, sum;
-    int N, NC, col, inc;
-    float pct = 0.75f;
-    byte threshold ;
-
-    N = w*h;
-    NC = w;
-    s = (float) (NC * 2);
-    col = 0;
-    inc = 1;
-    sum = 127.F * s;
-
-    Image<byte>::const_iterator sptr = src.begin();
-    Image<byte>::iterator rfinalptr = resultfinal.beginw();
-    Image<float>::iterator meanptr = meanimg.beginw();
-
-    for (int i = 0; i < N; i++) {
-        if (col >= NC) {
-            col = NC - 1;
-            inc = -1;
-	    bptr += NC - 1;
-            sptr += NC - 1;
-            rfinalptr += NC - 1;
-            meanptr += NC - 1;
-        } else if (col < 0) {
-            col = 0;
-            inc = 1;
-	    bptr += NC;
-            sptr += NC;
-            rfinalptr += NC;
-            meanptr += NC;
-        }
-        sum = sum - sum / s + (float) * sptr;
-
-        if (i > NC) {
-            Image<float>::iterator ptr = meanptr;
-            ptr -= NC;
-            mymean = (sum + *ptr) / s;
-        } else mymean = sum / s;
-
-        *meanptr = mymean;
-        int p= (int) (mymean * (100.0F - pct) / 100.0F);
-	threshold = *bptr;
-
-        if (i > NC && *sptr > p && abs(*sptr - threshold) > 3)
-            *rfinalptr = 255; //white
-        else
-            *rfinalptr = 0; //black
-
-        rfinalptr += inc;
-        sptr += inc;
-        col += inc;
-	bptr += inc;
-        meanptr += inc;
+// ######################################################################
+// Return the parameters from a comma-delimited string
+// ######################################################################
+vector< float > Segmentation::getFloatParameters(const string  &str) {
+    vector< float > aFloats; 
+    istringstream floats(str);
+    string floatStr;
+    float aFloat;
+    while (getline(floats, floatStr, ',')
+            && istringstream(floatStr) >> aFloat) {
+        aFloats.push_back(aFloat);
     }
-    return resultfinal;
+    return aFloats;
+}
+// ######################################################################
+// Returns sigma for graph segmentation. If not between 0 and 1 defaults to 0.5
+// ######################################################################
+float Segmentation::getSigma(const vector< float > & v) {
+    float sigma = v.at(0);
+    if (sigma <= 1.0f && sigma > 0.0f)
+        return sigma;
+    return 0.50;
+}
+// ######################################################################
+// Returns K for graph segmentation. If not greater than 0 defaults to 500
+// ######################################################################
+int Segmentation::getK(const vector< float > & v) {
+    float k = v.at(1);
+    if ( k > 0)
+        return (int) k;
+    return 500;
+}
+// ######################################################################
+// Returns minimum size for graph segmentation. If not greater than 0 defaults to 50
+// ######################################################################
+int Segmentation::getMinSize(const vector< float > & v) {
+    float minSize = v.at(2);
+    if ( minSize > 0)
+        return (int) minSize;
+    return 50;
 }
 
 // ######################################################################
 
-Image<byte> Segmentation::runBinaryAdaptive(const Image<byte> &bwImg) {
-    byte bgthreshold = getThreshold(bwImg);
-    return (runBinaryAdaptive(bwImg, bgthreshold, (const float) 0.75f));
-}
-
-// ######################################################################
-
-Image< PixRGB<byte> > Segmentation::runGraph(const Image < PixRGB<byte> >&input) {
-    //printf("processing\n");
+Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, const int min_size, const Image < PixRGB<byte> >&input) {
+       //printf("processing\n");
   int num_ccs;
-  float sigma = 0.75;
-  int k = 500;
-  int min_size = 50;
 
     image<rgb> *im = new image<rgb > (input.getWidth(), input.getHeight());
 
@@ -154,78 +126,10 @@ Image< PixRGB<byte> > Segmentation::runGraph(const Image < PixRGB<byte> >&input)
     return output;
 }
 // ######################################################################
-// ###### Private Functions related to the BinaryAdaptive algorithm #####
+// ###### Private Functions related to the Adaptive algorithms #####
 // ######################################################################
 
-// ######################################################################
-
-byte Segmentation::getThreshold(const Image<byte> &bwImg) {
-    float bwmean = mean(bwImg);
-    float bwstddev = stdev(bwImg);
-    byte bgthreshold = (byte) (bwmean +  bwstddev);
-    return bgthreshold;
-}
-
-// ######################################################################
-
-Image<byte> Segmentation::runBinaryAdaptive(const Image<byte>& src, const byte& threshold, const float& pct) {
-    Image<byte> resultfinal(src.getDims(), ZEROS);
-    Image<float> meanimg(src.getDims(), ZEROS);
-    const int w = src.getWidth(), h = src.getHeight();
-    float mymean, s, sum;
-    int N, NC, col, inc;
-
-    N = w*h;
-    NC = w;
-    s = (float) (NC * 2);
-    col = 0;
-    inc = 1;
-    sum = 127.F * s;
-
-    Image<byte>::const_iterator sptr = src.begin();
-    Image<byte>::iterator rfinalptr = resultfinal.beginw();
-    Image<float>::iterator meanptr = meanimg.beginw();
-
-    for (int i = 0; i < N; i++) {
-        if (col >= NC) {
-            col = NC - 1;
-            inc = -1;
-            sptr += NC - 1;
-            rfinalptr += NC - 1;
-            meanptr += NC - 1;
-        } else if (col < 0) {
-            col = 0;
-            inc = 1;
-            sptr += NC;
-            rfinalptr += NC;
-            meanptr += NC;
-        }
-        sum = sum - sum / s + (float) * sptr;
-
-        if (i > NC) {
-            Image<float>::iterator ptr = meanptr;
-            ptr -= NC;
-            mymean = (sum + *ptr) / s;
-        } else mymean = sum / s;
-
-        *meanptr = mymean;
-        int p= (int) (mymean * (100.0F - pct) / 100.0F);
-
-        if (i > NC && *sptr > p )//&& *sptr > threshold)
-            *rfinalptr = 255; //white
-        else
-            *rfinalptr = 0; //black
-
-        rfinalptr += inc;
-        sptr += inc;
-        col += inc;
-        meanptr += inc;
-    }
-    return resultfinal;
-}
- 
-
-/**
+ /**
  *AdapThresh is an algorithm to apply adaptive thresholding to an image.
  *@author Timothy Sharman
  */
@@ -297,7 +201,7 @@ Image<byte> Segmentation::runBinaryAdaptive(const Image<byte>& src, const byte& 
     const int i_w = src.getWidth(), i_h = src.getHeight();
 
     int median = 0;  
-    std::vector<int> values(size*size);
+    vector<int> values(size*size);
     int count = 0;
     int a,b;
 
@@ -321,7 +225,7 @@ Image<byte> Segmentation::runBinaryAdaptive(const Image<byte>& src, const byte& 
 	//Find the median value
 
 	//First Sort the array
-        std::sort(values.begin(), values.end());
+        sort(values.begin(), values.end());
 
 	//Then select the median
 	count = count / 2;
@@ -381,8 +285,8 @@ Image<byte> Segmentation::runBinaryAdaptive(const Image<byte>& src, const byte& 
 		}
 	  }
 	}
+        
 	//Find the mean value
-
 	tmp = max + min;
 	tmp = tmp / 2;
 	mean = tmp - con;

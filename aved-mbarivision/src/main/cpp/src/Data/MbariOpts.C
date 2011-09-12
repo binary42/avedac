@@ -18,7 +18,7 @@
  * work that originated at the 2002 Workshop  Neuromorphic Engineering 
  * in Telluride, CO, USA. 
  * 
- * This code requires the The iLab Neuromorphic Vision C++ Toolkit developed
+ * This code requires the The iLab Neuromorphic Vision C++ Toolkit developedF
  * by the University of Southern California (USC) and the iLab at USC. 
  * See http://iLab.usc.edu for information about this project. 
  *  
@@ -70,6 +70,7 @@ void REQUEST_OPTIONALIAS_MBARI(OptionManager& m)
 {
   m.requestOptionAlias(&OPT_MDPMosaicBenthicStills);
   m.requestOptionAlias(&OPT_MDPBenthicVideo);
+  m.requestOptionAlias(&OPT_MDPEyeInTheSeaVideo);
   m.requestOptionAlias(&OPT_MDPMidwaterVideo);
   m.requestOptionAlias(&OPT_MDPMosaicStills);
   m.requestOptionAlias(&OPT_MDPTimeLapseStills);
@@ -84,36 +85,57 @@ const ModelOptionDef OPT_MDPMosaicBenthicStills =
     "mbari-mosaic-benthic-stills", '\0',"",
     "--mbari-saliency-dist=1 --mbari-tracking-mode=None "
     "--mbari-keep-boring-WTA-points=yes "
-    "--mbari-save-non-interesting-events=yes "
-    "--mbari-segment-algorithm-input-image=MaxRGB "
-    "--mbari-saliency-input-image=Raw --mbari-cache-size=2 "
+    "--mbari-save-non-interesting-events=yes --mbari-segment-graph-parameters=0.75,500,50 "
+    "--mbari-segment-algorithm-input-image=Luminance --mbari-color-space=Gray "
+    "--mbari-saliency-input-image=Raw --levelspec=1-3,2-5,3 "
     "--mbari-max-WTA-points=15 --mbari-max-evolve-msec=15000 "
-    "--vc-type=OIC --use-random=false  "
-    "--oricomp-type=Steerable "
-    "--mbari-cache-size=2 --use-random=false --use-older-version=false "
-    "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst "  };
+    "--vc-type=O --use-random=true  --mbari-segment-algorithm=GraphCutOnly "
+    "--oricomp-type=Steerable  --shape-estim-mode=None --foa-radius=20 "
+    "--mbari-cache-size=1 --use-older-version=false "
+    "--ior-type=Disc  --maxnorm-type=Maxnorm"  };
+const ModelOptionDef OPT_MDPEyeInTheSeaVideo = { MODOPT_ALIAS, "ALIASEyeInTheSeaVideo", &MOC_MBARI, OPTEXP_MRV,
+    "Options used for processing Eye-in-the-Sea Video from the  "
+    "Ocean Research and Conservation Association (ORCA)",
+    "mbari-eits-video", '\0',"", 
+    "--mbari-saliency-dist=5 --mbari-tracking-mode=KalmanFilter "
+    "--mbari-keep-boring-WTA-points=yes "
+    "--mbari-save-non-interesting-events=yes --mbari-save-original-frame-spec "
+    "--mbari-segment-algorithm-input-image=Luminance --mbari-color-space=RGB "
+    "--mbari-saliency-input-image=Raw --mbari-cache-size=2 "
+    "--mbari-max-WTA-points=15 --mbari-max-evolve-msec=1000 "
+    "--vc-type=OIC --use-random=true  --maxnorm-type=Maxnorm "
+    "--oricomp-type=Steerable --levelspec=1-3,2-5,3 "
+    "--mbari-cache-size=2 --use-older-version=false "
+    "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst "
+    "--mbari-max-event-area=30000 --mbari-min-variance=10.0 "
+    "--mbari-segment-algorithm=GraphCutOnly "
+    "--mbari-event-expiration-frames=3 --rescale-input=320x240 "
+    "--mbari-segment-graph-parameters=0.5,1500,500"  };
 const ModelOptionDef OPT_MDPBenthicVideo =
   { MODOPT_ALIAS, "ALIASBenthicVideo", &MOC_MBARI, OPTEXP_MRV,
     "Implements good choice of options to experiment with "
     "processing video from a moving camera traversing the sea bottom",
     "mbari-benthic-video", '\0',"",
-    "--mbari-saliency-dist=5 --mbari-tracking-mode=NearestNeighbor "
-    "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=MaxRGB "
-    "--vc-type=O:5IC --use-random=false  "
-    "--ori-interaction=None --oricomp-type=Steerable "
-    "--mbari-cache-size=15 --use-random=false --use-older-version=false "
-    "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst "  };
+    "--mbari-saliency-dist=5 --mbari-max-WTA-points=10 --mbari-segment-adaptive-offset=5 "
+    "--mbari-tracking-mode=NearestNeighbor "
+    "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=Luminance "
+    "--vc-type=OI --mbari-color-space=Gray --use-random=true  --mbari-se-size=4 "
+    "--ori-interaction=None --oricomp-type=Steerable --boring-sm-mv=1.0 "
+    "--mbari-cache-size=60 --use-older-version=false "
+    "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst --maxnorm-type=Maxnorm"  };
 
 const ModelOptionDef OPT_MDPMidwaterVideo =
   { MODOPT_ALIAS, "ALIASMidwaterVideo", &MOC_MBARI, OPTEXP_MRV,
    "Implements good choice of options to experiment with "
     "processing video from a moving camera traversing the midwater sea column",
     "mbari-midwater-video", '\0',"",
-    "--mbari-saliency-dist=5 --mbari-tracking-mode=KalmanFilter "
-    "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=MaxRGB "
-    "--vc-type=O:5IC --use-random=false  "
-    "--mbari-cache-size=10 --use-random=false --use-older-version=false "
-    "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst  "  };
+    "--mbari-saliency-dist=5 --mbari-max-WTA-points=10 --mbari-segment-graph-parameters=0.75,100,50"
+    "--mbari-tracking-mode=KalmanFilter  --mbari-segment-algorithm=MeanAdaptive --mbari-segment-adaptive-offset=7 "
+    "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=Luminance "
+    "--vc-type=I:5OC --mbari-color-space=RGB --use-random=true "
+    "--ori-interaction=None --oricomp-type=Steerable --boring-sm-mv=1.0 "
+    "--mbari-cache-size=60 --use-older-version=false --levelspec=1-3,2-5,3 "
+    "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst --maxnorm-type=Maxnorm "};
 
 const ModelOptionDef OPT_MDPMosaicStills =
   { MODOPT_ALIAS, "ALIASMosaicStills", &MOC_MBARI, OPTEXP_MRV,
@@ -124,8 +146,8 @@ const ModelOptionDef OPT_MDPMosaicStills =
     "--mbari-keep-boring-WTA-points=yes "
     "--boring-sm-mv=0.25 "
     "--mbari-save-non-interesting-events=yes "
-    "--mbari-segment-algorithm-input-image=MaxRGB "
-    "--vc-type=Variance --use-random=false "
+    "--mbari-segment-algorithm-input-image=MaxRGB --mbari-color-space=RGB"
+    "--vc-type=Variance --use-random=true "
     "--mbari-saliency-input-image=Raw --mbari-cache-size=2 "
     "--mbari-max-WTA-points=25 --mbari-max-evolve-msec=15000" };
 
@@ -137,12 +159,12 @@ const ModelOptionDef OPT_MDPTimeLapseStills =
     "--mbari-saliency-dist=1 --mbari-tracking-mode=NearestNeighbor "
     "--mbari-keep-boring-WTA-points=yes "
     "--mbari-save-non-interesting-events=yes "
-    "--mbari-segment-algorithm-input-image=MaxRGB "
+    "--mbari-segment-algorithm-input-image=MaxRGB --mbari-color-space=RGB"
     "--mbari-saliency-input-image=Raw --mbari-cache-size=10 "
     "--qtime-decay=1.0 "
-    "--vc-type=Variance  --use-random=false "
+    "--vc-type=Variance  --use-random=true "
     "--mbari-max-WTA-points=30 --mbari-max-evolve-msec=15000 "
-    "--use-random=false --use-older-version=false "  };
+    "--use-older-version=false "  };
 
 const ModelOptionDef OPT_MDPTimeLapseRover =
   { MODOPT_ALIAS, "ALIASTimeLapseRover", &MOC_MBARI, OPTEXP_MRV,
@@ -153,9 +175,9 @@ const ModelOptionDef OPT_MDPTimeLapseRover =
     "--mbari-keep-boring-WTA-points=yes "
     "--qtime-decay=1.0 "
     "--mbari-save-non-interesting-events=yes "
-    "--mbari-segment-algorithm-input-image=MaxRGB "
+    "--mbari-segment-algorithm-input-image=MaxRGB --mbari-color-space=RGB"
     "--mbari-saliency-input-image=Raw "
-    "--vc-type=O:5IC --use-random=false  "
+    "--vc-type=O:5IC --use-random=true  "
     "--mbari-max-WTA-points=15 --mbari-max-evolve-msec=15000" };
 
 // #################### MbariResultViewer options:
@@ -261,7 +283,7 @@ const ModelOptionDef OPT_MRVrescaleDisplay =
 // Used by: MbariResultViewer
 const ModelOptionDef OPT_MRVsaveEventNums =
   { MODOPT_ARG_STRING, "MRVsaveEventNums", &MOC_MBARI, OPTEXP_MRV,
-    "Save video clips showing specific events",
+    "Save cropped, event-centered images of specific events, or all events. Will save according to bounding box.",
     "mbari-save-event-num", '\0', "ev1,ev1,...,evN; or: all", "" };
 
 const ModelOptionDef OPT_MRVsaveSummaryEventsName =
@@ -290,6 +312,21 @@ const ModelOptionDef OPT_MDPsegmentAlgorithmType =
     "Segment algorithm to find foreground objects",
     "mbari-segment-algorithm", '\0', "<MeanAdaptive|MedianAdaptive|MeanMinMaxAdapative>", 
     "MedianAdaptive" };
+const ModelOptionDef OPT_MDPsegmentAdaptiveOffset =
+  { MODOPT_ARG_INT, "MDPsegmentAdaptiveOffset", &MOC_MBARI, OPTEXP_MRV,
+    "Size of the offset to subtract from the mean or median in the segment algorithm",
+    "mbari-segment-adaptive-offset", '\0', "0-50",
+    "5" };
+const ModelOptionDef OPT_MDPsegmentGraphParameters =
+  { MODOPT_ARG_STRING, "MDPsegmentGraphParameters", &MOC_MBARI, OPTEXP_MRV,
+    "Graph segment parameters, in the order sigma, k, minsize. Generally,the defaults work.\
+     Dont mess with this unless you need to.  See algorithm details in Segmentation.C.",
+    "mbari-segment-graph-parameters", '\0', "sigma, k, minsize", "0.75,500,50" };
+const ModelOptionDef OPT_MDPcolorSpace = {
+   MODOPT_ARG(ColorSpaceType), "MDPcolorSpace", &MOC_MBARI, OPTEXP_MRV,
+   "Input image color space. Used to determine whether to compute saliency on color channels or not",
+    "mbari-color-space", '\0', "<RGB|YCBCR|Gray>",
+    "RGB" };
 const ModelOptionDef OPT_MDPsegmentAlgorithmInputImage = {
    MODOPT_ARG(SegmentAlgorithmInputImageType), "MDPsegmentInputImage", &MOC_MBARI, OPTEXP_MRV,
    "Segment algorithm input images type",
@@ -300,11 +337,11 @@ const ModelOptionDef OPT_MDPsaliencyInputImage = {
     "Saliency input image type",
     "mbari-saliency-input-image", '\0', "<Raw|DiffMean|None>",
     "DiffMean" };
-const ModelOptionDef OPT_MDPsegmentSEType =    
-  { MODOPT_ARG_STRING, "MDPsegmentationSEType", &MOC_MBARI, OPTEXP_MRV,
-    "Jerome segmentation algorithm structure element test",
-    "mbari-segment-algorithm-se-type", '\0', "<benthic|midwater>",
-    "benthic" };
+const ModelOptionDef OPT_MDPcleanupSESize =
+  { MODOPT_ARG_INT, "MDPcleanupSESize", &MOC_MBARI, OPTEXP_MRV,
+    "Size of structure element to do morhphological erode/dilate to clean-up segmented image",
+    "mbari-se-size", '\0', "2-10",
+    "2" };
 const ModelOptionDef OPT_MDPmaskPath =
   { MODOPT_ARG_STRING, "MDPmaskPath", &MOC_MBARI, OPTEXP_MRV,
     "MaskPath: path to the mask image",
@@ -376,11 +413,6 @@ const ModelOptionDef OPT_MDPminVariance =
   { MODOPT_ARG_FLOAT, "OPT_MDPminVariance", &MOC_MBARI, OPTEXP_MRV,
     "Minimum variance of input image required for processing. This is useful to remove black frames, or frames with high visual noise",
     "mbari-min-variance", '\0.', "<float>", "0."};
-const ModelOptionDef OPT_MDPcolorSpace = {
-   MODOPT_ARG(ColorSpaceType), "MDPcolorSpace", &MOC_MBARI, OPTEXP_MRV,
-   "Input image color space. Used to determine whether to compute saliency on color channels or not",
-    "mbari-color-space", '\0', "<RGB|YCBCR|Gray>",
-    "Gray" };
 const ModelOptionDef OPT_MDPaddGraphWinners = {
    MODOPT_FLAG, "MDPaddGraphWinner", &MOC_MBARI, OPTEXP_MRV,
    "Used to determine whether to compute winners based on the graph segmentation colorized output",

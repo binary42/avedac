@@ -43,4 +43,4 @@ void convertFromString(const std::string& str, ColorSpaceType& val)
 
 std::string convertToString(const ColorSpaceType val)
 { return colorSpaceType(val); }
- 
+  
