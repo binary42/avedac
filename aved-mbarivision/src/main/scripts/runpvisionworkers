@@ -126,8 +126,8 @@ for i in `seq 1 10`
       break
   else
       echo "Failed to acquire lockfile: $lockfile."
-      echo "Held by `cat $lockfile`. Sleeping 3 seconds before retrying."
-      sleep 3
+      echo "Held by `cat $lockfile`. Sleeping 60 seconds before retrying."
+      sleep 60
   fi
 done
 }
@@ -157,13 +157,9 @@ if [ ! "$worker_list"  ]; then
     exit $E_ERR
 fi
 
-# Setup MPI
-if [ $MPDIR ]; then
-  export PATH=$MPDIR/bin:.:$PATH
-else 
-  MPDIR=/opt/mpich2-1.1p1
-  export PATH=$MPDIR/bin:.:$PATH
-fi
+# Setup MPI 
+MPDIR=/opt/mpich2-1.1p1/bin
+export PATH=$MPDIR:.:$PATH
 
 # Check all the required environment variables
 if [ ! $SCRATCH_DIR ]; then
@@ -187,6 +183,7 @@ exec_file=$AVED_BIN/pvisionTCPmbari
 
 # Define the machine file. Change this to point to the MPICH installation 
 # directory on your machine
+MPDIR=/opt/mpich2-1.1p1
 machine_file=$MPDIR/etc/mpd.hosts 
 
 if [ ! -f $machine_file ]; then
@@ -195,7 +192,7 @@ if [ ! -f $machine_file ]; then
 fi
 
 echo "----MPI machines available------------"
-sort -n < $machine_file | awk '{print $1}' 
+sort -n +0 < $machine_file | awk '{print $1}' 
 
 # Define the mpi setup file that contains the port ranges
 mpisetup=/etc/aved/pmbarivision.mpi
@@ -272,7 +269,13 @@ echo $list  > $worker_list
 # Make sure the mp2script is executable 
 checkexe mp2script 
 
-args="--logverb=Error --ip-port=$nextavail_port"
+# Add in the mbarivision options if there are any
+if [ -n "$MBARIVISION_OPTIONS" ]; then
+    args="--logverb=Error --ip-port=$nextavail_port $MBARIVISION_OPTIONS"
+else
+    args="--logverb=Error --ip-port=$nextavail_port"
+fi
+
  
 # If not running in debugger, then just run 
 if [ $debug = 0 ]; then
