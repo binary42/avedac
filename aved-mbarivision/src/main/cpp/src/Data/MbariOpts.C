@@ -412,12 +412,7 @@ const ModelOptionDef OPT_MDPsaveOriginalFrameSpec =
 const ModelOptionDef OPT_MDPminVariance =
   { MODOPT_ARG_FLOAT, "OPT_MDPminVariance", &MOC_MBARI, OPTEXP_MRV,
     "Minimum variance of input image required for processing. This is useful to remove black frames, or frames with high visual noise",
-    "mbari-min-variance", '\0.', "<float>", "0."};
-const ModelOptionDef OPT_MDPaddGraphWinners = {
-   MODOPT_FLAG, "MDPaddGraphWinner", &MOC_MBARI, OPTEXP_MRV,
-   "Used to determine whether to compute winners based on the graph segmentation colorized output",
-    "mbari-add-graph-winners", '\0', "",
-    "false" };
+    "mbari-min-variance", '\0.', "<float>", "0."}; 
 const ModelOptionDef OPT_MDPeventExpirationFrames = {
    MODOPT_ARG_INT, "MDPeventExpirationFrames", &MOC_MBARI, OPTEXP_MRV,
    "How long to keep an event in memory before removing it if no bit objects found to combine with the event. Useful for noisy video or reduced frame rate video where tracking problems occur.",

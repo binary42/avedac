@@ -30,6 +30,7 @@
 #include "PipelineControl/PipelineController.H"
 #include "MessagePassing/Mpimessage.H"
 #include "Image/FilterOps.H"
+#include "Image/MathOps.H"
 #include "Image/MbariImage.H"
 #include "Data/MbariMetaData.H"
 
@@ -50,13 +51,15 @@ CachePreprocessStage::CachePreprocessStage(MPI_Comm mastercomm,
                                            nub::soft_ref<InputFrameSeries> &ifs,
                                            nub::soft_ref<MbariResultViewer> &rv,
                                            const FrameRange framerange,
-                                           const std::string& inputFileStem )
+                                           const std::string& inputFileStem,
+                                           const Dims &dims)
   :Stage(mastercomm,name),
    itsifs(ifs),
    itsFrameRange(framerange),
    itsAvgCache(ImageCacheAvg< PixRGB<byte> > (DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache)),
    itsInputFileStem(inputFileStem),
-   itsRv(rv)
+   itsRv(rv),
+   itsDims(dims)
 {
   preload();	
 }
@@ -67,7 +70,7 @@ CachePreprocessStage::~CachePreprocessStage()
 
 void CachePreprocessStage::runStage()
 {
-  DetectionParameters detectionParms = DetectionParametersSingleton::instance()->itsParameters;
+  DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
   Image< PixRGB<byte> > img, img2runsaliency; 
   Image< byte > img2segment; 
   MPI_Status s;
@@ -75,8 +78,10 @@ void CachePreprocessStage::runStage()
   int curFrame = itsFrameRange.getFirst();
   int countFrameDist = 1;  
   int cacheFrameNum;
-  uint numFrameDist = detectionParms.itsSaliencyFrameDist;
+  uint numFrameDist = dp.itsSaliencyFrameDist;
+  float minVariance = dp.itsMinVariance;
   string tc;
+  float stddev= 0.f;
   MbariImage< PixRGB<byte> > mbariImg(itsInputFileStem);
   
   LINFO("Running stage %s", Stage::name());  
@@ -95,22 +100,28 @@ void CachePreprocessStage::runStage()
           img = itsAvgCache[cacheFrameNum];
         }
         else
-          {	
-            if (itsifs->frame() >= itsFrameRange.getLast()) {
-	        LERROR("Less input frames than necessary for sliding average - "
-		     "using all the frames for caching.");
-		break;
-	    }	
-            itsifs->updateNext();
-            img = itsifs->readRGB();
+          {
+                if (itsifs->frame() >= itsFrameRange.getLast()) {
+                    LERROR("Less input frames than necessary for sliding average - "
+                            "using all the frames for caching.");
+                    break;
+                }
+                itsifs->updateNext();
+                img = itsifs->readRGB();
 
-	   // if there is little deviation do not add to the average cache
-           if (stdev(luminance(img)) <= 5.0f && itsAvgCache.size() > 0){
-             LINFO("No standard deviation in frame %d. Is this frame all black ? Not including this image in the average cache", itsifs->frame());
-             itsAvgCache.push_back(itsAvgCache.mean());
-           }
-           else
-             itsAvgCache.push_back(img);
+                if (dp.itsMinVariance > 0.f) {
+                    stddev = stdev(luminance(img));
+                    LINFO("Standard deviation in frame %d:  %f", itsifs->frame(), stddev);
+
+                    // if there is little deviation do not add to the average cache
+                    if (stdev(luminance(img)) <= minVariance && itsAvgCache.size() > 0) {
+                        LINFO("No standard deviation in frame %d too low. Is this frame all black ? Not including this image in the average cache", itsifs->frame());
+                        itsAvgCache.push_back(itsAvgCache.mean());
+                    } else
+                        itsAvgCache.push_back(img);
+                } else {
+                    itsAvgCache.push_back(img);
+                }
  
 	   // Get the MBARI metadata from the frame if it exists
             mbariImg.updateData(img, curFrame);
@@ -123,32 +134,32 @@ void CachePreprocessStage::runStage()
           }
         
 	// Create the binary image to segment
- 	if (detectionParms.itsSegmentAlgorithmInputType == SAIMaxRGB) {
-          img2segment = maxRGB(itsAvgCache.absDiffMean(img));
+ 	if (dp.itsSegmentAlgorithmInputType == SAIMaxRGB) {
+          img2segment = maxRGB(itsAvgCache.clampedDiffMean(img));
 	}
-        else if (detectionParms.itsSegmentAlgorithmInputType == SAILuminance) {
+        else if (dp.itsSegmentAlgorithmInputType == SAILuminance) {
 	  img2segment = luminance(img);
 	}
         else {
-          img2segment = maxRGB(itsAvgCache.absDiffMean(img));
+          img2segment = maxRGB(itsAvgCache.clampedDiffMean(img));
 	}
 
  	itsRv->output(img2segment, curFrame, "Segment_input"); 
 
  	// Get the saliency input image
-        if ( detectionParms.itsSaliencyInputType == SIDiffMean) {
-            if (detectionParms.itsSizeAvgCache > 1)
-              img2runsaliency = itsAvgCache.clampedDiffMean(img);
+        if ( dp.itsSaliencyInputType == SIDiffMean) {
+            if (dp.itsSizeAvgCache > 1)
+              img2runsaliency = rescale(itsAvgCache.clampedDiffMean(img),itsDims);
             else
               LFATAL("ERROR - must specify an imaging cache size "
-                      "to use the DiffMean option. Try setting the"
+                      "to use the --mbari-saliency-input-image=DiffMean option. Try setting the"
                       "--mbari-cache-size option to something > 1");
         }
-        else if (detectionParms.itsSaliencyInputType == SIRaw) {
-             img2runsaliency = img;
+        else if (dp.itsSaliencyInputType == SIRaw) {
+             img2runsaliency = rescale(img, itsDims);
         }
         else {
-             img2runsaliency = itsAvgCache.clampedDiffMean(img);
+             img2runsaliency = rescale(img, itsDims);
         } 
 
         itsRv->output(img, curFrame, "Input"); 

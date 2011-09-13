@@ -1105,7 +1105,7 @@ namespace MbariVisualEvent {
 
                     // round down the radius in case near the edges
                     if (ebox.width() > 0 && ebox.height() > 0) {
-                        int radius = sqrt(pow((double) ebox.width(), 2.0) + pow((double) ebox.height(), 2.0))/2;
+                        int radius = (int) sqrt(pow(ebox.width(), 2.0) + pow(ebox.height(), 2.0))/2;
                         drawCircle(img, ctr, radius, colorPred);
                         if (showEventLabels) { 
                             Point2D<int> numLoc = getLabelPosition(img.getDims(), ebox, textImg.getDims());

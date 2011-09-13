@@ -124,9 +124,7 @@ public:
     bool itsSaveNonInteresting;
     //! @param  itsSaveOriginalFrameSpec = true if want to save events in original frame size
     bool itsSaveOriginalFrameSpec;
-    //! @param itsAddGraphWinners = true if computing winners based on the graph segmentation colorized output
-    bool itsAddGraphWinners;
-    //! @param itsEventExpirationFrames= How long to keep an event in memory before removing it if no bit objects
+     //! @param itsEventExpirationFrames= How long to keep an event in memory before removing it if no bit objects
     // found to combine with the event. Useful for noisy video or reduced frame rate video where tracking problems occur
     int itsEventExpirationFrames;
     //! @param itsTrackingMode = tracking mode used to find event
@@ -243,8 +241,7 @@ private:
     OModelParam<int> itsEventExpirationFrames;
     OModelParam<bool> itsKeepWTABoring;
     OModelParam<bool> itsSaveNonInteresting;
-    OModelParam<bool> itsSaveOriginalFrameSpec;
-    OModelParam<bool> itsAddGraphWinners;
+    OModelParam<bool> itsSaveOriginalFrameSpec; 
 };
 
 #endif

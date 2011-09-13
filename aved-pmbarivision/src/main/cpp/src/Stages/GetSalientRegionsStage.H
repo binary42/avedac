@@ -122,8 +122,7 @@ private:
   const int itsArgc;
   LevelSpec itsLevelSpec;
   MaxNormType itsMaxNormType;
-  VisualCortexWeights itsWeights;
-  bool itsGrayscaleCompute;
+  VisualCortexWeights itsWeights; 
   float itsBoringmv;
   SimTime itsBoringDelay;
   float itsScaleW, itsScaleH;

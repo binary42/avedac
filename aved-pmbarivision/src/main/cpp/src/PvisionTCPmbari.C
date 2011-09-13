@@ -99,9 +99,7 @@ int main(const int argc, const char **argv)
   nub::soft_ref<Beowulf>
   beo(new Beowulf(manager, "Beowulf Slave", "BeowulfSlave", false));
   manager.addSubComponent(beo);
-
-  DetectionParameters detectionParms = DetectionParametersSingleton::instance()->itsParameters ;
-
+ 
   nub::soft_ref<InputFrameSeries> ifs(new InputFrameSeries(manager));
   manager.addSubComponent(ifs);
   nub::soft_ref<OutputFrameSeries> ofs(new OutputFrameSeries(manager));
@@ -146,8 +144,7 @@ int main(const int argc, const char **argv)
   srand48(time(0) + getpid());          // init random numbers
 
   // various processing inits:
-  TCPmessage rmsg;            // message being received and to process
-  TCPmessage smsg;            // message being sentx
+  TCPmessage rmsg;            // message being received and to process 
 
   // let's get all our ModelComponent instances started:
   manager.start();

@@ -71,7 +71,6 @@ itsSaliencyInputType(DEFAULT_SALIENCY_INPUT_TYPE),
 itsMinVariance(DEFAULT_MIN_VARIANCE),
 itsColorSpaceType(DEFAULT_COLOR_SPACE),
 itsKeepWTABoring(DEFAULT_KEEP_WTA_BORING),
-itsAddGraphWinners(false),
 itsEventExpirationFrames(0){
     //initialize with some defaults
     float maxDist = itsMaxDist;
@@ -101,8 +100,7 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     os << "\tsavenoninteresting:" << itsSaveNonInteresting;
     os << "\tsaveoriginalframespec:" << itsSaveOriginalFrameSpec;
     os << "\tcolorspace:" << colorSpaceType(itsColorSpaceType);
-    os << "\tminvariance:" << itsMinVariance;
-    os << "\taddGraphWinners:" << itsAddGraphWinners;
+    os << "\tminvariance:" << itsMinVariance; 
     os << "\teventExpirationFrames:" << itsEventExpirationFrames;
 
     if (itsMaskPath.length() > 0) {
@@ -143,8 +141,7 @@ DetectionParameters &DetectionParameters::operator=(const DetectionParameters& p
     this->itsMaskWidth = p.itsMaskWidth;
     this->itsMaskHeight = p.itsMaskHeight;
     this->itsSizeAvgCache = p.itsSizeAvgCache; 
-    this->itsMaxCost = p.itsMaxCost;
-    this->itsAddGraphWinners = p.itsAddGraphWinners;
+    this->itsMaxCost = p.itsMaxCost; 
     return *this;
 }
 // ######################################################################
@@ -217,7 +214,6 @@ itsMaxEventFrames(&OPT_MDPmaxEventFrames, this),
 itsEventExpirationFrames(&OPT_MDPeventExpirationFrames, this),
 itsSaliencyFrameDist(&OPT_MDPsaliencyFrameDist, this),
 itsKeepWTABoring(&OPT_MDPkeepBoringWTAPoints, this),
-itsAddGraphWinners(&OPT_MDPaddGraphWinners, this),
 itsSaveNonInteresting(&OPT_MDPsaveNonInterestingEvents, this),
 itsMinVariance(&OPT_MDPminVariance, this),
 itsColorSpaceType(&OPT_MDPcolorSpace, this),
@@ -275,7 +271,6 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
     if (itsEventExpirationFrames.getVal() >= 0)
         p->itsEventExpirationFrames = itsEventExpirationFrames.getVal();
 
-    p->itsAddGraphWinners = itsAddGraphWinners.getVal();
     p->itsKeepWTABoring = itsKeepWTABoring.getVal();
     p->itsSaveNonInteresting = itsSaveNonInteresting.getVal();
     p->itsSaveOriginalFrameSpec = itsSaveOriginalFrameSpec.getVal();

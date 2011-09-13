@@ -74,7 +74,7 @@ private:
   
   // !initiate events for frameNum. Uses itsSalientFrameCache and itsWinner cache
   // to seed events
-  void initiateEvents(int frameNum, Image< byte > bitImg, Image< PixRGB<byte> > colorBitImg );
+  void initiateEvents(int frameNum, Image< byte > bitImg);
 
   MbariVisualEvent::VisualEventSet itsEventSet;	
   MbariImageCache< byte > itsOutCache;	
@@ -87,8 +87,7 @@ private:
   std::string itsInputFileStem;
   FrameRange itsFrameRange; 
   FOEestimator itsFOEEst;
-  int itsLastEventSeedFrameNum; 
-  bool itsGrayscale; //! flag to indicate whether processing color or grayscale images
+  int itsLastEventSeedFrameNum;  
 };
 
 #endif // !defined(UPDATEEVENTS_H)

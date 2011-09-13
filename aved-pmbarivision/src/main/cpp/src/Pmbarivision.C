@@ -64,8 +64,6 @@ void initModelComponents(int argc, const char **argv);
 
 // ! Local variables
 const int maxSizeFactor = 200;
-const float maxEvolveTime = 0.5F;
-const uint maxNumSalSpots = 20;
 const int maxDistRatio = 40;
 const int foaSizeRatio = 19;
 const int circleRadiusRatio = 40; 
@@ -157,7 +155,7 @@ extern "C" {
 
     LINFO("Creating stage:%s id: %d", Stages::stageName(id), id);
 
-    DetectionParameters detectionParms;
+    DetectionParameters dp;
     nub::soft_ref<WinnerTakeAllConfigurator>  wtac(new WinnerTakeAllConfigurator(manager));
     manager.addSubComponent(wtac);
     nub::soft_ref<JobServerConfigurator>
@@ -209,16 +207,16 @@ extern "C" {
     ofs->setModelParamVal(string("OutputFrameRange"), fr);
  
     // get image dimensions and set a few parameters that depend on it
-    detectionParmsModel->reset(&detectionParms);
-    const Dims dims = ifs->peekDims();	
-    manager.setOptionValString(&OPT_InputFrameDims, convertToString(dims));
-    
+    detectionParmsModel->reset(&dp);
+
+    // get the dimensions of the input frames
+    Dims dims = ifs->peekDims();
     float scaleW = 1.0f;
     float scaleH = 1.0f;
 
     // if the user has selected to retain the original dimensions in the events
     // get the scaling factors, and unset the resizing in the input frame series
-    if (detectionParms.itsSaveOriginalFrameSpec) {
+    if (dp.itsSaveOriginalFrameSpec) {
       // get a reference to our original frame source
       const nub::ref<FrameIstream> ref = ifs->getFrameSource();
       const Dims origDims = ref->peekDims();
@@ -228,8 +226,7 @@ extern "C" {
       ifs->peekDims();
     }
 
-    // calculate the foa size and default min/max event size based on the image size
-    const int circleRadius = dims.w() / circleRadiusRatio;
+    // calculate the foa size and default min/max event size based on the image size 
     const int maxDist = dims.w() / maxDistRatio;
     const int foaSize = dims.w() / foaSizeRatio;
     const int minSize = (int) (foaSize*scaleW);
@@ -246,19 +243,19 @@ extern "C" {
     }
     
     // initialize derived detection parameters
-    detectionParms.itsMaxDist = maxDist; //pixels
+    dp.itsMaxDist = maxDist; //pixels
 
-    if (detectionParms.itsMinEventArea == DEFAULT_MIN_EVENT_AREA)
-    detectionParms.itsMinEventArea = minSize; //sq pixels
-    if (detectionParms.itsMaxEventArea == DEFAULT_MAX_EVENT_AREA)
-    detectionParms.itsMaxEventArea = maxSize; //sq pixels
+    if (dp.itsMinEventArea == DEFAULT_MIN_EVENT_AREA)
+    dp.itsMinEventArea = minSize; //sq pixels
+    if (dp.itsMaxEventArea == DEFAULT_MAX_EVENT_AREA)
+    dp.itsMaxEventArea = maxSize; //sq pixels
 	
     // calculate cost parameter from other parameters
     float maxDistFloat = (float) maxDist;
     float maxAreaDiff = pow((double)maxDistFloat,2) / (double)4.0;
-    detectionParms.itsMaxCost = (float) maxDist/2*maxAreaDiff;
-    if(detectionParms.itsTrackingMode == TMKalmanFilter)
-      detectionParms.itsMaxCost = pow((double)maxDistFloat,2) + pow((double)maxAreaDiff,2);
+    dp.itsMaxCost = (float) maxDist/2*maxAreaDiff;
+    if(dp.itsTrackingMode == TMKalmanFilter)
+      dp.itsMaxCost = pow((double)maxDistFloat,2) + pow((double)maxAreaDiff,2);
 		
     // disable model manager option for all display-related options for
     // all stages because Xdisplay option are not enabled in parallel code.
@@ -271,7 +268,19 @@ extern "C" {
     nub::soft_ref<WinnerTakeAll> wta = wtac->getWTA();
 
     // initialize detection parameters
-    DetectionParametersSingleton::initialize(detectionParms);
+    DetectionParametersSingleton::initialize(dp);
+
+    // is this a a gray scale sequence ? if so disable computing the color channels
+    // to save computation time. This assumes the color channel has no weight !
+    if (dp.itsColorSpaceType == SAColorGray )   {
+        string search = "C";
+        string source = manager.getOptionValString(&OPT_VisualCortexType);
+        size_t pos = source.find(search);
+        if (pos != string::npos) {
+            string replace = source.erase(pos, 1);
+            manager.setOptionValString(&OPT_VisualCortexType, replace);
+        }
+    }
 
     // get level spec and norm type 
     const string ls = manager.getOptionValString(&OPT_LevelSpec).c_str();
@@ -312,7 +321,8 @@ extern "C" {
                                             ifs,
 					    rv,
                                             frameRange,
-                                            inputFileStem);
+                                            inputFileStem,
+                                            dims);
       break;
     case(Stages::SG_STAGE):
       s = (Stage *)new SegmentStage(master, Stages::stageName(id),

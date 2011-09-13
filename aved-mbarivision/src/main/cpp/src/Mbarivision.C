@@ -24,7 +24,7 @@
  *  
  * This work would not be possible without the generous support of the 
  * David and Lucile Packard Foundation
- */ 
+ */
 
 #include "Channels/ChannelOpts.H"
 #include "Component/GlobalOpts.H"
@@ -73,9 +73,9 @@ using namespace std;
 int main(const int argc, const char** argv) {
 
     // ######## Initialization of variables, reading of parameters etc.
-    DetectionParameters detectionParms;
+    DetectionParameters dp;
     MbariMetaData metadata;
-    Segmentation segmentation; 
+    Segmentation segmentation;
     //PauseWaiter p(3000000);
     //setPause(true);
 
@@ -83,7 +83,7 @@ int main(const int argc, const char** argv) {
     const int maxDistRatio = 40;
     const int foaSizeRatio = 19;
     const int circleRadiusRatio = 40;
-    
+
     //initialize a few things
     ModelManager manager("MBARI Automated Visual Event Detection Program");
 
@@ -113,7 +113,7 @@ int main(const int argc, const char** argv) {
     // Get the directory of this executable
     string exe(argv[0]);
     size_t found = exe.find_last_of("/\\");
-    nub::soft_ref<MbariResultViewer> rv(new MbariResultViewer(manager, evtofs, ofs, exe.substr(0,found)));
+    nub::soft_ref<MbariResultViewer> rv(new MbariResultViewer(manager, evtofs, ofs, exe.substr(0, found)));
     manager.addSubComponent(rv);
 
     nub::soft_ref<DetectionParametersModelComponent> detectionParmsModel(new DetectionParametersModelComponent(manager));
@@ -129,26 +129,26 @@ int main(const int argc, const char** argv) {
     REQUEST_OPTIONALIAS_NEURO(manager);
 
     // Initialize brain defaults
-    manager.setOptionValString(&OPT_UseRandom,"false");
+    manager.setOptionValString(&OPT_UseRandom, "false");
 
     // parse the command line
-    if (manager.parseCommandLine(argc, argv, "",0,-1) == false)
-	LFATAL("Invalid command line argument. Aborting program now !"); 
-    
+    if (manager.parseCommandLine(argc, argv, "", 0, -1) == false)
+        LFATAL("Invalid command line argument. Aborting program now !");
+
     // set the range to be the same as the input frame range
     FrameRange fr = ifs->getModelParamVal<FrameRange > ("InputFrameRange");
     ofs->setModelParamVal(string("OutputFrameRange"), fr);
     evtofs->setModelParamVal(string("OutputFrameRange"), fr);
 
     // unset the rescaling in the event output frame series in case it is set
-    evtofs->setModelParamVal(string("OutputFrameDims"), Dims(0,0));
-    
+    evtofs->setModelParamVal(string("OutputFrameDims"), Dims(0, 0));
+
     // get image dimensions and set a few paremeters that depend on it
-    detectionParmsModel->reset(&detectionParms);
+    detectionParmsModel->reset(&dp);
 
     // is this a a gray scale sequence ? if so disable computing the color channels
     // to save computation time. This assumes the color channel has no weight !
-    if (detectionParms.itsColorSpaceType == SAColorGray )   {
+    if (dp.itsColorSpaceType == SAColorGray) {
         string search = "C";
         string source = manager.getOptionValString(&OPT_VisualCortexType);
         size_t pos = source.find(search);
@@ -156,8 +156,8 @@ int main(const int argc, const char** argv) {
             string replace = source.erase(pos, 1);
             manager.setOptionValString(&OPT_VisualCortexType, replace);
         }
-    } 
- 
+    }
+
     // get a reference to our original frame source
     const nub::ref<FrameIstream> ref = ifs->getFrameSource();
 
@@ -165,22 +165,22 @@ int main(const int argc, const char** argv) {
     Dims dims = ifs->peekDims();
     float scaleW = 1.0f;
     float scaleH = 1.0f;
-    
+
     // if the user has selected to retain the original dimensions in the events
     // get the scaling factors, and unset the resizing in the input frame series
-    if (detectionParms.itsSaveOriginalFrameSpec) {
-      const Dims origDims = ref->peekDims();
-      scaleW = (float) origDims.w() / (float) dims.w();
-      scaleH = (float) origDims.h() / (float) dims.h();
-      ifs->setModelParamVal(string("InputFrameDims"), Dims(0,0), MC_RECURSE);
-      ifs->peekDims();
-    } 
+    if (dp.itsSaveOriginalFrameSpec) {
+        const Dims origDims = ref->peekDims();
+        scaleW = (float) origDims.w() / (float) dims.w();
+        scaleH = (float) origDims.h() / (float) dims.h();
+        ifs->setModelParamVal(string("InputFrameDims"), Dims(0, 0), MC_RECURSE);
+        ifs->peekDims();
+    }
 
     // calculate the foa size and default min/max event size based on the image size
     const int circleRadius = dims.w() / circleRadiusRatio;
     const int maxDist = dims.w() / maxDistRatio;
     const int foaSize = dims.w() / foaSizeRatio;
-    const int minSize = (int) (foaSize*scaleW);
+    const int minSize = (int) (foaSize * scaleW);
     const int maxSize = minSize * maxSizeFactor;
 
     int foaRadius;
@@ -189,27 +189,28 @@ int main(const int argc, const char** argv) {
 
     // A zero foa radius indicates to set defaults from input image dims
     if (foaRadius == 0) {
-      char str[256]; sprintf(str,"%d",foaSize);
-      manager.setOptionValString(&OPT_FOAradius,str);
+        char str[256];
+        sprintf(str, "%d", foaSize);
+        manager.setOptionValString(&OPT_FOAradius, str);
     }
 
     // initialize derived detection parameters
-    detectionParms.itsMaxDist = maxDist; //pixels 
+    dp.itsMaxDist = maxDist; //pixels
 
     // If these are set to the default, override them
     // with derived values,  otherwise these have been
     // set by the user so keep the user preferences 
-    if (detectionParms.itsMinEventArea == DEFAULT_MIN_EVENT_AREA)
-        detectionParms.itsMinEventArea = minSize; //sq pixels
-    if (detectionParms.itsMaxEventArea == DEFAULT_MAX_EVENT_AREA)
-        detectionParms.itsMaxEventArea = maxSize; //sq pizels
+    if (dp.itsMinEventArea == DEFAULT_MIN_EVENT_AREA)
+        dp.itsMinEventArea = minSize; //sq pixels
+    if (dp.itsMaxEventArea == DEFAULT_MAX_EVENT_AREA)
+        dp.itsMaxEventArea = maxSize; //sq pizels
 
     // calculate cost parameter from other derived values
     float maxDistFloat = (float) maxDist;
     float maxAreaDiff = pow((double) maxDistFloat, 2) / (double) 4.0;
-    detectionParms.itsMaxCost = (float) maxDist / 2 * maxAreaDiff;
-    if (detectionParms.itsTrackingMode == TMKalmanFilter)
-        detectionParms.itsMaxCost = pow((double) maxDistFloat, 2) + pow((double) maxAreaDiff, 2);
+    dp.itsMaxCost = (float) maxDist / 2 * maxAreaDiff;
+    if (dp.itsTrackingMode == TMKalmanFilter)
+        dp.itsMaxCost = pow((double) maxDistFloat, 2) + pow((double) maxAreaDiff, 2);
 
     // get reference to the SimEventQueue
     nub::ref<SimEventQueue> seq = seqc->getQ();
@@ -220,16 +221,16 @@ int main(const int argc, const char** argv) {
     int retval = 0;
 
     // set defaults for detection model parameters
-    DetectionParametersSingleton::initialize(detectionParms);
+    DetectionParametersSingleton::initialize(dp);
 
     // get graph parameters
-    vector<float> p = segmentation.getFloatParameters(detectionParms.itsSegmentGraphParameters);
+    vector<float> p = segmentation.getFloatParameters(dp.itsSegmentGraphParameters);
     const float sigma = segmentation.getSigma(p);
     const int k = segmentation.getK(p);
     const int min_size = segmentation.getMinSize(p);
 
     // initialize the visual event set
-    VisualEventSet eventSet(detectionParms, manager.getExtraArg(0));
+    VisualEventSet eventSet(dp, manager.getExtraArg(0));
     int countFrameDist = 1;
 
     // are we loading the event structure from a file?
@@ -245,12 +246,12 @@ int main(const int argc, const char** argv) {
     if (loadedProperties) rv->loadProperties(pvs);
 
     // initialize some more
-    FrameRange frameRange = FrameRange::fromString(manager.getOptionValString(&OPT_InputFrameRange));  
-    ImageCacheAvg< PixRGB<byte> > avgCache(detectionParms.itsSizeAvgCache); 
-    MbariImageCache< PixRGB<byte> > outCache(detectionParms.itsSizeAvgCache);
+    FrameRange frameRange = FrameRange::fromString(manager.getOptionValString(&OPT_InputFrameRange));
+    ImageCacheAvg< PixRGB<byte> > avgCache(dp.itsSizeAvgCache);
+    MbariImageCache< PixRGB<byte> > outCache(dp.itsSizeAvgCache);
     Image< PixRGB<byte> > img, img2runsaliency;
     MbariImage< PixRGB<byte> > mbariImg(manager.getOptionValString(&OPT_InputFrameSource).c_str());
-    Image< PixRGB<byte> >savePreviousPicture (img.getDims(), ZEROS);
+    Image< PixRGB<byte> >savePreviousPicture(img.getDims(), ZEROS);
     float stddev = 0.f;
 
     // initialize the XML if requested to save event set to XML
@@ -275,84 +276,83 @@ int main(const int argc, const char** argv) {
                 frameRange,
                 mstart.getMetaData().getTC(),
                 mend.getMetaData().getTC(),
-                detectionParms);
-        
-	rep->setFrameNumber((frameRange.getFirst()));
+                dp);
+
+        rep->setFrameNumber((frameRange.getFirst()));
     }
 
     string tc;
     // do we actually need to process the frames?
     if (rv->needFrames()) {
-	  while ( avgCache.size() < detectionParms.itsSizeAvgCache) {
-            if (ifs->frame() >= frameRange.getLast() ) {
+        while (avgCache.size() < dp.itsSizeAvgCache) {
+            if (ifs->frame() >= frameRange.getLast()) {
                 LERROR("Less input frames than necessary for sliding average - "
                         "using all the frames for caching.");
-		break;
+                break;
             }
-            ifs->updateNext(); 
+            ifs->updateNext();
             img = ifs->readRGB();
 
-            if (detectionParms.itsMinVariance > 0.f) {
+            if (dp.itsMinVariance > 0.f) {
                 stddev = stdev(luminance(img));
                 LINFO("Standard deviation in frame %d:  %f", ifs->frame(), stddev);
-                
+
                 // get the standard deviation in the input image
                 // if there is little deviation do not add to the average cache
-                if (stddev <= detectionParms.itsMinVariance && avgCache.size() > 0) {
+                if (stddev <= dp.itsMinVariance && avgCache.size() > 0) {
                     LINFO("Standard deviation in frame %d too low. Is this frame all black ? Not including this image in the cache", ifs->frame());
-                    avgCache.push_back(avgCache.mean()); 
+                    avgCache.push_back(avgCache.mean());
                 } else
-                    avgCache.push_back(img); 
-            } else { 
-                avgCache.push_back(img); 
+                    avgCache.push_back(img);
+            } else {
+                avgCache.push_back(img);
             }
- 
-	   // Get the MBARI metadata from the frame if it exists
-           mbariImg.updateData(img, ifs->frame());
-           tc = mbariImg.getMetaData().getTC();
-           metadata = mbariImg.getMetaData();
 
-           if (tc.length() > 0)
-             LINFO("Caching frame %06d timecode: %s", ifs->frame(), tc.c_str());
-           else
-             LINFO("Caching frame %06d", ifs->frame());
+            // Get the MBARI metadata from the frame if it exists
+            mbariImg.updateData(img, ifs->frame());
+            tc = mbariImg.getMetaData().getTC();
+            metadata = mbariImg.getMetaData();
 
-           outCache.push_back(mbariImg);
+            if (tc.length() > 0)
+                LINFO("Caching frame %06d timecode: %s", ifs->frame(), tc.c_str());
+            else
+                LINFO("Caching frame %06d", ifs->frame());
+
+            outCache.push_back(mbariImg);
         }
     } // end if needFrames 
 
 
     // ######## loop over frames ####################
-    for (int curFrame = frameRange.getFirst(); curFrame <= frameRange.getLast(); ++curFrame) {       
+    for (int curFrame = frameRange.getFirst(); curFrame <= frameRange.getLast(); ++curFrame) {
         rv->updateNext();
-	if (rv->needFrames()) {
+        if (rv->needFrames()) {
             // get image from cache or load and low-pass
-            uint cacheFrameNum = curFrame - frameRange.getFirst() ;
+            uint cacheFrameNum = curFrame - frameRange.getFirst();
             if (cacheFrameNum < avgCache.size()) {
                 // we have cached this guy already
                 LINFO("Processing frame %06d from cache.", curFrame);
                 img = avgCache[cacheFrameNum];
                 mbariImg = outCache[cacheFrameNum];
                 metadata = mbariImg.getMetaData();
-                
-                if (detectionParms.itsMinVariance > 0.f) {
+
+                if (dp.itsMinVariance > 0.f) {
                     stddev = stdev(luminance(mbariImg));
                     LINFO("Standard deviation in frame %d:  %f", curFrame, stddev);
                 }
 
-               const list<BitObject> bitObjectFrameList = eventSet.getBitObjectsForFrame(curFrame - 1);
+                const list<BitObject> bitObjectFrameList = eventSet.getBitObjectsForFrame(curFrame - 1);
                 if (!bitObjectFrameList.empty() && curFrame <= avgCache.size()) {
                     Image< PixRGB<byte> > imgToAddToTheBackground = getImageToAddToTheBackground(
                             mbariImg, avgCache.mean(),
                             savePreviousPicture,
                             bitObjectFrameList);
                     avgCache.push_back(imgToAddToTheBackground);
-                rv->output(imgToAddToTheBackground, curFrame - 1, "Background_input");
+                    rv->output(imgToAddToTheBackground, curFrame - 1, "Background_input");
                 }
                 savePreviousPicture = mbariImg; // save the current frame for the next loop
 
-            }
-            else {
+            } else {
                 // This means we are out of input
                 if (ifs->frame() > frameRange.getLast()) {
                     LERROR("%d > %d Premature end of frame sequence - bailing out.", ifs->frame(), frameRange.getLast());
@@ -374,13 +374,13 @@ int main(const int argc, const char** argv) {
                 ifs->updateNext();
                 img = ifs->readRGB();
 
-                if (detectionParms.itsMinVariance > 0.f) {
+                if (dp.itsMinVariance > 0.f) {
                     stddev = stdev(luminance(img));
                     LINFO("Standard deviation in frame %d:  %f", ifs->frame(), stddev);
                     // get the standard deviation in the input image
 
                     // if there is little deviation do not add to the average cache
-                    if (stddev <= detectionParms.itsMinVariance && avgCache.size() > 0) {
+                    if (stddev <= dp.itsMinVariance && avgCache.size() > 0) {
                         LINFO("Standard deviation low in frame %d. Is this frame all black or just noise ? Not including this image in the cache", ifs->frame());
                         avgCache.push_back(avgCache.mean());
                     } else {
@@ -400,179 +400,139 @@ int main(const int argc, const char** argv) {
                     LINFO("Caching frame %06d", curFrame);
             }
 
-	    // Get the saliency input image
-            if ( detectionParms.itsSaliencyInputType == SIDiffMean) {
-            	if (detectionParms.itsSizeAvgCache > 1) {
-                     img2runsaliency = rescale(avgCache.absDiffMean(mbariImg),dims);
-		  }
-		else
-		  LFATAL("ERROR - must specify an imaging cache size "
-                          "to use the DiffMean option. Try setting the"
-                          "--mbari-cache-size option to something > 1");
-	    }
-            else if (detectionParms.itsSaliencyInputType == SIRaw) {
-                 img2runsaliency = rescale(mbariImg,dims);
-            }
-            else {
-                img2runsaliency = rescale(mbariImg,dims);
+            // Get the saliency input image
+            if (dp.itsSaliencyInputType == SIDiffMean) {
+                if (dp.itsSizeAvgCache > 1) {
+                    img2runsaliency = rescale(avgCache.clampedDiffMean(mbariImg), dims);
+                } else
+                    LFATAL("ERROR - must specify an imaging cache size "
+                        "to use the DiffMean option. Try setting the"
+                        "--mbari-cache-size option to something > 1");
+            } else if (dp.itsSaliencyInputType == SIRaw) {
+                img2runsaliency = rescale(mbariImg, dims);
+            } else {
+                img2runsaliency = rescale(mbariImg, dims);
             }
 
             rv->output(img2runsaliency, curFrame, "Saliency_input");
 
         } // end if needFrames
 
-        rv->output(mbariImg, mbariImg.getFrameNum(), "Input"); 
+        rv->output(mbariImg, mbariImg.getFrameNum(), "Input");
         rv->output(luminance(avgCache.mean()), mbariImg.getFrameNum(), "Background_mean");
 
-        if (!loadedEvents) { 
+        if (!loadedEvents) {
 
             // create a binary image for the segmentation
             Image<byte> bitImgShadow, bitImgHighlight, bitImgMasked;
+            Image< byte > img2segment;
             Image<byte> bitImg(mbariImg.getDims(), ZEROS);
             Image< PixRGB<byte > > graphBitImg;
             std::list<WTAwinner> winlistGraph;
-            const int offset = detectionParms.itsSegmentAdaptiveOffset;
+            const int offset = dp.itsSegmentAdaptiveOffset;
 
-            if (detectionParms.itsSegmentAlgorithmInputType == SAILuminance) {
+            if (dp.itsSegmentAlgorithmInputType == SAILuminance) {
+                img2segment = luminance(mbariImg);
                 graphBitImg = segmentation.runGraph(sigma, k, min_size, luminance(mbariImg));
             } else {
+                img2segment = maxRGB(avgCache.clampedDiffMean(mbariImg));
                 graphBitImg = segmentation.runGraph(sigma, k, min_size, maxRGB(avgCache.clampedDiffMean(mbariImg)));
             }
-
+             
             winlistGraph = getGraphWinners(graphBitImg, mbariImg.getFrameNum(), 1.0f, 1.0f);
             list<BitObject> sobjs = getSalientObjects(graphBitImg, winlistGraph);
 
-            if (detectionParms.itsSegmentAlgorithmType == SAGraphCutOnly) {
+            if (dp.itsSegmentAlgorithmType == SAGraphCutOnly) {
                 if (sobjs.size() > 0)
                     bitImg = showAllObjects(sobjs);
             }
-
-            rv->output(graphBitImg, mbariImg.getFrameNum(), "Graph_segment");
-
-            if (detectionParms.itsSegmentAlgorithmType == SAMeanAdaptiveThreshold) {
-                if (detectionParms.itsSegmentAlgorithmInputType == SAILuminance) {
-                    bitImgShadow = segmentation.mean_thresh(luminance(mbariImg), maxDist, offset);
-                } else {
-                    bitImgShadow = segmentation.mean_thresh(maxRGB(avgCache.clampedDiffMean(mbariImg)), maxDist, offset);
-                }
+            else if (dp.itsSegmentAlgorithmType == SAMeanAdaptiveThreshold) {
+                bitImgShadow = segmentation.mean_thresh(img2segment, maxDist, offset);
 
                 rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_meanshadow");
 
                 if (sobjs.size() > 0) {
                     bitImgHighlight = showAllObjects(sobjs);
-                    rv->output(bitImgHighlight, mbariImg.getFrameNum(), "Segment_meanhighlight");
+                    rv->output(bitImgHighlight, mbariImg.getFrameNum(), "Segment_highlight");
                     bitImg = bitImgHighlight + bitImgShadow;
                 } else {
                     bitImg = bitImgShadow;
-                }  
-	    }
-
-            if (detectionParms.itsSegmentAlgorithmType == SAMedianAdaptiveThreshold) {
-                
-             if (detectionParms.itsSegmentAlgorithmInputType == SAILuminance) {
-                    bitImgShadow = segmentation.median_thresh(luminance(mbariImg), maxDist, offset);
-                } else {
-                    bitImgShadow = segmentation.median_thresh(maxRGB(avgCache.clampedDiffMean(mbariImg)), maxDist, offset);
                 }
+            }
+            else if (dp.itsSegmentAlgorithmType == SAMedianAdaptiveThreshold) {
+                bitImgShadow = segmentation.median_thresh(img2segment, maxDist, offset);
 
                 rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_medianshadow");
- 
+
                 if (sobjs.size() > 0) {
                     bitImgHighlight = showAllObjects(sobjs);
-                    rv->output(bitImgHighlight, mbariImg.getFrameNum(), "Segment_medianhighlight");
+                    rv->output(bitImgHighlight, mbariImg.getFrameNum(), "Segment_highlight");
                     bitImg = bitImgHighlight + bitImgShadow;
                 } else {
                     bitImg = bitImgShadow;
                 }
-                }
+            }
+            else if (dp.itsSegmentAlgorithmType == SAMeanMinMaxAdaptiveThreshold) {
+                bitImgShadow = segmentation.meanMaxMin_thresh(img2segment, maxDist, offset);
 
-            if(detectionParms.itsSegmentAlgorithmType == SAMeanMinMaxAdaptiveThreshold) {
+                rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_minmaxshadow");
 
-              if (detectionParms.itsSegmentAlgorithmInputType == SAILuminance) {
-                    bitImgShadow = segmentation.meanMaxMin_thresh(luminance(mbariImg), maxDist, offset);
-                } else {
-                    bitImgShadow = segmentation.meanMaxMin_thresh(maxRGB(avgCache.clampedDiffMean(mbariImg)), maxDist, offset);
-                }
-
-                rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_meanminmaxshadow");
- 
                 if (sobjs.size() > 0) {
                     bitImgHighlight = showAllObjects(sobjs);
-                    rv->output(bitImgHighlight, mbariImg.getFrameNum(), "Segment_meanminmaxhighlight");
+                    rv->output(bitImgHighlight, mbariImg.getFrameNum(), "Segment_highlight");
                     bitImg = bitImgHighlight + bitImgShadow;
                 } else {
                     bitImg = bitImgShadow;
                 }
             }
 
+            rv->output(graphBitImg, mbariImg.getFrameNum(), "Graph_segment");
+            
             // update the focus of expansion
             Vector2D curFOE = foeEst.updateFOE(bitImg);
-            
+
             // cleanup image noise and display
-            const Image<byte> se = twofiftyfives(detectionParms.itsCleanupStructureElementSize);
-            bitImg = erodeImg(dilateImg(bitImg, se), se); 
+            const Image<byte> se = twofiftyfives(dp.itsCleanupStructureElementSize);
+            bitImg = erodeImg(dilateImg(bitImg, se), se);
 
             // mask special area in the frame we don't care
-            bitImgMasked = maskArea(bitImg, &detectionParms);
+            bitImgMasked = maskArea(bitImg, &dp);
 
             rv->output(bitImgMasked, mbariImg.getFrameNum(), "Segment_output");
 
             // update the events with the segmented  images
             eventSet.updateEvents(bitImgMasked,
                     curFOE, mbariImg.getFrameNum(), metadata);
-            
+
             // is counter at 0?
             --countFrameDist;
             if (countFrameDist == 0) {
-                countFrameDist = detectionParms.itsSaliencyFrameDist;
-                if (stddev >= detectionParms.itsMinVariance) {
+                countFrameDist = dp.itsSaliencyFrameDist;
+                if (stddev >= dp.itsMinVariance) {
 
                     LINFO("Getting salient regions for frame: %06d", mbariImg.getFrameNum());
-                    std::list<WTAwinner> winlist, winlist1, winlist2;
+                    std::list<WTAwinner> winlist;
 
-                    const float maxEvolveTime = detectionParms.itsMaxEvolveTime;
-                    const uint maxNumSalSpots = detectionParms.itsMaxWTAPoints;
-                    winlist1 = getSalientWinners(simofs,
+                    const float maxEvolveTime = dp.itsMaxEvolveTime;
+                    const uint maxNumSalSpots = dp.itsMaxWTAPoints;
+                    winlist = getSalientWinners(simofs,
                             img2runsaliency, brain, seq, maxEvolveTime, maxNumSalSpots,
                             mbariImg.getFrameNum(), scaleW, scaleH);
 
-                    // add all winners into one list
-                    list<WTAwinner>::iterator iter = winlist1.begin();
-                    if (winlist1.size() > 0) {
-
-                        while (iter != winlist1.end()) {
-                            winlist.push_back(*iter);
-                            iter++;
-                        }
-                    }
-                    // add in graph winners
-                    if (detectionParms.itsAddGraphWinners) {
-                        winlist2 = getGraphWinners(rescale(graphBitImg, dims), mbariImg.getFrameNum(), scaleW, scaleH);
-
-                        if (winlist2.size() > 0) {
-                            iter = winlist2.begin();
-
-                            while (iter != winlist2.end()) {
-                                winlist.push_back(*iter);
-                                iter++;
-                            }
-                        }
-                    }
-
-                    rv->output(showAllWinners(winlist, mbariImg, detectionParms.itsMaxDist), mbariImg.getFrameNum(), "Winners");
+                    rv->output(showAllWinners(winlist, mbariImg, dp.itsMaxDist), mbariImg.getFrameNum(), "Winners");
 
                     list<BitObject> sobjs = getSalientObjects(bitImgMasked, winlist);
 
                     if (sobjs.size() > 0) rv->output(showAllObjects(sobjs), mbariImg.getFrameNum(), "Salient_Objects");
 
                     // initiate events with these objects
-                    eventSet.initiateEvents(sobjs, mbariImg.getFrameNum(), metadata); 
+                    eventSet.initiateEvents(sobjs, mbariImg.getFrameNum(), metadata);
                 }
             }
 
             // last frame? -> close everyone
             if (mbariImg.getFrameNum() == frameRange.getLast()) {
-              eventSet.closeAll();
+                eventSet.closeAll();
             }
 
             // clean up small events, and those needing deletion.
@@ -623,19 +583,19 @@ int main(const int argc, const char** argv) {
             eventFrameList = eventSet.getEventsForFrame(mbariImg.getFrameNum());
 
             // write out eventSet to XML?
-            if (rv->isSaveXMLEventsNameSet() ){
+            if (rv->isSaveXMLEventsNameSet()) {
                 rv->saveVisualEventSetToXML(eventFrameList,
-                    mbariImg.getFrameNum(),
-                    mbariImg.getMetaData().getTC(),
-                    frameRange);
-	    }
+                        mbariImg.getFrameNum(),
+                        mbariImg.getMetaData().getTC(),
+                        frameRange);
+            }
 
-	    // display or write results  ?
-	    if (rv->isDisplayOutputSet() || rv->isSaveOutputSet()) {
-                    rv->outputResultFrame(mbariImg,
-                    eventSet,
-                    circleRadius);
-	    }
+            // display or write results  ?
+            if (rv->isDisplayOutputSet() || rv->isSaveOutputSet()) {
+                rv->outputResultFrame(mbariImg,
+                        eventSet,
+                        circleRadius);
+            }
 
             // need to save any event clips?
             if (rv->isSaveAllEventClips()) {
@@ -656,7 +616,7 @@ int main(const int argc, const char** argv) {
                 }
             }
         }
- 
+
         if (!loadedEvents) {
             //flag events that have been saved for delete otherwise takes too much memory
             list<VisualEvent *>::iterator i;

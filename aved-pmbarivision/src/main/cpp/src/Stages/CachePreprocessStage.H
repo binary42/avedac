@@ -49,7 +49,8 @@ public:
 		       nub::soft_ref<InputFrameSeries> &ifs,
 		       nub::soft_ref<MbariResultViewer> &rv,
 		       const FrameRange framerange,
-		       const std::string& inputFileStem);
+		       const std::string& inputFileStem,
+                       const Dims& dims);
 
   //!desctructor
   virtual ~CachePreprocessStage();
@@ -68,6 +69,7 @@ private:
   nub::soft_ref<MbariResultViewer> itsRv;
   FrameRange itsFrameRange; 
   std::string itsInputFileStem;
+  Dims itsDims;
 };
 
 #endif // !defined(CACHEPREPROCESS_H)
