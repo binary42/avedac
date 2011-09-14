@@ -129,8 +129,14 @@ int main(const int argc, const char** argv) {
     REQUEST_OPTIONALIAS_NEURO(manager);
 
     // Initialize brain defaults
-    manager.setOptionValString(&OPT_UseRandom, "false");
-
+    manager.setOptionValString(&OPT_UseRandom, "true");
+    manager.setOptionValString(&OPT_SVdisplayFOA, "true");
+    manager.setOptionValString(&OPT_SVdisplayPatch, "false");
+    manager.setOptionValString(&OPT_SVdisplayFOALinks, "false");
+    manager.setOptionValString(&OPT_SVdisplayAdditive, "true");
+    manager.setOptionValString(&OPT_SVdisplayTime, "false");
+    manager.setOptionValString(&OPT_SVdisplayBoring, "false");
+    
     // parse the command line
     if (manager.parseCommandLine(argc, argv, "", 0, -1) == false)
         LFATAL("Invalid command line argument. Aborting program now !");
@@ -334,7 +340,7 @@ int main(const int argc, const char** argv) {
                 LINFO("Processing frame %06d from cache.", curFrame);
                 img = avgCache[cacheFrameNum];
                 mbariImg = outCache[cacheFrameNum];
-                metadata = mbariImg.getMetaData();
+                metadata = mbariImg.getMetaData(); 
 
                 if (dp.itsMinVariance > 0.f) {
                     stddev = stdev(luminance(mbariImg));
@@ -419,25 +425,24 @@ int main(const int argc, const char** argv) {
         } // end if needFrames
 
         rv->output(mbariImg, mbariImg.getFrameNum(), "Input");
-        rv->output(luminance(avgCache.mean()), mbariImg.getFrameNum(), "Background_mean");
+        rv->output(avgCache.mean(), mbariImg.getFrameNum(), "Background_mean");
 
         if (!loadedEvents) {
 
             // create a binary image for the segmentation
             Image<byte> bitImgShadow, bitImgHighlight, bitImgMasked;
             Image< byte > img2segment;
-            Image<byte> bitImg(mbariImg.getDims(), ZEROS);
+            Image<byte> mbariImg.getDims(), ZEROS);
             Image< PixRGB<byte > > graphBitImg;
-            std::list<WTAwinner> winlistGraph;
-            const int offset = dp.itsSegmentAdaptiveOffset;
+            std::list<WTAwinner> winlistGraph; 
 
             if (dp.itsSegmentAlgorithmInputType == SAILuminance) {
                 img2segment = luminance(mbariImg);
-                graphBitImg = segmentation.runGraph(sigma, k, min_size, luminance(mbariImg));
             } else {
                 img2segment = maxRGB(avgCache.clampedDiffMean(mbariImg));
-                graphBitImg = segmentation.runGraph(sigma, k, min_size, maxRGB(avgCache.clampedDiffMean(mbariImg)));
             }
+            
+            graphBitImg = segmentation.runGraph(sigma, k, min_size, img2segment);
              
             winlistGraph = getGraphWinners(graphBitImg, mbariImg.getFrameNum(), 1.0f, 1.0f);
             list<BitObject> sobjs = getSalientObjects(graphBitImg, winlistGraph);
@@ -447,7 +452,7 @@ int main(const int argc, const char** argv) {
                     bitImg = showAllObjects(sobjs);
             }
             else if (dp.itsSegmentAlgorithmType == SAMeanAdaptiveThreshold) {
-                bitImgShadow = segmentation.mean_thresh(img2segment, maxDist, offset);
+                bitImgShadow = segmentation.mean_thresh(img2segment, maxDist, dp.itsSegmentAdaptiveOffset);
 
                 rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_meanshadow");
 
@@ -460,7 +465,7 @@ int main(const int argc, const char** argv) {
                 }
             }
             else if (dp.itsSegmentAlgorithmType == SAMedianAdaptiveThreshold) {
-                bitImgShadow = segmentation.median_thresh(img2segment, maxDist, offset);
+                bitImgShadow = segmentation.median_thresh(img2segment, maxDist, dp.itsSegmentAdaptiveOffset);
 
                 rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_medianshadow");
 
@@ -473,7 +478,7 @@ int main(const int argc, const char** argv) {
                 }
             }
             else if (dp.itsSegmentAlgorithmType == SAMeanMinMaxAdaptiveThreshold) {
-                bitImgShadow = segmentation.meanMaxMin_thresh(img2segment, maxDist, offset);
+                bitImgShadow = segmentation.meanMaxMin_thresh(img2segment, maxDist, dp.itsSegmentAdaptiveOffset);
 
                 rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_minmaxshadow");
 
@@ -511,15 +516,12 @@ int main(const int argc, const char** argv) {
                 if (stddev >= dp.itsMinVariance) {
 
                     LINFO("Getting salient regions for frame: %06d", mbariImg.getFrameNum());
-                    std::list<WTAwinner> winlist;
-
-                    const float maxEvolveTime = dp.itsMaxEvolveTime;
-                    const uint maxNumSalSpots = dp.itsMaxWTAPoints;
-                    winlist = getSalientWinners(simofs,
-                            img2runsaliency, brain, seq, maxEvolveTime, maxNumSalSpots,
+                    
+                    std::list<WTAwinner> winlist = getSalientWinners(simofs,
+                            mbariImg, brain, seq, dp.itsMaxEvolveTime, dp.itsMaxWTAPoints,
                             mbariImg.getFrameNum(), scaleW, scaleH);
 
-                    rv->output(showAllWinners(winlist, mbariImg, dp.itsMaxDist), mbariImg.getFrameNum(), "Winners");
+                    if (winlist.size() > 0) rv->output(showAllWinners(winlist, mbariImg, dp.itsMaxDist), mbariImg.getFrameNum(), "Winners");
 
                     list<BitObject> sobjs = getSalientObjects(bitImgMasked, winlist);
 
