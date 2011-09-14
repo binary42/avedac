@@ -52,7 +52,7 @@ parameters*/
 // to be a valid event. These work well for NTSC size video and should
 // be scaled for larger/smaller video accordingly
 #define DEFAULT_MIN_EVENT_AREA 34
-#define DEFAULT_MAX_EVENT_AREA 1000
+#define DEFAULT_MAX_EVENT_AREA 20000
 // Default maximum number of frames an event can be before closing
 // -1 = unlimited
 // 10 minutes @ 30 fps = 18000
