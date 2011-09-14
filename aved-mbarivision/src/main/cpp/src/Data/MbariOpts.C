@@ -116,8 +116,8 @@ const ModelOptionDef OPT_MDPBenthicVideo =
     "Implements good choice of options to experiment with "
     "processing video from a moving camera traversing the sea bottom",
     "mbari-benthic-video", '\0',"",
-    "--mbari-saliency-dist=5 --mbari-max-WTA-points=10 --mbari-segment-adaptive-offset=5 "
-    "--mbari-tracking-mode=NearestNeighbor "
+    "--mbari-saliency-dist=5 --mbari-max-WTA-points=10 --mbari-segment-adaptive-offset=10 "
+    "--mbari-tracking-mode=NearestNeighbor --mbari-max-event-area=30000 "
     "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=Luminance "
     "--vc-type=OI --mbari-color-space=Gray --use-random=true  --mbari-se-size=4 "
     "--ori-interaction=None --oricomp-type=Steerable --boring-sm-mv=1.0 "
