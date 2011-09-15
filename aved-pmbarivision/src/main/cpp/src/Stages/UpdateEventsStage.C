@@ -66,7 +66,7 @@ itsSalientFrameCache(DetectionParametersSingleton::instance()->itsParameters.its
 itsFOEEst(20, 0),
 itsLastEventSeedFrameNum(-1),
 itsifs(ifs),
-itsrv(rv) {
+itsRv(rv) {
 
 }
 
@@ -80,7 +80,7 @@ void UpdateEventsStage::initStage() {
     itsifs->updateNext();
 
     // initialize the XML if requested to save events to XML
-    if (itsrv->isSaveXMLEventsNameSet()) {
+    if (itsRv->isSaveXMLEventsNameSet()) {
         Image< PixRGB<byte> > tmpimg;
         MbariImage< PixRGB<byte> > mstart(itsInputFileStem);
         MbariImage< PixRGB<byte> > mend(itsInputFileStem);
@@ -97,7 +97,7 @@ void UpdateEventsStage::initStage() {
         mend.updateData(tmpimg, itsFrameRange.getLast());
 
         // create the XML document
-        itsrv->createXMLDocument(PVersion::versionString(),
+        itsRv->createXMLDocument(PVersion::versionString(),
                 itsFrameRange,
                 mstart.getMetaData().getTC(),
                 mend.getMetaData().getTC(),
@@ -253,7 +253,7 @@ void UpdateEventsStage::updateEvents() {
             (itsOutCache.front().getFrameNum() == itsFrameRange.getLast()))) {
 
         // update the MbariResultsViewer one frame - this assumes we are receiving sequential frames to process
-        itsrv->updateNext();
+        itsRv->updateNext();
 
         //pop off frames from oldest to newest
         mbariImg = itsOutCache.front();
@@ -273,12 +273,12 @@ void UpdateEventsStage::updateEvents() {
             // mask special area in the frame we don't care
             bitImgMasked = maskArea(bitImg, &dp);
 
-            itsrv->output(bitImgMasked, mbariImg.getFrameNum(), "Segment_output");
+            itsRv->output(bitImgMasked, mbariImg.getFrameNum(), "Segment_output");
 
-            //update the events using with the segmented binary image
+            // update the events using with the segmented binary image
             itsEventSet.updateEvents(bitImgMasked, curFOE, mbariImg.getFrameNum(), mbariImg.getMetaData());
 
-            //if at next frame number for event seed, initiate events using cached winners
+            // if at next frame number for event seed, initiate events using cached winners
             if (mbariImg.getFrameNum() == itsLastEventSeedFrameNum) {
                 initiateEvents(mbariImg.getFrameNum(), bitImgMasked);
             }
@@ -287,13 +287,13 @@ void UpdateEventsStage::updateEvents() {
             if (mbariImg.getFrameNum() == itsFrameRange.getLast())
                 itsEventSet.closeAll();
 
-            // weed out migit events (e.g. too few frames)
+            // prune invalid events
             itsEventSet.cleanUp(mbariImg.getFrameNum());
         }
         // are we loading the event structure from a file?
-        const bool loadedEvents = itsrv->isLoadEventsNameSet();
+        const bool loadedEvents = itsRv->isLoadEventsNameSet();
         // are we loading the set of property vectors from a file?
-        const bool loadedProperties = itsrv->isLoadPropertiesNameSet();
+        const bool loadedProperties = itsRv->isLoadPropertiesNameSet();
         const int circleRadius = mbariImg.getWidth() / 40;
 
         // initialize a few variables
@@ -310,11 +310,11 @@ void UpdateEventsStage::updateEvents() {
             eventListToSave = itsEventSet.getEventsReadyToSave(mbariImg.getFrameNum());
 
             // write out eventSet?
-            if (itsrv->isSaveEventsNameSet())
-                itsrv->saveVisualEvent(itsEventSet, eventFrameList);
+            if (itsRv->isSaveEventsNameSet())
+                itsRv->saveVisualEvent(itsEventSet, eventFrameList);
 
-            if (itsrv->isSaveEventSummaryNameSet())
-                itsrv->saveVisualEventSummary(PVersion::versionString(), eventListToSave);
+            if (itsRv->isSaveEventSummaryNameSet())
+                itsRv->saveVisualEventSummary(PVersion::versionString(), eventListToSave);
 
             // flag events that have been saved for delete
             list<VisualEvent *>::iterator i;
@@ -322,16 +322,16 @@ void UpdateEventsStage::updateEvents() {
                 (*i)->flagWriteComplete();
 
             // write out positions?
-            if (itsrv->isSavePositionsNameSet()) itsrv->savePositions(eventFrameList);
+            if (itsRv->isSavePositionsNameSet()) itsRv->savePositions(eventFrameList);
 
             PropertyVectorSet pvsToSave = itsEventSet.getPropertyVectorSetToSave();
 
             // write out property vector set?
-            if (itsrv->isSavePropertiesNameSet()) itsrv->saveProperties(pvsToSave);
+            if (itsRv->isSavePropertiesNameSet()) itsRv->saveProperties(pvsToSave);
         }
 
         // do this only when we actually load frames
-        if (itsrv->needFrames()) {
+        if (itsRv->needFrames()) {
             mbariRGBImg = itsRGBOutCache.front();
 
             // get a list of events for this frame
@@ -341,40 +341,41 @@ void UpdateEventsStage::updateEvents() {
             if (!loadedProperties) pvs = itsEventSet.getPropertyVectorSet();
 
             // write out eventSet to XML?
-            if (itsrv->isSaveXMLEventsNameSet())
-                itsrv->saveVisualEventSetToXML(eventFrameList,
+            if (itsRv->isSaveXMLEventsNameSet())
+                itsRv->saveVisualEventSetToXML(eventFrameList,
                     mbariRGBImg.getFrameNum(),
                     mbariRGBImg.getMetaData().getTC(),
                     itsFrameRange);
+            
             // write results  ?
-            if (itsrv->isSaveOutputSet()) {
+            if (itsRv->isSaveOutputSet()) {
                 LINFO("Writing results for frame :%d", mbariRGBImg.getFrameNum());
-                itsrv->outputResultFrame(mbariRGBImg,
+                itsRv->outputResultFrame(mbariRGBImg,
                         itsEventSet,
                         circleRadius);
             }
 
             // need to save any event clips?
-            if (itsrv->isSaveAllEventClips()) {
+            if (itsRv->isSaveAllEventClips()) {
                 //save all events
                 LINFO("Saving event clips");
                 list<VisualEvent *>::iterator i;
                 for (i = eventFrameList.begin(); i != eventFrameList.end(); ++i) {
-                    itsrv->saveSingleEventFrame(mbariRGBImg, mbariRGBImg.getFrameNum(), *i);
+                    itsRv->saveSingleEventFrame(mbariRGBImg, mbariRGBImg.getFrameNum(), *i);
                 }
             } else { //only save enumerated list of events (only for post-process clip creation)
-                uint csavenum = itsrv->numSaveEventClips();
+                uint csavenum = itsRv->numSaveEventClips();
                 for (uint idx = 0; idx < csavenum; ++idx) {
-                    uint evnum = itsrv->getSaveEventClipNum(idx);
+                    uint evnum = itsRv->getSaveEventClipNum(idx);
                     if (!itsEventSet.doesEventExist(evnum)) continue;
 
                     VisualEvent *event = itsEventSet.getEventByNumber(evnum);
                     if (event->frameInRange(itsOutCache.front().getFrameNum()))
-                        itsrv->saveSingleEventFrame(itsRGBOutCache.front(), itsRGBOutCache.front().getFrameNum(), event);
+                        itsRv->saveSingleEventFrame(itsRGBOutCache.front(), itsRGBOutCache.front().getFrameNum(), event);
                 }
             }// end of saving enumerated list of events
 
-            LINFO("########## %d  ##### %d", mbariImg.getFrameNum(), itsFrameRange.getLast());
+            LINFO("########## current frame: %d  ##### end frame: %d", mbariImg.getFrameNum(), itsFrameRange.getLast());
 
             // if last frame, send exit signal to controller
             if (mbariImg.getFrameNum() == itsFrameRange.getLast()) {
@@ -405,7 +406,8 @@ void UpdateEventsStage::updateEvents() {
 
 void UpdateEventsStage::initiateEvents(int frameNum, Image< byte > bitImg) {
     int index = frameNum - itsLastEventSeedFrameNum;
-
+    DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
+    
     if (!itsSalientFrameCache.empty() && index < itsSalientFrameCache.size()) {
         map<int, list<SalientWinner> *>::iterator iter = itsWinners.find(frameNum);
 
@@ -426,11 +428,15 @@ void UpdateEventsStage::initiateEvents(int frameNum, Image< byte > bitImg) {
             // extract salient BitObjects
             LINFO("Extracting salient BitObjects for frame: %d number of potential winners: %d", frameNum, wtawinners.size());
             list<BitObject> sobjs = getSalientObjects(bitImg, wtawinners); 
+            if (sobjs.size() > 0) itsRv->output(showAllObjects(sobjs), frameNum, "Salient_Objects");
 
             // initiate events with these objects
             LINFO("Initiating events for frame %d number of objects found %d number winners: %d", frameNum, sobjs.size(), winners->size());
             MbariImage <byte> mbariImg = itsSalientFrameCache[index];
             itsEventSet.initiateEvents(sobjs, frameNum, mbariImg.getMetaData());
+
+            // save winners for debugging
+            if (wtawinners.size() > 0) itsRv->output(showAllWinners(wtawinners, mbariImg, dp.itsMaxDist), frameNum, "Winners");
 
             //cleanup allocated list
             winners->clear();

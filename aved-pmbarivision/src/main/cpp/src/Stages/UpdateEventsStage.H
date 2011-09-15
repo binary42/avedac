@@ -83,7 +83,7 @@ private:
   ImageCacheAvg< PixRGB<byte> > itsAvgCache;
   std::map<int, std::list<SalientWinner>* > itsWinners;    
   nub::soft_ref<InputFrameSeries> itsifs;
-  nub::soft_ref<MbariResultViewer> itsrv;
+  nub::soft_ref<MbariResultViewer> itsRv;
   std::string itsInputFileStem;
   FrameRange itsFrameRange; 
   FOEestimator itsFOEEst;
