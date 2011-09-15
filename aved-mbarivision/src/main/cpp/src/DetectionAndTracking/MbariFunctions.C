@@ -383,8 +383,7 @@ list<WTAwinner> getSalientWinners(
     std::list<WTAwinner> winners;
     int numSpots = 0;
     SimStatus status = SIM_CONTINUE;
-    DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
-    //nub::soft_ref<Brain> mbrain = dynCastWeak<Brain > (brain);
+    DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters; 
  
     if (p.itsMinVariance > 0.f) {
         float stddevlum = stdev(luminance(img));
@@ -408,7 +407,7 @@ list<WTAwinner> getSalientWinners(
     const SimTime simMaxEvolveTime = seq->now() + SimTime::MSECS(maxEvolveTime);
 
     rutz::shared_ptr<SimEventInputFrame>
-            eif(new SimEventInputFrame(NULL,
+            eif(new SimEventInputFrame(brain.get(),
             GenericFrame(img),
             framenum));
 
@@ -421,6 +420,9 @@ list<WTAwinner> getSalientWinners(
 
             // evolve brain:
             brain->evolve(*seq);
+
+            // switch to next time step:
+            status = seq->evolve();
 
             if (SeC<SimEventWTAwinner> e = seq->check<SimEventWTAwinner > (0)) {
 
@@ -448,23 +450,25 @@ list<WTAwinner> getSalientWinners(
                 }
 
                 LINFO("##### time now:%f msecs max evolve time:%f msecs frame: %d #####", seq->now().msecs(), simMaxEvolveTime.msecs(), framenum);
-              }
-  
+
+                if (seq->now().msecs() >= simMaxEvolveTime.msecs()) {
+                    LINFO("##### time limit reached time now:%f msecs max evolve time:%f msecs frame: %d #####", seq->now().msecs(), simMaxEvolveTime.msecs(), framenum);
+                    rutz::shared_ptr<SimEventBreak>
+                            e(new SimEventBreak(0, "##### time limit reached #####"));
+                    seq->post(e);
+                } 
+
+                // Evolve output frame series. It will trigger a save() on our
+                // modules as needed, before we start loading new inputs and
+                // processing them for the new time step. Leave this out for now
+                // this is causing a LeakyIntegrator exception
+                simofs->evolve(*seq);
+            }
+            
             if (seq->now().msecs() >= simMaxEvolveTime.msecs()) {
                 LINFO("##### time limit reached time now:%f msecs max evolve time:%f msecs frame: %d #####", seq->now().msecs(), simMaxEvolveTime.msecs(), framenum);
-                rutz::shared_ptr<SimEventBreak>
-                        e(new SimEventBreak(0, "##### time limit reached #####"));
-                seq->post(e); 
+                break;
             }
-
-            // switch to next time step:
-            status = seq->evolve();
-            
-            // Evolve output frame series. It will trigger a save() on our
-            // modules as needed, before we start loading new inputs and
-            // processing them for the new time step. Leave this out for now
-            // this is causing a LeakyIntegrator exception
-            simofs->evolve(*seq);
 
         }
     } catch (const exception& e) { 
