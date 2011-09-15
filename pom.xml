@@ -241,6 +241,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.8</version>
                 <configuration>
                     <excludePackageNames>*.target.checkout.*</excludePackageNames>
                 </configuration>
@@ -333,6 +334,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
+                <version>2.2.1</version>
                 <configuration>
                     <preparationGoals>clean install verify</preparationGoals>
                     <goals>clean install javadoc:javadoc assembly:assembly deploy</goals>
@@ -342,6 +344,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
                 <configuration>
                     <source>1.5</source>
                     <target>1.5</target>
@@ -349,6 +352,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2.1</version>
                 <inherited>false</inherited>
                 <configuration>
                     <appendAssemblyId>false</appendAssemblyId>
