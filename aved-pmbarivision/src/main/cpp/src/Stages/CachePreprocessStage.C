@@ -134,11 +134,11 @@ void CachePreprocessStage::runStage()
           }
         
 	// Create the binary image to segment
- 	if (dp.itsSegmentAlgorithmInputType == SAIMaxRGB) {
-          img2segment = maxRGB(itsAvgCache.clampedDiffMean(img));
+ 	if (dp.itsSegmentAlgorithmInputType == SAILuminance) {
+            img2segment = luminance(img);
 	}
-        else if (dp.itsSegmentAlgorithmInputType == SAILuminance) {
-	  img2segment = luminance(img);
+        else if (dp.itsSegmentAlgorithmInputType == SAIDiffMean) {
+          img2segment = maxRGB(itsAvgCache.clampedDiffMean(img));
 	}
         else {
           img2segment = maxRGB(itsAvgCache.clampedDiffMean(img));
