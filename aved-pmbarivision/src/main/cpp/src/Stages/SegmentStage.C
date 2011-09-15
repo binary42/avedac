@@ -112,7 +112,7 @@ void SegmentStage::runStage() {
                             bitImg = showAllObjects(sobjs);
                     }
                     else if (dp.itsSegmentAlgorithmType == SAMeanAdaptiveThreshold) {
-                        bitImgShadow = segmentation.mean_thresh(*img2segment, maxDist, offset);
+                        bitImgShadow = segmentation.mean_thresh(*img2segment, maxDist/2, offset);
 
                         itsRv->output(bitImgShadow, framenum, "Segment_meanshadow");
 
@@ -125,7 +125,7 @@ void SegmentStage::runStage() {
                         }
                     }
                     else if (dp.itsSegmentAlgorithmType == SAMedianAdaptiveThreshold) {
-                        bitImgShadow = segmentation.median_thresh(*img2segment, maxDist, offset);
+                        bitImgShadow = segmentation.median_thresh(*img2segment,  maxDist/2, offset);
 
                         itsRv->output(bitImgShadow, framenum, "Segment_medianshadow");
 
@@ -138,7 +138,7 @@ void SegmentStage::runStage() {
                         }
                     }
                     else if (dp.itsSegmentAlgorithmType == SAMeanMinMaxAdaptiveThreshold) {
-                        bitImgShadow = segmentation.meanMaxMin_thresh(*img2segment, maxDist, offset);
+                        bitImgShadow = segmentation.meanMaxMin_thresh(*img2segment,  maxDist/2, offset);
 
                         itsRv->output(bitImgShadow, framenum, "Segment_meanMinMaxShadow");
 
