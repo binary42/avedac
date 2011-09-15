@@ -208,16 +208,14 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinnersNew(const Image< P
 
     // initialize the max time to simulate
     const SimTime simMaxEvolveTime = SimTime::MSECS(itsSeq->now().msecs()) + SimTime::MSECS(dp.itsMaxEvolveTime);
-
-    LINFO("######Inputting saliency into attention guidance map. Map size: %dx%d", sm.getWidth(), sm.getHeight());
-
+ 
     rutz::shared_ptr<SimEventAttentionGuidanceMapOutput>
             agm(new SimEventAttentionGuidanceMapOutput(NULL, sm));
     itsSeq->post(agm);
 
     while (status == SIM_CONTINUE) {
 
-        LINFO("######Evolve time now: %f msecs max evolve time: %f msecs", itsSeq->now().msecs(), simMaxEvolveTime.msecs());
+        LINFO("###### evolve time now: %f msecs max evolve time: %f msecs", itsSeq->now().msecs(), simMaxEvolveTime.msecs());
 
         itsWta->evolve(*itsSeq);
 
@@ -227,8 +225,7 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinnersNew(const Image< P
         if (SeC<SimEventWTAwinner> e = itsSeq->check<SimEventWTAwinner > (0)) {
             WTAwinner newwin = e->winner();
             newwin.p.i = (int) ((float) newwin.p.i * itsScaleW);
-            newwin.p.j = (int) ((float) newwin.p.j * itsScaleH);
-            const Dims d = intensity.getDims();
+            newwin.p.j = (int) ((float) newwin.p.j * itsScaleH); 
 
             LINFO("#### winner #%d found at [%d; %d] with %f voltage frame: %d ",
                     numSpots, newwin.p.i, newwin.p.j, newwin.sv, framenum);
@@ -425,8 +422,8 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
     // get the standard deviation in the input image
     // if there is little deviation, this image is uniform and
     // will have no saliency so return empty winners
-    float stddevlum = stdev(luminance(img));
-    if (dp.itsMinVariance > 0.f || stddevlum == 0) {
+    if (dp.itsMinVariance > 0.f) {
+        float stddevlum = stdev(luminance(img));
         // get the standard deviation in the input image
         // if there is no deviation, this image is uniform and
         // will have no saliency so return empty winners
