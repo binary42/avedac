@@ -356,7 +356,7 @@ int main(const int argc, const char** argv) {
                     avgCache.push_back(imgToAddToTheBackground);
                     rv->output(imgToAddToTheBackground, curFrame - 1, "Background_input");
                 }
-                savePreviousPicture = mbariImg; // save the current frame for the next loop
+                savePreviousPicture = mbariImg; // save the current frame for the next loop*/
 
             } else {
                 // This means we are out of input
@@ -375,7 +375,7 @@ int main(const int argc, const char** argv) {
                     rv->output(imgToAddToTheBackground, curFrame - 1, "Background_input");
                 }
 
-                savePreviousPicture = img; // save the current frame for the next loop
+                savePreviousPicture = img; // save the current frame for the next loop*/
 
                 ifs->updateNext();
                 img = ifs->readRGB();
@@ -432,16 +432,19 @@ int main(const int argc, const char** argv) {
             // create a binary image for the segmentation
             Image<byte> bitImgShadow, bitImgHighlight, bitImgMasked;
             Image< byte > img2segment;
-            Image<byte> mbariImg.getDims(), ZEROS);
+            Image<byte> bitImg(mbariImg.getDims(), ZEROS);
             Image< PixRGB<byte > > graphBitImg;
-            std::list<WTAwinner> winlistGraph; 
+            std::list<WTAwinner> winlistGraph;
 
+            // Create the binary image to segment
             if (dp.itsSegmentAlgorithmInputType == SAILuminance) {
                 img2segment = luminance(mbariImg);
+            } else if (dp.itsSegmentAlgorithmInputType == SAILuminance) {
+                img2segment = maxRGB(avgCache.clampedDiffMean(mbariImg));
             } else {
                 img2segment = maxRGB(avgCache.clampedDiffMean(mbariImg));
             }
-            
+
             graphBitImg = segmentation.runGraph(sigma, k, min_size, img2segment);
              
             winlistGraph = getGraphWinners(graphBitImg, mbariImg.getFrameNum(), 1.0f, 1.0f);
@@ -452,7 +455,7 @@ int main(const int argc, const char** argv) {
                     bitImg = showAllObjects(sobjs);
             }
             else if (dp.itsSegmentAlgorithmType == SAMeanAdaptiveThreshold) {
-                bitImgShadow = segmentation.mean_thresh(img2segment, maxDist, dp.itsSegmentAdaptiveOffset);
+                bitImgShadow = segmentation.mean_thresh(img2segment, maxDist/2, dp.itsSegmentAdaptiveOffset);
 
                 rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_meanshadow");
 
@@ -465,7 +468,7 @@ int main(const int argc, const char** argv) {
                 }
             }
             else if (dp.itsSegmentAlgorithmType == SAMedianAdaptiveThreshold) {
-                bitImgShadow = segmentation.median_thresh(img2segment, maxDist, dp.itsSegmentAdaptiveOffset);
+                bitImgShadow = segmentation.median_thresh(img2segment, maxDist/2, dp.itsSegmentAdaptiveOffset);
 
                 rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_medianshadow");
 
@@ -478,7 +481,7 @@ int main(const int argc, const char** argv) {
                 }
             }
             else if (dp.itsSegmentAlgorithmType == SAMeanMinMaxAdaptiveThreshold) {
-                bitImgShadow = segmentation.meanMaxMin_thresh(img2segment, maxDist, dp.itsSegmentAdaptiveOffset);
+                bitImgShadow = segmentation.meanMaxMin_thresh(img2segment, maxDist/2, dp.itsSegmentAdaptiveOffset);
 
                 rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_minmaxshadow");
 
@@ -518,7 +521,7 @@ int main(const int argc, const char** argv) {
                     LINFO("Getting salient regions for frame: %06d", mbariImg.getFrameNum());
                     
                     std::list<WTAwinner> winlist = getSalientWinners(simofs,
-                            mbariImg, brain, seq, dp.itsMaxEvolveTime, dp.itsMaxWTAPoints,
+                            img2runsaliency, brain, seq, dp.itsMaxEvolveTime, dp.itsMaxWTAPoints,
                             mbariImg.getFrameNum(), scaleW, scaleH);
 
                     if (winlist.size() > 0) rv->output(showAllWinners(winlist, mbariImg, dp.itsMaxDist), mbariImg.getFrameNum(), "Winners");
