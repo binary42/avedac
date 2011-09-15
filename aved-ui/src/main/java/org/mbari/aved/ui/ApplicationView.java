@@ -1,23 +1,33 @@
 /*
  * @(#)ApplicationView.java
  * 
- * Copyright 2010 MBARI
+ * Copyright 2011 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import com.jeta.forms.components.image.ImageComponent;
 import com.jeta.forms.components.panel.FormPanel;
 import com.jeta.forms.gui.form.FormAccessor;
@@ -65,12 +75,12 @@ import javax.swing.border.EmptyBorder;
  *
  */
 public class ApplicationView extends JFrameView {
+    private static final long  serialVersionUID = 1L;
+    public final static Cursor defaultCursor    = Cursor.getDefaultCursor();
 
-    private static final long serialVersionUID = 1L;
-    public final static Cursor defaultCursor = Cursor.getDefaultCursor();
     /** Busy and wait cursor */
     public final static Cursor busyCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
-    private SummaryView summaryView;
+    private SummaryView        summaryView;
 
     /**
      * ApplicationView.
@@ -83,7 +93,7 @@ public class ApplicationView extends JFrameView {
         ImageIcon icon = new ImageIcon(getClass().getResource("/org/mbari/aved/ui/images/logo.jpg"));
 
         if (icon != null) {
-            JPanel p = new JPanel(new BorderLayout());
+            JPanel      p      = new JPanel(new BorderLayout());
             HeaderPanel header = new HeaderPanel("Automated Visual Event Detection and Classification   ", icon, 0.25f);
 
             p.add(BorderLayout.NORTH, header);
@@ -107,7 +117,7 @@ public class ApplicationView extends JFrameView {
         // windowClosing  method of a registered WindowListener object.
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-        Toolkit kit = this.getToolkit();
+        Toolkit   kit        = this.getToolkit();
         Dimension screenSize = kit.getScreenSize();
 
         // Set window size to full display
@@ -136,35 +146,37 @@ public class ApplicationView extends JFrameView {
             // Put table in scroll pane  this allows for display of
             // column headings
             JScrollPane s = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                    JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+                                            JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
             pane.setComponentAt(0, s);
 
             // Calculate the height remaining in the view
             // after the summary view
-            Dimension pd = this.getPreferredSize(); 
+            Dimension pd = this.getPreferredSize();
             Dimension sd = summaryView.getSize();
             Dimension vd = getSize();
+
             sd.height = vd.height - sd.height;
             pane.setPreferredSize(sd);
         }
     }
 
     private void replaceSummaryPanel(FormPanel panel) {
-        FormAccessor accessor = getForm().getFormAccessor("main"); 
+        FormAccessor accessor = getForm().getFormAccessor("main");
 
         // TODO: put exception handling code around this
         accessor.replaceBean("editorSummary", panel);
     }
 
     private void replaceHeaderPanel(JPanel p) {
-        FormAccessor accessor = getForm().getFormAccessor("header");
-        Iterator<Component> i = accessor.beanIterator();
+        FormAccessor        accessor = getForm().getFormAccessor("header");
+        Iterator<Component> i        = accessor.beanIterator();
 
         while (i.hasNext()) {
             Component c = i.next();
 
             if (c instanceof FormAccessor) {
+
                 // found nested form
             } else {
 
@@ -177,18 +189,16 @@ public class ApplicationView extends JFrameView {
     }
 
     public JTabbedPane getTabbedPane() {
-        FormPanel panel = getForm();
-        JTabbedPane c = panel.getTabbedPane("tabbedPane");
+        FormPanel   panel = getForm();
+        JTabbedPane c     = panel.getTabbedPane("tabbedPane");
 
         return c;
     }
 
     /** Handles the model changes from the ApplicationModel */
-    public void modelChanged(ModelEvent event) {
-    }
+    public void modelChanged(ModelEvent event) {}
 
-    public void actionPerformed(ActionEvent e) {
-    }
+    public void actionPerformed(ActionEvent e) {}
 
     public SummaryView getSummaryView() {
         return summaryView;
@@ -256,10 +266,9 @@ public class ApplicationView extends JFrameView {
      * @author Roguy
      */
     public static class HeaderPanel extends JPanel {
-
         private static AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER);
-        private Color blender;
-        private ImageIcon icon;
+        private Color                 blender;
+        private ImageIcon             icon;
 
         /**
          * Crée un nouvel en-tête affichant l'image sélectionnée, avec l'opacité choisie et le titre
@@ -271,11 +280,11 @@ public class ApplicationView extends JFrameView {
          */
         public HeaderPanel(String title, ImageIcon icon, float alpha) {
             super(new BorderLayout());
-            this.icon = icon;
+            this.icon    = icon;
             this.blender = new Color(255, 255, 255, (int) (255 * alpha));
 
             JLabel headerTitle = new JLabel(title);
-            Font font = new Font("Papyrus", Font.PLAIN, 20);
+            Font   font        = new Font("Papyrus", Font.PLAIN, 20);
 
             // Font font = headerTitle.getFont().deriveFont(Font.PLAIN, 20.0f);
             headerTitle.setFont(font);
@@ -298,8 +307,8 @@ public class ApplicationView extends JFrameView {
             }
 
             return (c != null)
-                    ? c
-                    : UIManager.getColor("InternalFrame.activeTitleBackground");
+                   ? c
+                   : UIManager.getColor("InternalFrame.activeTitleBackground");
         }
 
         /**
@@ -314,10 +323,10 @@ public class ApplicationView extends JFrameView {
                 return;
             }
 
-            Color control = new Color(178, 213, 255);
-            int width = getWidth();
-            int height = getHeight();
-            Graphics2D g2 = (Graphics2D) g;
+            Color      control = new Color(178, 213, 255);
+            int        width   = getWidth();
+            int        height  = getHeight();
+            Graphics2D g2      = (Graphics2D) g;
 
             g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -336,13 +345,13 @@ public class ApplicationView extends JFrameView {
         }
     }
 
-    public static class SummaryView extends JFrameView {
 
+    public static class SummaryView extends JFrameView {
         public static final String ID_IMPORT_DIRECTORY_LABEL = "importDir";         // javax.swing.JTable
-        public static final String ID_INPUTSOURCE_URL_LABEL = "videoSourceURL";    // javax.swing.JLabel
-        public static final String ID_MASTER_BROWSE_BUTTON = "browseMaster";      // javax.swing.JButton
-        public static final String ID_MPEG_BROWSE_BUTTON = "browseMpeg";        // javax.swing.JButton
-        public static final String ID_MPEG_FILE_LABEL = "mpegFile";          // javax.swing.JLabel
+        public static final String ID_INPUTSOURCE_URL_LABEL  = "videoSourceURL";    // javax.swing.JLabel
+        public static final String ID_MASTER_BROWSE_BUTTON   = "browseMaster";      // javax.swing.JButton
+        public static final String ID_MPEG_BROWSE_BUTTON     = "browseMpeg";        // javax.swing.JButton
+        public static final String ID_MPEG_FILE_LABEL        = "mpegFile";          // javax.swing.JLabel
 
         /*
          *  Component names in the EditorSummary.xml form
@@ -350,10 +359,12 @@ public class ApplicationView extends JFrameView {
          * should be modified here too
          */
         public static final String ID_XML_FILE_LABEL = "xmlFile";    // javax.swing.JLabel
+
         /**
          *
          */
         private static final long serialVersionUID = 1L;
+
         /** frequently accessed components */
         JLabel mpegFileLabel, xmlFileLabel, inputSourceUrlLabel, importDirectoryLabel;
 
@@ -368,9 +379,9 @@ public class ApplicationView extends JFrameView {
 
             getForm().getButton(ID_MPEG_BROWSE_BUTTON).addActionListener(l);
             getForm().getButton(ID_MASTER_BROWSE_BUTTON).addActionListener(l);
-            mpegFileLabel = getForm().getLabel(ID_MPEG_FILE_LABEL);
-            xmlFileLabel = getForm().getLabel(ID_XML_FILE_LABEL);
-            inputSourceUrlLabel = getForm().getLabel(ID_INPUTSOURCE_URL_LABEL);
+            mpegFileLabel        = getForm().getLabel(ID_MPEG_FILE_LABEL);
+            xmlFileLabel         = getForm().getLabel(ID_XML_FILE_LABEL);
+            inputSourceUrlLabel  = getForm().getLabel(ID_INPUTSOURCE_URL_LABEL);
             importDirectoryLabel = getForm().getLabel(ID_IMPORT_DIRECTORY_LABEL);
         }
 
@@ -396,6 +407,7 @@ public class ApplicationView extends JFrameView {
             if (mpegFileLabel != null) {
                 mpegFileLabel.addMouseListener(l);
             }
+
             if (inputSourceUrlLabel != null) {
                 inputSourceUrlLabel.addMouseListener(l);
             }
@@ -409,10 +421,10 @@ public class ApplicationView extends JFrameView {
          *  Otherwise, if files are in different directories, displays the full path names
          */
         private void runDisplayLogic() {
-            SummaryModel e = ((ApplicationModel) getModel()).getSummaryModel();
-            File xml = e.getXmlFile();
-            URL mpeg = e.getMpegUrl();
-            URL inputsource = e.getInputSourceURL();
+            SummaryModel e           = ((ApplicationModel) getModel()).getSummaryModel();
+            File         xml         = e.getXmlFile();
+            URL          mpeg        = e.getMpegUrl();
+            URL          inputsource = e.getInputSourceURL();
 
             // If the xml is defined then show all related files/directories
             // relative to it
@@ -429,14 +441,14 @@ public class ApplicationView extends JFrameView {
                     if (URLUtils.isFile(mpeg.toString())) {
                         File f = new File(mpeg.toString());
 
-                        mpegFileLabel.setText(new String("<html><a href>" + f.getName() + "</a></html>"));
+                        mpegFileLabel.setText("<html><a href>" + f.getName() + "</a></html>");
                     } else {
 
                         // This is a URL. Since it can be long, so only display the name
                         // not the fullpath
                         File f = new File(mpeg.getPath());
 
-                        mpegFileLabel.setText(new String("<html><a href>" + f.getName() + "</a></html>"));
+                        mpegFileLabel.setText("<html><a href>" + f.getName() + "</a></html>");
                     }
                 } else {
                     mpegFileLabel.setText("");
@@ -446,7 +458,7 @@ public class ApplicationView extends JFrameView {
                     if (URLUtils.isFile(inputsource.toString())) {
                         File f = new File(inputsource.toString());
 
-                        inputSourceUrlLabel.setText(new String("<html><a href>" + f.getName() + "</a></html>"));
+                        inputSourceUrlLabel.setText("<html><a href>" + f.getName() + "</a></html>");
                     } else {
 
                         /**
@@ -456,7 +468,7 @@ public class ApplicationView extends JFrameView {
                          */
                         File f = new File(inputsource.getPath());
 
-                        inputSourceUrlLabel.setText(new String("<html><a href>" + f.getName() + "</a></html>"));
+                        inputSourceUrlLabel.setText("<html><a href>" + f.getName() + "</a></html>");
                     }
                 } else {
                     inputSourceUrlLabel.setText("");
@@ -470,13 +482,13 @@ public class ApplicationView extends JFrameView {
                 xmlFileLabel.setText("-");
 
                 if (mpeg != null) {
-                    mpegFileLabel.setText(new String("<html><a href>" + mpeg.toString() + "</a></html>"));
+                    mpegFileLabel.setText("<html><a href>" + mpeg.toString() + "</a></html>");
                 } else {
                     mpegFileLabel.setText("-");
                 }
 
                 if (inputsource != null) {
-                    inputSourceUrlLabel.setText(new String("<html><a href>" + inputsource.toString() + "</a></html>"));
+                    inputSourceUrlLabel.setText("<html><a href>" + inputsource.toString() + "</a></html>");
                 } else {
                     inputSourceUrlLabel.setText("-");
                 }

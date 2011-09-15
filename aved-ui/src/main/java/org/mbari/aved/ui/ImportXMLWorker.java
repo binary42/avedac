@@ -1,23 +1,33 @@
 /*
  * @(#)ImportXMLWorker.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import aved.model.EventDataStream;
 import aved.model.EventObject;
 import aved.model.FrameEventSet;
@@ -26,6 +36,7 @@ import aved.model.xml.Mapper;
 
 import org.jdesktop.swingworker.SwingWorker;
 
+import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.message.NonModalMessageDialog;
 import org.mbari.aved.ui.model.EventObjectContainer;
 import org.mbari.aved.ui.model.SummaryModel;
@@ -60,24 +71,31 @@ import javax.swing.JFrame;
  * slow for even small XML files, so put this in worker thread to not bog
  * down the UI
  */
-class ImportXMLWorker extends SwingWorker {
+public class ImportXMLWorker extends SwingWorker {
 
-    /** Frequently accessed busy and wait cursors */
-    public final static Cursor busyCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
-    public final static Cursor defaultCursor = Cursor.getDefaultCursor();
+
+    /** Maximum frame any event found in. Used for bounding transcoding range */
+    private Integer maxEventFrame = 0;
+
+    /** Flag to indicate whether to display progress or not */
+    private boolean displayProgress = true;
+
     /**
      * Helper member to send message to editor controller
      *
      */
-    private ApplicationController controller;
+    private AbstractController controller;
+
     /**
      * Handle to data stream mapped to the current editor. This is reset
      * every time a new XML schema is loaded
      */
-    private EventDataStream eventDataStream;
+    private EventDataStream  eventDataStream;
+    private ApplicationModel model;
 
     /* Simple display to show import progress */
     ProgressDisplay progressDisplay;
+
     /** XML file to import and controller */
     File xmlFile;
 
@@ -87,11 +105,17 @@ class ImportXMLWorker extends SwingWorker {
      * @param xmlFile
      *            XML file to import/edit
      */
-    public ImportXMLWorker(File xmlFile, ApplicationController controller) {
+    public ImportXMLWorker(File xmlFile, ApplicationModel model, AbstractController controller,
+                           boolean displayProgress) {
         try {
-            this.controller = controller;
-            this.xmlFile = xmlFile;
-            progressDisplay = new ProgressDisplay((SwingWorker) this, "Importing " + xmlFile.getName() + "...");
+            this.model           = model;
+            this.controller      = controller;
+            this.xmlFile         = xmlFile;
+            this.displayProgress = displayProgress;
+
+            if (displayProgress) {
+                progressDisplay = new ProgressDisplay((SwingWorker) this, "Importing " + xmlFile.getName() + "...");
+            }
         } catch (Exception e) {
 
             // TODO Add error message box here
@@ -111,44 +135,61 @@ class ImportXMLWorker extends SwingWorker {
         progressDisplay = null;
     }
 
+    /**
+     * Maximum frame any event found in. Used for bounding transcoding range
+     * @return
+     */
+    public int getMaxEventFrame() {
+        return this.maxEventFrame;
+    }
+
     /*
      * Application task. Executed in background thread. This execute the importXML
      * function, which can be slow for large XML files
      */
     @Override
     protected Object doInBackground() throws Exception {
-        progressDisplay.display("Importing " + xmlFile.getName() + " now...");
+        if (displayProgress) {
+            progressDisplay.display("Importing " + xmlFile.getName() + " now...");
+        }
 
         // Initialize progress property.
         setProgress(0);
-        Application.getView().setCursor(busyCursor);
+        Application.getView().setBusyCursor();
 
         // Create event map with 201 objects and 75% loading factor
         // This should be enough to store events collected over a few
         // minutes and will grow when needed
-        HashMap<Long, EventObjectContainer> map = new HashMap<Long, EventObjectContainer>(201, 0.75f);
-        Object object = null;
+        HashMap<Long, EventObjectContainer> map    = new HashMap<Long, EventObjectContainer>(201, 0.75f);
+        Object                              object = null;
 
-        progressDisplay.display("Parsing XML file now");
+        if (displayProgress) {
+            progressDisplay.display("Parsing XML file now");
+        }
 
         // Import the XML file using Brian S. AVED XML parser for AVED DB
         // files
         try {
-            progressDisplay.display("Unmarshalling the XML file...");
+            if (displayProgress) {
+                progressDisplay.display("Unmarshalling the XML file...");
+            }
 
-            URL url = xmlFile.toURL();
+            URL         url         = xmlFile.toURL();
             InputStream inputStream = url.openStream();
 
             object = Mapper.unmarshall(inputStream);
             inputStream.close();
-            progressDisplay.display("Unmarshalling done");
+
+            if (displayProgress) {
+                progressDisplay.display("Unmarshalling done");
+            }
         } catch (Exception e) {
-            Application.getView().setCursor(defaultCursor);
+            Application.getView().setDefaultCursor();
             Logger.getLogger(ImportXMLWorker.class.getName()).log(Level.SEVERE, null, e);
 
-            String message = new String("Error - cannot parse xml file: " + xmlFile.getName() + "\nmessage:"
-                    + e.getMessage());
-            NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) controller.getView(), message);
+            String                message = "Error - cannot parse xml file: " + xmlFile.getName() + "\nmessage:"
+                                            + e.getMessage();
+            NonModalMessageDialog dialog  = new NonModalMessageDialog((JFrame) controller.getView(), message);
 
             dialog.setVisible(true);
 
@@ -158,19 +199,20 @@ class ImportXMLWorker extends SwingWorker {
         // Get handle to data stream
         eventDataStream = (EventDataStream) object;
 
-        SummaryModel model = controller.getModel().getSummaryModel();
-
         // Update the XML file. This must be done before setting the source
-        model.setXmlFile(xmlFile);
+        model.getSummaryModel().setXmlFile(xmlFile);
 
         // Update the data stream in the model
-        model.setEventDataStream(eventDataStream);
+        model.getSummaryModel().setEventDataStream(eventDataStream);
 
         // Update the source metadata if there is one
         SourceMetadata source = null;
 
         source = eventDataStream.getSourceMetadata();
-        progressDisplay.display("Checking for a video source identifier");
+
+        if (displayProgress) {
+            progressDisplay.display("Checking for a video source identifier");
+        }
 
         // If a video source defined check if it contains
         // a file or http protocol string before setting it
@@ -180,10 +222,10 @@ class ImportXMLWorker extends SwingWorker {
             // If this is a true url reference and not a local file
             // just set it
             if (URLUtils.isURL(id)) {
-                model.setInputSourceURL(new URL(id));
+                model.getSummaryModel().setInputSourceURL(new URL(id));
             } else if (URLUtils.isFile(id)) {
-                // otherwise check if a file and convert it to a file URL reference
 
+                // otherwise check if a file and convert it to a file URL reference
                 // Convert to to a file reference
                 File video = new File(id);
 
@@ -191,27 +233,29 @@ class ImportXMLWorker extends SwingWorker {
                 // assume it is in the same path as the XML,
                 // and set its root to the same path as the XML
                 if (video.getParent() == null) {
-                    String v = new String("file:" + xmlFile.getParent() + "/" + video.getName());
+                    String v = "file:" + xmlFile.getParent() + "/" + video.getName();
 
-                    model.setInputSourceURL(new URL(v));
+                    model.getSummaryModel().setInputSourceURL(new URL(v));
                 } else {
-                    model.setInputSourceURL(new URL(new String("file:" + video.toString())));
+                    model.getSummaryModel().setInputSourceURL(new URL("file:" + video.toString()));
                 }
             }
         } else {
-            model.setInputSourceURL(null);
+            model.getSummaryModel().setInputSourceURL(null);
         }
 
-        long key = 0;
+        long                 key   = 0;
         EventObjectContainer value = null;
 
-        progressDisplay.display("Extracting event objects...");
+        if (displayProgress) {
+            progressDisplay.display("Extracting event objects...");
+        }
 
         // Walk through all FrameEventSets and extract event objects
         SortedSet<FrameEventSet> frames = eventDataStream.getFrameEventSets();
-        int max = ((frames.size() > 0)
-                ? frames.size()
-                : 1);    // avoid divide
+        int                      max    = ((frames.size() > 0)
+                                           ? frames.size()
+                                           : 1);    // avoid divide
 
         // by zero
         // exception
@@ -235,7 +279,7 @@ class ImportXMLWorker extends SwingWorker {
                 // If key is not stored in this map, add a new object of
                 // type Event to the map
                 if (!map.containsKey(key)) {
-                    value = new EventObjectContainer(event, controller.getModel());
+                    value = new EventObjectContainer(event, model);
                     map.put(key, value);
                 } else {    // Otherwise, add this EventObject to the
 
@@ -244,26 +288,35 @@ class ImportXMLWorker extends SwingWorker {
                     value.add(event);
                 }
             }
+
+            if (!eventObjs.isEmpty()) {
+                maxEventFrame = f.getFrameNumber();
+            }
         }
 
         // Sort the map by key using the event ID
         LinkedList<Long> keys = new LinkedList<Long>(map.keySet());    // Get the keys from
 
         // the map as a list
-        progressDisplay.display("Sorting events by increasing ID order");
+        if (displayProgress) {
+            progressDisplay.display("Sorting events by increasing ID order");
+        }
+
         Collections.sort(keys);
 
         // Create a collection of AVEDEvents based on the sorted event keys
-        progressDisplay.display("Creating a collection based on event keys");
+        if (displayProgress) {
+            progressDisplay.display("Creating a collection based on event keys");
+        }
 
         // Sleep for a second so the user can see this last message since
         // the sorting is very fast
         Thread.sleep(1000);
 
         LinkedList<EventObjectContainer> entries = new LinkedList<EventObjectContainer>();
-        Iterator<Long> i = keys.iterator();
+        Iterator<Long>                   i       = keys.iterator();
 
-        max = keys.size();
+        max   = keys.size();
         count = 0;
 
         while (i.hasNext()) {
@@ -276,14 +329,12 @@ class ImportXMLWorker extends SwingWorker {
             entries.add(e);
         }
 
-        ApplicationModel mainModel = controller.getModel();
-
         // Set the progress bar to 100% and reset cursor
         setProgress(100);
 
         // Add the sorted collection to the list model
-        mainModel.add(entries);
-        Application.getView().setCursor(defaultCursor);
+        model.add(entries);
+        Application.getView().setDefaultCursor();
 
         return null;
     }

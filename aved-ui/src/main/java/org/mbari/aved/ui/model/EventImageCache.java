@@ -1,23 +1,33 @@
 /*
  * @(#)EventImageCache.java
  * 
- * Copyright 2010 MBARI
+ * Copyright 2011 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui.model;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import aved.model.BoundingBox;
 import aved.model.EventObject;
 
@@ -59,19 +69,20 @@ import javax.media.jai.operator.ScaleDescriptor;
  * SwingWorker class
  */
 public class EventImageCache {
-
     int cacheNextIndex = 0;
+
     /**
      * Used to kill the SwingWorker
      */
-    boolean iKeepRunning = true;
+    boolean                           iKeepRunning       = true;
     private List<EventImageCacheData> imageCacheDataList = null;
-    int[] indexsToCache = null;
-    int loadingCacheIndex = 0;
-    int loadingIndex = -1;
-    final String syncArrays = "syncArrays";
-    private ImageLoader thread = null;
-    int totalLoaded = 0;
+    int[]                             indexsToCache      = null;
+    int                               loadingCacheIndex  = 0;
+    int                               loadingIndex       = -1;
+    final String                      syncArrays         = "syncArrays";
+    private ImageLoader               thread             = null;
+    int                               totalLoaded        = 0;
+
     /**
      * Event List model for retrieving event images
      * to populate the cache with.
@@ -98,16 +109,16 @@ public class EventImageCache {
                 thread.cancel(true);
             }
 
-            cacheNextIndex = 0;
+            cacheNextIndex    = 0;
             loadingCacheIndex = 0;
-            totalLoaded = 0;
+            totalLoaded       = 0;
 
             if (imageCacheDataList != null) {
                 imageCacheDataList.clear();
                 imageCacheDataList = null;
             }
 
-            loadingIndex = -1;
+            loadingIndex  = -1;
             indexsToCache = null;
         }
     }
@@ -123,7 +134,7 @@ public class EventImageCache {
 
                 // System.out.println("Reloading image cache: " + eventListModel.getSize());
                 this.eventListModel = eventListModel;
-                indexsToCache = new int[eventListModel.getSize()];
+                indexsToCache       = new int[eventListModel.getSize()];
 
                 int size = eventListModel.getSize();
 
@@ -131,8 +142,8 @@ public class EventImageCache {
                     imageCacheDataList = new ArrayList<EventImageCacheData>();
 
                     for (int i = 0; i < size; i++) {
-                        EventObjectContainer c = (EventObjectContainer) this.eventListModel.getElementAt(i);
-                        EventImageCacheData data = new EventImageCacheData(c);
+                        EventObjectContainer c    = (EventObjectContainer) this.eventListModel.getElementAt(i);
+                        EventImageCacheData  data = new EventImageCacheData(c);
 
                         // Add the new data to my cache
                         imageCacheDataList.add(data);
@@ -141,7 +152,7 @@ public class EventImageCache {
 
                 update();
                 iKeepRunning = true;
-                thread = new ImageLoader(this, eventListModel);
+                thread       = new ImageLoader(this, eventListModel);
                 thread.execute();
             } else {
                 System.out.println("Image cache empty - no images to load");
@@ -182,7 +193,7 @@ public class EventImageCache {
     public void removeIndexes(ArrayList<Integer> l) {
         iKeepRunning = false;
 
-        Iterator<Integer> i = l.iterator();
+        Iterator<Integer>              i          = l.iterator();
         ArrayList<EventImageCacheData> collection = new ArrayList<EventImageCacheData>(l.size());
 
         synchronized (syncArrays) {
@@ -202,7 +213,7 @@ public class EventImageCache {
         iKeepRunning = true;
         update();
         System.out.println("BufferedImageCache removed new size:" + imageCacheDataList.size() + " collection size:"
-                + l.size());
+                           + l.size());
     }
 
     void update() {
@@ -276,11 +287,11 @@ public class EventImageCache {
                 pb.addSource(original);
 
                 // Calculate the cropping coordinates from the bounding box
-                BoundingBox b = bestEvtObj.getBoundingBox();
-                int xorigin = b.getLowerLeftX();
-                int yorigin = b.getUpperRightY();
-                int width = b.getUpperRightX() - b.getLowerLeftX();
-                int height = b.getLowerLeftY() - b.getUpperRightY();
+                BoundingBox b       = bestEvtObj.getBoundingBox();
+                int         xorigin = b.getLowerLeftX();
+                int         yorigin = b.getUpperRightY();
+                int         width   = b.getUpperRightX() - b.getLowerLeftX();
+                int         height  = b.getLowerLeftY() - b.getUpperRightY();
 
                 // If the clip bounds are beyond the original image size, adjust
                 if (xorigin + width > original.getWidth()) {
@@ -289,6 +300,15 @@ public class EventImageCache {
 
                 if (yorigin + height > original.getHeight()) {
                     height = original.getHeight() - yorigin;
+                }
+
+                // If width or height is zero, adjust to 1 to avoid cropping error
+                if (width == 0) {
+                    width = 1;
+                }
+
+                if (height == 0) {
+                    height = 1;
                 }
 
                 pb.add((float) xorigin);    // x origin
@@ -312,7 +332,7 @@ public class EventImageCache {
                 float yScale = 0.f;
                 float xScale = 0.f;
 
-                width = output.getWidth();
+                width  = output.getWidth();
                 height = output.getHeight();
 
                 if (width > height) {
@@ -332,7 +352,7 @@ public class EventImageCache {
 
                 // hint with border extender
                 RenderingHints hint = new RenderingHints(JAI.KEY_BORDER_EXTENDER,
-                        BorderExtender.createInstance(BorderExtender.BORDER_COPY));
+                                          BorderExtender.createInstance(BorderExtender.BORDER_COPY));
 
                 // scale
                 PlanarImage scaledImg = JAI.create("Scale", paramScale, hint);
@@ -344,15 +364,14 @@ public class EventImageCache {
 
                 if ((outputFile != null)
                         && (JAI.create("filestore", scaledImg.getAsBufferedImage(), outputFile.toString(), "jpeg",
-                        param) != null)) {
+                                       param) != null)) {
                     output.dispose();
 
                     return true;
                 }
             } catch (InterruptedException ex) {
                 return false;
-            } catch (IllegalArgumentException e) {
-            }
+            } catch (IllegalArgumentException e) {}
         }
 
         return false;
@@ -399,11 +418,11 @@ public class EventImageCache {
                 pb.addSource(original);
 
                 // Calculate the cropping coordinates from the bounding box
-                BoundingBox b = bestEvtObj.getBoundingBox();
-                int xorigin = b.getLowerLeftX();
-                int yorigin = b.getUpperRightY();
-                int width = b.getUpperRightX() - b.getLowerLeftX();
-                int height = b.getLowerLeftY() - b.getUpperRightY();
+                BoundingBox b       = bestEvtObj.getBoundingBox();
+                int         xorigin = b.getLowerLeftX();
+                int         yorigin = b.getUpperRightY();
+                int         width   = b.getUpperRightX() - b.getLowerLeftX();
+                int         height  = b.getLowerLeftY() - b.getUpperRightY();
 
                 // If the clip bounds are beyond the original image size, adjust
                 if (xorigin + width > original.getWidth()) {
@@ -414,6 +433,15 @@ public class EventImageCache {
                     height = original.getHeight() - yorigin;
                 }
 
+                // If width or height is zero, adjust to 1 to avoid cropping error
+                if (width == 0) {
+                    width = 1;
+                }
+
+                if (height == 0) {
+                    height = 1;
+                }
+                
                 pb.add((float) xorigin);    // x origin
                 pb.add((float) yorigin);    // y origin
                 pb.add((float) width);      // width
@@ -438,15 +466,14 @@ public class EventImageCache {
 
                 if ((outputFile != null)
                         && (JAI.create("filestore", output.getAsBufferedImage(), outputFile.toString(), "jpeg", param)
-                        != null)) {
+                            != null)) {
                     output.dispose();
 
                     return true;
                 }
             } catch (InterruptedException ex) {
                 Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IllegalArgumentException e) {
-            }
+            } catch (IllegalArgumentException e) {}
         }
 
         return false;
@@ -479,8 +506,8 @@ public class EventImageCache {
                 data = imageCacheDataList.get(index);
 
                 if (data != null) {
-                    EventObjectContainer ec = data.getEventObjectContainer();
-                    int bestFrame = ec.getBestEventFrame();
+                    EventObjectContainer ec        = data.getEventObjectContainer();
+                    int                  bestFrame = ec.getBestEventFrame();
 
                     data.initialize(bestFrame);
 
@@ -489,8 +516,8 @@ public class EventImageCache {
 
                             // Load the image that corresponds to the best frame
                             PlanarImage original = JAI.create("fileload", data.getImageSource().toString());
-                            int mean = meanValue(original.getAsBufferedImage());
-                            int length = ec.getEndFrame() - ec.getStartFrame();
+                            int         mean     = meanValue(original.getAsBufferedImage());
+                            int         length   = ec.getEndFrame() - ec.getStartFrame();
 
                             /*
                              * System.out.println("Mean: " + mean +
@@ -498,7 +525,7 @@ public class EventImageCache {
                              * " bestFrame: " + bestFrame);
                              */
 
-                            // If the mean is nearly black, then assume this is a bogus 
+                            // If the mean is nearly black, then assume this is a bogus
                             // image and select the next best frame.
                             // This may not be true for all cases, but this is true
                             // for the still-images processed in Station M when
@@ -515,7 +542,7 @@ public class EventImageCache {
                                     ec.setBestImageFrame(nextBestFrame);
                                     data.initialize(nextBestFrame);
                                     System.out.println("Found alternative best frame" + " for ObjectID: "
-                                            + ec.getObjectId() + " bestFrame: " + nextBestFrame);
+                                                       + ec.getObjectId() + " bestFrame: " + nextBestFrame);
                                     ec.setIsBlackChecked();
                                     ec.setEventImageCacheData(data);
 
@@ -553,7 +580,7 @@ public class EventImageCache {
      */
     public static int meanValue(BufferedImage image) {
         Raster raster = image.getRaster();
-        double sum = 0.0;
+        double sum    = 0.0;
 
         for (int y = 0; y < image.getHeight(); ++y) {
             for (int x = 0; x < image.getWidth(); ++x) {
@@ -606,7 +633,7 @@ public class EventImageCache {
 
         // If loaded all the images then end the SwingWorker
         if (totalLoaded >= indexsToCache.length) {
-            iKeepRunning = false;
+            iKeepRunning   = false;
             cacheNextIndex = 0;
         }
 
@@ -614,7 +641,7 @@ public class EventImageCache {
         // then reset the next index back to zero. This will continue
         // this threads attempts to load images.
         if ((cacheNextIndex >= indexsToCache.length) && (totalLoaded < indexsToCache.length)) {
-            iKeepRunning = true;
+            iKeepRunning   = true;
             cacheNextIndex = 0;
         }
 
@@ -639,14 +666,14 @@ public class EventImageCache {
      * to the View classes in the SwingWorker thread
      */
     private static class ImageLoadStats {
-
         private final int numloaded, total;
 
         ImageLoadStats(int numloaded, int total) {
             this.numloaded = numloaded;
-            this.total = total;
+            this.total     = total;
         }
     }
+
 
     /**
      * Worker to load the images into the EventImageCache
@@ -654,9 +681,8 @@ public class EventImageCache {
      *
      */
     private class ImageLoader extends SwingWorker<Void, ImageLoadStats> {
-
         EventImageCache cache;
-        EventListModel model;
+        EventListModel  model;
 
         public ImageLoader(EventImageCache cache, EventListModel model) throws Exception {
             if ((cache != null) && (cache.size() > 0)) {
@@ -692,13 +718,12 @@ public class EventImageCache {
              *  Runnable implementation
              */
             if (cache != null) {
-                int ttl = cache.size();
-                int ttllast = 0;
+                int ttl        = cache.size();
+                int ttllast    = 0;
                 int refreshcnt = 7;
 
                 while (cache.iKeepRunning) {
                     try {
-
                         int totalLoaded = cache.loadNextIndex();
 
                         if ((totalLoaded - ttllast > refreshcnt) || (totalLoaded == ttl)) {
@@ -707,14 +732,15 @@ public class EventImageCache {
                             System.out.println("publishing  totalLoaded: " + totalLoaded);
                         }
 
-                        if (totalLoaded == ttl)
+                        if (totalLoaded == ttl) {
                             return null;
+                        }
                     } catch (Exception e) {
                         continue;
                     }
                 }
             }
- 
+
             return null;
         }
     }

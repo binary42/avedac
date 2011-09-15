@@ -40,6 +40,7 @@
                   only works on Linux or MacOSX. Windows is not supported.-->
                         <groupId>org.freehep</groupId>
                         <artifactId>freehep-nar-plugin</artifactId>
+                        <version>2.0-alpha-11-SNAPSHOT</version>
                         <extensions>true</extensions>
                         <configuration>
                             <classifiers>
@@ -104,7 +105,7 @@
                             because the format isn't supported in the mcc compiler.
                             Adding versioning is handled in the install phases -->
                                     <arguments>
-                                        <cmdlineArguments>${matlabRoot}/bin/mcc -v -W lib:libaved${artifactId} -T link:lib -I ${basedir}/src/main/native/matlab -I ${basedir}/src/main/native/matlab/netlab -g run_tests_ui collect_ui collect_tests collect_class assign_class test_class train_classes_ui
+                                        <cmdlineArguments>${matlabRoot}/bin/mcc -v -W lib:libaved${project.artifactId} -T link:lib -I ${basedir}/src/main/native/matlab -I ${basedir}/src/main/native/matlab/netlab -g run_tests_ui collect_ui collect_tests collect_class assign_class test_class train_classes_ui
                                         </cmdlineArguments>
                                     </arguments>
                                 </configuration>
@@ -125,7 +126,7 @@
                                     <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                                     <executable>${basedir}/src/main/scripts/statcheck</executable>
                                     <arguments>
-                                        <cmdlineArguments>-i libaved${artifactId}.h -o ${basedir}/src/main/include/libavedsharedlib.h -d ${basedir}/src/main/include
+                                        <cmdlineArguments>-i libaved${project.artifactId}.h -o ${basedir}/src/main/include/libavedsharedlib.h -d ${basedir}/src/main/include
                                         </cmdlineArguments>
                                     </arguments>
                                 </configuration>
@@ -141,7 +142,7 @@
                                     <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                                     <executable>${basedir}/src/main/scripts/execute</executable>
                                     <arguments>
-                                        <cmdlineArguments>cp libaved${artifactId}.${sharedExtension} lib${artifactId}-${version}.${sharedExtension}</cmdlineArguments>
+                                        <cmdlineArguments>cp libaved${project.artifactId}.${sharedExtension} lib${project.artifactId}-${project.version}.${sharedExtension}</cmdlineArguments>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -179,6 +180,7 @@
                         <groupId>org.freehep</groupId>
                         <artifactId>freehep-nar-plugin</artifactId>
                         <extensions>true</extensions>
+                        <version>2.0-alpha-2-SNAPSHOT</version>
                         <configuration>
                             <classifiers>
                                 <classifier>amd64-Linux-g++</classifier>
@@ -241,7 +243,7 @@
                             because the format isn't supported in the mcc compiler.
                             Adding versioning is handled in the install phases -->
                                     <arguments>
-                                        <cmdlineArguments>${matlabRoot}/bin/mcc -v -W lib:libaved${artifactId} -T link:lib -I ${basedir}/src/main/native/matlab -I ${basedir}/src/main/native/matlab/netlab -g run_tests_ui collect_ui collect_tests collect_class assign_class test_class train_classes_ui
+                                        <cmdlineArguments>${matlabRoot}/bin/mcc -v -W lib:libaved${project.artifactId} -T link:lib -I ${basedir}/src/main/native/matlab -I ${basedir}/src/main/native/matlab/netlab -g run_tests_ui collect_ui collect_tests collect_class assign_class test_class train_classes_ui
                                         </cmdlineArguments>
                                     </arguments>
                                 </configuration>
@@ -262,7 +264,7 @@
                                     <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                                     <executable>${basedir}/src/main/scripts/statcheck</executable>
                                     <arguments>
-                                        <cmdlineArguments>-i libaved${artifactId}.h -o ${basedir}/src/main/include/libavedsharedlib.h -d ${basedir}/src/main/include
+                                        <cmdlineArguments>-i libaved${project.artifactId}.h -o ${basedir}/src/main/include/libavedsharedlib.h -d ${basedir}/src/main/include
                                         </cmdlineArguments>
                                     </arguments>
                                 </configuration>
@@ -278,7 +280,7 @@
                                     <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                                     <executable>${basedir}/src/main/scripts/execute</executable>
                                     <arguments>
-                                        <cmdlineArguments>cp libaved${artifactId}.${sharedExtension} lib${artifactId}-${version}.${sharedExtension}</cmdlineArguments>
+                                        <cmdlineArguments>cp libaved${project.artifactId}.${sharedExtension} lib${project.artifactId}-${project.version}.${sharedExtension}</cmdlineArguments>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -314,6 +316,7 @@
                   only works on Linux or MacOSX. Windows is not supported.-->
                         <groupId>org.freehep</groupId>
                         <artifactId>freehep-nar-plugin</artifactId>
+                        <version>2.0-alpha-11-SNAPSHOT</version>
                         <extensions>true</extensions>
                         <configuration>
                             <classifiers>
@@ -378,7 +381,7 @@
                             because the format isn't supported in the mcc compiler.
                             Adding versioning is handled in the install phases -->
                                     <arguments>
-                                        <cmdlineArguments>${matlabRoot}/bin/mcc -maci -v -W lib:libaved${artifactId} -T link:lib -I ${basedir}/src/main/native/matlab -I ${basedir}/src/main/native/matlab/netlab -g run_tests_ui collect_ui collect_tests collect_class assign_class test_class train_classes_ui
+                                        <cmdlineArguments>${matlabRoot}/bin/mcc -maci -v -W lib:libaved${project.artifactId} -T link:lib -I ${basedir}/src/main/native/matlab -I ${basedir}/src/main/native/matlab/netlab -g run_tests_ui collect_ui collect_tests collect_class assign_class test_class train_classes_ui
                                         </cmdlineArguments>
                                     </arguments>
                                 </configuration>
@@ -399,7 +402,7 @@
                                     <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                                     <executable>${basedir}/src/main/scripts/statcheck</executable>
                                     <arguments>
-                                        <cmdlineArguments>-i libaved${artifactId}.h -o ${basedir}/src/main/include/libavedsharedlib.h -d ${basedir}/src/main/include
+                                        <cmdlineArguments>-i libaved${project.artifactId}.h -o ${basedir}/src/main/include/libavedsharedlib.h -d ${basedir}/src/main/include
                                         </cmdlineArguments>
                                     </arguments>
                                 </configuration>
@@ -415,7 +418,7 @@
                                     <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                                     <executable>${basedir}/src/main/scripts/execute</executable>
                                     <arguments>
-                                        <cmdlineArguments>cp libaved${artifactId}.${sharedExtension} lib${artifactId}-${version}.${sharedExtension}</cmdlineArguments>
+                                        <cmdlineArguments>cp libaved${project.artifactId}.${sharedExtension} lib${project.artifactId}-${project.version}.${sharedExtension}</cmdlineArguments>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -451,6 +454,7 @@
                   only works on Linux or MacOSX. Windows is not supported.-->
                         <groupId>org.freehep</groupId>
                         <artifactId>freehep-nar-plugin</artifactId>
+                        <version>2.0-alpha-11-SNAPSHOT</version>
                         <extensions>true</extensions>
                         <configuration>
                             <classifiers>
@@ -533,7 +537,7 @@
                             because the format isn't supported in the mcc compiler.
                             Adding versioning is handled in the install phases -->
                                     <arguments>
-                                        <cmdlineArguments>${matlabRoot}/bin/mcc -cache -maci64 -v -W lib:libaved${artifactId} -T link:lib -I ${basedir}/src/main/native/matlab -I ${basedir}/src/main/native/matlab/netlab -g run_tests_ui collect_ui collect_tests collect_class assign_class test_class train_classes_ui
+                                        <cmdlineArguments>${matlabRoot}/bin/mcc -maci64 -v -W lib:libaved${project.artifactId} -T link:lib -I ${basedir}/src/main/native/matlab -I ${basedir}/src/main/native/matlab/netlab -g run_tests_ui collect_ui collect_tests collect_class assign_class test_class train_classes_ui
                                         </cmdlineArguments>
                                     </arguments>
                                 </configuration>
@@ -554,7 +558,7 @@
                                     <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                                     <executable>${basedir}/src/main/scripts/statcheck</executable>
                                     <arguments>
-                                        <cmdlineArguments>-i libaved${artifactId}.h -o ${basedir}/src/main/include/libavedsharedlib.h -d ${basedir}/src/main/include
+                                        <cmdlineArguments>-i libaved${project.artifactId}.h -o ${basedir}/src/main/include/libavedsharedlib.h -d ${basedir}/src/main/include
                                         </cmdlineArguments>
                                     </arguments>
                                 </configuration>
@@ -570,7 +574,7 @@
                                     <workingDirectory>${basedir}/target/${narLibDir}</workingDirectory>
                                     <executable>${basedir}/src/main/scripts/execute</executable>
                                     <arguments>
-                                        <cmdlineArguments>cp libaved${artifactId}.${sharedExtension} lib${artifactId}-${version}.${sharedExtension}</cmdlineArguments>
+                                        <cmdlineArguments>cp libaved${project.artifactId}.${sharedExtension} lib${project.artifactId}-${project.version}.${sharedExtension}</cmdlineArguments>
                                     </arguments>
                                 </configuration>
                             </execution>

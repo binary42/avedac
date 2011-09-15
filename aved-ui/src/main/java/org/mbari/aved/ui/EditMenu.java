@@ -1,19 +1,25 @@
 /*
  * @(#)EditMenu.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 
@@ -22,7 +28,9 @@ package org.mbari.aved.ui;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.mbari.aved.ui.classifier.ConceptTreePanel;
+import com.google.inject.Injector;
+import javax.swing.event.TreeSelectionEvent;
+
 import org.mbari.aved.ui.command.AbstractCommand;
 import org.mbari.aved.ui.command.ClassCommand;
 import org.mbari.aved.ui.command.CombineCommand;
@@ -41,6 +49,14 @@ import org.mbari.aved.ui.player.PlayerManager;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
 import org.mbari.aved.ui.userpreferences.UserPreferencesModel;
 
+import vars.ToolBelt;
+
+import vars.knowledgebase.Concept;
+import vars.knowledgebase.ui.Lookup;
+
+import vars.shared.ui.tree.ConceptTreeNode;
+import vars.shared.ui.tree.ConceptTreePanel;
+
 //~--- JDK imports ------------------------------------------------------------
 
 import java.awt.*;
@@ -57,10 +73,13 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.TreePath;
 
 /**
  * Creates and manages a mainMenu, either as a mainMenu mainMenu
@@ -494,21 +513,24 @@ public class EditMenu extends JFrame {
      * @param listener the listener to attach to the concept tree
      * @param point the point to display the tree
      */
-    private void displayConceptTree(MouseListener listener, Point point) {
+    private void displayConceptTree(TreeSelectionListener listener, Point point) {
         if (conceptTreePanel != null) {
             MouseListener[] listeners = conceptTreePanel.getMouseListeners();
 
             for (int i = 0; i < listeners.length; i++) {
-                conceptTreePanel.removeListener(listeners[i]);
+                conceptTreePanel.getJTree().removeMouseListener(listeners[i]);
             }
 
-            conceptTreePanel.replaceListener(listener);
+            conceptTreePanel.getJTree().addTreeSelectionListener(listener);
         } else {
+            Injector injector = (Injector) Lookup.getGuiceInjectorDispatcher().getValueObject();
+            ToolBelt toolBelt = injector.getInstance(ToolBelt.class);
 
-            conceptTreePanel = new ConceptTreePanel(listener);
+            conceptTreePanel = new ConceptTreePanel(toolBelt.getKnowledgebaseDAOFactory());
+            conceptTreePanel.getJTree().addTreeSelectionListener(listener);
 
             // Only build the conceptTreePanel when the window is opened
-            conceptTreePanel.buildPanel();
+            // conceptTreePanel.buildPanel();
             conceptTreeFrame = new JFrame(ApplicationInfo.getName() + " - " + VARS_KB + " Lookup");
             conceptTreeFrame.setContentPane(conceptTreePanel);
             conceptTreeFrame.setFocusable(true);
@@ -520,8 +542,7 @@ public class EditMenu extends JFrame {
 
         conceptTreeFrame.setSize(400, 600);
         conceptTreeFrame.setVisible(true);
-        conceptTreePanel.setVisible(true);
-        conceptTreePanel.addMouseListener(listener);
+        conceptTreePanel.setVisible(true); 
     }
 
     /**
@@ -589,7 +610,7 @@ public class EditMenu extends JFrame {
             int                  index = sorter.modelIndex(lsm.getMinSelectionIndex());
             EventObjectContainer event = model.getElementAt(index);
 
-            PlayerManager.getInstance().openView(event, mainModel, true);
+            PlayerManager.getInstance().openView(event, mainModel);
         }
     }
 
@@ -702,8 +723,8 @@ public class EditMenu extends JFrame {
                 UserPreferencesModel prefs = UserPreferences.getModel();
 
                 if (prefs.getAskBeforeDelete() == true) {
-                    String question = new String("Are you sure you want to delete" + Execute.getObjectIdDescription()
-                                                 + " ?");
+                    String                question = "Are you sure you want to delete"
+                                                     + Execute.getObjectIdDescription() + " ?";
                     ModalYesNoNeverDialog dialog;
 
                     try {
@@ -741,13 +762,18 @@ public class EditMenu extends JFrame {
                 classNameTextEntryFrame.setLocation(lastInvokerPoint);
                 classNameTextEntryFrame.setVisible(true);
             } else if (source.equals(classNewKbMenuItem)) {
-                MouseAdapter adapter = new MouseAdapter() {
-                    public void mouseClicked(MouseEvent e) {
-                        if ((conceptTreePanel != null) && (e.getClickCount() == 2)) {
-                            String conceptName = conceptTreePanel.getSelectedConceptName();
+                TreeSelectionListener adapter = new TreeSelectionListener() {
 
-                            if (conceptName.length() > 0) {
-                                Execute.run(new ClassCommand(conceptName));
+                    public void valueChanged(TreeSelectionEvent e) {
+                        if ((conceptTreePanel != null)) {
+                            JTree    tree          = conceptTreePanel.getJTree();
+                            TreePath selectionPath = tree.getSelectionPath();
+
+                            if ((selectionPath != null)) {
+                                ConceptTreeNode node    = (ConceptTreeNode) selectionPath.getLastPathComponent();
+                                Concept         concept = (Concept) node.getUserObject();
+
+                                Execute.run(new ClassCommand(concept.getPrimaryConceptName().getName()));
                                 conceptTreeFrame.dispose();
                             }
                         }
@@ -875,15 +901,14 @@ public class EditMenu extends JFrame {
                     }
                 }
 
-                ArrayList<Integer> selections            = Execute.getTranslatedRows();
-                EventListModel     model                 = mainModel.getEventListModel(); 
-                boolean            hasClassName          = false;
-                boolean            hasTag                = false;
-                boolean            hasId                 = false;
+                ArrayList<Integer> selections   = Execute.getTranslatedRows();
+                EventListModel     model        = mainModel.getEventListModel();
+                boolean            hasClassName = false;
+                boolean            hasTag       = false;
+                boolean            hasId        = false;
 
                 if (selections.size() > 0) {
                     Iterator<Integer> i = selections.iterator();
- 
 
                     while (i.hasNext()) {
                         EventObjectContainer obj = model.getElementAt(i.next().intValue());

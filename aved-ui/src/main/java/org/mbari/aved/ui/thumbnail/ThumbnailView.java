@@ -1,23 +1,33 @@
 /*
  * @(#)ThumbnailView.java
  * 
- * Copyright 2010 MBARI
+ * Copyright 2011 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui.thumbnail;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import com.jeta.forms.gui.form.FormAccessor;
 
 import org.mbari.aved.ui.ApplicationModel;
@@ -42,15 +52,16 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 
 public class ThumbnailView extends JFrameView {
-
-    public static final String ID_PANEL = "panel";     // javax.swing.JPanel
+    public static final String ID_PANEL  = "panel";     // javax.swing.JPanel
     public static final String ID_SLIDER = "slider";    // javax.swing.JSlider
+
     /**
      *
      */
     private static final long serialVersionUID = 1L;
+
     // Frequently accessed components
-    private JSlider slider = null;
+    private JSlider        slider         = null;
     private ThumbnailPanel thumbnailPanel = null;
 
     public ThumbnailView(ApplicationModel model, ThumbnailController controller) {
@@ -61,12 +72,12 @@ public class ThumbnailView extends JFrameView {
 
         // Create a new custom panel and get a reference to the slider
         thumbnailPanel = new ThumbnailPanel(this);
-        slider = (JSlider) getForm().getComponentByName(ID_SLIDER);
+        slider         = (JSlider) getForm().getComponentByName(ID_SLIDER);
         slider.setFocusable(true);
 
         // Replace the panel in the form with the custom panel
-        FormAccessor a = getForm().getFormAccessor();
-        JPanel panel = getForm().getPanel(ID_PANEL);
+        FormAccessor a     = getForm().getFormAccessor();
+        JPanel       panel = getForm().getPanel(ID_PANEL);
 
         a.replaceBean(panel, thumbnailPanel);
     }
@@ -146,12 +157,12 @@ public class ThumbnailView extends JFrameView {
         Hashtable<Integer, JComponent> table = new Hashtable<Integer, JComponent>();
 
         for (int i = 0; i < (count - majorTick); i += majorTick) {
-            String a = new String(Integer.toString(i + 1));
+            String a = Integer.toString(i + 1);
 
             table.put(new Integer(i), new JLabel(a));
         }
 
-        table.put(new Integer(count), new JLabel(new String(Integer.toString(count + 1))));
+        table.put(new Integer(count), new JLabel(Integer.toString(count + 1)));
         slider.setLabelTable(table);
         slider.setPaintLabels(true);
 
@@ -178,64 +189,64 @@ public class ThumbnailView extends JFrameView {
             EventListModel.EventListModelEvent e = (EventListModel.EventListModelEvent) event;
 
             switch (e.getID()) {
-                case EventListModel.EventListModelEvent.LIST_CLEARED:
-                    thumbnailPanel.setWaitCursor(true);
+            case EventListModel.EventListModelEvent.LIST_CLEARED :
+                thumbnailPanel.setWaitCursor(true);
 
-                    // Reset the pictures in the panel
-                    thumbnailPanel.reset();
+                // Reset the pictures in the panel
+                thumbnailPanel.reset();
 
-                    // Reset display
-                    showPageFromScroller(0);
-                    thumbnailPanel.invalidatePicPointer();
-                    thumbnailPanel.setWaitCursor(false);
+                // Reset display
+                showPageFromScroller(0);
+                thumbnailPanel.invalidatePicPointer();
+                thumbnailPanel.setWaitCursor(false);
 
-                    break;
+                break;
 
-                case EventListModel.EventListModelEvent.ONE_ENTRY_REMOVED:
-                    long id = e.getObjectId();
+            case EventListModel.EventListModelEvent.ONE_ENTRY_REMOVED :
+                long id = e.getObjectId();
 
-                    thumbnailPanel.removePicture(id);
+                thumbnailPanel.removePicture(id);
 
-                    // Reset display
-                    showPageFromScroller(0);
+                // Reset display
+                showPageFromScroller(0);
 
-                    break;
+                break;
 
-                case EventListModelEvent.MULTIPLE_ENTRIES_CHANGED:
-                    thumbnailPanel.setWaitCursor(true);
+            case EventListModelEvent.MULTIPLE_ENTRIES_CHANGED :
+                thumbnailPanel.setWaitCursor(true);
 
-                    ArrayList<Long> a = e.getObjectIds();
-                    Iterator<Long> iter = a.iterator();
+                ArrayList<Long> a    = e.getObjectIds();
+                Iterator<Long>  iter = a.iterator();
 
-                    while (iter.hasNext()) {
+                while (iter.hasNext()) {
 
-                        // Reset display to show from the first index removed
-                        thumbnailPanel.removePicture(iter.next());
-                    }
+                    // Reset display to show from the first index removed
+                    thumbnailPanel.removePicture(iter.next());
+                }
 
-                    showPageFromScroller(0);
-                    thumbnailPanel.setWaitCursor(false);
+                showPageFromScroller(0);
+                thumbnailPanel.setWaitCursor(false);
 
-                    break;
+                break;
 
-                case EventListModel.EventListModelEvent.NUM_LOADED_IMAGES_CHANGED:
-                    break;
+            case EventListModel.EventListModelEvent.NUM_LOADED_IMAGES_CHANGED :
+                break;
 
-                case EventListModel.EventListModelEvent.LIST_RELOADED:
+            case EventListModel.EventListModelEvent.LIST_RELOADED :
 
-                    // TODO: test this and delete cursor in panel
-                    this.setCursor(ImageUtils.busyCursor);
+                // TODO: test this and delete cursor in panel
+                this.setCursor(ImageUtils.busyCursor);
 
-                    // thumbnailPanel.setWaitCursor(true);
-                    // Reset the pictures in the panel
-                    thumbnailPanel.reset();
-                    thumbnailPanel.invalidatePicPointer();
+                // thumbnailPanel.setWaitCursor(true);
+                // Reset the pictures in the panel
+                thumbnailPanel.reset();
+                thumbnailPanel.invalidatePicPointer();
 
-                    // Create new pictures based on the current model
-                    thumbnailPanel.createThumbnailPictures(getModel());
-                    setSlider();
+                // Create new pictures based on the current model
+                thumbnailPanel.createThumbnailPictures(getModel());
+                setSlider();
 
-                    break;
+                break;
             }
         }
     }
@@ -268,7 +279,9 @@ public class ThumbnailView extends JFrameView {
     public boolean requestFocus(boolean state) {
         if (state == true) {
             thumbnailPanel.requestFocus(state);
+
             int value = getSlider().getValue();
+
             if (value >= 0) {
                 showPageFromScroller(getSlider().getValue());
             }

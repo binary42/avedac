@@ -1,29 +1,39 @@
 /*
  * @(#)ClassifierController.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import aved.model.EventObject;
-import java.io.FileNotFoundException;
 
 import org.jdesktop.swingworker.SwingWorker;
 
 import org.mbari.aved.classifier.ClassModel;
+import org.mbari.aved.classifier.ClassifierLibraryJNI;
 import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.appframework.ModelEvent;
 import org.mbari.aved.ui.appframework.ModelListener;
@@ -33,18 +43,16 @@ import org.mbari.aved.ui.model.EventListModel;
 import org.mbari.aved.ui.model.EventListModel.EventListModelEvent;
 import org.mbari.aved.ui.model.EventObjectContainer;
 import org.mbari.aved.ui.model.SummaryModel;
-import org.mbari.aved.ui.progress.ProgressDisplay;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
 
 //~--- JDK imports ------------------------------------------------------------
 
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.BufferedReader;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 
 import java.util.ArrayList;
@@ -53,27 +61,39 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.mbari.aved.classifier.ClassifierLibraryJNI;
 
 /**
  *
  * @author dcline
  */
 public class ClassifierController extends AbstractController implements ModelListener {
-
-    private final CreateClass createClass;
-    private final CreateTrainingLibrary createTrainingLib;
-    private final EventListModel eventListModel;
-    private final RunClassifier runClassifier;
-    private final TestClass testClass;
+    private final ClassifierBatchProcess   batchProcess;
+    private final CreateClass              createClass;
+    private final CreateTrainingLibrary    createTrainingLib;
+    private final EventListModel           eventListModel;
     private ClassifierLibraryJNITaskWorker jniQueue;
+    private final RunClassifier            runClassifier;
+    private final TestClass                testClass;
+
+    /**
+     * Default constructor
+     */
+    ClassifierController() {
+        createTrainingLib = null;
+        createClass       = null;
+        testClass         = null;
+        runClassifier     = null;
+        eventListModel    = null;
+        jniQueue          = null;
+        batchProcess      = null;
+    }
 
     public ClassifierController(EventListModel list, SummaryModel summaryModel) throws Exception {
         eventListModel = list;
 
         // Create common model for all controllers/views to use
         ClassifierModel model = new ClassifierModel();
-        ClassifierView view = new ClassifierView(model, this);
+        ClassifierView  view  = new ClassifierView(model, this);
 
         // Need to create the model and view before creating the controllers
         setView(view);
@@ -82,17 +102,19 @@ public class ClassifierController extends AbstractController implements ModelLis
         // Register as listener to the summary and list model
         model.addModelListener(this);
         list.addModelListener(this);
-
         createTrainingLib = new CreateTrainingLibrary(model);
-        createClass = new CreateClass(model, list);
-        testClass = new TestClass(model);
-        runClassifier = new RunClassifier(model, list, summaryModel);
+        createClass       = new CreateClass(model, list);
+        testClass         = new TestClass(model);
+        runClassifier     = new RunClassifier(model);
+        runClassifier.init(eventListModel, summaryModel);
+        batchProcess = new ClassifierBatchProcess(model);
 
         // Replace the views
         view.setTrainingPanel(createTrainingLib.getView().getForm());
         view.setCreateClassPanel(createClass.getView().getForm());
         view.setTestClassPanel(testClass.getView().getForm());
         view.setRunPanel(runClassifier.getView().getForm());
+        view.setBatchRunPanel(batchProcess.getView().getForm());
         view.pack();
 
         try {
@@ -100,28 +122,19 @@ public class ClassifierController extends AbstractController implements ModelLis
             jniQueue.execute();
         } catch (Exception ex) {
             Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+
             throw new Exception(ex.getMessage());
         }
 
         // Initialize the database directory from the user-defined preferences
         File dbDir = UserPreferences.getModel().getClassDatabaseDirectory();
+
         model.setDatabaseRoot(dbDir);
 
         // Initialize the training image directory
         File trainingDir = UserPreferences.getModel().getClassImageDirectory();
-        model.setClassTrainingImageDirectory(trainingDir);
-    }
 
-    /**
-     * Default constructor
-     */
-    ClassifierController() {
-        createTrainingLib = null;
-        createClass = null;
-        testClass = null;
-        runClassifier = null;
-        eventListModel = null;
-        jniQueue = null;
+        model.setClassTrainingImageDirectory(trainingDir);
     }
 
     @Override
@@ -153,16 +166,20 @@ public class ClassifierController extends AbstractController implements ModelLis
          */
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
-                case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED:
-                    try {
-                        LoadModelWorker task = new LoadModelWorker(this.getModel());
-                        this.addQueue(task);
-                    } catch (Exception ex) {
-                        Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    break;
+            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
+                try {
+                    LoadModelWorker task = new LoadModelWorker(this.getModel());
+
+                    this.addQueue(task);
+                } catch (Exception ex) {
+                    Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                break;
             }
-        } /**
+        }
+
+        /**
          * when entries are changed, check if this belongs to a class and whether
          * the user is creating a training classes, and if so add it to the
          * appropriate training class
@@ -171,51 +188,51 @@ public class ClassifierController extends AbstractController implements ModelLis
             EventListModel.EventListModelEvent e = (EventListModel.EventListModelEvent) event;
 
             switch (e.getID()) {
-                case EventListModelEvent.MULTIPLE_ENTRIES_CHANGED:
-                    // Get the list of model indexes that have changes
-                    ArrayList<Integer> a = e.getModelIndexes();
-                    Iterator<Integer> iter = a.iterator();
+            case EventListModelEvent.MULTIPLE_ENTRIES_CHANGED :
 
-                    // Go through each, creating directories if needed and adding
-                    // the images to the model
-                    while (iter.hasNext()) {
-                        File f = UserPreferences.getModel().getClassImageDirectory();
-                        EventObjectContainer eoc = eventListModel.getElementAt(iter.next());
+                // Get the list of model indexes that have changes
+                ArrayList<Integer> a    = e.getModelIndexes();
+                Iterator<Integer>  iter = a.iterator();
 
-                        if ((eoc != null) && (eoc.getClassName().length() > 0)) {
-                            try {
-                                String className = eoc.getClassName();
-                                File dir = new File(f + "/" + className + "//");
+                // Go through each, creating directories if needed and adding
+                // the images to the model
+                while (iter.hasNext()) {
+                    File                 f   = UserPreferences.getModel().getClassImageDirectory();
+                    EventObjectContainer eoc = eventListModel.getElementAt(iter.next());
 
-                                if (!dir.exists()) {
-                                    if (f.canWrite()) {
-                                        dir.mkdir();
-                                    } else {
+                    if ((eoc != null) && (eoc.getClassName().length() > 0)) {
+                        try {
+                            String className = eoc.getClassName();
+                            File   dir       = new File(f + "/" + className + "//");
 
-                                        // TODO: display error message to user here
-                                        return;
-                                    }
+                            if (!dir.exists()) {
+                                if (f.canWrite()) {
+                                    dir.mkdir();
+                                } else {
+
+                                    // TODO: display error message to user here
+                                    return;
                                 }
-
-                                // create a new model with some reasonable defaults
-                                ClassModel newModel = new ClassModel();
-
-                                newModel.setRawImageDirectory(dir);
-                                newModel.setName(className);
-                                newModel.setVarsClassName(eoc.getClassName());
-                                newModel.setDescription(eoc.getClassName());
-
-                                AddClassImageWorker thread = new AddClassImageWorker(newModel, eoc);
-
-                                thread.execute();
-
-                            } catch (Exception ex) {
-                                Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
                             }
+
+                            // create a new model with some reasonable defaults
+                            ClassModel newModel = new ClassModel();
+
+                            newModel.setRawImageDirectory(dir);
+                            newModel.setName(className);
+                            newModel.setVarsClassName(eoc.getClassName());
+                            newModel.setDescription(eoc.getClassName());
+
+                            AddClassImageWorker thread = new AddClassImageWorker(newModel, eoc);
+
+                            thread.execute();
+                        } catch (Exception ex) {
+                            Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-                default:
-                    break;
+                }
+            default :
+                break;
             }
         }
     }
@@ -224,6 +241,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         if (this.jniQueue != null) {
             return jniQueue;
         }
+
         return null;
     }
 
@@ -250,6 +268,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         if (jniQueue != null) {
             return jniQueue.getBufferedReader();
         }
+
         return null;
     }
 
@@ -263,33 +282,33 @@ public class ClassifierController extends AbstractController implements ModelLis
     }
 
     /**
-     * Worker to manager adding cropped-event images to 
+     * Worker to manager adding cropped-event images to
      * class training library.  This occurs in a SwingWorker
-     * in the backbgroun because this can take a while for
-     * very long events. 
+     * in the backbground because this can take a while for
+     * very long events.
      */
     public class AddClassImageWorker extends SwingWorker {
-
-        private final ClassModel classModel;
+        private final ClassModel           classModel;
         private final EventObjectContainer event;
-        //private ProgressDisplay progressDisplay;
 
+        // private ProgressDisplay progressDisplay;
         public AddClassImageWorker(ClassModel classModel, EventObjectContainer event) {
-            this.event = event;
+            this.event      = event;
             this.classModel = classModel;
-            //TODO: add another type of progress display to the main view
-            //to indicate this is working in the background
-            //progressDisplay = new ProgressDisplay(this, "Adding class image" + classModel.getName());
+
+            // TODO: add another type of progress display to the main view
+            // to indicate this is working in the background
+            // progressDisplay = new ProgressDisplay(this, "Adding class image" + classModel.getName());
         }
 
         @Override
         protected Object doInBackground() throws Exception {
-            //progressDisplay.display("Adding class " + classModel.getName() + "...");
 
+            // progressDisplay.display("Adding class " + classModel.getName() + "...");
             boolean addImages = UserPreferences.getModel().getAddTrainingImages();
 
             if (addImages) {
-                File dir = UserPreferences.getModel().getClassImageDirectory();
+                File dir      = UserPreferences.getModel().getClassImageDirectory();
                 File classDir = new File(dir + "/" + classModel.getName());
 
                 // Add this class to the docking image directories
@@ -300,8 +319,8 @@ public class ClassifierController extends AbstractController implements ModelLis
                     // If found a valid frame number
                     if (frameNo >= 0) {
                         try {
-                            int bestFrameNo = frameNo;
-                            EventImageCacheData data = new EventImageCacheData(event);
+                            int                 bestFrameNo = frameNo;
+                            EventImageCacheData data        = new EventImageCacheData(event);
 
                             data.initialize(bestFrameNo);
 
@@ -317,32 +336,28 @@ public class ClassifierController extends AbstractController implements ModelLis
                 }
             }
 
-            //progressDisplay.display("Done !");
-            //progressDisplay.getView().dispose();
-
+            // progressDisplay.display("Done !");
+            // progressDisplay.getView().dispose();
             // Add the model to the classes
-            if (!getModel().checkClassExists(classModel)) {
-                getModel().addClassModel(classModel);
-            }
+            getModel().addClassModel(classModel);
 
             return this;
         }
     }
+
 
     /**
      * A task thread designed to execute JNI functions from a command queue
      * @author dcline
      */
     private class ClassifierLibraryJNITaskWorker extends SwingWorker {
+        private boolean                               exit          = false;
+        private boolean                               isInitialized = false;
+        private final Queue<ClassifierLibraryJNITask> queue         = new LinkedList<ClassifierLibraryJNITask>();
+        private final File                            logFile       = getDefaultMatlabLog();
+        private final ClassifierLibraryJNI            jniLibrary    = new ClassifierLibraryJNI(this);
 
-        private boolean exit = false;
-        private boolean isInitialized = false;
-        private final Queue<ClassifierLibraryJNITask> queue = new LinkedList<ClassifierLibraryJNITask>();
-        private final ClassifierLibraryJNI jniLibrary = new ClassifierLibraryJNI(this);
-        private final File logFile = new File(UserPreferences.getModel().getDefaultScratchDirectory().getAbsolutePath() + "/matlablog.txt");
-
-        ClassifierLibraryJNITaskWorker() throws Exception {
-        }
+        ClassifierLibraryJNITaskWorker() throws Exception {}
 
         @Override
         protected Object doInBackground() throws Exception {
@@ -351,22 +366,39 @@ public class ClassifierController extends AbstractController implements ModelLis
             while (exit == false) {
                 if (queue.isEmpty() == false) {
                     ClassifierLibraryJNITask task = queue.element();
+
                     try {
                         task.run(jniLibrary);
                     } catch (Exception ex) {
                         Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null, ex);
                     }
+
                     queue.remove();
                     getModel().setJniTaskComplete(task.getId());
                 } else {
                     try {
                         Thread.sleep(1000);
-                    } catch (InterruptedException ex) {
-                    }
+                    } catch (InterruptedException ex) {}
                 }
             }
+
             closeLibrary();
+
             return null;
+        }
+
+        /**
+         *
+         *     @return returns log file for the classifier
+         */
+        public File getDefaultMatlabLog() {
+            if (System.getenv("USER") != null) {
+                return new File(UserPreferences.getModel().getDefaultScratchDirectory().getAbsolutePath() + "/"
+                                + System.getenv("USER").toString() + "_" + "matlablog.txt");
+            } else {
+                return new File(UserPreferences.getModel().getDefaultScratchDirectory().getAbsolutePath()
+                                + "/matlablog.txt");
+            }
         }
 
         /**
@@ -380,15 +412,17 @@ public class ClassifierController extends AbstractController implements ModelLis
         /**
          * Cancels a running Matlab method through the JNI layer
          * This sets a kill flag in a file that is read
-         * by the compiled matlab code.  
+         * by the compiled Matlab code.
          * @param task
          */
         private synchronized void cancelTask(ClassifierLibraryJNITask task) {
             Iterator<ClassifierLibraryJNITask> it = queue.iterator();
+
             while (it.hasNext()) {
                 if (it.next().equals(task)) {
                     task.setCancelled();
                     jniLibrary.set_kill(task.getCancel(), 1);
+
                     break;
                 }
             }
@@ -412,16 +446,22 @@ public class ClassifierController extends AbstractController implements ModelLis
          */
         public synchronized BufferedReader getBufferedReader() {
             BufferedReader br = null;
+
             if (logFile.exists() && logFile.canRead()) {
                 FileInputStream fis = null;
+
                 try {
                     fis = new FileInputStream(logFile);
+
                     InputStreamReader isr = new InputStreamReader(fis);
+
                     br = new BufferedReader(isr);
                 } catch (FileNotFoundException ex) {
-                    Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null,
+                                     "ERROR: cannot write to log file " + logFile.getAbsolutePath());
                 }
             }
+
             return br;
         }
 
@@ -430,13 +470,12 @@ public class ClassifierController extends AbstractController implements ModelLis
          * <p> An exception may be thrown if the Matlab log file does not exist,
          * which indicates there is something  wrong with the Matlab library
          * initialization. This is likely caused by an invalid matlab log file
-         * directory 
+         * directory
          *
          * @return a {@link org.mbari.aved.classifier.ClassifierLibraryJNI} singleton
          */
         private synchronized ClassifierLibraryJNI getLibrary() throws Exception {
             if (isInitialized == false) {
-
                 try {
                     String lcOSName = System.getProperty("os.name").toLowerCase();
 
@@ -473,7 +512,6 @@ public class ClassifierController extends AbstractController implements ModelLis
                     jniLibrary.closeLib();
                     isInitialized = false;
                 }
-
             } catch (Exception ex) {
                 Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null, ex);
             }

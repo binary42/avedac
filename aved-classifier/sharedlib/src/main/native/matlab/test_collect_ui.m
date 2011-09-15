@@ -8,28 +8,28 @@
 
 function test_collect_ui(a)
 
-dbroot='/Users/dcline';
-color_space=2;
+dbroot='./DB';   
+color_space=1;
 classname='Flatfish';
-dirct_or_filelist='/Users/dcline/aved/ui/aved-classifier/sharedlibjni/src/test/resources/2526_Training_Classes/flat';
-a='/Users/dcline/Desktop/test';
-create_kill_handle(a);
-collect_ui(a, dirct_or_filelist, dirct_or_filelist, classname, dbroot, color_space, 'Flatfish', 'Test flatfish image class');
+dirct_or_filelist='./trainingclasses/Flatfish';
+handle='./kill_collect';
+create_kill_handle(handle);
+collect_ui(handle, dirct_or_filelist, dirct_or_filelist, classname, dbroot, color_space, classname, 'Test flatfish image class'); 
+    
+classname='Rockfish';
+dirct_or_filelist='./trainingclasses/Rockfish';
+collect_ui(handle, dirct_or_filelist, dirct_or_filelist, classname, dbroot, color_space, classname, 'Test rockfish image class');
 
-%classname='Rockfish';
-%dirct_or_filelist='/Users/dcline/aved/ui/aved-classifier/sharedlibjni/src/test/resources/2526_Training_Classes/rock';
-%collect_ui(a, dirct_or_filelist, classname, dbroot, color_space, 'Rockfish', 'Test rockfish image class');
+classname='Leukethele';
+dirct_or_filelist='./trainingclasses/Leukethele';
+collect_ui(handle, dirct_or_filelist, dirct_or_filelist, classname, dbroot, color_space, classname, 'Test Leukethele');
 
-%classname='Leukethele';
-%dirct_or_filelist='/Users/dcline/aved/ui/aved-classifier/sharedlibjni/src/test/resources/2526_Training_Classes/leuk';
-%collect_ui(dirct_or_filelist, classname, dbroot, color_space);
+classname='Rathbunaster';
+dirct_or_filelist='./trainingclasses/Rathbunaster';
+collect_ui(handle, dirct_or_filelist, dirct_or_filelist, classname, dbroot, color_space, classname, 'Test Rathbunaster');
 
-%classname='Rathbunaster californicus';
-%dirct_or_filelist='/Users/dcline/aved/ui/aved-classifier/sharedlibjni/src/test/resources/2526_Training_Classes/rath';
-%collect_ui(dirct_or_filelist, classname, dbroot, color_space);
-
-%classname='junk';
-%dirct_or_filelist='/Users/dcline/aved/ui/aved-classifier/sharedlibjni/src/test/resources/2526_Training_Classes/junk';
-%collect_ui(dirct_or_filelist, classname, dbroot, color_space);
+classname='Other';
+dirct_or_filelist='./trainingclasses/Other'; 
+collect_ui(handle, dirct_or_filelist, dirct_or_filelist, classname, dbroot, color_space, classname, 'Test Other');
 
 end

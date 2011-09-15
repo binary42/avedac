@@ -31,19 +31,21 @@ function [probtable] = run_tests(trainingdir, testingdir, saveresultsname, metho
 
     %modified - load the results from the class and test directories, then
     %assign variables for class and test names and for indexes
-    classmfiles = find_mfile([trainingdir '/features/class/names'], '*');
+    classmfiles = find_mfile([trainingdir '/features/class/'], '_names_collection_avljNL3_cl_pcsnew');
     if(size(classmfiles,1) == 0)
-      fprintf(1,'Error - no class names in %s', [trainingdir '/features/class/names']);
+      fprintf(1,'Error - no class names in %s', [trainingdir '/features/class']);
       return;
     end
-    load(classmfiles{1}); %if more than one test file, load the first found
+    load(classmfiles{1}); 
+    
+    %if more than one test file, load the first found
     %TODO: change this to load all those found, or give user options to 
     %deselect
     trainclass = filenames(1,:);
 
-    testmfiles = find_mfile([testingdir '/features/tests/names'], '*');
+    testmfiles = find_mfile([testingdir '/features/tests/'], '*_names_*');
     if(size(testmfiles,1) == 0)
-      fprintf(1,'Error - no class names in %s', [testingdir '/features/class/names']);
+      fprintf(1,'Error - no class names in %s', [testingdir '/features/class']);
       return;
     end
     load(testmfiles{1}); %if more than one test file, load the first found

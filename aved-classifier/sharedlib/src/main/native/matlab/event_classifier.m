@@ -13,16 +13,22 @@ switch lower(method)
 
    case {'majority','major'}
 
-      disp('Running event classifier method majority wins')      
-      event_classifier_results(1,:) = {'EVENT CLASSIFIER METHOD:',method,'','',''};   
-      event_classifier_results(2,:) = {'EVENTID','CLASS NAME', 'CLASS INDEX','TTL FRAMES', 'FRAMES FOUND IN CLASS'};   
-
-   case {'probability', 'prob'}
+      disp('Running event classifier method majority wins')
+      event_classifier_results(1,:) = {'EVENT CLASSIFIER METHOD:',method,'','',''};
+      event_classifier_results(2,:) = {'EVENTID','CLASS NAME', 'CLASS INDEX','TTL FRAMES', 'FRAMES FOUND IN CLASS'};
+   
+    case {'probability', 'prob'}
 
       disp('Running event classifier method probability wins')      
       event_classifier_results(1,:) = {'EVENT CLASSIFIER METHOD:',method,'','','',''};   
       event_classifier_results(2,:) = {'EVENTID','CLASS NAME', 'CLASS INDEX','TTL FRAMES', 'FRAMES FOUND IN CLASS', 'PROBABILITY IN CLASS'};   
 
+    case {'maximum', 'max'}  
+    
+      disp('Running event classifier method max probability wins')      
+      event_classifier_results(1,:) = {'EVENT CLASSIFIER METHOD:',method,'',''};   
+      event_classifier_results(2,:) = {'EVENTID','CLASS NAME', 'CLASS INDEX', 'PROBABILITY IN CLASS'};  
+      
    otherwise
 
       disp('Unknown method.')
@@ -34,8 +40,8 @@ end
 % file names
 recfiles(1,:) = [classes];
 
-%get the next filename
-str = filenames{2};
+%get the first filename
+str = filenames{1};
 
 %find ending index of event identifier _evt
 m = regexp(str, '\.*?evt[0-9]+\.*?','match');
@@ -44,42 +50,41 @@ m = regexp(str, '\.*?evt[0-9]+\.*?','match');
 id = m{:};      
 
 %event identifier string
-eventid = id;
+eventid = id; 
 eventstr = {str};
 
 %start and end frame indices
 efi=1;
 sfi=1;
 ii=1;
-maxlen=length(filenames);
+maxlen=length(filenames); 
 
 %iterate through all files
-while  ii < maxlen           
+while  ii <= maxlen
 
     %search for the end of this event
-    %by looking until the event id changes
-    while  strcmp(id, eventid)                 
+    %by looking for changes in the event id name
+    while  strcmp(id, eventid) 
         
         %increment the ending frame index
-        efi = ii;         
+        efi = ii;
 
-        %increment the index                     
-        ii = ii + 1;                       
+        %increment the file index
+        ii = ii + 1;
 
-        %check to make sure don't access beyond the last filename
-        if ii < maxlen           
+        %don't access beyond the last filename
+        if ii <= maxlen
 
-            %get the next filename
-            str = filenames{ii + 1};    
+            str = filenames{ii};
 
             %find ending index of event identifier evt
-            m = regexp(str, '\.*?evt[0-9]+\.*?','match'); 
+            m = regexp(str, '\.*?evt[0-9]+\.*?','match');
 
             %get event id string - this assumes only one unique match
-            id = m{:};         
+            id = m{:} ;
             
         else
-
+            
             break;
 
         end
@@ -93,6 +98,25 @@ while  ii < maxlen
     %calculate the winner based on the chosen method
     switch lower(method)
 
+        case {'maximum','max'}
+
+            %find winner with max probability
+            winner = find(probabilityindex == max(probabilityindex));
+
+            %if there is more than one, choose the first one
+            if length(winner) > 1
+               maxprobindex = winner(1);
+            else
+               maxprobindex = winner;
+            end
+ 
+            classwinner = classindex(maxprobindex); 
+         
+            recfiles(end+1, classwinner) = eventstr;
+
+            %store the results in the results table      
+            event_classifier_results(end+1,:)={eventid,classes{classwinner},classwinner, probabilityindex(maxprobindex)};
+           
         case {'majority','major'}
 
             %initialize class sum matrix
@@ -108,10 +132,10 @@ while  ii < maxlen
             %find the index of the majority
             winner = find(classsum == max(classsum));                        
 
-            %if there is a tie, set to UNK category
+            %if there is a tie, set to first
             if length(winner) > 1
 
-                winner = 1;
+                winner = winner(1);
 
             end
             
@@ -119,7 +143,7 @@ while  ii < maxlen
             recfiles(end+1, winner) = eventstr;
 
             %store the results in the results table            
-            event_classifier_results(end+1,:)={eventid,classes{winner},winner,ttlframes,classsum(winner)};         
+            event_classifier_results(end+1,:)={eventid,classes{winner},winner,ttlframes,classsum(winner)};
 
         case {'probability', 'prob'}            
 
@@ -172,7 +196,6 @@ while  ii < maxlen
                 winner = 1;
             end            
             
-            % store the resuls in a matrix
             recfiles(end+1, winner) = eventstr;
 
             %store the results in the results table
@@ -181,12 +204,12 @@ while  ii < maxlen
     end     
 
     %reset the start index and event id
-    eventid = id;    
+    eventid = id;     %eventid=2, eventid=3, eventid=4
     eventstr = {str};
 
     %reset the start and end indices
-    sfi = efi+1;            
-    efi = sfi;    
+    sfi = efi+1;            %sfi=2 sfi=3 sfi=4
+    efi = sfi;    %efi=2 efi=3 efi=4
 
 end %end iterate through all the files
 

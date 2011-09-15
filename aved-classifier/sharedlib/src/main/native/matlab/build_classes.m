@@ -8,7 +8,7 @@
 %
 % Modified by doliver@mbari.org on December 5, 2004
 
-function build_classes(classdir, dbroot, color_space)
+function build_classes(kill, classdir, dbroot, color_space)
     
     %format direcotories to save training and feature data
     trainingrootdir = [dbroot '/training/'];
@@ -22,7 +22,7 @@ function build_classes(classdir, dbroot, color_space)
        return
     end
 
-    %check if output directories exists to save training data to, 
+    %check if output directories exist to save training data to, 
     %if not create it
     if(isdir(trainingrootdir) == 0)
         mkdir(trainingrootdir);   
@@ -31,8 +31,6 @@ function build_classes(classdir, dbroot, color_space)
     if(isdir(featurerootdir) == 0)
         mkdir(featurerootdir);   
     end
-
-    kill = create_kill_handle();
     
     %format class data file
     if(isempty(subdirstr) == 0)
@@ -49,6 +47,6 @@ function build_classes(classdir, dbroot, color_space)
 
     %train and save classes
     fprintf(1, 'Building training classes\n');
-    train_classes(c, rfiles, dfiles, classdatafile);
+    train_classes(kill, c, rfiles, dfiles, classdatafile);
 
 end

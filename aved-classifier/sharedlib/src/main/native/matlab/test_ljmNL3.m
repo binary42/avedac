@@ -60,33 +60,36 @@ for jj=1:ncltr
         if (isKill(kill))
              error('Killing test_ljmNL3');
         end
-        
+
         val = cltd(ii,:);
         risol = cltr(ii);
-        
+
         % store the current file in variable
         currentfile = filenames(ii);
         probtable.files(ii,1) = currentfile;
-        
+ 
         % update status in console 
         a = [classes{jj}];
-        fprintf(1,'testing %d of %d for class: %s\r', ii, nclts, a ); 
+        
+        fprintf(1,'testing %d of %d for class: %s\r', ii, nclts, a );
         
         % TODO: need a check here for dimension because color
         % has 3x the dimension as grayscale and the following line
-        % fails in this case
+        % fails in this case 
         val = val - mediatot;
         val = (FLD' * val')';
         
         for jjj= 1:ncltr
             dprobab(jjj) = gmmprob( mog(jjj).mix, val );
         end
-        
+  
         if sum(dprobab) == 0
             Mp = 0;
             estimate = 0;
             storeprob(ii) = Mp;
         else
+            fprintf(1, 'sum probability %f \r', sum(dprobab));
+            sum(dprobab);
             prob = dprobab/sum(dprobab);
             Mp = max(prob);
             
@@ -99,7 +102,9 @@ for jj=1:ncltr
                 estimate = 0;
             end
         end
-        
+
+       fprintf(1,'max probability: %f probability estimate: %f for class: %s \r', threshold, Mp, a );
+            
        probtable.data(ii,:) = dprobab;
         
         %if the risol is out of bounds with estimated class resolution and

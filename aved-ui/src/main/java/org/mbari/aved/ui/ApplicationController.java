@@ -1,32 +1,44 @@
 /*
  * @(#)ApplicationController.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import edu.stanford.ejalbert.BrowserLauncher;
 import edu.stanford.ejalbert.exception.BrowserLaunchingInitializingException;
 import edu.stanford.ejalbert.exception.UnsupportedOperatingSystemException;
 
 import org.apache.commons.io.IOUtils;
 
+import org.mbari.aved.mbarivision.api.utils.Utils;
 import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.appframework.ModelEvent;
 import org.mbari.aved.ui.appframework.ModelListener;
+import org.mbari.aved.ui.classifier.Classifier;
 import org.mbari.aved.ui.message.ModalYesNoDialog;
 import org.mbari.aved.ui.message.NonModalMessageDialog;
 import org.mbari.aved.ui.message.NonModalYesNoDialog;
@@ -43,7 +55,7 @@ import org.mbari.aved.ui.userpreferences.UserPreferencesModel.VideoPlayoutMode;
 import org.mbari.aved.ui.utils.ExcelExporter;
 import org.mbari.aved.ui.utils.ImageFileFilter;
 import org.mbari.aved.ui.utils.ParseUtils;
-import org.mbari.aved.ui.utils.ProcessedResultsFileFilter;
+import org.mbari.aved.ui.utils.XmlFileFilter;
 import org.mbari.aved.ui.utils.URLUtils;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -69,10 +81,8 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
-import org.mbari.aved.mbarivision.api.utils.Utils;
-import org.mbari.aved.ui.classifier.Classifier;
 
-public class ApplicationController extends AbstractController implements ModelListener, WindowListener {
+public final class ApplicationController extends AbstractController implements ModelListener, WindowListener {
 
     /**
      * True when a save as operation is in progress. This is used
@@ -80,20 +90,25 @@ public class ApplicationController extends AbstractController implements ModelLi
      * and mpeg of the results
      */
     private boolean isSaveAs = false;
+
+    /** Classifier */
+    private Classifier classifier;
+
     /**
      * Robust browser utility for launching web page for a given URL. This should
      * provide the same response for most platforms and web browsers (except
      * Mac)
      */
     private BrowserLauncher launcher;
+
     /** Controls the event table */
     private TableController tableController;
+
     /** Controls the thumbnail view */
     private ThumbnailController thumbnailController;
+
     /** Worker to handle transcoding video files */
     private VideoTranscodeWorker transcodeWorker;
-    /** Classifier **/
-    private Classifier classifier;
 
     public ApplicationController() throws Exception {
         setModel(new ApplicationModel());
@@ -107,7 +122,7 @@ public class ApplicationController extends AbstractController implements ModelLi
         getModel().addModelListener(PlayerManager.getInstance());
 
         // Create child controllers for thumbnail and table data displays
-        tableController = new TableController(getModel());
+        tableController     = new TableController(getModel());
         thumbnailController = new ThumbnailController(getModel());
 
         // Replace the tabbed panels with the customized ones
@@ -119,17 +134,20 @@ public class ApplicationController extends AbstractController implements ModelLi
             classifier = new Classifier(getModel());
         } catch (Exception ex) {
             Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
+
             return;
         }
 
         String s = System.getProperty("os.name").toLowerCase();
 
         if (s.indexOf("mac os x") != -1) {
+
             // needed on mac os x to display menus in the mac convention
             System.setProperty("apple.laf.useScreenMenuBar", "true");
         }
 
         MainMenu menu = new MainMenu(getModel());
+
         getView().setJMenuBar(menu.buildJJMenuBar());
 
         // Initialize mouse listener for tabbed pane
@@ -144,7 +162,6 @@ public class ApplicationController extends AbstractController implements ModelLi
             // otherwise will simply print stack traces
             launcher = new BrowserLauncher();
             launcher.setNewWindowPolicy(true);
-
         } catch (RuntimeException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
 
@@ -204,25 +221,26 @@ public class ApplicationController extends AbstractController implements ModelLi
         }
 
         // Clean-up the downloaded and created files and directories
-        SummaryModel summary = getModel().getSummaryModel();
+        SummaryModel summary             = getModel().getSummaryModel();
+        File         transcodeSourceFile = summary.getTranscodeSource();
 
-        File transcodeSourceFile = summary.getTranscodeSource();
         // Delete the transcode source file it is exists and was downloaded
         // to a temporary folder
         File tmpDir = UserPreferences.getModel().getScratchDirectory();
-        if (transcodeSourceFile != null && transcodeSourceFile.toString().startsWith(tmpDir.toString())
+
+        if ((transcodeSourceFile != null) && transcodeSourceFile.toString().startsWith(tmpDir.toString())
                 && transcodeSourceFile.exists() && transcodeSourceFile.canWrite()) {
             transcodeSourceFile.delete();
         }
 
         File testImageDir = summary.getTestImageDirectory();
-        if (testImageDir != null && testImageDir.exists() && testImageDir.canWrite()) {
+
+        if ((testImageDir != null) && testImageDir.exists() && testImageDir.canWrite()) {
             Utils.deleteDir(testImageDir);
         }
 
         // Finally, reset the model
         getModel().reset();
-
         getView().setDefaultCursor();
     }
 
@@ -251,11 +269,11 @@ public class ApplicationController extends AbstractController implements ModelLi
      * This will prompt the user first to browse for
      * a suitable file
      */
-    void exportProcessedResultsAsXls() {
-        File dir = UserPreferences.getModel().getExportedExcelDirectory();
-        File xml = getModel().getSummaryModel().getXmlFile();
-        File tmp = new File(dir + "/" + ParseUtils.removeFileExtension(xml.getName()) + ".xls");
-        File f = browseForXlsExport(tmp);
+    public void exportProcessedResultsAsXls() {
+        File   dir   = UserPreferences.getModel().getExportedExcelDirectory();
+        File   xml   = getModel().getSummaryModel().getXmlFile();
+        File   tmp   = new File(dir + "/" + ParseUtils.removeFileExtension(xml.getName()) + ".xls");
+        File   f     = ExcelExporter.browseForXlsExport(tmp, getView());
         JTable table = tableController.getTable();
 
         if (f != null) {
@@ -269,35 +287,6 @@ public class ApplicationController extends AbstractController implements ModelLi
         }
     }
 
-    /**
-     *    Browse for Excel file to save the results to
-     *
-     *    @param file the default file to save
-     *    @return the file to save exported results to or null if
-     *    a selection was not made
-     */
-    private File browseForXlsExport(File file) {
-
-        // Browse for XML to import starting with the last exported directory
-        JFileChooser chooser = new JFileChooser();
-
-        chooser.setCurrentDirectory(UserPreferences.getModel().getExportedExcelDirectory());
-        chooser.setSelectedFile(file);
-        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        chooser.setDialogTitle("Choose Excel file to save the results to");
-
-        if (chooser.showDialog(getView(), "Export") == JFileChooser.APPROVE_OPTION) {
-            File f = chooser.getSelectedFile();
-
-            UserPreferences.getModel().setExportedExcelDirectory(new File(f.getAbsolutePath()));
-
-            return f;
-        } else {
-
-            // TODO: print dialog message box with something meaningful here
-            return null;
-        }
-    }
 
     /** Exports the model data to XML file */
     private void exportProcessedResults(File xmlfile) {
@@ -316,10 +305,10 @@ public class ApplicationController extends AbstractController implements ModelLi
         if (model.getXmlFile() != null) {
             try {
                 if (newfile != null) {
-                    if (newfile.exists() && !newfile.canWrite()) {
-                        String message = new String("Warning: " + newfile.getName() + " cannot be written."
-                                + "\nCould be locked by another application, "
-                                + "or is read-only. Check the file.");
+                    if (newfile.exists() &&!newfile.canWrite()) {
+                        String message = "Warning: " + newfile.getName() + " cannot be written."
+                                                    + "\nCould be locked by another application, "
+                                                    + "or is read-only. Check the file.";
                         NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), message);
 
                         dialog.setVisible(true);
@@ -328,10 +317,10 @@ public class ApplicationController extends AbstractController implements ModelLi
                             return;
                         }
                     } else if (newfile.exists() && newfile.canWrite()) {
-                        String message = new String("Warning: " + newfile.getName() + " exists"
-                                + "\n\nExporting the results to this file will "
-                                + "permanently erase the original contents. "
-                                + "Are you sure you want to save to this file ?");
+                        String message = "Warning: " + newfile.getName() + " exists"
+                                                    + "\n\nExporting the results to this file will "
+                                                    + "permanently erase the original contents. "
+                                                    + "Are you sure you want to save to this file ?";
                         NonModalYesNoDialog dialog = new NonModalYesNoDialog((JFrame) this.getView(), message);
 
                         dialog.setVisible(true);
@@ -380,6 +369,7 @@ public class ApplicationController extends AbstractController implements ModelLi
                     // Import the processed results
                     runImportXML(xmlfile);
                 } else {
+
                     // TODO: display message
                 }
             }
@@ -398,7 +388,7 @@ public class ApplicationController extends AbstractController implements ModelLi
      *            The xmlfile
      * @returns the URL to the video source file it found or null if none found
      */
-    private URL searchVideoSource(File xmlfile, URL source) {
+    private static URL searchVideoSource(File xmlfile, URL source) {
 
         // Convert input source associated with the XML to frames
         // and use these frames to start the image loader to
@@ -433,10 +423,10 @@ public class ApplicationController extends AbstractController implements ModelLi
 
                         // if can't find a file return and don't transcode.
                         String question =
-                                new String("A local file reference to the video input source associated with the\n"
-                                + xmlfile.getName()
-                                + " has not been found.\n\n Would you like to search for it now ? ");
-                        NonModalYesNoDialog dialog = new NonModalYesNoDialog((ApplicationView) getView(), question);
+                            "A local file reference to the video input source associated with the\n"
+                                       + xmlfile.getName()
+                                       + " has not been found.\n\n Would you like to search for it now ? ";
+                        NonModalYesNoDialog dialog = new NonModalYesNoDialog(Application.getView(), question);
 
                         dialog.setVisible(true);
 
@@ -487,7 +477,6 @@ public class ApplicationController extends AbstractController implements ModelLi
         // Need a valid xml file
         if (xmlfile != null) {
             try {
-                URL url;
                 File clip;
                 File f = new File(UserPreferences.getModel().getImportVideoDir());
 
@@ -510,10 +499,10 @@ public class ApplicationController extends AbstractController implements ModelLi
                 }
 
                 // Create the dialog
-                String question = new String("The mpeg encoded video results associated with the " + xmlfile.getName()
-                        + " has not been found. \n\n"
-                        + "This is not required, but can be useful when "
-                        + "editing the results. Would you like to search for it now ? ");
+                String question = "The mpeg encoded video results associated with the " + xmlfile.getName()
+                                             + " has not been found. \n\n"
+                                             + "This is not required, but can be useful when "
+                                             + "editing the results. Would you like to search for it now ? ";
                 NonModalYesNoDialog dialog = new NonModalYesNoDialog((ApplicationView) getView(), question);
 
                 dialog.setVisible(true);
@@ -539,9 +528,10 @@ public class ApplicationController extends AbstractController implements ModelLi
 
     /** Starts a separate worker to export the processed results */
     private void runExportXML(File xmlfile) throws Exception {
+        SummaryModel summary =  this.getModel().getSummaryModel();
         if ((xmlfile != null) && (this.getModel() != null) && (this.getModel().getSummaryModel() != null)) {
-            ExportXMLWorker thread = new ExportXMLWorker(xmlfile, this,
-                    this.getModel().getSummaryModel().getEventDataStream());
+            ExportXMLWorker thread = new ExportXMLWorker(xmlfile, this, summary,
+                                        summary.getEventDataStream());
 
             thread.execute();
         }
@@ -552,7 +542,7 @@ public class ApplicationController extends AbstractController implements ModelLi
     /** Starts a separate worker to import the processed results */
     private void runImportXML(File xmlfile) throws Exception {
         if (xmlfile != null) {
-            ImportXMLWorker thread = new ImportXMLWorker(xmlfile, this);
+            ImportXMLWorker thread = new ImportXMLWorker(xmlfile, this.getModel(), this, true);
 
             thread.execute();
         }
@@ -569,11 +559,11 @@ public class ApplicationController extends AbstractController implements ModelLi
          * file filter to only find XML files and disable the default
          */
         JFileChooser chooser = new JFileChooser();
-        FileFilter filter = (FileFilter) new ProcessedResultsFileFilter();
+        FileFilter   filter  = (FileFilter) new XmlFileFilter();
 
         chooser.addChoosableFileFilter(filter);
         chooser.setAcceptAllFileFilterUsed(false);
-        chooser.setCurrentDirectory(UserPreferences.getModel().setImportedXmlDirectory());
+        chooser.setCurrentDirectory(UserPreferences.getModel().setXmlImportDirectory());
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         chooser.setDialogTitle("Choose XML to import");
         chooser.setFileFilter(filter);
@@ -599,9 +589,9 @@ public class ApplicationController extends AbstractController implements ModelLi
          */
         JFileChooser chooser = new JFileChooser();
 
-        chooser.addChoosableFileFilter(new ProcessedResultsFileFilter());
+        chooser.addChoosableFileFilter(new XmlFileFilter());
         chooser.setAcceptAllFileFilterUsed(false);
-        chooser.setCurrentDirectory(UserPreferences.getModel().getExportedXMLDirectory());
+        chooser.setCurrentDirectory(UserPreferences.getModel().getXmlExportDirectory());
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         chooser.setDialogTitle("Choose XML file to save");
 
@@ -619,7 +609,7 @@ public class ApplicationController extends AbstractController implements ModelLi
     }
 
     /** Browse for video clip, starting in last imported directory */
-    private File browseForVideoClip(File setCurrentDirectory) throws Exception {
+    private static File browseForVideoClip(File setCurrentDirectory) throws Exception {
         File f = null;
 
         // Add a custom file filter and disable the default
@@ -630,7 +620,7 @@ public class ApplicationController extends AbstractController implements ModelLi
         chooser.setDialogTitle("Choose Video Source File");
         chooser.setCurrentDirectory(setCurrentDirectory);
 
-        if (chooser.showOpenDialog((ApplicationView) getView()) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showOpenDialog(Application.getView()) == JFileChooser.APPROVE_OPTION) {
             f = chooser.getSelectedFile();
             UserPreferences.getModel().setImportVideoDir(f.getParent());
         } else {
@@ -685,7 +675,7 @@ public class ApplicationController extends AbstractController implements ModelLi
      *
      * @return file with clip if it's found
      */
-    private File searchForClip(File xmlFile, String ext, File dir) {
+    private static File searchForClip(File xmlFile, String ext, File dir) {
         if ((xmlFile != null) && (ext != null) && (dir != null)) {
             File clip = null;
 
@@ -721,7 +711,7 @@ public class ApplicationController extends AbstractController implements ModelLi
      *
      * @return file name or null if not found
      */
-    private File searchForClip(File xmlFile, String ext) {
+    private static File searchForClip(File xmlFile, String ext) {
         if ((xmlFile != null) && (ext != null)) {
             File clip = null;
 
@@ -758,7 +748,7 @@ public class ApplicationController extends AbstractController implements ModelLi
 
             // System.out.println(actionCommand);
             SummaryModel model = getModel().getSummaryModel();
-            File v = new File(UserPreferences.getModel().getImportVideoDir().toString());
+            File         v     = new File(UserPreferences.getModel().getImportVideoDir().toString());
 
             if (actionCommand.equals("BrowseMaster")) {
                 File f;
@@ -801,13 +791,11 @@ public class ApplicationController extends AbstractController implements ModelLi
 
         if (e.getID() == MouseEvent.MOUSE_CLICKED) {
             SwingUtilities.invokeLater(new Runnable() {
-
                 public void run() {
                     Thread change = new Thread(new Runnable() {
-
                         public void run() {
                             try {
-                                ApplicationView view = (ApplicationView) getView();
+                                ApplicationView  view = (ApplicationView) getView();
                                 VideoPlayoutMode mode = UserPreferences.getModel().getPlayoutMode();
 
                                 if (mode == VideoPlayoutMode.DEFAULT) {
@@ -824,6 +812,7 @@ public class ApplicationController extends AbstractController implements ModelLi
 
                                     if (urlString != null) {
                                         try {
+
                                             // This will launch a separate
                                             // browser window each time it's
                                             // called and this process is not
@@ -844,12 +833,15 @@ public class ApplicationController extends AbstractController implements ModelLi
                                         }
                                     }
                                 } else if (mode == VideoPlayoutMode.OTHER) {
+
                                     // launch separate process to play video
                                     // TODO: add error handling/display for bogus commands
                                     String cmd = mode.command + " " + model.getInputSourceURL().getFile();
+
                                     System.out.println("Executing " + cmd);
-                                    Runtime.getRuntime().exec(cmd); 
+                                    Runtime.getRuntime().exec(cmd);
                                 } else {
+
                                     // TODO: launch err message - cannot find
                                     // file - need to check the CLASSPATH
                                     // variable ?
@@ -869,111 +861,110 @@ public class ApplicationController extends AbstractController implements ModelLi
     public void modelChanged(ModelEvent event) {
         try {
             if (event instanceof SummaryModel.SummaryModelEvent) {
-
                 switch (event.getID()) {
-                    case SummaryModelEvent.TRANSCODE_OUTPUT_DIR_CHANGED:
+                case SummaryModelEvent.TRANSCODE_OUTPUT_DIR_CHANGED :
 
-                        // when the transcode output changes, change the test directory
-                        // to be a subdirectory of this. Putting this test images
-                        // in a subdirectory makes for easy deletion later
-                        SummaryModel model = getModel().getSummaryModel();
-                        File s = model.getFrameSourceDir();
-                        File testingDir = new File(s + "/testimages");
+                    // when the transcode output changes, change the test directory
+                    // to be a subdirectory of this. Putting this test images
+                    // in a subdirectory makes for easy deletion later
+                    SummaryModel model      = getModel().getSummaryModel();
+                    File         s          = model.getFrameSourceDir();
+                    File testingDir = new File(s + "/testimages_" + s.getName());
 
-                        if (!testingDir.exists()) {
-                            testingDir.mkdir();
-                        }
+                    if (!testingDir.exists()) {
+                        testingDir.mkdir();
+                    }
 
-                        model.setTestImageDir(testingDir);
+                    model.setTestImageDir(testingDir);
 
-                        break;
+                    break;
 
-                    case SummaryModelEvent.TRANSCODE_SOURCE_CHANGED:
-                        model = getModel().getSummaryModel();
+                case SummaryModelEvent.TRANSCODE_SOURCE_CHANGED :
+                    model = getModel().getSummaryModel();
 
-                        File file = model.getTranscodeSource();
+                    File file = model.getTranscodeSource();
 
-                        transcodeWorker = new VideoTranscodeWorker(this, file);
-                        Thread transcodeThread = new Thread(new Runnable() {
+                    transcodeWorker = new VideoTranscodeWorker(this, getModel(), file, true);
 
-                            public void run() {
-                                SummaryModel model = getModel().getSummaryModel();
-                                File file = model.getTranscodeSource();
+                    Thread transcodeThread = new Thread(new Runnable() {
+                        public void run() {
+                            SummaryModel model = getModel().getSummaryModel();
+                            File         file  = model.getTranscodeSource();
+
+                            try {
+                                if ((file != null) && file.exists()) {
+                                    transcodeWorker.execute();
+                                }
+                            } catch (Exception ex) {
+                                NonModalMessageDialog dialog;
 
                                 try {
-                                    if ((file != null) && file.exists()) {
-                                        transcodeWorker.execute();
-                                    }
-                                } catch (Exception ex) {
-                                    NonModalMessageDialog dialog;
-
-                                    try {
-                                        dialog = new NonModalMessageDialog((ApplicationView) getView(),
-                                                ex.getMessage());
-                                        dialog.setVisible(true);
-                                    } catch (Exception ex1) {
-                                        Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE,
-                                                null, ex1);
-                                    }
-
+                                    dialog = new NonModalMessageDialog((ApplicationView) getView(), ex.getMessage());
+                                    dialog.setVisible(true);
+                                } catch (Exception ex1) {
                                     Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null,
-                                            ex);
+                                                     ex1);
                                 }
+
+                                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                             }
-                        });
+                        }
+                    });
 
-                        transcodeThread.start();
+                    transcodeThread.start();
 
-                        break;
+                    break;
 
-                    case SummaryModelEvent.XML_FILE_CHANGED:
-                        break;
+                case SummaryModelEvent.XML_FILE_CHANGED :
+                    break;
 
-                    case SummaryModelEvent.INPUT_SOURCE_URL_CHANGED:
-                        runImportLogic();
-                        break;
+                case SummaryModelEvent.INPUT_SOURCE_URL_CHANGED :
+                    runImportLogic(getModel().getSummaryModel());
+                    break;
 
-                    default:
-                        break;
+                default :
+                    break;
                 }
             }
 
             if (event instanceof EventListModel.EventListModelEvent) {
-                EventListModel.EventListModelEvent e = (EventListModel.EventListModelEvent) event;
-                EventListModel model = getModel().getEventListModel();
+                EventListModel.EventListModelEvent e     = (EventListModel.EventListModelEvent) event;
+                EventListModel                     model = getModel().getEventListModel();
 
                 switch (event.getID()) {
-                    case EventListModel.EventListModelEvent.LIST_CLEARED:
-                        this.getView().setDefaultCursor();
-                        break;
+                case EventListModel.EventListModelEvent.LIST_CLEARED :
+                    this.getView().setDefaultCursor();
 
-                    case EventListModel.EventListModelEvent.LIST_RELOADED:
-                        runListReloadLogic();
-                        break;
+                    break;
 
-                    case EventListModelEvent.ONE_ENTRY_REMOVED:
-                        break;
+                case EventListModel.EventListModelEvent.LIST_RELOADED :
+                    runListReloadLogic();
 
-                    case EventListModelEvent.MULTIPLE_ENTRIES_CHANGED:
-                        break;
+                    break;
 
-                    case EventListModelEvent.NUM_LOADED_IMAGES_CHANGED:
+                case EventListModelEvent.ONE_ENTRY_REMOVED :
+                    break;
 
-                        /*
-                         *  if the number of loaded images has reached the model
-                         * size kill the transcode worker in case it is still running.
-                         * Note that the transcode worker should end on its own - this
-                         * is useful when the video to transcode is much longer than
-                         * if actually needed.
-                         */
-                        if ((e.getFlag() >= model.getSize()) && (transcodeWorker != null)) {
-                            transcodeWorker.gracefulCancel();
-                        }
+                case EventListModelEvent.MULTIPLE_ENTRIES_CHANGED :
+                    break;
 
-                        break;
+                case EventListModelEvent.NUM_LOADED_IMAGES_CHANGED :
 
-                    default:
-                        break;
+                    /*
+                     *  if the number of loaded images has reached the model
+                     * size kill the transcode worker in case it is still running.
+                     * Note that the transcode worker should end on its own - this
+                     * is useful when the video to transcode is much longer than
+                     * if actually needed.
+                     */
+                    if ((e.getFlag() >= model.getSize()) && (transcodeWorker != null)) {
+                        transcodeWorker.gracefulCancel();
+                    }
+
+                    break;
+
+                default :
+                    break;
                 }
             }
         } catch (Exception ex) {
@@ -987,43 +978,45 @@ public class ApplicationController extends AbstractController implements ModelLi
      * @param url URL to download from
      * @param target file to copy to
      */
-    public void download(URL url, File target) throws Exception {
+    public static void download(URL url, File target) throws Exception {
         try {
-            getView().setBusyCursor();
+
+            Application.getView().setBusyCursor();
+
             // create/overwrite target
             target.createNewFile();
 
             // and download
             URLConnection con = url.openConnection();
-            InputStream in = con.getInputStream();
-            OutputStream out = new FileOutputStream(target);
+            InputStream   in  = con.getInputStream();
+            OutputStream  out = new FileOutputStream(target);
 
             IOUtils.copy(in, out);
             in.close();
             out.flush();
             out.close();
-            getView().setDefaultCursor();
+            Application.getView().setDefaultCursor();
+
         } catch (Exception e) {
 
             // if can't find a file, delete empty file, display message,
             // return and don't transcode.
             target.delete();
 
-            String message = new String("Error downloading " + ((url != null)
+            String message = "Error downloading " + ((url != null)
                     ? url.toString()
-                    : "[null]") + "\nException: " + e.toString());
+                    : "[null]") + "\nException: " + e.toString();
 
             throw new Exception(message);
         }
     }
 
-    public void windowOpened(WindowEvent e) {
-    }
+    public void windowOpened(WindowEvent e) {}
 
     public void windowClosing(WindowEvent e) {
         if (Application.getModel().getEventListModel().getSize() > 0) {
-            String question = new String("About to shut down the application. "
-                    + "Are you sure you saved your data ?\n");
+            String question = "About to shut down the application. "
+                                         + "Are you sure you saved your data ?\n";
             ModalYesNoDialog dialog = new ModalYesNoDialog(Application.getView(), question);
 
             dialog.setVisible(true);
@@ -1046,20 +1039,15 @@ public class ApplicationController extends AbstractController implements ModelLi
         }
     }
 
-    public void windowClosed(WindowEvent e) {
-    }
+    public void windowClosed(WindowEvent e) {}
 
-    public void windowIconified(WindowEvent e) {
-    }
+    public void windowIconified(WindowEvent e) {}
 
-    public void windowDeiconified(WindowEvent e) {
-    }
+    public void windowDeiconified(WindowEvent e) {}
 
-    public void windowActivated(WindowEvent e) {
-    }
+    public void windowActivated(WindowEvent e) {}
 
-    public void windowDeactivated(WindowEvent e) {
-    }
+    public void windowDeactivated(WindowEvent e) {}
 
     /**
      * Runs logic to run every time a new event file is loaded.
@@ -1069,15 +1057,13 @@ public class ApplicationController extends AbstractController implements ModelLi
      */
     private void runListReloadLogic() {
         Thread searchMpeg = new Thread(new Runnable() {
-
             public void run() {
                 EventListModel model = getModel().getEventListModel();
 
                 try {
                     model.loadImageCacheData();
                 } catch (Exception ex) {
-                    Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null,
-                            ex);
+                    Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
                 /**
@@ -1086,9 +1072,9 @@ public class ApplicationController extends AbstractController implements ModelLi
                  * back the results in an external video player
                  */
                 SummaryModel smodel = getModel().getSummaryModel();
-                URL mpeg = smodel.getMpegUrl();
+                URL          mpeg   = smodel.getMpegUrl();
 
-                if ((mpeg == null) || !URLUtils.isValidURL(mpeg.toString())) {
+                if ((mpeg == null) ||!URLUtils.isValidURL(mpeg.toString())) {
 
                     /**
                      * If  doing a save-as operation, then bypass looking
@@ -1126,8 +1112,7 @@ public class ApplicationController extends AbstractController implements ModelLi
                                     fileName = fileName.substring(0, fileName.lastIndexOf('.'));
                                 }
 
-                                if ((url = searchForURLClip(new URL(fileName.toString()),
-                                        ".results.mpeg")) != null) {
+                                if ((url = searchForURLClip(new URL(fileName.toString()), ".results.mpeg")) != null) {
                                     smodel.setMpegUrl(url);
 
                                     return;
@@ -1140,25 +1125,22 @@ public class ApplicationController extends AbstractController implements ModelLi
                                 smodel.setMpegUrl(f.toURL());
                             }
                         } catch (MalformedURLException ex) {
-                            Logger.getLogger(ApplicationController.class.getName()).log(
-                                    Level.SEVERE, null, ex);
+                            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 }
             }
         });
+
         searchMpeg.start();
     }
 
     /**
      * Runs logic following selecting a new file for import
      */
-    private void runImportLogic() {
+    public static void runImportLogic(final SummaryModel model) {
         Thread downloadUrlThread = new Thread(new Runnable() {
-
             public void run() {
-                SummaryModel model = getModel().getSummaryModel();
-
                 /**
                  * When the input source changes, search for the video source
                  * associated with it and copy it to the scratch directory
@@ -1167,9 +1149,10 @@ public class ApplicationController extends AbstractController implements ModelLi
                 URL url = model.getInputSourceURL();
 
                 if (url != null) {
+
                     // If this is a http url reference and not a local file
                     if (url.getProtocol().startsWith("http:")) {
-                        File file = null;
+                        File file   = null;
                         File tmpDir = UserPreferences.getModel().getScratchDirectory();
 
                         // Initialize the transcoder output directory to be the temporary directory
@@ -1178,9 +1161,8 @@ public class ApplicationController extends AbstractController implements ModelLi
                         }
 
                         if (tmpDir != null) {
-                            String v =
-                                    new String(tmpDir.toString() + "/"
-                                    + ParseUtils.parseFileNameRemoveDirectory(url.getFile()));
+                            String v = tmpDir.toString() + "/"
+                                                  + ParseUtils.parseFileNameRemoveDirectory(url.getFile());
 
                             file = new File(v);
                         } else {
@@ -1188,6 +1170,7 @@ public class ApplicationController extends AbstractController implements ModelLi
                         }
 
                         try {
+
                             // Download the contents of the url to a local file if it doesn't exist
                             if (!file.exists()) {
                                 download(url, file);
@@ -1202,14 +1185,14 @@ public class ApplicationController extends AbstractController implements ModelLi
                                  * the user for one.
                                  */
                                 URL u = searchVideoSource(model.getXmlFile(), url);
+
                                 model.setTranscodeSource(new File(u.getFile()));
                             }
                         } catch (Exception ex) {
                             NonModalMessageDialog dialog;
 
                             try {
-                                dialog = new NonModalMessageDialog((ApplicationView) getView(),
-                                        ex.getMessage());
+                                dialog = new NonModalMessageDialog(Application.getView(), ex.getMessage());
                                 dialog.setVisible(true);
 
                                 /**
@@ -1220,19 +1203,18 @@ public class ApplicationController extends AbstractController implements ModelLi
 
                                 model.setTranscodeSource(new File(u.getFile()));
                             } catch (Exception ex1) {
-                                Logger.getLogger(ApplicationController.class.getName()).log(
-                                        Level.SEVERE, null, ex1);
+                                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex1);
                             }
 
-                            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE,
-                                    null, ex);
+                            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     } else {
 
                         // Convert to to a local file reference
-                        File xml = model.getXmlFile();
+                        File xml  = model.getXmlFile();
                         File file = new File(url.getPath());
                         File localFile;
+
                         if (xml.getParent() != null) {
                             localFile = new File(xml.getParent() + "/" + file.getName());
                         } else {
@@ -1245,18 +1227,20 @@ public class ApplicationController extends AbstractController implements ModelLi
                         if (localFile.exists()) {
                             model.setTranscodeSource(localFile);
                         } else {
+
                             /**
                              * Can't find the file automatically so prompt
                              * the user for one.
                              */
                             URL u = searchVideoSource(model.getXmlFile(), url);
+
                             model.setTranscodeSource(new File(u.getFile()));
                         }
                     }
-
                 }
             }
         });
+
         downloadUrlThread.start();
     }
 
@@ -1273,23 +1257,19 @@ public class ApplicationController extends AbstractController implements ModelLi
      * @author dcline
      */
     class MouseClickFileActionHandler implements MouseListener {
-
         public void mouseClicked(MouseEvent e) {
             actionClickVideoFile(e);
         }
 
-        public void mouseEntered(MouseEvent e) {
-        }
+        public void mouseEntered(MouseEvent e) {}
 
-        public void mouseExited(MouseEvent e) {
-        }
+        public void mouseExited(MouseEvent e) {}
 
-        public void mousePressed(MouseEvent e) {
-        }
+        public void mousePressed(MouseEvent e) {}
 
-        public void mouseReleased(MouseEvent e) {
-        }
+        public void mouseReleased(MouseEvent e) {}
     }
+
 
     /**
      * Action handler for responding to clicking tabbed pane in
@@ -1297,7 +1277,6 @@ public class ApplicationController extends AbstractController implements ModelLi
      * @author dcline
      */
     class MouseClickTabActionHandler implements MouseListener {
-
         public void mouseClicked(MouseEvent e) {
             JTabbedPane pane = (JTabbedPane) e.getSource();
 
@@ -1310,16 +1289,12 @@ public class ApplicationController extends AbstractController implements ModelLi
             }
         }
 
-        public void mouseEntered(MouseEvent e) {
-        }
+        public void mouseEntered(MouseEvent e) {}
 
-        public void mouseExited(MouseEvent e) {
-        }
+        public void mouseExited(MouseEvent e) {}
 
-        public void mousePressed(MouseEvent e) {
-        }
+        public void mousePressed(MouseEvent e) {}
 
-        public void mouseReleased(MouseEvent e) {
-        }
+        public void mouseReleased(MouseEvent e) {}
     }
 }

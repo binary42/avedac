@@ -28,6 +28,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
+                <version>2.2</version>
                 <configuration>
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
@@ -70,6 +71,7 @@
                     </plugin>
                     <plugin>
                         <artifactId>maven-scm-plugin</artifactId>
+                        <version>1.5</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>
@@ -673,11 +675,6 @@
             <version>1.1.1</version>
         </dependency>
         <dependency>
-            <groupId>org.codehaus.castor</groupId>
-            <artifactId>castor</artifactId>
-            <version>1.1.1</version>
-        </dependency>
-        <dependency>
             <groupId>org.jdesktop</groupId>
             <artifactId>swing-worker</artifactId>
             <version>1.2</version>
@@ -696,12 +693,7 @@
             <groupId>javax.persistence</groupId>
             <artifactId>persistence-api</artifactId>
             <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.transaction</groupId>
-            <artifactId>jta</artifactId>
-            <version>1.0.1B</version>
-        </dependency>
+        </dependency> 
         <dependency>
             <groupId>abeille</groupId>
             <artifactId>designer</artifactId>
@@ -771,13 +763,7 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-io</artifactId>
             <version>1.3.2</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>
+        </dependency> 
         <dependency>
             <groupId>jgoodies</groupId>
             <artifactId>binding</artifactId>
@@ -787,6 +773,16 @@
             <groupId>foxtrot</groupId>
             <artifactId>foxtrot</artifactId>
             <version>2.0</version>
+        </dependency>
+         <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>vars-redux</groupId>
+            <artifactId>vars-knowledgebase</artifactId>
+            <version>6.0.4-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.l2fprod</groupId>
@@ -802,42 +798,7 @@
             <groupId>com.vlsolutions</groupId>
             <artifactId>vldocking</artifactId>
             <version>2.1.1</version>
-        </dependency>
-        <dependency>
-            <groupId>foxtrot</groupId>
-            <artifactId>foxtrot</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>abeille</groupId>
-            <artifactId>designer</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>abeille</groupId>
-            <artifactId>dt</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>abeille</groupId>
-            <artifactId>formshelp</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>abeille</groupId>
-            <artifactId>formsrt</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>abeille</groupId>
-            <artifactId>jh</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>abeille</groupId>
-            <artifactId>looks</artifactId>
-            <version>1.2.2</version>
-        </dependency>
+        </dependency>    
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -852,37 +813,17 @@
             <groupId>org.mbari</groupId>
             <artifactId>mbarix4j</artifactId>
             <version>1.5</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>persistence-api</artifactId>
-            <version>1.0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <version>1.1</version>
-        </dependency>
+        </dependency> 
         <dependency>
             <groupId>com.jgoodies</groupId>
             <artifactId>validation</artifactId>
             <version>2.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.l2fprod</groupId>
-            <artifactId>l2fprod</artifactId>
-            <version>1.0</version>
-        </dependency>
+        </dependency> 
         <dependency>
             <groupId>foxtrot</groupId>
             <artifactId>foxtrot-core</artifactId>
             <version>3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.castor</groupId>
-            <artifactId>castor</artifactId>
-            <version>1.1.1</version>
-        </dependency>
+        </dependency> 
         <dependency>
             <groupId>commons-pool</groupId>
             <artifactId>commons-pool</artifactId>
@@ -892,22 +833,7 @@
             <groupId>commons-dbcp</groupId>
             <artifactId>commons-dbcp</artifactId>
             <version>1.2.2</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.transaction</groupId>
-            <artifactId>jta</artifactId>
-            <version>1.0.1B</version>
-        </dependency>
-        <dependency>
-            <groupId>net.sourceforge.jtds</groupId>
-            <artifactId>jtds</artifactId>
-            <version>1.2.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.castor</groupId>
-            <artifactId>castor</artifactId>
-            <version>1.1.1</version>
-        </dependency>
+        </dependency>   
         <dependency>
             <groupId>org.mbari</groupId>
             <artifactId>vars-castor</artifactId>
@@ -933,17 +859,7 @@
             <groupId>jgoodies</groupId>
             <artifactId>plastic</artifactId>
             <version>1.2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jgoodies</groupId>
-            <artifactId>binding</artifactId>
-            <version>2.0.6</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jgoodies</groupId>
-            <artifactId>forms</artifactId>
-            <version>1.2.1</version>
-        </dependency>
+        </dependency>  
         <dependency>
             <groupId>cglib</groupId>
             <artifactId>cglib-full</artifactId>
@@ -953,22 +869,7 @@
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.14</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mbari</groupId>
-            <artifactId>mbarix4j</artifactId>
-            <version>1.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.5.6</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.5.6</version>
-        </dependency>
+        </dependency>  
         <dependency>
             <groupId>xerces</groupId>
             <artifactId>xerces</artifactId>

@@ -131,6 +131,21 @@ public class ClassifierLibraryJNI {
     public native void collect_class(String killfile, String rawDirectoryName, String squaredDirectoryName,
             String classname, String matlabdbDirName, String varsclassname,
             String description, ColorSpace colorspace);
+    
+    /**
+     * Delete class information. Call this whenever a  class is deleted
+     * @param classname the class name
+     * @param matlabdbDirName the root directory of the stored classifier matlab (.mat) data
+     * @param colorSpace the color space to use for this class
+     */
+    public native void delete_class(String classname, String matlabdbDirName, ColorSpace colorspace);
+
+     /**
+     * Delete training classes information. Call this whenever a  class is deleted
+     * @param matlabdbDirName the root directory of the stored classifier matlab (.mat) data
+     * @param trainingalias alias to name this training data to 
+     */
+    public native void delete_train_class(String matlabdbDirName, String trainingalias);
 
     /**
      * Collect testing images information. Call this before running run_test
@@ -184,6 +199,7 @@ public class ClassifierLibraryJNI {
      * @param eventids event identifiers - this corresponds to the filename with the "evt" stem
      * @param majoritywinnerindex the majority class assignment
      * @param probabilitywinnerindex the probability rule class assignment
+     * @param maxwinnerindex the max rule class assignment
      * @param probability probability of the class match in the probability
      * rule class assignment
      * @param testclassname a subset of the training classes to test
@@ -196,12 +212,12 @@ public class ClassifierLibraryJNI {
      * @param colorSpace the color space to use for this class
      */
     public native void run_test(String killfile, String[] eventids, int[] majoritywinnerindex,
-            int[] probabilitywinnerindex, float[] probability, String testclassname,
+            int[] probabilitywinnerindex, int[] maxwinnerindex, float[] probability, String testclassname,
             String trainingalias, float minprobthreshold, String matlabdbDirName,
             ColorSpace colorspace);
 
     /**
-     * This will initialialize the classifier with a training classes
+     * This will initialize the classifier with a training library
      * which is a collection of two or more collected classes.
      * All the classes in the training class need to collected before
      * running this. The training class string - which is comma,  space,

@@ -48,7 +48,7 @@ if (options(14))
   niters = options(14);
 else
   niters = 100;
-end 
+end
 
 display = options(1);
 store = 0;
@@ -139,7 +139,7 @@ for n = 1:niters
   case 'full'
     for j = 1:mix.ncentres
       diffs = x - (ones(ndata, 1) * mix.centres(j,:));
-      diffs = diffs.*(sqrt(post(:,j))*ones(1, mix.nin));      
+      diffs = diffs.*(sqrt(post(:,j))*ones(1, mix.nin));
       mix.covars(:,:,j) = (diffs'*diffs)/new_pr(j);
     end
     if check_covars

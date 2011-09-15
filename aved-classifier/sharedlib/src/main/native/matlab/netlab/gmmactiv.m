@@ -52,7 +52,7 @@ case 'full'
   for i = 1:mix.ncentres
     diffs = x - (ones(ndata, 1) * mix.centres(i,:));
     % Use Cholesky decomposition of covariance matrix to speed computation
-        c = chol(mix.covars(:,:,i));
+    c = chol(mix.covars(:,:,i));
     temp = diffs/c;
     a(:,i) = exp(-0.5*sum(temp.*temp, 2))./(normal*prod(diag(c)));
   end

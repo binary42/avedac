@@ -1,23 +1,33 @@
 /*
  * @(#)AvedTable.java
  * 
- * Copyright 2010 MBARI
+ * Copyright 2011 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui.table;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import org.mbari.aved.ui.Application;
 import org.mbari.aved.ui.model.EventAbstractTableModel;
 
@@ -37,11 +47,9 @@ import javax.swing.JViewport;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableColumn; 
 
 public class AvedTable extends JTable {
-
     private static final Color VERTICAL_LINE_COLOR = new Color(0xd9d9d9);
 
     public AvedTable() {
@@ -68,12 +76,11 @@ public class AvedTable extends JTable {
     @Override
     protected JTableHeader createDefaultTableHeader() {
         return new JTableHeader(columnModel) {
-
             @Override
             public String getToolTipText(MouseEvent e) {
-                java.awt.Point p = e.getPoint();
-                int index = columnModel.getColumnIndexAtX(p.x);
-                int realIndex = columnModel.getColumn(index).getModelIndex();
+                java.awt.Point p         = e.getPoint();
+                int            index     = columnModel.getColumnIndexAtX(p.x);
+                int            realIndex = columnModel.getColumn(index).getModelIndex();
 
                 return EventAbstractTableModel.columnToolTips[realIndex];
             }
@@ -102,21 +109,21 @@ public class AvedTable extends JTable {
      * we have no data.
      */
     protected void paintEmptyRows(Graphics g) {
-        final int rowCount = getRowCount();
-        final Rectangle clip = g.getClipBounds();
-        final int height = clip.y + clip.height;
+        final int       rowCount = getRowCount();
+        final Rectangle clip     = g.getClipBounds();
+        final int       height   = clip.y + clip.height;
 
         if (rowCount * rowHeight < height) {
             for (int i = rowCount; i <= height / rowHeight; ++i) {
                 g.setColor((i % 2 == 0)
-                        ? Color.LIGHT_GRAY
-                        : Color.WHITE);
+                           ? Color.LIGHT_GRAY
+                           : Color.WHITE);
                 g.fillRect(clip.x, i * rowHeight, clip.width, rowHeight);
             }
 
             g.setColor(VERTICAL_LINE_COLOR);
-
             columnModel = getColumnModel();
+
             int x = 0;
 
             for (int i = 0; i < columnModel.getColumnCount(); ++i) {
@@ -149,8 +156,8 @@ public class AvedTable extends JTable {
      * Shades alternate rows in different colors.
      */
     public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-        Component c = super.prepareRenderer(renderer, row, column);
-        boolean selected = isCellSelected(row, column);
+        Component c        = super.prepareRenderer(renderer, row, column);
+        boolean   selected = isCellSelected(row, column);
 
         if (selected) {
             c.setBackground(Application.lookAndFeelSettings.getSelectedColor());
@@ -158,8 +165,8 @@ public class AvedTable extends JTable {
 
             // Outside of selected rows, we want to alternate the background color.
             c.setBackground((row % 2 == 0)
-                    ? Color.LIGHT_GRAY
-                    : Color.WHITE);
+                            ? Color.LIGHT_GRAY
+                            : Color.WHITE);
         }
 
         if (c instanceof JComponent) {
@@ -208,7 +215,7 @@ public class AvedTable extends JTable {
             return null;
         }
 
-        final int row = rowAtPoint(e.getPoint());
+        final int row    = rowAtPoint(e.getPoint());
         final int column = columnAtPoint(e.getPoint());
 
         if ((row == -1) || (column == -1)) {

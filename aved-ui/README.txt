@@ -28,7 +28,9 @@ or
 
 5) In the Configuration tab, set the Destination for both folders to /Applications/AVEDac, and set the distribution title to AVEDac
 
-6) In the Contents tab, select the root folder, then set the owner to root and group to wheel for both folders, check the boxes for Read/Execute for Owner,Group, Others and Write for Owner/Group. Lastly, click Application Recommendations to apply these changes.
+6) In the Contents tab, select the root folder, then set the owner to root and group to wheel for both folders,
+check the boxes for Read/Execute for Owner,Group, Others and Write for Owner/Group.
+Lastly, click Apply Recommendations to apply these changes.
 
 7) Add the MCRInstaller.dmg package to run following installation. In the Distributions icon, Click actions, then Edit button in PostInstall. Select
 Open File in the Actions. In the Type drop-down box, select Absolute Path and enter /Applications/AVEDac/tools/MCRInstaller.dmg  

@@ -1,26 +1,34 @@
 /*
  * @(#)ClassifierModel.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import com.jgoodies.binding.list.ArrayListModel;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.mbari.aved.classifier.ClassModel;
 import org.mbari.aved.classifier.TrainingModel;
@@ -33,26 +41,27 @@ import org.mbari.aved.ui.userpreferences.UserPreferences;
 import java.io.File;
 
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author dcline
  */
 public class ClassifierModel extends AbstractModel {
-
     public static final String DBROOT = "databaseRoot";
+
     // a list of available models under this database root
-    private final ArrayListModel classModelList = new ArrayListModel();
-    private final ArrayListModel trainingModelList = new ArrayListModel();
-    private File lastClassTrainingDirectory = new File("");
-    private File dbrootDirectory = new File("");
-    final String syncArrays = "syncArrays";
+    private final ArrayListModel classModelList             = new ArrayListModel();
+    final String                 syncArrays                 = "syncArrays";
+    private final ArrayListModel trainingModelList          = new ArrayListModel();
+    private File                 lastClassTrainingDirectory = new File("");
+    private File                 dbrootDirectory            = new File("");
 
     /**
      * Constructor.
      */
-    public ClassifierModel() {
-    }
+    public ClassifierModel() {}
 
     /**
      * Get the current training image directory. This is where
@@ -66,35 +75,37 @@ public class ClassifierModel extends AbstractModel {
 
     /**
      * Sets the class training image directory
-     * 
+     *
      * @param dir the training image directory
      */
     public void setClassTrainingImageDirectory(File directory) {
-
         UserPreferences.getModel().clearDockingImagesDirectories();
+
         if (changedName(lastClassTrainingDirectory, directory)) {
             lastClassTrainingDirectory = directory;
             UserPreferences.getModel().setClassTrainingImageDirectory(directory);
+
             ClassifierModelEvent e = new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_DIR_UPDATED,
-                    "setTrainingClassDirectory" + directory.toString());
+                                         "setTrainingClassDirectory" + directory.toString());
+
             notifyChanged(e);
         }
     }
 
     /**
      * Get a training model at the given index. Returns an empty
-     * <code>TrainingModel</code> if no model exist at that index
+     * <code>TrainingModel</code> if no model exists at that index
      *
      * @return a TrainingModel
      */
     public TrainingModel getTrainingModel(int index) {
-
         synchronized (syncArrays) {
             try {
                 TrainingModel model = (TrainingModel) trainingModelList.get(index);
+
                 return model;
-            } catch (IndexOutOfBoundsException ex) {
-            }
+            } catch (IndexOutOfBoundsException ex) {}
+
             return new TrainingModel();
         }
     }
@@ -104,7 +115,6 @@ public class ClassifierModel extends AbstractModel {
      * @param f the root directory to set
      */
     public void setDatabaseRoot(File directory) {
-
         if (changedName(dbrootDirectory, directory)) {
             dbrootDirectory = directory;
             UserPreferences.getModel().setClassDatabaseDirectory(directory);
@@ -128,11 +138,11 @@ public class ClassifierModel extends AbstractModel {
      */
     private static Boolean changedName(File a, File b) {
         String oldfile = ((a != null)
-                ? a.toString()
-                : new String(""));
+                          ? a.toString()
+                          : "");
         String newfile = ((b != null)
-                ? b.toString()
-                : new String(""));
+                          ? b.toString()
+                          : "");
 
         return !oldfile.equals(newfile);
     }
@@ -147,9 +157,10 @@ public class ClassifierModel extends AbstractModel {
         synchronized (syncArrays) {
             try {
                 ClassModel model = (ClassModel) classModelList.get(index);
+
                 return model;
-            } catch (IndexOutOfBoundsException ex) {
-            }
+            } catch (IndexOutOfBoundsException ex) {}
+
             return new ClassModel();
         }
     }
@@ -163,12 +174,11 @@ public class ClassifierModel extends AbstractModel {
             throw new Exception("class model cannot be null");
         }
 
-
         synchronized (syncArrays) {
             for (int i = 0; i < model.length; i++) {
                 ClassModel c = model[i].copy();
-                checkClassModel(c);
-                classModelList.add(c);
+
+                addClassModelToList(c);
             }
         }
 
@@ -186,10 +196,63 @@ public class ClassifierModel extends AbstractModel {
 
         synchronized (syncArrays) {
             ClassModel m = model.copy();
-            checkClassModel(m);
-            classModelList.add(m);
 
+            addClassModelToList(m);
             notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASS_MODELS_UPDATED, m.getName()));
+        }
+    }
+
+    /**
+     * Remove a class model from the list
+     * @param model class model to delete
+     */
+    public void removeClassModel(ClassModel model) throws Exception {
+        if (model == null) {
+            throw new Exception("class model cannot be null");
+        }
+
+        synchronized (syncArrays) {
+            Iterator<ClassModel> i = classModelList.iterator();
+
+            while (i.hasNext()) {
+                ClassModel m = i.next();
+
+                if (m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())) {
+                    classModelList.remove(m);
+
+                    break;
+                }
+            }
+
+            notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODELS_UPDATED,
+                    model.getName()));
+        }
+    }
+
+    /**
+     * Remove a training model from the list
+     * @param model training model to delete
+     */
+    public void removeTrainingModel(TrainingModel model) throws Exception {
+        if (model == null) {
+            throw new Exception("training model cannot be null");
+        }
+
+        synchronized (syncArrays) {
+            Iterator<TrainingModel> i = trainingModelList.iterator();
+
+            while (i.hasNext()) {
+                TrainingModel m = i.next();
+
+                if ((m != null) && (model != null) && m.getName().equals(model.getName())
+                        && m.getColorSpace().equals(model.getColorSpace())) {
+                    trainingModelList.remove(model);
+
+                    break;
+                }
+            }
+
+            notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASS_MODELS_UPDATED, model.getName()));
         }
     }
 
@@ -203,9 +266,37 @@ public class ClassifierModel extends AbstractModel {
         }
 
         synchronized (syncArrays) {
-            checkTrainingModel(model);
-            this.trainingModelList.add(model);
-            notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODELS_UPDATED, model.getName()));
+            addTrainingModelToList(model);
+            notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODELS_UPDATED,
+                    model.getName()));
+        }
+    }
+
+    /**
+     * Checks if the training model exists and delete it if so
+     * @param m the training model to check
+     */
+    public void addTrainingModelToList(TrainingModel model) throws Exception {
+        if (model == null) {
+            throw new Exception("training model cannot be null");
+        }
+
+        synchronized (syncArrays) {
+            Iterator<TrainingModel> i = trainingModelList.iterator();
+
+            while (i.hasNext()) {
+                TrainingModel m = i.next();
+
+                if ((m != null) && (model != null) && m.getName().equals(model.getName())
+                        && m.getColorSpace().equals(model.getColorSpace())) {
+                    trainingModelList.remove(m);
+                    trainingModelList.add(model);
+
+                    return;
+                }
+            }
+
+            trainingModelList.add(model);
         }
     }
 
@@ -222,74 +313,22 @@ public class ClassifierModel extends AbstractModel {
             for (int i = 0; i < training.length; i++) {
                 try {
                     TrainingModel t = training[i];
-                    checkTrainingModel(t);
-                    this.trainingModelList.add(t);
+
+                    addTrainingModelToList(t);
                 } catch (Exception ex) {
                     Logger.getLogger(ClassifierModel.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+
             notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODELS_UPDATED, "all"));
         }
     }
 
     /**
-     * Checks if the model exists
-     * @param model the class model to check
-     * @return true if it exists
-     */
-    public boolean checkClassExists(ClassModel newModel) {
-
-        synchronized (syncArrays) {
-            Iterator<ClassModel> i = classModelList.iterator();
-
-
-            while (i.hasNext()) {
-                ClassModel model = i.next();
-
-                if (newModel.getName().equals(model.getName())
-                        && newModel.getColorSpace().equals(model.getColorSpace())
-                        && newModel.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
-                        && newModel.getDescription().equals(model.getDescription())
-                        && newModel.getRawImageDirectory().equals(model.getRawImageDirectory())
-                        && newModel.getVarsClassName().equals(model.getVarsClassName())) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
-
-    /**
-     * Checks if the training model exists and delete it if so
-     * @param m the training model to check 
-     */
-    public void checkTrainingModel(TrainingModel model) throws Exception {
-        if (model == null) {
-            throw new Exception("training model cannot be null");
-        }
-
-        synchronized (syncArrays) {
-            Iterator<TrainingModel> i = trainingModelList.iterator();
-
-            while (i.hasNext()) {
-                TrainingModel m = i.next();
-
-                if (m != null && model != null
-                        && m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())
-                        && m.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
-                        && m.getDescription().equals(model.getDescription())) {
-                    trainingModelList.remove(model);
-                    break;
-                }
-            }
-        }
-    }
-
-    /**
      * Checks if the class model exists and delete it if so
-     * @param m the class model to check 
+     * @param m the class model to check
      */
-    public void checkClassModel(ClassModel m) throws Exception {
+    public void addClassModelToList(ClassModel m) throws Exception {
         if (m == null) {
             throw new Exception("class model cannot be null");
         }
@@ -300,13 +339,15 @@ public class ClassifierModel extends AbstractModel {
             while (i.hasNext()) {
                 ClassModel model = i.next();
 
-                if (m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())
-                        && m.getDatabaseRootdirectory().equals(model.getDatabaseRootdirectory())
-                        && m.getDescription().equals(model.getDescription())) {
+                if (m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())) {
                     classModelList.remove(model);
+                    classModelList.add(m);
+
                     break;
                 }
             }
+
+            classModelList.add(m);
         }
     }
 
@@ -317,7 +358,6 @@ public class ClassifierModel extends AbstractModel {
      * @return the class model if found, otherwise throws exception
      */
     public ClassModel getClassModel(String className) throws Exception {
-
         synchronized (syncArrays) {
             Iterator<ClassModel> i = classModelList.iterator();
 
@@ -372,10 +412,10 @@ public class ClassifierModel extends AbstractModel {
          * Indicates that the class model has changed
          */
         public static final int CLASSIFIER_DBROOT_MODEL_CHANGED = 0;
-        public static final int CLASS_MODELS_UPDATED = 2;
-        public static final int TRAINING_DIR_UPDATED = 1;
-        public static final int TRAINING_MODELS_UPDATED = 3;
-        public static final int JNI_TASK_COMPLETED = 4;
+        public static final int CLASS_MODELS_UPDATED            = 2;
+        public static final int JNI_TASK_COMPLETED              = 4;
+        public static final int TRAINING_DIR_UPDATED            = 1;
+        public static final int TRAINING_MODELS_UPDATED         = 3;
 
         /**
          * Constructor for this custom ModelEvent. Basically just like ModelEvent.

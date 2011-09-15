@@ -1,19 +1,25 @@
 /*
  * @(#)EventLabelerView.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 
@@ -22,11 +28,26 @@ package org.mbari.aved.ui;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import com.google.inject.Injector;
+import javax.swing.JButton;
+
+import org.jdesktop.swingx.JXTree;
+
 import org.mbari.aved.ui.appframework.JFrameView;
 import org.mbari.aved.ui.appframework.ModelEvent;
-import org.mbari.aved.ui.classifier.ConceptTreePanel;
+import org.mbari.aved.ui.classifier.knowledgebase.KnowledgeBaseUtil;
 import org.mbari.aved.ui.model.EventListModel;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
+
+import vars.ToolBelt;
+
+import vars.knowledgebase.Concept;
+import vars.knowledgebase.ui.Lookup;
+
+import vars.shared.ui.tree.ConceptTreeCellRenderer;
+import vars.shared.ui.tree.ConceptTreeModel;
+import vars.shared.ui.tree.ConceptTreeNode;
+import vars.shared.ui.tree.ConceptTreePanel;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -37,6 +58,8 @@ import java.util.ArrayList;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JTree;
+import javax.swing.tree.TreePath;
 
 /**
  *
@@ -52,9 +75,9 @@ public class EventLabelerView extends JFrameView {
      */
     private static final String ID_CLASS_BROWSE_KB_BUTTON = "browseknowledgebase";
     private static final String ID_CLASS_NAME_COMBO       = "classname";
-    private static final String ID_SPECIES_NAME_COMBO     = "speciesname";
     private static final String ID_CLOSE_BUTTON           = "close";
     private static final String ID_IDENTITY_REF_COMBO     = "identityreference";
+    private static final String ID_SPECIES_NAME_COMBO     = "speciesname";
     private static final String ID_TAG_COMBO              = "tag";
 
     /** Frequently accessed components */
@@ -87,13 +110,16 @@ public class EventLabelerView extends JFrameView {
         ArrayList<String> list = UserPreferences.getModel().getClassNameList();
 
         speciesClassComboBox = getForm().getComboBox(ID_SPECIES_NAME_COMBO);
-        classComboBox = getForm().getComboBox(ID_CLASS_NAME_COMBO);
+        classComboBox        = getForm().getComboBox(ID_CLASS_NAME_COMBO);
         classComboBox.setModel(new DefaultComboBoxModel(list.toArray()));
         classComboBox.addActionListener(actionHandler);
         classComboBox.setSelectedIndex(-1);
         getForm().getButton(ID_APPLY_BUTTON).addActionListener(actionHandler);
         getForm().getButton(ID_CLOSE_BUTTON).addActionListener(actionHandler);
         getForm().getButton(ID_CLASS_BROWSE_KB_BUTTON).addActionListener(actionHandler);
+
+
+        this.getRootPane().setDefaultButton((JButton) getForm().getButton(ID_APPLY_BUTTON));
         this.addMouseListener((MouseListener) controller);
         this.pack();
         this.setResizable(false);
@@ -105,8 +131,16 @@ public class EventLabelerView extends JFrameView {
      * @return the concept tree name
      */
     String getSelectedConceptName() {
-        if (conceptTreePanel != null) {
-            return conceptTreePanel.getSelectedConceptName();
+        if ((conceptTreePanel != null)) {
+            JTree    tree          = conceptTreePanel.getJTree();
+            TreePath selectionPath = tree.getSelectionPath();
+
+            if (selectionPath != null) {
+                ConceptTreeNode node    = (ConceptTreeNode) selectionPath.getLastPathComponent();
+                Concept         concept = (Concept) node.getUserObject();
+
+                return concept.getPrimaryConceptName().getName();
+            }
         }
 
         return null;
@@ -148,17 +182,29 @@ public class EventLabelerView extends JFrameView {
         MouseListener listener = (MouseListener) getController();
 
         // TODO: put check for knowledge base existence
-        conceptTreePanel = new ConceptTreePanel(listener);
+        if (KnowledgeBaseUtil.isKnowledgebaseAvailable()) {
+            Injector injector = (Injector) Lookup.getGuiceInjectorDispatcher().getValueObject();
+            ToolBelt toolBelt = injector.getInstance(ToolBelt.class);
 
-        // Only build the conceptTreePanel when the window is opened
-        conceptTreePanel.buildPanel();
-        conceptTreeFrame = new JFrame(ApplicationInfo.getName() + " - " + "VARS Knowledge Base Lookup");
-        conceptTreeFrame.setContentPane(conceptTreePanel);
-        conceptTreeFrame.setFocusable(true);
-        conceptTreeFrame.setSize(400, 600);
-        conceptTreeFrame.setVisible(true);
-        conceptTreePanel.setVisible(true);
-        conceptTreePanel.addMouseListener(listener);
+            conceptTreePanel = new ConceptTreePanel(toolBelt.getKnowledgebaseDAOFactory());
+
+            final ConceptTreeModel treeModel = new ConceptTreeModel(toolBelt.getKnowledgebaseDAOFactory());
+            JXTree                 tree      = new JXTree(treeModel);
+
+            tree.setCellRenderer(new ConceptTreeCellRenderer());
+            conceptTreePanel.setJTree(tree);
+            conceptTreePanel.setOpaque(true);
+
+            // Only build the conceptTreePanel when the window is opened
+            // conceptTreePanel.buildPanel();
+            conceptTreeFrame = new JFrame(ApplicationInfo.getName() + " - " + "VARS Knowledge Base Lookup");
+            conceptTreeFrame.setContentPane(conceptTreePanel);
+            conceptTreeFrame.setFocusable(true);
+            conceptTreeFrame.setSize(400, 600);
+            conceptTreeFrame.setVisible(true);
+            conceptTreePanel.setVisible(true);
+            conceptTreePanel.addMouseListener(listener);
+        }
     }
 
     public void modelChanged(ModelEvent event) {}

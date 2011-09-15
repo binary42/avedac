@@ -112,6 +112,14 @@ public class AVEDClassifierLibraryJNITestClass extends TestCase {
                             + "\tprobability in class:" + storeProbability[i]);
                 }
             }
+
+            System.out.println("Deleting classes");
+            app.delete_class("flat", dbRoot, ColorSpace.GRAY);
+            app.delete_class("rath", dbRoot, ColorSpace.GRAY);
+
+            System.out.println("Deleting training libraries");
+            app.delete_train_class(dbRoot, trainingAlias);
+
         } catch (Exception e) {
             System.out.println("Exception" + e);
         }

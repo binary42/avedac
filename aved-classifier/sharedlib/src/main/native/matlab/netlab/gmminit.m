@@ -29,7 +29,7 @@ end
 
 % Arbitrary width used if variance collapses to zero: make it 'large' so
 % that centre is responsible for a reasonable number of points.
-GMM_WIDTH = 1.0; 
+GMM_WIDTH = 1.0;
 
 perm = randperm(ndata);
 perm = perm(1:mix.ncentres);
@@ -73,11 +73,7 @@ case 'spherical'
       % Pick out data points belonging to this centre
       c = x(find(post(:,i)),:);
       diffs = c - (ones(size(c, 1), 1) * mix.centres(i, :));
-      if(size(c, 1) > 0)
-          mix.covars(:,:,i) = (diffs'*diffs)/(size(c, 1));
-      else
-          mix.covars(:,:,i) = (diffs'*diffs)*0;
-      end
+      mix.covars(:,:,i) = (diffs'*diffs)/(size(c, 1));
       % Add GMM_WIDTH*Identity to rank-deficient covariance matrices
       if rank(mix.covars(:,:,i)) < mix.nin
 	mix.covars(:,:,i) = mix.covars(:,:,i) + GMM_WIDTH.*eye(mix.nin);

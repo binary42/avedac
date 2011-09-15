@@ -1,19 +1,25 @@
 /*
  * @(#)SummaryModel.java
  * 
- * Copyright 2010 MBARI
+ * Copyright 2011 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 
@@ -25,6 +31,7 @@ package org.mbari.aved.ui.model;
 import aved.model.EventDataStream;
 
 import org.mbari.aved.mbarivision.api.AvedVideo;
+import org.mbari.aved.mbarivision.api.utils.Utils;
 import org.mbari.aved.ui.appframework.AbstractModel;
 import org.mbari.aved.ui.appframework.ModelEvent;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
@@ -36,7 +43,6 @@ import java.io.File;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import org.mbari.aved.mbarivision.api.utils.Utils;
 
 /**
  *
@@ -45,7 +51,7 @@ import org.mbari.aved.mbarivision.api.utils.Utils;
 public class SummaryModel extends AbstractModel {
 
     /** Defines the default string to put in each label */
-    private static final String EMPTY_STRING = new String("");
+    private static final String EMPTY_STRING = "";
 
     /** Defines the source video transcoded output */
     private AvedVideo avedVideoOut;
@@ -81,7 +87,6 @@ public class SummaryModel extends AbstractModel {
      * Clears out the list and notifies model event listeners
      */
     public void reset() throws MalformedURLException {
-       
         this.eventDataStream = null;
         this.avedVideoOut    = null;
         this.setXmlFile(new File(EMPTY_STRING));
@@ -90,7 +95,6 @@ public class SummaryModel extends AbstractModel {
         this.setTranscodeDir(new File(EMPTY_STRING));
         this.setTestImageDir(new File(EMPTY_STRING));
         this.setTranscodeSource(new File(EMPTY_STRING));
-     
     }
 
     /**
@@ -164,7 +168,7 @@ public class SummaryModel extends AbstractModel {
 
             String name = ((file != null)
                            ? file.toString()
-                           : new String("null"));
+                           : "null");
 
             notifyChanged(new SummaryModelEvent(this, SummaryModelEvent.XML_FILE_CHANGED, name));
         }
@@ -282,10 +286,10 @@ public class SummaryModel extends AbstractModel {
     private static Boolean changedName(URL a, URL b) {
         String oldfile = ((a != null)
                           ? a.toString()
-                          : new String(""));
+                          : "");
         String newfile = ((b != null)
                           ? b.toString()
-                          : new String(""));
+                          : "");
 
         return !oldfile.equals(newfile);
     }
@@ -297,10 +301,10 @@ public class SummaryModel extends AbstractModel {
     private static Boolean changedName(File a, File b) {
         String oldfile = ((a != null)
                           ? a.toString()
-                          : new String(""));
+                          : "");
         String newfile = ((b != null)
                           ? b.toString()
-                          : new String(""));
+                          : "");
 
         return !oldfile.equals(newfile);
     }

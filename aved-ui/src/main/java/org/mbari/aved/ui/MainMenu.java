@@ -1,28 +1,40 @@
 /*
  * @(#)MainMenu.java
  * 
- * Copyright 2010 MBARI
+ * Copyright 2011 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import com.vlsolutions.swing.docking.DockingDesktop;
 
 import org.mbari.aved.ui.appframework.JFrameView;
 import org.mbari.aved.ui.appframework.ModelEvent;
 import org.mbari.aved.ui.appframework.ModelListener;
+import org.mbari.aved.ui.classifier.ClassImageDirectoryViewManager;
+import org.mbari.aved.ui.classifier.DockingContainer;
 import org.mbari.aved.ui.detectionsettings.DetectionSettings;
 import org.mbari.aved.ui.message.MessagePrintStream;
 import org.mbari.aved.ui.model.EventListModel;
@@ -75,67 +87,68 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
-import org.mbari.aved.ui.classifier.ClassImageDirectoryViewManager;
-import org.mbari.aved.ui.classifier.DockingContainer;
 
 /**
  *
  */
 public class MainMenu implements ModelListener {
+    public static String       BATCH_PROCESS           = "Batch process";
+    public static String       CLOSE_EVENTS            = "Close events";
+    public static String       CREATE_CLASS            = "Create class";
+    public static String       CREATE_TRAINING_LIBRARY = "Create training library";
+    public static String       DETECTION_SETTINGS      = "Detection Settings";
+    public static String       EXIT                    = "Exit";
+    public static String       EXPORT_EVENTS           = "Export events";
+    public static String       FILE_PROCESS            = "Video file";
+    public static String       HELP_CONTENTS           = "Contents";
+    public static String       MESSAGES                = "Messages";
+    public static String       OPEN_EVENTS             = "Open events";
+    public static String       ORGANIZE_CLASSES        = "Organize classes";
+    public static String       PREFERENCES             = "Preferences";
+    public static String       RUN_CLASSIFIER          = "Run";
+    public static String       BATCH_RUN_CLASSIFIER           = "Batch process";
+    public static String       SAVE_EVENTS             = "Save events";
+    public static String       SAVE_EVENTS_AS          = "Save events as...";
+    public static String       STREAM_PROCESS          = "Video stream";
+    public static String       TEST_CLASS              = "Test class";
+    private static final long  serialVersionUID        = 1L;
+    public final static Cursor defaultCursor           = Cursor.getDefaultCursor();
 
-    public static String BATCH_PROCESS = "Batch process";
-    public static String CLOSE_EVENTS = "Close events";
-    public static String CREATE_CLASS = "Create class";
-    public static String CREATE_TRAINING_LIBRARY = "Create training library";
-    public static String DETECTION_SETTINGS = "Detection Settings";
-    public static String EXIT = "Exit";
-    public static String EXPORT_EVENTS = "Export events";
-    public static String FILE_PROCESS = "Video file";
-    public static String HELP_CONTENTS = "Contents";
-    public static String MESSAGES = "Messages";
-    public static String OPEN_EVENTS = "Open events";
-    public static String ORGANIZE_CLASSES = "Organize classes";
-    public static String PREFERENCES = "Preferences";
-    public static String RUN_CLASSIFIER = "Run";
-    public static String SAVE_EVENTS = "Save events";
-    public static String SAVE_EVENTS_AS = "Save events as...";
-    public static String STREAM_PROCESS = "Video stream";
-    public static String TEST_CLASS = "Test class";
-    private static final long serialVersionUID = 1L;
-    public final static Cursor defaultCursor = Cursor.getDefaultCursor();
     /** Busy and wait cursor */
     public final static Cursor busyCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
+
     /** Help menu items */
-    public static String HELP_ABOUT = "About " + ApplicationInfo.getName();
-    private static JFrame imageOrganizer;
+    public static String           HELP_ABOUT = "About " + ApplicationInfo.getName();
+    private static JFrame          imageOrganizer;
+    private JMenuItem              closeEventsItem;
+    private JMenuItem              createClassItem;
+    private JMenuItem              createTrainingLibraryItem;
+    private DetectionSettings      detectionSettings;
+    private EditMenu               editM;
+    private JMenu                  editMenu;
+    private JMenuItem              exitItem;
+    private JMenuItem              exportExcelEventsItems;
+    private JMenuItem              helpContentsMenuItem;
     private final ApplicationModel model;
-    private JMenuItem closeEventsItem;
-    private JMenuItem createClassItem;
-    private JMenuItem createTrainingLibraryItem;
-    private DetectionSettings detectionSettings;
-    private EditMenu editM;
-    private JMenu editMenu;
-    private JMenuItem exitItem;
-    private JMenuItem exportExcelEventsItems;
-    private JMenuItem helpContentsMenuItem;
-    private JMenuItem openClassifierPreferenceItem;
-    private JMenuItem openEventsItem;
-    private JMenuItem organizeClassImagesMenuItem;
-    private JMenuItem runClassifierItem;
-    private JMenuItem saveEventsItemAs;
-    private JMenuItem saveEventsMenuItem;
-    private SummaryView summaryView;
-    private JMenuItem testClassItem;
+    private JMenuItem              openClassifierPreferenceItem;
+    private JMenuItem              openEventsItem;
+    private JMenuItem              organizeClassImagesMenuItem;
+    private JMenuItem              runClassifierItem;
+    private JMenuItem              saveEventsItemAs;
+    private JMenuItem              saveEventsMenuItem;
+    private SummaryView            summaryView;
+    private JMenuItem              testClassItem;
+    private JMenuItem batchRunClassifierItem;
 
     public MainMenu(ApplicationModel model) {
         this.model = model;
-        model.addModelListener(this);      
+        model.addModelListener(this);
     }
 
     /**
      * Displays the Classifier class creation interface
      */
-    void displayCreateClass() {       
+    void displayCreateClass() {
         Application.getClassifier().selectCreateClassTabbedView();
         display(Application.getClassifier().getView());
     }
@@ -145,7 +158,8 @@ public class MainMenu implements ModelListener {
      */
     void displayTestClass() {
         Application.getClassifier().selectTestClassTabbedView();
-        display(Application.getClassifier().getView());    }
+        display(Application.getClassifier().getView());
+    }
 
     /**
      * Displays the Classifier training library interface
@@ -162,6 +176,15 @@ public class MainMenu implements ModelListener {
         Application.getClassifier().selectRunPanelTabbedView();
         display(Application.getClassifier().getView());
     }
+
+    /**
+     * Displays the Classifier batch run interface
+     */
+    private void displayBatchRunClassifier() {
+        Application.getClassifier().selectBatchRunPanelTabbedView();
+        display(Application.getClassifier().getView());
+    }
+
 
     /**
      * Displays the Classifier setup interface
@@ -194,13 +217,12 @@ public class MainMenu implements ModelListener {
      */
     public void exitApp() {
         try {
-            Application.getController().shutdown(); 
+            Application.getController().shutdown();
         } catch (Exception ex) {
             Logger.getLogger(MainMenu.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         System.exit(0);
-
     }
 
     /**
@@ -215,11 +237,10 @@ public class MainMenu implements ModelListener {
             // windowClosing  method of a registered WindowListener object.
             imageOrganizer.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
             imageOrganizer.addWindowListener(new WindowAdapter() {
-
                 @Override
                 public void windowClosing(WindowEvent e) {
                     DockingContainer dockContainer = (DockingContainer) imageOrganizer.getContentPane();
-                    DockingDesktop desktop = dockContainer.getDesktop();
+                    DockingDesktop   desktop       = dockContainer.getDesktop();
 
                     desktop.clear();
                     imageOrganizer.dispose();
@@ -227,10 +248,7 @@ public class MainMenu implements ModelListener {
                 }
             });
             imageOrganizer.addKeyListener(new KeyListener() {
-
-                public void keyTyped(KeyEvent e) {
-                }
-
+                public void keyTyped(KeyEvent e) {}
                 public void keyPressed(KeyEvent e) {
                     String s = System.getProperty("os.name").toLowerCase();
 
@@ -241,9 +259,7 @@ public class MainMenu implements ModelListener {
                         imageOrganizer.setVisible(false);
                     }
                 }
-
-                public void keyReleased(KeyEvent e) {
-                }
+                public void keyReleased(KeyEvent e) {}
             });
 
             try {
@@ -287,8 +303,8 @@ public class MainMenu implements ModelListener {
         // Build the menus
 
         /** **************File menu ************** */
-        JMenu fileMenu = new JMenu("File");
-        ActionHandler l = new ActionHandler();
+        JMenu         fileMenu = new JMenu("File");
+        ActionHandler l        = new ActionHandler();
 
         openEventsItem = new JMenuItem(OPEN_EVENTS);
         setMenuItemMneumonic(openEventsItem, KeyEvent.VK_O);
@@ -349,6 +365,9 @@ public class MainMenu implements ModelListener {
 
         runClassifierItem = new JMenuItem(RUN_CLASSIFIER);
         classifierMenu.add(runClassifierItem);
+        batchRunClassifierItem = new JMenuItem(BATCH_RUN_CLASSIFIER);
+        classifierMenu.add(batchRunClassifierItem);
+        batchRunClassifierItem.addActionListener(l);
         runClassifierItem.addActionListener(l);
         createClassItem = new JMenuItem(CREATE_CLASS);
         classifierMenu.add(createClassItem);
@@ -376,10 +395,10 @@ public class MainMenu implements ModelListener {
 
         // Initalize listener for the JavaHelp system
         try {
-            URL url = Application.class.getResource("/org/mbari/aved/ui/HelpSet.hs");
+            URL         url    = Application.class.getResource("/org/mbari/aved/ui/HelpSet.hs");
             ClassLoader loader = Application.class.getClassLoader();
-            HelpSet hs = new HelpSet(loader, url);
-            HelpBroker hb = hs.createHelpBroker();
+            HelpSet     hs     = new HelpSet(loader, url);
+            HelpBroker  hb     = hs.createHelpBroker();
 
             addHelpActionListener(new CSH.DisplayHelpFromSource(hb));
         } catch (Exception e) {
@@ -391,12 +410,14 @@ public class MainMenu implements ModelListener {
         // If mac, handling preferences and about menu differently
         if (s.indexOf("mac") != -1) {
             try {
+
                 // Generate and register the OSXAdapter, passing it a hash of all the methods we wish to
                 // use as delegates for various com.apple.eawt.ApplicationListener methods
                 OSXAdapter.setQuitHandler(this, getClass().getDeclaredMethod("exitApp", (Class[]) null));
                 OSXAdapter.setAboutHandler(this, getClass().getDeclaredMethod("showAboutBox", (Class[]) null));
                 OSXAdapter.setPreferencesHandler(this, getClass().getDeclaredMethod("showPrefsDialog", (Class[]) null));
-                OSXAdapter.setFileHandler(this, getClass().getDeclaredMethod("openEvent", new Class[]{String.class}));
+                OSXAdapter.setFileHandler(this,
+                                          getClass().getDeclaredMethod("openEvent", new Class[] { String.class }));
             } catch (Exception e) {
                 System.err.println("Error while loading the OSXAdapter:");
                 e.printStackTrace();
@@ -415,11 +436,11 @@ public class MainMenu implements ModelListener {
 
         JMenu edit = new JMenu("Edit");
 
-        editM = new EditMenu(this.model);
+        editM    = new EditMenu(this.model);
         editMenu = (JMenu) editM.create(edit);
 
-        JMenu viewMenu = new JMenu("View");
-        JMenuItem item = new JMenuItem(MESSAGES);
+        JMenu     viewMenu = new JMenu("View");
+        JMenuItem item     = new JMenuItem(MESSAGES);
 
         setMenuItemMneumonic(item, KeyEvent.VK_M);
         item.addActionListener(l);
@@ -483,24 +504,24 @@ public class MainMenu implements ModelListener {
     public void modelChanged(ModelEvent event) {
         if (event instanceof EventListModel.EventListModelEvent) {
             switch (event.getID()) {
-                case EventListModel.EventListModelEvent.LIST_RELOADED:
-                    runDisplayLogic();
+            case EventListModel.EventListModelEvent.LIST_RELOADED :
+                runDisplayLogic();
 
-                    break;
+                break;
 
-                case EventListModelEvent.LIST_CLEARED:
+            case EventListModelEvent.LIST_CLEARED :
 
-                    // Disable save/close function
-                    openEventsItem.setEnabled(true);
-                    closeEventsItem.setEnabled(false);
-                    saveEventsMenuItem.setEnabled(false);
-                    saveEventsItemAs.setEnabled(false);
-                    exportExcelEventsItems.setEnabled(false);
+                // Disable save/close function
+                openEventsItem.setEnabled(true);
+                closeEventsItem.setEnabled(false);
+                saveEventsMenuItem.setEnabled(false);
+                saveEventsItemAs.setEnabled(false);
+                exportExcelEventsItems.setEnabled(false);
 
-                    break;
+                break;
 
-                default:
-                    break;
+            default :
+                break;
             }
         }
     }
@@ -515,7 +536,7 @@ public class MainMenu implements ModelListener {
      */
     public void sendExit() {
         ActionListener l[] = exitItem.getActionListeners();
-        ActionEvent e = new ActionEvent(this, 0, EXIT);
+        ActionEvent    e   = new ActionEvent(this, 0, EXIT);
 
         if (l.length > 0) {
             l[0].actionPerformed(e);
@@ -534,6 +555,7 @@ public class MainMenu implements ModelListener {
     }
 
     private void openEvent(String path) {
+
         // TODO: Add function to ask user close events, then re-open new event
     }
 
@@ -543,10 +565,8 @@ public class MainMenu implements ModelListener {
         // ask user if want to save the changes made before
         // allowing to open and thrash existing data
         SwingUtilities.invokeLater(new Runnable() {
-
             public void run() {
                 Thread change = new Thread(new Runnable() {
-
                     public void run() {
                         try {
                             Application.getController().importProcessedResults();
@@ -564,15 +584,12 @@ public class MainMenu implements ModelListener {
     }
 
     public class ActionHandler implements ActionListener {
-
         public void actionPerformed(final ActionEvent e) {
             SwingUtilities.invokeLater(new Runnable() {
-
                 public void run() {
                     Thread change = new Thread(new Runnable() {
-
                         public void run() {
-                            Object obj = e.getSource();
+                            Object obj           = e.getSource();
                             String actionCommand = e.getActionCommand();
 
                             if (actionCommand.equals(MainMenu.EXIT)) {
@@ -580,7 +597,9 @@ public class MainMenu implements ModelListener {
                             } else if (obj.equals(createTrainingLibraryItem)) {
                                 displayTrainingLibrary();
                             } else if (obj.equals(runClassifierItem)) {
-                                displayRunClassifier();
+                                displayRunClassifier();}
+                            else if (obj.equals(batchRunClassifierItem)) {
+                                displayBatchRunClassifier();
                             } else if (obj.equals(openClassifierPreferenceItem)) {
                                 displayClassifierSettings();
                             } else if (obj.equals(createClassItem)) {
@@ -601,10 +620,8 @@ public class MainMenu implements ModelListener {
                                 showAboutBox();
                             } else if (obj.equals(saveEventsMenuItem)) {
                                 SwingUtilities.invokeLater(new Runnable() {
-
                                     public void run() {
                                         Thread change = new Thread(new Runnable() {
-
                                             public void run() {
                                                 try {
                                                     Application.getController().saveProcessedResults();
@@ -621,10 +638,8 @@ public class MainMenu implements ModelListener {
                                 });
                             } else if (obj.equals(saveEventsItemAs)) {
                                 SwingUtilities.invokeLater(new Runnable() {
-
                                     public void run() {
                                         Thread change = new Thread(new Runnable() {
-
                                             public void run() {
                                                 try {
                                                     Application.getController().saveProcessedResultsAs();
@@ -641,10 +656,8 @@ public class MainMenu implements ModelListener {
                                 });
                             } else if (obj.equals(exportExcelEventsItems)) {
                                 SwingUtilities.invokeLater(new Runnable() {
-
                                     public void run() {
                                         Thread change = new Thread(new Runnable() {
-
                                             public void run() {
                                                 try {
                                                     Application.getController().exportProcessedResultsAsXls();
@@ -661,16 +674,20 @@ public class MainMenu implements ModelListener {
                                 });
 
                                 // TODO: fill in settings for these
-                            } else if (actionCommand.equals(MainMenu.DETECTION_SETTINGS)) {
-                            } else if (actionCommand.equals(MainMenu.PREFERENCES)) {
+                            } else if (actionCommand.equals(MainMenu.DETECTION_SETTINGS)) {}
+                            else if (actionCommand.equals(MainMenu.PREFERENCES)) {
                                 displayPreferences();
-                            } else if (actionCommand.equals(MainMenu.FILE_PROCESS)) {
-                            } else if (actionCommand.equals(MainMenu.STREAM_PROCESS)) {
-                            } else if (actionCommand.equals(MainMenu.BATCH_PROCESS)) {
-                            } else if (actionCommand.equals(MainMenu.HELP_ABOUT)) {
-                            } else if (actionCommand.equals(MainMenu.HELP_CONTENTS)) {
+                            } else if (actionCommand.equals(MainMenu.FILE_PROCESS)) {}
+                            else if (actionCommand.equals(MainMenu.STREAM_PROCESS)) {}
+                            else if (actionCommand.equals(MainMenu.BATCH_PROCESS)) {
+                            
+                            }
+                            else if (actionCommand.equals(MainMenu.HELP_ABOUT)) {}
+                            else if (actionCommand.equals(MainMenu.HELP_CONTENTS)) {
+
                                 // This is already tied to the HelpBroker so no need to handle this here
                             } else {
+
                                 // TODO: throw exception here
                             }
                         }
@@ -682,6 +699,7 @@ public class MainMenu implements ModelListener {
         }
     }
 
+
     /**
      * Ce panneau représente l'en-tête d'un formulaire. Un en-tête affiche un logo (dont l'opacité peut
      * être modifiée) et un titre.
@@ -689,10 +707,9 @@ public class MainMenu implements ModelListener {
      * @author Roguy
      */
     public static class HeaderPanel extends JPanel {
-
         private static AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER);
-        private Color blender;
-        private ImageIcon icon;
+        private Color                 blender;
+        private ImageIcon             icon;
 
         /**
          * Crée un nouvel en-tête affichant l'image sélectionnée, avec l'opacité choisie et le titre
@@ -704,11 +721,11 @@ public class MainMenu implements ModelListener {
          */
         public HeaderPanel(String title, ImageIcon icon, float alpha) {
             super(new BorderLayout());
-            this.icon = icon;
+            this.icon    = icon;
             this.blender = new Color(255, 255, 255, (int) (255 * alpha));
 
             JLabel headerTitle = new JLabel(title);
-            Font font = new Font("Papyrus", Font.PLAIN, 20);
+            Font   font        = new Font("Papyrus", Font.PLAIN, 20);
 
             // Font font = headerTitle.getFont().deriveFont(Font.PLAIN, 20.0f);
             headerTitle.setFont(font);
@@ -731,8 +748,8 @@ public class MainMenu implements ModelListener {
             }
 
             return (c != null)
-                    ? c
-                    : UIManager.getColor("InternalFrame.activeTitleBackground");
+                   ? c
+                   : UIManager.getColor("InternalFrame.activeTitleBackground");
         }
 
         /**
@@ -747,10 +764,10 @@ public class MainMenu implements ModelListener {
                 return;
             }
 
-            Color control = new Color(178, 213, 255);
-            int width = getWidth();
-            int height = getHeight();
-            Graphics2D g2 = (Graphics2D) g;
+            Color      control = new Color(178, 213, 255);
+            int        width   = getWidth();
+            int        height  = getHeight();
+            Graphics2D g2      = (Graphics2D) g;
 
             g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -769,15 +786,15 @@ public class MainMenu implements ModelListener {
         }
     }
 
-    public static class SummaryView extends JFrameView {
 
-        public static final String ID_IMPORT_DIRECTORY_LABEL = "importDir";                   // javax.swing.JTable
-        public static final String ID_INPUTSOURCE_URL_LABEL = "videoSourceURL";              // javax.swing.JLabel
-        public static final String ID_MASTER_BROWSE_BUTTON = "browseMaster";                // javax.swing.JButton
-        public static final String ID_MPEG_BROWSE_BUTTON = "browseMpeg";                  // javax.swing.JButton
-        public static final String ID_MPEG_FILE_LABEL = "mpegFile";                    // javax.swing.JLabel
+    public static class SummaryView extends JFrameView {
+        public static final String ID_IMPORT_DIRECTORY_LABEL     = "importDir";                   // javax.swing.JTable
+        public static final String ID_INPUTSOURCE_URL_LABEL      = "videoSourceURL";              // javax.swing.JLabel
+        public static final String ID_MASTER_BROWSE_BUTTON       = "browseMaster";                // javax.swing.JButton
+        public static final String ID_MPEG_BROWSE_BUTTON         = "browseMpeg";                  // javax.swing.JButton
+        public static final String ID_MPEG_FILE_LABEL            = "mpegFile";                    // javax.swing.JLabel
         public static final String ID_TRANSCODE_OUTPUT_DIR_LABEL = "transcodeSourceOutputDir";    // javax.swing.JLabel
-        public static final String ID_TRANSCODE_SOURCE_LABEL = "transcodeSource";             // javax.swing.JLabel
+        public static final String ID_TRANSCODE_SOURCE_LABEL     = "transcodeSource";             // javax.swing.JLabel
 
         /*
          *  Component names in the EditorSummary.xml form
@@ -785,6 +802,7 @@ public class MainMenu implements ModelListener {
          * should be modified here too
          */
         public static final String ID_XML_FILE_LABEL = "xmlFile";    // javax.swing.JLabel
+
         /**
          *
          */
@@ -817,12 +835,12 @@ public class MainMenu implements ModelListener {
          *  Otherwise, if files are in different directories, displays the full path names
          */
         private void runDisplayLogic() {
-            SummaryModel e = ((ApplicationModel) getModel()).getSummaryModel();
-            File xml = e.getXmlFile();
-            URL mpeg = e.getMpegUrl();
-            URL inputsource = e.getInputSourceURL();
-            File transcodeDir = e.getFrameSourceDir();
-            File transcodesource = e.getTranscodeSource();
+            SummaryModel e               = ((ApplicationModel) getModel()).getSummaryModel();
+            File         xml             = e.getXmlFile();
+            URL          mpeg            = e.getMpegUrl();
+            URL          inputsource     = e.getInputSourceURL();
+            File         transcodeDir    = e.getFrameSourceDir();
+            File         transcodesource = e.getTranscodeSource();
 
             // If the xml is defined then show all related files/directories
             // relative to it
@@ -834,16 +852,16 @@ public class MainMenu implements ModelListener {
                     if (URLUtils.isFile(mpeg.toString())) {
                         File f = new File(mpeg.toString());
 
-                        getForm().getLabel(ID_MPEG_FILE_LABEL).setText(new String("<html><a href>" + f.getName()
-                                + "</a></html>"));
+                        getForm().getLabel(ID_MPEG_FILE_LABEL).setText("<html><a href>" + f.getName()
+                                + "</a></html>");
                     } else {
 
                         // This is a URL. Since it can be long, so only display the name
                         // not the fullpath
                         File f = new File(mpeg.getPath());
 
-                        getForm().getLabel(ID_MPEG_FILE_LABEL).setText(new String("<html><a href>" + f.getName()
-                                + "</a></html>"));
+                        getForm().getLabel(ID_MPEG_FILE_LABEL).setText("<html><a href>" + f.getName()
+                                + "</a></html>");
                     }
                 }
 
@@ -851,8 +869,8 @@ public class MainMenu implements ModelListener {
                     if (URLUtils.isFile(inputsource.toString())) {
                         File f = new File(inputsource.toString());
 
-                        getForm().getLabel(ID_INPUTSOURCE_URL_LABEL).setText(new String("<html><a href>" + f.getName()
-                                + "</a></html>"));
+                        getForm().getLabel(ID_INPUTSOURCE_URL_LABEL).setText("<html><a href>" + f.getName()
+                                + "</a></html>");
                     } else {
 
                         /**
@@ -862,14 +880,14 @@ public class MainMenu implements ModelListener {
                          */
                         File f = new File(inputsource.getPath());
 
-                        getForm().getLabel(ID_INPUTSOURCE_URL_LABEL).setText(new String("<html><a href>" + f.getName()
-                                + "</a></html>"));
+                        getForm().getLabel(ID_INPUTSOURCE_URL_LABEL).setText("<html><a href>" + f.getName()
+                                + "</a></html>");
                     }
                 }
 
                 if (transcodeDir != null) {
                     getForm().getLabel(ID_TRANSCODE_OUTPUT_DIR_LABEL).setText(
-                            transcodeDir.getAbsolutePath().toString());
+                        transcodeDir.getAbsolutePath().toString());
                 }
 
                 if (transcodesource != null) {
@@ -884,15 +902,15 @@ public class MainMenu implements ModelListener {
                 getForm().getLabel(ID_XML_FILE_LABEL).setText("-");
 
                 if (mpeg != null) {
-                    getForm().getLabel(ID_MPEG_FILE_LABEL).setText(new String("<html><a href>" + mpeg.toString()
-                            + "</a></html>"));
+                    getForm().getLabel(ID_MPEG_FILE_LABEL).setText("<html><a href>" + mpeg.toString()
+                            + "</a></html>");
                 } else {
                     getForm().getLabel(ID_MPEG_FILE_LABEL).setText("-");
                 }
 
                 if (inputsource != null) {
-                    getForm().getLabel(ID_INPUTSOURCE_URL_LABEL).setText(new String("<html><a href>"
-                            + inputsource.toString() + "</a></html>"));
+                    getForm().getLabel(ID_INPUTSOURCE_URL_LABEL).setText("<html><a href>"
+                            + inputsource.toString() + "</a></html>");
                 } else {
                     getForm().getLabel(ID_INPUTSOURCE_URL_LABEL).setText("-");
                 }

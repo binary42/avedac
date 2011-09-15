@@ -1,23 +1,33 @@
 /*
  * @(#)TableController.java
  * 
- * Copyright 2010 MBARI
+ * Copyright 2011 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui.table;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import org.mbari.aved.ui.ApplicationModel;
 import org.mbari.aved.ui.EventPopupMenu;
 import org.mbari.aved.ui.appframework.AbstractController;
@@ -43,17 +53,19 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 
 import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableModel;
+import javax.swing.table.AbstractTableModel; 
 
 public class TableController extends AbstractController implements ModelListener {
 
     /** True when a popup window is displayed */
     private Boolean hasPopup = false;
+
     /** Customized table for displaying AVED data */
     private final EventTable eventTable;
+
     /** The popup */
     private final EventPopupMenu popup;
+
     /** Defines the table model for displaying event data in a table */
     private final EventAbstractTableModel tablemodel;
 
@@ -125,7 +137,7 @@ public class TableController extends AbstractController implements ModelListener
             TableSorter sorter = getModel().getSorter();
 
             if (sorter != null) {
-                int row = table.rowAtPoint(p);
+                int row   = table.rowAtPoint(p);
                 int index = sorter.modelIndex(row);
 
                 // On double click, but not while a popup is showing
@@ -135,7 +147,7 @@ public class TableController extends AbstractController implements ModelListener
                     if (e.getClickCount() == 2) {
                         EventObjectContainer c = model.getEventListModel().getElementAt(index);
 
-                        PlayerManager.getInstance().openView(c, model, true);
+                        PlayerManager.getInstance().openView(c, model);
                     }
                 }
 
@@ -165,77 +177,79 @@ public class TableController extends AbstractController implements ModelListener
      */
     public void modelChanged(ModelEvent event) {
         if (event instanceof EventListModelEvent) {
-            EventListModelEvent e = (EventListModelEvent) event;
-            EventListModel listmodel = getModel().getEventListModel();
+            EventListModelEvent e         = (EventListModelEvent) event;
+            EventListModel      listmodel = getModel().getEventListModel();
 
             switch (event.getID()) {
-                case EventListModel.EventListModelEvent.CURRENT_PAGE_CHANGED:
-                    if (!listmodel.getValueIsAdjusting() && (eventTable != null)) {
-                        // TODO: don't we need model to view translation here ?
-                        //int row = listmodel.getValue();
-                        //eventTable.scrollRectToVisible(eventTable.getCellRect(row, 1, true));
+            case EventListModel.EventListModelEvent.CURRENT_PAGE_CHANGED :
+                if (!listmodel.getValueIsAdjusting() && (eventTable != null)) {
+
+                    // TODO: don't we need model to view translation here ?
+                    // int row = listmodel.getValue();
+                    // eventTable.scrollRectToVisible(eventTable.getCellRect(row, 1, true));
+                }
+
+                break;
+
+            // Most of the events are handled through the JTable so these
+            // are here just as placeholders in case some special handling
+            // is required for these
+            case EventListModel.EventListModelEvent.LIST_RELOADED :
+                tablemodel.getTableModel().replace(listmodel);
+
+                break;
+
+            // This will scroll the table to the last loaded image
+            case EventListModel.EventListModelEvent.NUM_LOADED_IMAGES_CHANGED :
+
+                // uncomment if you want the table to scroll as it is loading
+                // int numchanged = e.getFlag();
+                // eventTable.scrollRectToVisible(eventTable.getCellRect(numchanged, 1, true));
+                break;
+
+            case EventListModel.EventListModelEvent.ONE_ENTRY_REMOVED :
+                CustomTableModel   model        = tablemodel.getTableModel();
+                ArrayList<Integer> modelIndexes = e.getModelIndexes();
+                ArrayList<Integer> rowIndexes   = getTranslatedIndexes(modelIndexes);
+
+                if (rowIndexes.size() > 0) {
+                    int firstRow = rowIndexes.get(0);
+                    int lastRow  = firstRow;
+
+                    model.fireTableRowsDeleted(firstRow, lastRow);
+                }
+
+                break;
+
+            case EventListModel.EventListModelEvent.MULTIPLE_ENTRIES_CHANGED :
+                if (!listmodel.getValueIsAdjusting()) {
+                    CustomTableModel   model2        = tablemodel.getTableModel();
+                    ArrayList<Integer> modelIndexes2 = e.getModelIndexes();
+                    ArrayList<Integer> rowIndexes2   = getTranslatedIndexes(modelIndexes2);
+
+                    if (rowIndexes2.size() > 0) {
+                        int firstRow  = rowIndexes2.get(0);
+                        int lastIndex = rowIndexes2.size() - 1;
+                        int lastRow   = rowIndexes2.get(lastIndex);
+
+                        model2.fireTableRowsUpdated(firstRow, lastRow);
                     }
+                }
 
-                    break;
+                break;
 
-                // Most of the events are handled through the JTable so these
-                // are here just as placeholders in case some special handling
-                // is required for these
-                case EventListModel.EventListModelEvent.LIST_RELOADED:
-                    tablemodel.getTableModel().replace(listmodel); 
-                    break;
+            case EventListModel.EventListModelEvent.LIST_CLEARED :
 
-                // This will scroll the table to the last loaded image
-                case EventListModel.EventListModelEvent.NUM_LOADED_IMAGES_CHANGED:
+                // TODO: put some logic to detect if editing and haven't saved results
+                // recently before closing
+                getView().setCursor(ImageUtils.busyCursor);
+                tablemodel.getTableModel().clear();
+                getView().setCursor(ImageUtils.defaultCursor);
 
-                    // uncomment if you want the table to scroll as it is loading
-                    // int numchanged = e.getFlag();
-                    // eventTable.scrollRectToVisible(eventTable.getCellRect(numchanged, 1, true));
-                    break;
+                break;
 
-                case EventListModel.EventListModelEvent.ONE_ENTRY_REMOVED:
-                    CustomTableModel model = tablemodel.getTableModel();
-                    ArrayList<Integer> modelIndexes = e.getModelIndexes();
-                    ArrayList<Integer> rowIndexes = getTranslatedIndexes(modelIndexes);
-
-                    if (rowIndexes.size() > 0) {
-                        int firstRow = rowIndexes.get(0);
-                        int lastRow = firstRow;
-
-                        model.fireTableRowsDeleted(firstRow, lastRow);
-                    }
-
-                    break;
-
-                case EventListModel.EventListModelEvent.MULTIPLE_ENTRIES_CHANGED:
-                    if (!listmodel.getValueIsAdjusting()) {
-                        CustomTableModel model2 = tablemodel.getTableModel();
-                        ArrayList<Integer> modelIndexes2 = e.getModelIndexes();
-                        ArrayList<Integer> rowIndexes2 = getTranslatedIndexes(modelIndexes2);
-
-                        if (rowIndexes2.size() > 0) {
-                            int firstRow = rowIndexes2.get(0);
-                            int lastIndex = rowIndexes2.size() - 1;
-                            int lastRow = rowIndexes2.get(lastIndex);
-
-                            model2.fireTableRowsUpdated(firstRow, lastRow);
-                        }
-                    }
-
-                    break;
-
-                case EventListModel.EventListModelEvent.LIST_CLEARED:
-
-                    // TODO: put some logic to detect if editing and haven't saved results
-                    // recently before closing
-                    getView().setCursor(ImageUtils.busyCursor);
-                    tablemodel.getTableModel().clear();
-                    getView().setCursor(ImageUtils.defaultCursor);
-
-                    break;
-
-                default:
-                    break;
+            default :
+                break;
             }
         }
     }
@@ -247,8 +261,8 @@ public class TableController extends AbstractController implements ModelListener
      */
     private ArrayList<Integer> getTranslatedIndexes(ArrayList<Integer> modelIndexes) {
         ArrayList<Integer> selections = new ArrayList<Integer>();
-        int iMin = modelIndexes.get(0);
-        int iMax = iMin;
+        int                iMin       = modelIndexes.get(0);
+        int                iMax       = iMin;
 
         if (modelIndexes.size() > 0) {
             iMax = modelIndexes.get(modelIndexes.size() - 1);
@@ -304,10 +318,10 @@ public class TableController extends AbstractController implements ModelListener
         String search = searchText.toString().toLowerCase();
 
         for (int row = 0; row < eventTable.getRowCount(); row++) {
-            Object val = eventTable.getValueAt(row, searchColumn);
+            Object val   = eventTable.getValueAt(row, searchColumn);
             String value = (val != null)
-                    ? val.toString()
-                    : "";
+                           ? val.toString()
+                           : "";
 
             if (value.toLowerCase().startsWith(search) || value.contains(search)) {
                 return row;
@@ -318,7 +332,6 @@ public class TableController extends AbstractController implements ModelListener
     }
 
     class MouseClickTableActionHandler implements MouseListener {
-
         public void mouseClicked(MouseEvent e) {
             actionClickTable(e);
         }
@@ -327,8 +340,7 @@ public class TableController extends AbstractController implements ModelListener
             actionClickTable(e);
         }
 
-        public void mouseExited(MouseEvent e) {
-        }
+        public void mouseExited(MouseEvent e) {}
 
         public void mousePressed(MouseEvent e) {
             actionClickTable(e);

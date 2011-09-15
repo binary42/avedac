@@ -84,6 +84,7 @@ trcl = [dbroot '/training/class/' trainingalias '_training_data_cls' '.mat'];
 
 % input parameters
 if (~exist(trd, 'file'))
+    %%
     error('%s does not exist\n', trd);
 end
 if (~exist(trcl, 'file'))
@@ -104,8 +105,18 @@ testfiles = tcf(indxtst,1);
 
 fprintf(1,'TESTING DONE...\n')     
 
+
 % save the results as the same name as the test class and color space appended
-saveresultsname = rootname;
+basedir = [dbroot '/features/tests/'];
+
+%check if  directories exist to save test data to, 
+%if not create it
+if(isdir(basedir) == 0)
+    mkdir(basedir);   
+end
+
+% save the results as the same name as the test class and color space appended
+saveresultsname = [basedir rootname];
 
 %modified - calculate the accuracy of the test and display the results
 %storage for results and for continued calculation of junk files

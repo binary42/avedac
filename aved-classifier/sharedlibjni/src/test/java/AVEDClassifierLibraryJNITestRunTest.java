@@ -155,6 +155,7 @@ public class AVEDClassifierLibraryJNITestRunTest extends TestCase {
             int numEvents = 4;
             int[] majoritywinnerindex = new int[numEvents];
             int[] probabilitywinnerindex = new int[numEvents];
+            int[] maxprobabilityindex = new int[numEvents];
             float[] probability = new float[numEvents];
             String[] eventids = new String[numEvents];
             float minprobthreshold = 0.8f;
@@ -166,6 +167,7 @@ public class AVEDClassifierLibraryJNITestRunTest extends TestCase {
                     eventids,
                     majoritywinnerindex,
                     probabilitywinnerindex,
+                    maxprobabilityindex,
                     probability,
                     testClassName,
                     trainingAlias,
@@ -179,6 +181,8 @@ public class AVEDClassifierLibraryJNITestRunTest extends TestCase {
                         + majoritywinnerindex[i]
                         + "\tprobabilitywinnerindex:"
                         + probabilitywinnerindex[i]
+                        + "\tmaxprobabilitywinnerindex:"
+                        + maxprobabilityindex[i]
                         + "\tprobability in class:"
                         + probability[i]);
             }

@@ -24,10 +24,10 @@
     </at>
     <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
    </super>
-   <at name="id">/home/aved/aved/avedac/aved-ui/src/main/resources/org/mbari/aved/ui/forms/ClassifierCreateClass.xml</at>
+   <at name="id">/Users/dcline/NetBeansProjects/avedac/aved-ui/src/main/resources/org/mbari/aved/ui/forms/ClassifierCreateClass.xml</at>
    <at name="path">ClassifierCreateClass.xml</at>
    <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:50DLU:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,FILL:DEFAULT:GROW(1.0),BOTTOM:DEFAULT:GROW(1.0)</at>
-   <at name="colspecs">RIGHT:DEFAULT:NONE,FILL:6PX:NONE,FILL:250PX:GROW(1.0),FILL:4PX:NONE,FILL:MIN:GROW(1.0),FILL:DEFAULT:NONE,FILL:5PX:NONE,FILL:DEFAULT:NONE</at>
+   <at name="colspecs">RIGHT:DEFAULT:NONE,FILL:6PX:NONE,FILL:250PX:GROW(1.0),FILL:4PX:NONE,FILL:DEFAULT:NONE,FILL:4PX:NONE,FILL:MIN:GROW(1.0),FILL:DEFAULT:NONE,FILL:5PX:NONE,FILL:DEFAULT:NONE</at>
    <at name="components">
     <object classname="java.util.LinkedList">
      <item >
@@ -124,9 +124,9 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Predicted class name:</at>
-            <at name="height">15</at>
+            <at name="height">16</at>
             <at name="name"/>
-            <at name="width">139</at>
+            <at name="width">136</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -186,8 +186,8 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Description (optional):</at>
-            <at name="height">15</at>
-            <at name="width">140</at>
+            <at name="height">16</at>
+            <at name="width">141</at>
             <at name="name">imagedirectory</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
@@ -246,10 +246,9 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">2</at>
-            <at name="height">27</at>
-            <at name="width">382</at>
+            <at name="height">28</at>
+            <at name="width">409</at>
             <at name="name">classname</at>
-            <at name="autoscrolls">true</at>
             <at name="toolTipText">The predicted class name this event was assigned to be. This can either be a VARS concept, or a user-defined class name. This corresponds to the AVEDac classifier prediction. </at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
@@ -284,7 +283,7 @@
         <super classname="com.jeta.forms.store.memento.ComponentMemento">
          <at name="cellconstraints">
           <object classname="com.jeta.forms.store.memento.CellConstraintsMemento">
-           <at name="column">8</at>
+           <at name="column">10</at>
            <at name="row">14</at>
            <at name="colspan">1</at>
            <at name="rowspan">1</at>
@@ -303,8 +302,8 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="text">Run</at>
-            <at name="height">27</at>
-            <at name="width">52</at>
+            <at name="height">29</at>
+            <at name="width">75</at>
             <at name="name">run</at>
             <at name="actionCommand">Run</at>
             <at name="border">
@@ -360,8 +359,11 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="lineWrap">true</at>
             <at name="scrollableTracksViewportWidth">true</at>
-            <at name="width">376</at>
+            <at name="height">259</at>
+            <at name="width">405</at>
+            <at name="name">classdescription</at>
             <at name="columns">20</at>
+            <at name="toolTipText">Optional description of the class </at>
             <at name="scollBars">
              <object classname="com.jeta.forms.store.properties.ScrollBarsProperty">
               <at name="name">scollBars</at>
@@ -389,12 +391,6 @@
               </at>
              </object>
             </at>
-            <at name="scrollableTracksViewportHeight">true</at>
-            <at name="wrapStyleWord">true</at>
-            <at name="rows">5</at>
-            <at name="height">344</at>
-            <at name="name">classdescription</at>
-            <at name="autoscrolls">true</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
               <super classname="com.jeta.forms.store.properties.BorderProperty">
@@ -415,7 +411,9 @@
               </at>
              </object>
             </at>
-            <at name="toolTipText">Optional description of the class </at>
+            <at name="wrapStyleWord">true</at>
+            <at name="scrollableTracksViewportHeight">true</at>
+            <at name="rows">5</at>
            </object>
           </at>
          </object>
@@ -447,7 +445,7 @@
           <at name="classname">javax.swing.JComboBox</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
-            <at name="height">25</at>
+            <at name="height">27</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>
@@ -456,7 +454,7 @@
               </at>
              </object>
             </at>
-            <at name="width">382</at>
+            <at name="width">409</at>
             <at name="name">imagedirectory</at>
             <at name="background" object="color">236,233,216</at>
             <at name="actionCommand">imageDirComboBoxChanged</at>
@@ -514,9 +512,9 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Class name (VARS):</at>
-            <at name="height">15</at>
+            <at name="height">16</at>
             <at name="name"/>
-            <at name="width">122</at>
+            <at name="width">120</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -575,10 +573,9 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">2</at>
-            <at name="height">27</at>
-            <at name="width">382</at>
+            <at name="height">28</at>
+            <at name="width">409</at>
             <at name="name">classsnamevars</at>
-            <at name="autoscrolls">true</at>
             <at name="toolTipText">(MBARI internal only), if the VARS knowledge base is available , select the class from the tree on the right. The VARS class doesn&apos;t necessarily need to match the predicted class. (External use), this can be any name, but is generally the lowest taxonomic classification of the animal that can be identified</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
@@ -633,7 +630,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text"> Color space:</at>
-            <at name="height">15</at>
+            <at name="height">16</at>
             <at name="name"/>
             <at name="width">82</at>
             <at name="fill">
@@ -692,13 +689,13 @@
           <at name="classname">javax.swing.JComboBox</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
-            <at name="height">25</at>
+            <at name="height">27</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>
              </object>
             </at>
-            <at name="width">382</at>
+            <at name="width">409</at>
             <at name="name">colorspace</at>
             <at name="background" object="color">236,233,216</at>
             <at name="actionCommand">colorSpaceComboBoxChanged</at>
@@ -755,9 +752,9 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="text">Example class image:</at>
-            <at name="height">15</at>
+            <at name="height">16</at>
             <at name="name"/>
-            <at name="width">134</at>
+            <at name="width">135</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -815,7 +812,7 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="height">16</at>
-            <at name="width">382</at>
+            <at name="width">409</at>
             <at name="name">classimage</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
@@ -870,9 +867,9 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Total images:</at>
-            <at name="height">15</at>
+            <at name="height">16</at>
             <at name="name"/>
-            <at name="width">84</at>
+            <at name="width">85</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -931,7 +928,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">2</at>
             <at name="text">-</at>
-            <at name="height">15</at>
+            <at name="height">16</at>
             <at name="width">12</at>
             <at name="name">numclassimages</at>
             <at name="fill">
@@ -973,7 +970,7 @@
         <super classname="com.jeta.forms.store.memento.ComponentMemento">
          <at name="cellconstraints">
           <object classname="com.jeta.forms.store.memento.CellConstraintsMemento">
-           <at name="column">6</at>
+           <at name="column">8</at>
            <at name="row">14</at>
            <at name="colspan">1</at>
            <at name="rowspan">1</at>
@@ -993,8 +990,8 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="enabled">false</at>
             <at name="text">Stop</at>
-            <at name="height">27</at>
-            <at name="width">57</at>
+            <at name="height">29</at>
+            <at name="width">75</at>
             <at name="name">stop</at>
             <at name="actionCommand">Stop</at>
             <at name="border">
@@ -1030,7 +1027,7 @@
         <super classname="com.jeta.forms.store.memento.ComponentMemento">
          <at name="cellconstraints">
           <object classname="com.jeta.forms.store.memento.CellConstraintsMemento">
-           <at name="column">5</at>
+           <at name="column">7</at>
            <at name="row">1</at>
            <at name="colspan">4</at>
            <at name="rowspan">13</at>
@@ -1048,11 +1045,69 @@
           <at name="classname">javax.swing.JPanel</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
-            <at name="height">631</at>
-            <at name="width">270</at>
+            <at name="height">540</at>
+            <at name="width">338</at>
             <at name="name">knowledgebase</at>
             <at name="background" object="color">255,255,255</at>
             <at name="autoscrolls">true</at>
+            <at name="toolTipText">Delete this class</at>
+           </object>
+          </at>
+         </object>
+        </at>
+       </object>
+      </at>
+     </item>
+     <item >
+      <at name="value">
+       <object classname="com.jeta.forms.store.memento.BeanMemento">
+        <super classname="com.jeta.forms.store.memento.ComponentMemento">
+         <at name="cellconstraints">
+          <object classname="com.jeta.forms.store.memento.CellConstraintsMemento">
+           <at name="column">5</at>
+           <at name="row">1</at>
+           <at name="colspan">1</at>
+           <at name="rowspan">1</at>
+           <at name="halign">default</at>
+           <at name="valign">default</at>
+           <at name="insets" object="insets">0,0,0,0</at>
+          </object>
+         </at>
+         <at name="componentclass">com.jeta.forms.gui.form.StandardComponent</at>
+        </super>
+        <at name="jetabeanclass">com.jeta.forms.gui.beans.JETABean</at>
+        <at name="beanclass">javax.swing.JButton</at>
+        <at name="beanproperties">
+         <object classname="com.jeta.forms.store.memento.PropertiesMemento">
+          <at name="classname">javax.swing.JButton</at>
+          <at name="properties">
+           <object classname="com.jeta.forms.store.support.PropertyMap">
+            <at name="text">Delete</at>
+            <at name="height">29</at>
+            <at name="width">84</at>
+            <at name="name">delete</at>
+            <at name="actionCommand">Delete</at>
+            <at name="toolTipText">Delete class</at>
+            <at name="border">
+             <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
+              <super classname="com.jeta.forms.store.properties.BorderProperty">
+               <at name="name">border</at>
+              </super>
+              <at name="borders">
+               <object classname="java.util.LinkedList">
+                <item >
+                 <at name="value">
+                  <object classname="com.jeta.forms.store.properties.DefaultBorderProperty">
+                   <super classname="com.jeta.forms.store.properties.BorderProperty">
+                    <at name="name">border</at>
+                   </super>
+                  </object>
+                 </at>
+                </item>
+               </object>
+              </at>
+             </object>
+            </at>
            </object>
           </at>
          </object>
@@ -1130,46 +1185,46 @@
      <at name="rows">
       <object classname="[Ljava.lang.Object;" size="14">
        <at name="item" index="0">
-        <object classname="[Ljava.lang.Object;" size="8"/>
+        <object classname="[Ljava.lang.Object;" size="10"/>
        </at>
        <at name="item" index="1">
-        <object classname="[Ljava.lang.Object;" size="8"/>
+        <object classname="[Ljava.lang.Object;" size="10"/>
        </at>
        <at name="item" index="2">
-        <object classname="[Ljava.lang.Object;" size="8"/>
+        <object classname="[Ljava.lang.Object;" size="10"/>
        </at>
        <at name="item" index="3">
-        <object classname="[Ljava.lang.Object;" size="8"/>
+        <object classname="[Ljava.lang.Object;" size="10"/>
        </at>
        <at name="item" index="4">
-        <object classname="[Ljava.lang.Object;" size="8"/>
+        <object classname="[Ljava.lang.Object;" size="10"/>
        </at>
        <at name="item" index="5">
-        <object classname="[Ljava.lang.Object;" size="8"/>
+        <object classname="[Ljava.lang.Object;" size="10"/>
        </at>
        <at name="item" index="6">
-        <object classname="[Ljava.lang.Object;" size="8"/>
+        <object classname="[Ljava.lang.Object;" size="10"/>
        </at>
        <at name="item" index="7">
-        <object classname="[Ljava.lang.Object;" size="8"/>
+        <object classname="[Ljava.lang.Object;" size="10"/>
        </at>
        <at name="item" index="8">
-        <object classname="[Ljava.lang.Object;" size="8"/>
+        <object classname="[Ljava.lang.Object;" size="10"/>
        </at>
        <at name="item" index="9">
-        <object classname="[Ljava.lang.Object;" size="8"/>
+        <object classname="[Ljava.lang.Object;" size="10"/>
        </at>
        <at name="item" index="10">
-        <object classname="[Ljava.lang.Object;" size="8"/>
+        <object classname="[Ljava.lang.Object;" size="10"/>
        </at>
        <at name="item" index="11">
-        <object classname="[Ljava.lang.Object;" size="8"/>
+        <object classname="[Ljava.lang.Object;" size="10"/>
        </at>
        <at name="item" index="12">
-        <object classname="[Ljava.lang.Object;" size="8"/>
+        <object classname="[Ljava.lang.Object;" size="10"/>
        </at>
        <at name="item" index="13">
-        <object classname="[Ljava.lang.Object;" size="8"/>
+        <object classname="[Ljava.lang.Object;" size="10"/>
        </at>
       </object>
      </at>

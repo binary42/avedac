@@ -1,29 +1,39 @@
 /*
  * @(#)VideoTranscodeWorker.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import org.jdesktop.swingworker.SwingWorker;
 
 import org.mbari.aved.mbarivision.api.AvedRuntimeException;
 import org.mbari.aved.mbarivision.api.TranscodeProcess;
+import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.message.NonModalMessageDialog;
-import org.mbari.aved.ui.model.SummaryModel;
 import org.mbari.aved.ui.process.ProcessDisplay;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
 import org.mbari.aved.ui.utils.ParseUtils;
@@ -36,6 +46,8 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.JFrame;
+
 /**
  * Helper worker to handle starting image handling
  * tasks like starting the transcoding script
@@ -43,19 +55,27 @@ import java.util.logging.Logger;
  *
  * @author dcline
  */
-class VideoTranscodeWorker extends SwingWorker {
+public class VideoTranscodeWorker extends SwingWorker {
 
     /**
      * Flag used to control cancellation messages
      * when cancel requested by the user
      */
     private boolean isUserCancel = false;
+
+    /** Flag to indicate whether to display progress or not */
+    private boolean displayProgress = true;
+
     /** The controller container parent view and model data */
-    private ApplicationController controller;
+    private AbstractController controller;
+    private ApplicationModel   model;
+
     /** Simple display to show process status */
     ProcessDisplay processDisplay;
+
     /** The underlying transcoder process */
     private TranscodeProcess transcodeProcess;
+
     /** *Video to transcode  using this worker */
     private File video;
 
@@ -66,12 +86,18 @@ class VideoTranscodeWorker extends SwingWorker {
      * @param videoSource the local file that contains the video source to transcode
      *
      */
-    public VideoTranscodeWorker(ApplicationController controller, File videoSource) {
+    public VideoTranscodeWorker(AbstractController controller, ApplicationModel model, File videoSource,
+                                boolean displayProgress) {
         try {
-            if ((controller != null) && (videoSource != null)) {
-                this.controller = controller;
-                video = videoSource;
-                processDisplay = new ProcessDisplay("Video transcoding " + videoSource.toString() + "...");
+            if ((controller != null) && (videoSource != null) && (model != null)) {
+                this.model           = model;
+                this.controller      = controller;
+                this.displayProgress = displayProgress;
+                video                = videoSource;
+
+                if (displayProgress) {
+                    processDisplay = new ProcessDisplay("Video transcoding " + videoSource.toString() + "...");
+                }
             }
         } catch (Exception ex) {
             Logger.getLogger(VideoTranscodeWorker.class.getName()).log(Level.SEVERE, null, ex);
@@ -89,7 +115,7 @@ class VideoTranscodeWorker extends SwingWorker {
     @Override
     protected void done() {
 
-        // If this was cancelled, kill the transcode process if it is running 
+        // If this was cancelled, kill the transcode process if it is running
         if (isCancelled() && (transcodeProcess != null)) {
             if (transcodeProcess.isRunning()) {
                 transcodeProcess.kill();
@@ -97,7 +123,7 @@ class VideoTranscodeWorker extends SwingWorker {
         }
 
         // Close the window when done
-        if (processDisplay != null) {
+        if (displayProgress && (processDisplay != null)) {
             processDisplay.getView().dispose();
         }
     }
@@ -110,11 +136,13 @@ class VideoTranscodeWorker extends SwingWorker {
      */
     @Override
     protected Object doInBackground() throws Exception {
-        ApplicationView view = controller.getView();
-        SummaryModel model = controller.getModel().getSummaryModel();
+        final JFrame view = (JFrame) controller.getView();
 
         Application.getView().setBusyCursor();
-        processDisplay.getView().setVisible(true); 
+
+        if (displayProgress) {
+            processDisplay.getView().setVisible(true);
+        }
 
         // If already a running process then stop it
         if ((transcodeProcess != null) && transcodeProcess.isRunning()) {
@@ -129,7 +157,10 @@ class VideoTranscodeWorker extends SwingWorker {
 
             // Create a new transcode process and redirect the output
             transcodeProcess = new TranscodeProcess(clip);
-            transcodeProcess.setPrintStream(processDisplay);
+
+            if (displayProgress) {
+                transcodeProcess.setPrintStream(processDisplay);
+            }
 
             // Get the temporary directory and create it if it doesn't exist
             File tmpDir = UserPreferences.getModel().getScratchDirectory();
@@ -142,19 +173,22 @@ class VideoTranscodeWorker extends SwingWorker {
             // Now, set the transcode directory by default to the temporary directory
             // appended with the source file file stem
             String srcDir = tmpDir + File.separator + ParseUtils.removeFileExtension(clip.getName().toString())
-                    + File.separator;
+                            + File.separator;
 
             // Update the model with the new transcode directory
-            model.setTranscodeDir(new File(srcDir));
+            model.getSummaryModel().setTranscodeDir(new File(srcDir));
             transcodeProcess.setOutTemporaryStorage(srcDir.toString());
-            model.setAVEDVideo(transcodeProcess.getOutAVEDVideo());
+            model.getSummaryModel().setAVEDVideo(transcodeProcess.getOutAVEDVideo());
 
             // Start the process
             transcodeProcess.run();
 
             try {
-                // Close the window when done
-                processDisplay.getView().dispose();
+                if (displayProgress) {
+
+                    // Close the window when done
+                    processDisplay.getView().dispose();
+                }
             } catch (Exception ex) {
                 Logger.getLogger(VideoTranscodeWorker.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -195,18 +229,18 @@ class VideoTranscodeWorker extends SwingWorker {
      * Reset the transcode process
      * Kills this worker if running and cleans up the transcoding files
      */
-    void reset() {
+    public void reset() {
         isUserCancel = true;
         this.cancel(true);
 
         if (transcodeProcess != null) {
-          do{
+            do {
                 try {
                     Thread.sleep(3000);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(VideoTranscodeWorker.class.getName()).log(Level.SEVERE, null, ex);
-                } 
-          }while (transcodeProcess.isAlive()) ;
+                }
+            } while (transcodeProcess.isAlive());
 
             Application.getView().setBusyCursor();
             transcodeProcess.clean();
@@ -219,6 +253,16 @@ class VideoTranscodeWorker extends SwingWorker {
             } catch (IOException ex) {
                 Logger.getLogger(VideoTranscodeWorker.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
+    }
+
+    /**
+     * Set the maximum frame range for transcoding
+     * @param maxEventFrame
+     */
+    public void setMaxFrame(int maxEventFrame) {
+        if (transcodeProcess != null) {
+            transcodeProcess.setTranscodeOpts(" -b 0 -e " + Integer.toString(maxEventFrame));
         }
     }
 }

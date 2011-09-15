@@ -1,24 +1,33 @@
 /*
  * @(#)UserPreferencesModel.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui.userpreferences;
 
 //~--- non-JDK imports --------------------------------------------------------
-import java.io.IOException;
+
 import org.mbari.aved.ui.Application;
 import org.mbari.aved.ui.appframework.AbstractModel;
 import org.mbari.aved.ui.appframework.ModelEvent;
@@ -26,6 +35,7 @@ import org.mbari.aved.ui.appframework.ModelEvent;
 //~--- JDK imports ------------------------------------------------------------
 
 import java.io.File;
+import java.io.IOException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -42,54 +52,63 @@ import java.util.prefs.*;
  * @author  Danelle Cline
  */
 public final class UserPreferencesModel extends AbstractModel {
-
-    private static final String CLASS_ADD_ALL_TRAINING = "CLASS_ADD_ALL_TRAINING";
-    private static final String CLASS_DATABASE_DIR_ROOT = "CLASS_DATABASE_DIR_ROOT";
-    private static final String CLASS_NAME_LIST = "CLASS_NAME_LIST";
-    private static final String CLASS_TRAINING_DIR_ROOT = "CLASS_TRAINING_DIR_ROOT";
-    private static final String ASK_BEFORE_DELETE = "ASK_BEFORE_DELETE";
-    private static final String EVENT_IMAGE_DIR = "EVENT_IMAGE_DIR";
-    private static final String EXCEL_EXPORT_DIR = "EXCEL_EXPORT_DIR";
-    private static final String ID_LIST = "ID_LIST";
-    private static final String IMAGE_DOCKING_DIRS = "IMAGE_DOCKING_DIRS";
-    private static final String IMAGE_IMPORT_DIR = "IMAGE_IMPORT_DIR";
-    private static final String LAST_CLASS_NAME = "LAST_CLASS_NAME";
-    private static final String LAST_ID_NAME = "LAST_ID_NAME";
-    private static final String LAST_IMPORTED_SRC_URL = "LAST_IMPORTED_SRC_URL";
-    private static final String LAST_IMPORTED_XML_LIST = "LAST_IMPORTED_XML_LIST";
+    private static final String ASK_BEFORE_DELETE                   = "ASK_BEFORE_DELETE";
+    public static int           ASK_BEFORE_DELETE_CHANGED           = 1;
+    private static final String CLASS_ADD_ALL_TRAINING              = "CLASS_ADD_ALL_TRAINING";
+    private static final String CLASS_DATABASE_DIR_ROOT             = "CLASS_DATABASE_DIR_ROOT";
+    private static final String CLASS_NAME_LIST                     = "CLASS_NAME_LIST";
+    private static final String CLASS_TRAINING_DIR_ROOT             = "CLASS_TRAINING_DIR_ROOT";
+    private static final String EVENT_IMAGE_DIR                     = "EVENT_IMAGE_DIR";
+    private static final String EXCEL_EXPORT_DIR                    = "EXCEL_EXPORT_DIR";
+    private static final String ID_LIST                             = "ID_LIST";
+    private static final String IMAGE_DOCKING_DIRS                  = "IMAGE_DOCKING_DIRS";
+    private static final String IMAGE_IMPORT_DIR                    = "IMAGE_IMPORT_DIR";
+    private static final String LAST_CLASS_NAME                     = "LAST_CLASS_NAME";
+    private static final String LAST_ID_NAME                        = "LAST_ID_NAME";
+    private static final String LAST_IMPORTED_SRC_URL               = "LAST_IMPORTED_SRC_URL";
+    private static final String LAST_IMPORTED_XML_LIST              = "LAST_IMPORTED_XML_LIST";
     private static final String LAST_MPEG_RESULTS_IMPORT_URL_PARENT = "LAST_MPEG_RESULTS_IMPORT_URL_PARENT";
-    private static final String LAST_SPECIES_NAME = "LAST_CLASS_NAME";
-    private static final String LAST_TAG_NAME = "LAST_TAG_NAME";
-    private static final String LAST_TRAINING_SELECTION = "LAST_TRAINING_SELECTION";
-    private static final String LAST_VIDEO_IMPORT_DIR = "LAST_VIDEO_IMPORT_DIR";
-    private static final String PREDICTED_CLASS_NAME_LIST = "SPECIES_NAME_LIST";
-    private static final String SCRATCH_DIR = "SCRATCH_DIR";
-    private static final String TAG_LIST = "TAG_LIST";
-    private static final String VIDEO_BATCH_INPUT_DIR = "VIDEO_BATCH_INPUT_DIR";
-    private static final String VIDEO_MASK_DIR = "VIDEO_MASK_DIR";
-    private static final String XML_EXPORT_DIR = "XML_EXPORT_DIR";
-    private static final String XML_IMPORT_DIR = "XML_IMPORT_DIR";
+    private static final String LAST_SPECIES_NAME                   = "LAST_CLASS_NAME";
+    private static final String LAST_TAG_NAME                       = "LAST_TAG_NAME";
+    private static final String LAST_TRAINING_SELECTION             = "LAST_TRAINING_SELECTION";
+    private static final String LAST_VIDEO_IMPORT_DIR               = "LAST_VIDEO_IMPORT_DIR";
+
     /** The maximum number of class names store */
     public static int MAX_NUM_CLASS_NAMES = 30;
+
     /** The maximum number of ids to store */
     public static int MAX_NUM_IDS = 30;
+
     /** The maximum number of tags to store */
-    public static int MAX_NUM_TAGS = 30;
-    public static int VIDEO_PLAYOUT_CHANGED = 0;
-    public static int ASK_BEFORE_DELETE_CHANGED = 1;
-    public static int SCRATCH_DIR_CHANGED = 2;
+    public static int           MAX_NUM_TAGS              = 30;
+    private static final String PREDICTED_CLASS_NAME_LIST = "SPECIES_NAME_LIST";
+    private static final String SCRATCH_DIR               = "SCRATCH_DIR";
+    public static int           SCRATCH_DIR_CHANGED       = 2;
+    private static final String TAG_LIST                  = "TAG_LIST";
+    private static final String VIDEO_BATCH_INPUT_DIR     = "VIDEO_BATCH_INPUT_DIR";
+    private static final String VIDEO_MASK_DIR            = "VIDEO_MASK_DIR";
+    public static int           VIDEO_PLAYOUT_CHANGED     = 0;
+    private static final String XML_EXPORT_DIR            = "XML_EXPORT_DIR";
+    private static final String XML_IMPORT_DIR            = "XML_IMPORT_DIR";
+
     /** TODO: rename this to something meaningful number of docking directories */
     private int dockingDirsCnt = 0;
+
     /** The number of class names stored in the user preference history */
     private int numClasses = 0;
+
     /** The number of tags currently stored */
     private int numIds = 0;
+
     /** The number of class names stored in the user preference history */
     private int numSpecies = 0;
+
     /** The number of tags stored in the user preference history */
     private int numTags = 0;
+
     /** Variables to store preferences in */
     private Preferences preferences;
+
     /** The video playout mode */
     private VideoPlayoutMode videoPlayoutMode;
 
@@ -99,15 +118,15 @@ public final class UserPreferencesModel extends AbstractModel {
         preferences = Preferences.userRoot().node("/org/mbari/aved/editor");
 
         // FOR DEBUGGING ONLY
-        //dump(preferences);
+        // dump(preferences);
         VideoPlayoutMode.initialize();
 
         ArrayList<String> list = getNodeValues(TAG_LIST);
 
-        numTags = list.size();
-        list = getNodeValues(ID_LIST);
-        numIds = list.size();
-        list = getNodeValues(CLASS_NAME_LIST);
+        numTags    = list.size();
+        list       = getNodeValues(ID_LIST);
+        numIds     = list.size();
+        list       = getNodeValues(CLASS_NAME_LIST);
         numClasses = list.size();
     }
 
@@ -115,24 +134,26 @@ public final class UserPreferencesModel extends AbstractModel {
 
         // These are ordered in the manner that makes sense to display them
         DEFAULT(0, "Use default player", ""),
+
         // arbitrarily set to Quicktime - should probably set to something
         // bundled in Mac/Linux distros
         OTHER(1, "Use user defined player", "Quicktime");
+
         private static final String EXTERNAL_VIDEO_PLAYER = "EXTERNAL_VIDEO_PLAYER";
-        private static final String VIDEO_PLAYOUT_MODE = "VIDEO_PLAYOUT_MODE";
-        public String command;
-        public final String description;
-        public final int index;
+        private static final String VIDEO_PLAYOUT_MODE    = "VIDEO_PLAYOUT_MODE";
+        public String               command;
+        public final String         description;
+        public final int            index;
         public UserPreferencesModel model;
 
         private VideoPlayoutMode(int index, String description, String command) {
-            this.index = index;
+            this.index       = index;
             this.description = description;
-            this.command = command;
+            this.command     = command;
         }
 
         private static void initialize() {
-            URL url = Application.class.getResource("/org/mbari/aved/ui/html/");
+            URL    url       = Application.class.getResource("/org/mbari/aved/ui/html/");
             String urlString = "file://";
 
             // If html code found assume using vlc html launcher,
@@ -147,6 +168,7 @@ public final class UserPreferencesModel extends AbstractModel {
             String lcOSName = System.getProperty("os.name").toLowerCase();
 
             if (lcOSName.startsWith("mac os x")) {
+
                 // OTHER.command =
             }
         }
@@ -223,7 +245,7 @@ public final class UserPreferencesModel extends AbstractModel {
      */
     private ArrayList<String> getNodeValues(String node) {
         ArrayList<String> list = new ArrayList<String>();
-        Preferences p = preferences.node(node);
+        Preferences       p    = preferences.node(node);
 
         try {
             for (String s : p.keys()) {
@@ -302,7 +324,7 @@ public final class UserPreferencesModel extends AbstractModel {
 
     /**
      * Gets the list of predicted class names
-     * @return A String list of specoes names
+     * @return A String list of specs names
      */
     public ArrayList<String> getPredictedClassList() {
         return getNodeValues(PREDICTED_CLASS_NAME_LIST);
@@ -405,7 +427,7 @@ public final class UserPreferencesModel extends AbstractModel {
         setId(id);
 
         ArrayList<String> l = getNodeValues(ID_LIST);
-        Iterator<String> i = l.iterator();
+        Iterator<String>  i = l.iterator();
 
         while (i.hasNext()) {
             if (i.next().equals(id)) {
@@ -415,8 +437,8 @@ public final class UserPreferencesModel extends AbstractModel {
 
         // Didn't find the id, so go ahead and add it
         numIds = ((numIds >= MAX_NUM_IDS)
-                ? 0
-                : numIds);
+                  ? 0
+                  : numIds);
 
         String key = String.format("%s" + "%0" + 2 + "d", "ID", numIds);
 
@@ -437,7 +459,7 @@ public final class UserPreferencesModel extends AbstractModel {
         this.setTag(tag);
 
         ArrayList<String> l = getNodeValues(TAG_LIST);
-        Iterator<String> i = l.iterator();
+        Iterator<String>  i = l.iterator();
 
         while (i.hasNext()) {
             if (i.next().equals(tag)) {
@@ -447,8 +469,8 @@ public final class UserPreferencesModel extends AbstractModel {
 
         // Didn't find the tag, so go ahead and add it
         numTags = ((numTags >= MAX_NUM_TAGS)
-                ? 0
-                : numTags);
+                   ? 0
+                   : numTags);
 
         String key = String.format("%s" + "%0" + 2 + "d", "TAG", numTags);
 
@@ -469,7 +491,7 @@ public final class UserPreferencesModel extends AbstractModel {
         setClassName(className);
 
         ArrayList<String> l = getNodeValues(CLASS_NAME_LIST);
-        Iterator<String> i = l.iterator();
+        Iterator<String>  i = l.iterator();
 
         while (i.hasNext()) {
             if (i.next().equals(className)) {
@@ -479,8 +501,8 @@ public final class UserPreferencesModel extends AbstractModel {
 
         // Didn't find the className, so go ahead and add it
         numClasses = ((numClasses >= MAX_NUM_CLASS_NAMES)
-                ? 0
-                : numClasses);
+                      ? 0
+                      : numClasses);
 
         String key = String.format("%s" + "%0" + 2 + "d", "CLASSNAME", numClasses);
 
@@ -501,7 +523,7 @@ public final class UserPreferencesModel extends AbstractModel {
         setSpeciesName(className);
 
         ArrayList<String> l = getNodeValues(PREDICTED_CLASS_NAME_LIST);
-        Iterator<String> i = l.iterator();
+        Iterator<String>  i = l.iterator();
 
         while (i.hasNext()) {
             if (i.next().equals(className)) {
@@ -511,8 +533,8 @@ public final class UserPreferencesModel extends AbstractModel {
 
         // Didn't find the className, so go ahead and add it
         numSpecies = ((numSpecies >= MAX_NUM_CLASS_NAMES)
-                ? 0
-                : numSpecies);
+                      ? 0
+                      : numSpecies);
 
         String key = String.format("%s" + "%0" + 2 + "d", "CLASSNAME", numSpecies);
 
@@ -560,16 +582,20 @@ public final class UserPreferencesModel extends AbstractModel {
     }
 
     /**
-     * Sets the delete without warning preference 
+     * Sets the delete without warning preference
      */
     public void setAskBeforeDelete(boolean state) {
         if (!state) {
             put(ASK_BEFORE_DELETE, "false");
+
             ModelEvent e = new ModelEvent(this, ASK_BEFORE_DELETE_CHANGED, "false");
+
             notifyChanged(e);
         } else {
             put(ASK_BEFORE_DELETE, "true");
+
             ModelEvent e = new ModelEvent(this, ASK_BEFORE_DELETE_CHANGED, "true");
+
             notifyChanged(e);
         }
     }
@@ -577,7 +603,7 @@ public final class UserPreferencesModel extends AbstractModel {
     /** Sets the last docking container directories */
     public void setDockingImageDirectory(File f) {
         ArrayList<String> l = getNodeValues(IMAGE_DOCKING_DIRS);
-        Iterator<String> i = l.iterator();
+        Iterator<String>  i = l.iterator();
 
         while (i.hasNext()) {
             if (i.next().equals(f.toString())) {
@@ -587,8 +613,8 @@ public final class UserPreferencesModel extends AbstractModel {
 
         // Didn't find the directory, so go ahead and add it
         dockingDirsCnt = ((dockingDirsCnt >= MAX_NUM_CLASS_NAMES)
-                ? 0
-                : dockingDirsCnt);
+                          ? 0
+                          : dockingDirsCnt);
 
         String key = String.format("%s" + "%0" + 2 + "d", "DIR", dockingDirsCnt);
 
@@ -637,7 +663,7 @@ public final class UserPreferencesModel extends AbstractModel {
     /**
      *
      * @return returns in the following search order:
-     * if exists, the PWD 
+     * if exists, the PWD
      * if exists, the HOME environment variable
      * if exists, the USERPROFILE environment variable
      * or "file://" if all else fails
@@ -685,6 +711,7 @@ public final class UserPreferencesModel extends AbstractModel {
         } catch (IOException ex) {
             Logger.getLogger(UserPreferencesModel.class.getName()).log(Level.SEVERE, null, ex);
         }
+
         return new File(preferences.get(SCRATCH_DIR, getDefaultScratchDirectory().getPath()));
     }
 
@@ -716,14 +743,14 @@ public final class UserPreferencesModel extends AbstractModel {
 
     public void removeClassImageDockingDirectory(File f) {
         try {
-            Preferences node = preferences.node(IMAGE_DOCKING_DIRS);
-            String childname = new String("IMAGE_EXPORT_DIRS" + dockingDirsCnt);
+            Preferences node      = preferences.node(IMAGE_DOCKING_DIRS);
+            String      childname = "IMAGE_EXPORT_DIRS" + dockingDirsCnt;
 
             node.put(childname, f.getAbsolutePath());
             dockingDirsCnt++;
 
-            Preferences p = preferences.node(IMAGE_DOCKING_DIRS);
-            String match = f.getAbsolutePath();
+            Preferences p     = preferences.node(IMAGE_DOCKING_DIRS);
+            String      match = f.getAbsolutePath();
 
             for (String s : p.keys()) {
                 if (p.get(s, "").equals(match)) {
@@ -762,14 +789,15 @@ public final class UserPreferencesModel extends AbstractModel {
      * installation of the examples classes
      */
     private String getDefaultClassDirectoryString() {
-
         String lcOSName = System.getProperty("os.name").toLowerCase();
 
         if (lcOSName.startsWith("mac os x")) {
             File examples = new File("/Applications/AVEDac/examples/trainingclasses");
+
             if (!examples.exists()) {
                 examples.mkdirs();
             }
+
             return examples.toString();
         } else {
             if (System.getenv("HOME") != null) {
@@ -781,17 +809,27 @@ public final class UserPreferencesModel extends AbstractModel {
     }
 
     /**
-     * Returns the directory XML results were successfully imported from,
+     *    Returns the directory XML results were successfully imported from,
+     *    and if not available returns HOME or USERPROFILE environment variable
+     */
+    public File getXmlImportDirectory() {
+        return new File(preferences.get(XML_IMPORT_DIR, getDefaultDirectoryString()));
+    }
+
+    /**
+     * Returns the directory XML results were successfully exported to,
      * and if not available returns HOME or USERPROFILE environment variable
      */
-    public File getExportedXMLDirectory() {
+    public File getXmlExportDirectory() {
         return new File(preferences.get(XML_EXPORT_DIR, getDefaultDirectoryString()));
     }
 
     /** Sets the directory Excel data was successfully exported to */
     public void setScratchDirectory(File f) {
         put(SCRATCH_DIR, f.getAbsolutePath());
+
         ModelEvent e = new ModelEvent(this, SCRATCH_DIR_CHANGED, f.getAbsolutePath());
+
         notifyChanged(e);
     }
 
@@ -822,13 +860,15 @@ public final class UserPreferencesModel extends AbstractModel {
     }
 
     /** Sets the directory Excel data was successfully exported to */
-    public void setExportedExcelDirectory(File f) {
+    public void setExcelExportDirectory(File f) {
         put(EXCEL_EXPORT_DIR, f.getAbsolutePath());
     }
 
-    /** Returns the directory XML results were successfully imported from, 
-     * and if not available returns HOME or environment variable */
-    public File setImportedXmlDirectory() {
+    /**
+     * Returns the directory XML results were successfully imported from,
+     * and if not available returns HOME or environment variable
+     */
+    public File setXmlImportDirectory() {
         return new File(get(XML_IMPORT_DIR, getDefaultDirectoryString()));
     }
 
@@ -945,8 +985,8 @@ public final class UserPreferencesModel extends AbstractModel {
     /** Returns the video playout mode preference */
     public VideoPlayoutMode getPlayoutMode() {
         String s = get(videoPlayoutMode.VIDEO_PLAYOUT_MODE, "0");
-        // set to default if can't find preference
 
+        // set to default if can't find preference
         if (String.valueOf(videoPlayoutMode.DEFAULT.index).equals(s)) {
             return videoPlayoutMode.DEFAULT;
         } else {

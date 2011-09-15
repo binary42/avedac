@@ -1,19 +1,25 @@
 /*
  * @(#)EventObjectContainer.java
  * 
- * Copyright 2010 MBARI
+ * Copyright 2011 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 
@@ -45,7 +51,7 @@ import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 
 public class EventObjectContainer implements Comparable, Serializable {
-    static String                  DEFAULT_DESCRIPTION = new String("-");
+    static String                  DEFAULT_DESCRIPTION = "-";
     public static final Comparator LEXICAL_COMPARATOR  = new Comparator() {
         public int compare(Object o1, Object o2) {
             return o1.toString().compareTo(o2.toString());
@@ -271,7 +277,7 @@ public class EventObjectContainer implements Comparable, Serializable {
      * @param value the name of the class
      * @param probability the probability it is within this class
      */
-    void setPredictedClass(String value, float probability) {
+    public void setPredictedClass(String value, float probability) {
         Iterator<Integer> iter = sortedEventFrames.iterator();
 
         while (iter.hasNext()) {
@@ -280,6 +286,7 @@ public class EventObjectContainer implements Comparable, Serializable {
             o.setPredictedClass(value, probability);
         }
     }
+ 
 
     /**
      * Sets a id to associate with this
@@ -380,27 +387,29 @@ public class EventObjectContainer implements Comparable, Serializable {
 
             // Reset the Event that represents the maximum sized event
             if (maxEventFrame != -1) {
-                EventObject object = eventHashMap.get(maxEventFrame); 
+                EventObject object = eventHashMap.get(maxEventFrame);
+
                 maxSize = object.getCurrSize();
             }
 
             // Find the new max size
             if (eventObject.getCurrSize() >= maxSize) {
-                maxEventFrame  = eventObject.getFrameEventSet().getFrameNumber();
+                maxEventFrame = eventObject.getFrameEventSet().getFrameNumber();
             }
 
             // The best event frame is generally the largest, however for very long events
             // it can take a very long time for transcoding of the entire event,
             // and subsequent searching for the max size, so we'll skip this for
             // events longer than 300 frames, which is 10 seconds at 30 fps
-            if (getFrameDuration() < 300 &&  maxEventFrame > bestEventFrame ) {
-                    bestEventFrame = maxEventFrame;
+            if ((getFrameDuration() < 300) && (maxEventFrame > bestEventFrame)) {
+                bestEventFrame = maxEventFrame;
             }
 
-             /*System.out.println("#########Max size for event: "
-                  + eventObject.getObjectId() + " size: " + eventObject.getCurrSize()
-                  + " frameSet#:" + eventObject.getFrameEventSet().getFrameNumber() );*/
-
+            /*
+             * System.out.println("#########Max size for event: "
+             *    + eventObject.getObjectId() + " size: " + eventObject.getCurrSize()
+             *    + " frameSet#:" + eventObject.getFrameEventSet().getFrameNumber() );
+             */
         }
 
         sort();
@@ -491,7 +500,7 @@ public class EventObjectContainer implements Comparable, Serializable {
             }
         }
 
-        return new String("");
+        return "";
     }
 
     /**
@@ -527,7 +536,7 @@ public class EventObjectContainer implements Comparable, Serializable {
             }
         }
 
-        return new String("");
+        return "";
     }
 
     /**
@@ -545,7 +554,7 @@ public class EventObjectContainer implements Comparable, Serializable {
             }
         }
 
-        return new String("");
+        return "";
     }
 
     /**
@@ -563,7 +572,7 @@ public class EventObjectContainer implements Comparable, Serializable {
             }
         }
 
-        return new String("");
+        return "";
     }
 
     public int getMaxSize() {
@@ -580,32 +589,40 @@ public class EventObjectContainer implements Comparable, Serializable {
 
     public String getStartTimecode() {
         synchronized (eventHashMap) {
-            if(!sortedEventFrames.isEmpty())
-            return eventHashMap.get(sortedEventFrames.getFirst()).getFrameEventSet().getTimecode();
+            if (!sortedEventFrames.isEmpty()) {
+                return eventHashMap.get(sortedEventFrames.getFirst()).getFrameEventSet().getTimecode();
+            }
+
             return "";
         }
     }
 
     public String getEndTimecode() {
         synchronized (eventHashMap) {
-            if(!sortedEventFrames.isEmpty())
-            return eventHashMap.get(sortedEventFrames.getLast()).getFrameEventSet().getTimecode();
+            if (!sortedEventFrames.isEmpty()) {
+                return eventHashMap.get(sortedEventFrames.getLast()).getFrameEventSet().getTimecode();
+            }
+
             return "";
         }
     }
 
     public int getStartFrame() {
         synchronized (eventHashMap) {
-            if(!sortedEventFrames.isEmpty())
-            return eventHashMap.get(sortedEventFrames.getFirst()).getFrameEventSet().getFrameNumber();
+            if (!sortedEventFrames.isEmpty()) {
+                return eventHashMap.get(sortedEventFrames.getFirst()).getFrameEventSet().getFrameNumber();
+            }
+
             return -1;
         }
     }
 
     public int getEndFrame() {
         synchronized (eventHashMap) {
-            if(!sortedEventFrames.isEmpty())
-            return eventHashMap.get(sortedEventFrames.getLast()).getFrameEventSet().getFrameNumber();
+            if (!sortedEventFrames.isEmpty()) {
+                return eventHashMap.get(sortedEventFrames.getLast()).getFrameEventSet().getFrameNumber();
+            }
+
             return -1;
         }
     }
@@ -664,6 +681,7 @@ public class EventObjectContainer implements Comparable, Serializable {
             }
         }
 
-        return new String("");
+        return "";
     }
+
 }

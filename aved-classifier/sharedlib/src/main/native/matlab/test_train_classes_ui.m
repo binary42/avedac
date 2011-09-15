@@ -8,16 +8,17 @@
 
 function test_train_classes_ui()
 
-dbroot='/Users/dcline';   
+dbroot='./DB';   
 
 class1='Flatfish';
 class2='Rockfish';
 class3='Leukethele'; 
-class4='Rathbunaster californicus';
-class5='junk';
-%classnames=[{class1} {class2} {class3} {class4} {class5}]; 
-classnames=[{class1} {class2}]; 
+class4='Rathbunaster';
+class5='Other';
+classnames=[{class1} {class2} {class3} {class4} {class5}];  
 classalias='benthic';
-
-train_classes_ui(dbroot, classalias, classnames, 'Test benthic training classes'); 
+color_space=1
+handle='kill_train';
+create_kill_handle(handle);  
+train_classes_ui(handle, dbroot, color_space, classalias, classnames, 'Test benthic training classes'); 
 end

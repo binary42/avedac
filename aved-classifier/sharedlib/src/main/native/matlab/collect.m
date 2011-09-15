@@ -22,7 +22,7 @@
 %Modified by dcline@mbari.org  Mar 25, 2010 appended color space to
 %metadata name 
 
-function testmfiles = collect(kill, dirct, pattern, dbroot, color_space)
+function [filenames, resolfiles, datafiles] = collect(kill, dirct, pattern, dbroot, color_space)
 
     GRAY = 1;
     RGB = 2;
@@ -37,7 +37,9 @@ function testmfiles = collect(kill, dirct, pattern, dbroot, color_space)
     % specified direct
     if( ~isempty(pattern) ) 
         pat = pattern;    
-        tmpfiles(1,:) = pat(:); 
+        tmpfiles(1,:) = pat(:);       
+        a=regexp(dirct,'\.*?/\.*?','start');
+        str = dirct(a(end)+1:length(dirct)); 
     else
         pat={''};
         %if no pattern defined, name this class the parent directory name
@@ -72,7 +74,8 @@ function testmfiles = collect(kill, dirct, pattern, dbroot, color_space)
         if (isKill(kill))
             error('Killing collect');
         end
-        
+
+        jj = 0;
         ii = 0;
         store = [];
         resol = [];
@@ -82,7 +85,7 @@ function testmfiles = collect(kill, dirct, pattern, dbroot, color_space)
         %*modified store the file names for all jpeg or ppm images
         if(length(pat) > 1)
             ppat = [ pat{cl(jj)} '/' ];
-            str = [str '-' pat{jj}];
+            str = pat{jj};
         else
             ppat = '';
             str = tmpfiles{1,:}';
@@ -137,37 +140,39 @@ function testmfiles = collect(kill, dirct, pattern, dbroot, color_space)
                 continue;
             end
             
-            filenames{end + 1,1} = [s(ii+1).name];
+            filenames{jj+1,1} = [s(ii+1).name];
             
             if color_space > 1
-                if strcmp(iminfo.ColorType,'grayscale')
+                if strcmp(iminfo.ColorType,'grayscale') 
                     source = im;
                     im(:,:,1) = source;
                     im(:,:,2) = source;
                     im(:,:,3) = source;
                 end
                 
-                if (color_space == YCBCR)
+                if (color_space == YCBCR)  
                     im = rgb2ycbcr(im);
                 end
+                 
                 for kk=1:3
                     data = calcola_invarianti(im(:,:,kk), scale);
                     val{kk} = apply_non_lin3(data,scale);
                 end
                 % store feature vector (stack of feature vectors for each channel)
-                store(ii+1,:) = [val{1}, val{2}, val{3}];
+                store(jj+1,:) = [val{1}, val{2}, val{3}];
             else
-                % COMPUTE INVARIANTS
+                % COMPUTE INVARIANTS 
                 im = rgb2gray(im);
                 data = calcola_invarianti(im, scale); % compute invariants at different scales
                 val = apply_non_lin3(data,scale); % Apply non linearity
-                store(ii+1,:) = val; % store feature vector
+                store(jj+1,:) = val; % store feature vector
             end
 
             % store resolution info 
-            resol(ii+1) = size(im,1); 
-            
-            ii = ii + 1;        
+            resol(jj+1) = size(im,1);
+             
+            ii = ii + 1;
+            jj = jj + 1;
 
             % update status in console 
             fprintf(1,'Collecting %d of %d\r', ii, ttl );

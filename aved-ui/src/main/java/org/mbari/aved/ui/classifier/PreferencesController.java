@@ -1,23 +1,33 @@
 /*
  * @(#)PreferencesController.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
 
@@ -26,9 +36,6 @@ import org.mbari.aved.ui.userpreferences.UserPreferences;
 import java.awt.event.ActionEvent;
 
 import java.io.File;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -56,21 +63,21 @@ public class PreferencesController extends AbstractController {
      * @return null if none found, otherwise user selection
      */
     private File browse(File dir, int choosermode, String dialogTitle) {
-                    JFileChooser chooser = new JFileChooser();
+        JFileChooser chooser = new JFileChooser();
 
-                    chooser.setFileSelectionMode(choosermode);
+        chooser.setFileSelectionMode(choosermode);
 
-                    // Initialize the chooser with the model directory
-                        chooser.setCurrentDirectory(dir);
-                    chooser.setDialogTitle(dialogTitle);
+        // Initialize the chooser with the model directory
+        chooser.setCurrentDirectory(dir);
+        chooser.setDialogTitle(dialogTitle);
 
-                    if (chooser.showOpenDialog(getView()) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showOpenDialog(getView()) == JFileChooser.APPROVE_OPTION) {
             return chooser.getSelectedFile();
-                    } else {
+        } else {
 
-                        // TODO print error message box
-                        System.out.println("No Selection ");
-                    }
+            // TODO print error message box
+            System.out.println("No Selection ");
+        }
 
         return null;
     }
@@ -80,20 +87,11 @@ public class PreferencesController extends AbstractController {
 
         if (op.equals("BrowseTraining")) {
             File newDir = browse(getModel().getClassTrainingImageDirectory(), JFileChooser.DIRECTORIES_ONLY,
-                    "Choose training library directory");
+                                 "Choose training library directory");
 
             if (newDir != null) {
                 getView().updateTrainingComboBox(new File(newDir.getAbsolutePath()));
                 getModel().setClassTrainingImageDirectory(newDir);
-            }
-        } else if (op.equals("BrowseDbroot")) {
-            File newDir = browse(getModel().getDatabaseRoot(), JFileChooser.DIRECTORIES_ONLY,
-                    "Choose class metadata directory");
-
-            try {
-                getView().updateDbrootComboBox(newDir);
-            } catch (Exception ex) {
-                Logger.getLogger(PreferencesController.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else if (op.equals("AddTrainingImages")) {
             boolean state = ((JCheckBox) e.getSource()).isSelected();

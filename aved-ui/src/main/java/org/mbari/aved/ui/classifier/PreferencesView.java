@@ -1,19 +1,25 @@
 /*
  * @(#)PreferencesView.java
  * 
- * Copyright 2010 MBARI
+ * Copyright 2011 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 
@@ -25,7 +31,6 @@ package org.mbari.aved.ui.classifier;
 import org.mbari.aved.ui.ApplicationInfo;
 import org.mbari.aved.ui.appframework.JFrameView;
 import org.mbari.aved.ui.appframework.ModelEvent;
-import org.mbari.aved.ui.classifier.ClassifierModel;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -44,15 +49,13 @@ public class PreferencesView extends JFrameView {
      * should be modified here too
      */
     public static final String ID_ADD_TRAINING_RADIO       = "addtrainingimages";
-    public static final String ID_BROWSE_BUTTON_DBROOT     = "browsedbroot";
     public static final String ID_BROWSE_BUTTON_TRAINING   = "browsetraining";
     public static final String ID_CLOSE_BUTTON             = "close";
-    public static final String ID_DBROOT_DIRECTORY_COMBO   = "dbrootdir";
     public static final String ID_TRAINING_DIRECTORY_COMBO = "trainingdir";
     private JCheckBox          addTrainingCheckBox;
 
     // Frequently accessed view variables
-    private JComboBox trainingRootDirCombo, dbRootDirCombo;
+    private JComboBox trainingRootDirCombo;
 
     public PreferencesView(ClassifierModel model, PreferencesController controller) {
         super("org/mbari/aved/ui/forms/ClassifierPreferences.xml", model, controller);
@@ -60,28 +63,26 @@ public class PreferencesView extends JFrameView {
 
         // Initialize frequently accessed fields
         trainingRootDirCombo = getForm().getComboBox(ID_TRAINING_DIRECTORY_COMBO);
-        dbRootDirCombo       = getForm().getComboBox(ID_DBROOT_DIRECTORY_COMBO);
         addTrainingCheckBox  = getForm().getCheckBox(ID_ADD_TRAINING_RADIO);
 
         JButton browseTrainingDirButton, browseDbrootDirButton, closeButton;
 
         closeButton             = (JButton) getForm().getButton(ID_CLOSE_BUTTON);
         browseTrainingDirButton = (JButton) getForm().getButton(ID_BROWSE_BUTTON_TRAINING);
-        browseDbrootDirButton   = (JButton) getForm().getButton(ID_BROWSE_BUTTON_DBROOT);
 
         // Add handler to buttons and combo boxes
         ActionHandler actionHandler = getActionHandler();
 
         browseTrainingDirButton.addActionListener(actionHandler);
-        browseDbrootDirButton.addActionListener(actionHandler);
         closeButton.addActionListener(actionHandler);
         addTrainingCheckBox.addActionListener(actionHandler);
-        dbRootDirCombo.addActionListener(actionHandler);
         trainingRootDirCombo.addActionListener(actionHandler);
         loadModel(model);
 
         // Set default size and.getName()
         setTitle(ApplicationInfo.getName() + "-" + "Classifier Preferences");
+
+        this.getRootPane().setDefaultButton((JButton) getForm().getButton(ID_CLOSE_BUTTON));
         this.pack();
         this.setResizable(false);
     }
@@ -102,10 +103,8 @@ public class PreferencesView extends JFrameView {
         addTrainingCheckBox.setSelected(isAddTrainingImages);
 
         File newTrainingDir = model.getClassTrainingImageDirectory();
-        File dbRootDir      = model.getDatabaseRoot();
 
         updateTrainingComboBox(newTrainingDir);
-        updateDbrootComboBox(dbRootDir);
     }
 
     public void modelChanged(ModelEvent event) {}
@@ -120,13 +119,4 @@ public class PreferencesView extends JFrameView {
         trainingRootDirCombo.setSelectedItem(dir);
     }
 
-    /**
-     * Inserts a directory into the class metadata combo box list
-     * at the first index.
-     * @param dir the directory to insert
-     */
-    public void updateDbrootComboBox(File dir) {
-        dbRootDirCombo.insertItemAt(dir, 0);
-        dbRootDirCombo.setSelectedItem(dir);
-    }
 }

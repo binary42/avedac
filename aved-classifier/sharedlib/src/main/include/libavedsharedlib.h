@@ -1,13 +1,13 @@
 /*
  * MATLAB Compiler: 4.14 (R2010b)
- * Date: Tue Jan 18 15:52:46 2011
+ * Date: Wed Jun 22 20:51:55 2011
  * Arguments: "-B" "macro_default" "-v" "-W" "lib:libavedsharedlib" "-T"
  * "link:lib" "-I"
- * "/Users/dcline/code/avedac/aved-classifier/sharedlib/src/main/native/matlab"
- * "-I"
- * "/Users/dcline/code/avedac/aved-classifier/sharedlib/src/main/native/matlab/n
- * etlab" "-g" "-G" "run_tests_ui" "collect_ui" "collect_tests" "collect_class"
- * "assign_class" "test_class" "train_classes_ui" 
+ * "/Users/dcline/NetBeansProjects/avedac/aved-classifier/sharedlib/src/main/nat
+ * ive/matlab" "-I"
+ * "/Users/dcline/NetBeansProjects/avedac/aved-classifier/sharedlib/src/main/nat
+ * ive/matlab/netlab" "-g" "-G" "run_tests_ui" "collect_ui" "collect_tests"
+ * "collect_class" "assign_class" "test_class" "train_classes_ui" 
  */
 
 #ifndef __libavedsharedlib_h
@@ -104,7 +104,7 @@ long MW_CALL_CONV libavedsharedlibGetMcrID();
 
 
 
-extern LIB_libavedsharedlib_C_API bool MW_CALL_CONV mlfRun_tests_ui(int nargout, mxArray** eventids, mxArray** majoritywinnerindex, mxArray** probabilitywinnerindex, mxArray** probability, mxArray* kill, mxArray* dbroot, mxArray* color_space, mxArray* testclassname, mxArray* trainingalias, mxArray* threshold);
+extern LIB_libavedsharedlib_C_API bool MW_CALL_CONV mlfRun_tests_ui(int nargout, mxArray** eventids, mxArray** majoritywinnerindex, mxArray** probabilitywinnerindex, mxArray** maxwinnerindex, mxArray** probability, mxArray* kill, mxArray* dbroot, mxArray* color_space, mxArray* testclassname, mxArray* trainingalias, mxArray* threshold);
 
 extern LIB_libavedsharedlib_C_API bool MW_CALL_CONV mlfCollect_ui(int nargout, mxArray** filenames, mxArray** store, mxArray* kill, mxArray* rawdirct, mxArray* sqdirct, mxArray* classname, mxArray* dbroot, mxArray* color_space, mxArray* varsclassname, mxArray* description);
 

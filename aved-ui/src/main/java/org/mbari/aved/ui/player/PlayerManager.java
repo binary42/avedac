@@ -1,19 +1,25 @@
 /*
  * @(#)PlayerManager.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 
@@ -35,9 +41,10 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Toolkit;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Singleton class that manages creating EventPlayer. This class
@@ -94,15 +101,61 @@ public class PlayerManager implements ModelListener {
      *
      * @param event The event to open in the view
      * @param model The data model associated with the event
-     * @param cascade True if the event should cascade next
+     * @param location upper left location to place the view
      * to the last opened event view
      */
-    public void openView(EventObjectContainer event, ApplicationModel model, Boolean cascade) {
+    void openView(EventObjectContainer event, ApplicationModel model, Point location) {
         try {
             if ((event != null) && (model != null)) {
                 Player e = null;
 
-                // Search for an editor that contains this event
+                // Search for an player that contains this event
+                Iterator iter = players.iterator();
+
+                while (iter.hasNext()) {
+                    e = (Player) iter.next();
+
+                    if (e.isEditing(event)) {
+                        e.getView().setVisible(false);
+                        e.getView().setLocation(location.x, location.y);
+                        e.getView().setVisible(true);
+                        e.getView().requestFocus();
+
+                        return;
+                    }
+                }
+
+                // Remove the first (oldest) view in this list
+                // before adding new players to the list
+                if (players.size() >= MAX_VIEWS) {
+                    remove(players.getFirst().getView());
+                }
+
+                e = new Player(event, model);
+                players.add(e);
+                e.getView().setLocation(location.x, location.y);
+                e.getView().setVisible(true);
+                e.getView().requestFocus();
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(PlayerManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
+     * Opens a view for the event
+     *
+     * @param event The event to open in the view
+     * @param model The data model associated with the event
+     * @param cascade True if the event should cascade next
+     * to the last opened event view
+     */
+    public void openView(EventObjectContainer event, ApplicationModel model) {
+        try {
+            if ((event != null) && (model != null)) {
+                Player e = null;
+
+                // Search for an player that contains this event
                 Iterator iter = players.iterator();
 
                 while (iter.hasNext()) {
@@ -124,18 +177,10 @@ public class PlayerManager implements ModelListener {
 
                 e = new Player(event, model);
                 players.add(e);
-
-                if (cascade) {
-                    cascadeView(e);
-                } else {
-                    e.getView().setVisible(true);
-                    e.getView().requestFocus();
-                }
+                cascadeView(e); 
             }
-        } catch (Exception e1) {
-
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
+        } catch (Exception ex) {
+            Logger.getLogger(PlayerManager.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

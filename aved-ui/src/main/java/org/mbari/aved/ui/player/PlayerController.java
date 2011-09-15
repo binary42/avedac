@@ -1,19 +1,25 @@
 /*
  * @(#)PlayerController.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 
@@ -141,7 +147,7 @@ public class PlayerController extends AbstractController implements ActionListen
 
             // If image is missing display message
             // Create the yes/no dialog
-            String                message = new String("Error: " + e.getMessage());
+            String                message = "Error: " + e.getMessage();
             NonModalMessageDialog dialog;
 
             try {
@@ -167,7 +173,7 @@ public class PlayerController extends AbstractController implements ActionListen
         if (eventListModel.isLastEvent(event)) {
             view.disableNextButton();
         } else {
-            view.enableNextButton();  
+            view.enableNextButton();
         }
 
         // Disable the prev button if this is the first event in the sequence
@@ -210,6 +216,46 @@ public class PlayerController extends AbstractController implements ActionListen
         }
     }
 
+    private void stepPrev() {
+
+        // Translated the row index into the real eventListModel index
+        // through the tableSorter, since the table may be sorted
+        PlayerView       view  = ((PlayerView) getView());
+        int              row   = tableSorter.viewIndex((eventListModel.getIndexOf(event)));
+        int              index = 0;
+        ApplicationModel m     = (ApplicationModel) getModel();
+
+        index = tableSorter.modelIndex(--row);
+        event = eventListModel.getElementAt(index);
+        PlayerManager.getInstance().openView(event, m, view.getLocation());
+        PlayerManager.getInstance().remove(view);
+
+        ApplicationModel   model = Application.getModel();
+        ListSelectionModel lsm   = model.getListSelectionModel();
+
+        lsm.setSelectionInterval(index, index);
+    }
+
+    private void stepNext() {
+
+        // Translated the row index into the real eventListModel index
+        // through the tableSorter, since the table may be sorted
+        PlayerView       view  = ((PlayerView) getView());
+        int              row   = tableSorter.viewIndex((eventListModel.getIndexOf(event)));
+        int              index = 0;
+        ApplicationModel m     = (ApplicationModel) getModel();
+
+        index = tableSorter.modelIndex(++row);
+        event = eventListModel.getElementAt(index);
+        PlayerManager.getInstance().openView(event, m, view.getLocation());
+        PlayerManager.getInstance().remove(view);
+
+        ApplicationModel   model = Application.getModel();
+        ListSelectionModel lsm   = model.getListSelectionModel();
+
+        lsm.setSelectionInterval(index, index);
+    }
+
     /*
      * timer action listener. Updates the image sequence counter and implements stop logic
      * (non-Javadoc)
@@ -217,46 +263,24 @@ public class PlayerController extends AbstractController implements ActionListen
      * If it's the last frame, restart the timer to get a long pause between loops
      */
     public void actionPerformed(ActionEvent e) {
-        PlayerView view = ((PlayerView) getView());
-
         updateButtonStates();
 
-        // Translated the row index into the real eventListModel index
-        // through the tableSorter, since the table may be sorted
-        int              row           = tableSorter.viewIndex((eventListModel.getIndexOf(event)));
-        int              index         = 0;
-        ApplicationModel m             = (ApplicationModel) getModel();
-        String           actionCommand = e.getActionCommand();
+        String     actionCommand = e.getActionCommand();
+        PlayerView view          = ((PlayerView) getView());
 
         if (actionCommand != null) {
             if (actionCommand.equals("Next")) {
-                index = tableSorter.modelIndex(++row);
-                event = eventListModel.getElementAt(index);
-                PlayerManager.getInstance().openView(event, m, false);
-                PlayerManager.getInstance().remove(view);
-
-                ApplicationModel   model = Application.getModel();
-                ListSelectionModel lsm   = model.getListSelectionModel();
-
-                lsm.setSelectionInterval(index, index);
+                stepNext();
             } else if (actionCommand.equals("Prev")) {
-                index = tableSorter.modelIndex(--row);
-                event = eventListModel.getElementAt(index);
-                PlayerManager.getInstance().openView(event, m, false);
-                PlayerManager.getInstance().remove(view);
-
-                ApplicationModel   model = Application.getModel();
-                ListSelectionModel lsm   = model.getListSelectionModel();
-
-                lsm.setSelectionInterval(index, index);
+                stepPrev();
             } else if (actionCommand.equals("Close")) {
                 view.setVisible(false);
             } else if (actionCommand.equals("Delete")) {
                 UserPreferencesModel prefs = UserPreferences.getModel();
 
                 if (prefs.getAskBeforeDelete() == true) {
-                    String question = new String("Are you sure you want to delete" + Execute.getObjectIdDescription()
-                                                 + " ?");
+                    String                question = "Are you sure you want to delete"
+                                                     + Execute.getObjectIdDescription() + " ?";
                     ModalYesNoNeverDialog dialog;
 
                     try {
@@ -334,12 +358,12 @@ public class PlayerController extends AbstractController implements ActionListen
 
         // If up arrow key
         if ((e.getKeyCode() == 38) && e.isActionKey()) {
-            play(Mode.Continuous, Direction.Forward);
+            stepPrev();
         }
 
         // If down arrow key
         if ((e.getKeyCode() == 40) && e.isActionKey()) {
-            stop();
+            stepNext();
         }
 
         // If left arrow key

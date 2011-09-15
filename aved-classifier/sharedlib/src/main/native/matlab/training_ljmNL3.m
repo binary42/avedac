@@ -90,18 +90,15 @@ for jj = 1:lc
     option(3) = 1;
     option(5) = 1;
     option(14) = MAX_N_ITER;
-    rand('state',0);
-    randn('state',0);
+    %%rand('state',0);
+    %%randn('state',0);
     %%rand('state',sum(100*clock))
     %%s{2}{jj} = rand('state');
     %%randn('state',sum(100*clock))
     %%s{3}{jj} = randn('state');
     %%%rand('state',s{2}{jj});
     %%%randn('state',s{3}{jj});
-    
-    if(size(st,1) < mix.ncentres)
-        mix.ncentres = size(st,1);
-    end
+     
     mix = gmminit(mix, st, option);
     mix = gmmem(mix, st, option);
     mog(jj).mix = mix;

@@ -1,19 +1,25 @@
 /*
  * @(#)ClassModel.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 
@@ -46,13 +52,13 @@ import java.util.logging.Logger;
  * <p>
  * @author dcline
  */
-public class ClassModel {
-    private String            className             = new String("-");
-    private String            description           = new String("-");
-    private static String[]          imageExtensions       = {
+public class ClassModel implements Comparable<ClassModel> {
+    private static String[]   imageExtensions       = {
         "ppm", "jpg", "gif", "png", "tif", "tiff", "bmp", "pnm"
     };
-    private String            varsClassName         = new String("-");
+    private String            className             = "-";
+    private String            description           = "-";
+    private String            varsClassName         = "-";
     private File              squaredImageDirectory = new File("");
     private File              rawImageDirectory     = new File("");
     private ArrayList<String> fileList              = new ArrayList<String>();
@@ -65,21 +71,29 @@ public class ClassModel {
      * Constructor
      */
     public void ClassModel() {}
-  
+
+    public int compareTo(ClassModel o) {
+        return this.className.compareToIgnoreCase(o.className);
+    }
+
     /**
      * Returns a copy of the class model
      */
     public ClassModel copy() {
         ClassModel m = new ClassModel();
-        m.className = this.getName();
-        m.description = this.getDescription();
-        m.varsClassName = this.getVarsClassName();
+
+        m.color                 = this.color;
+        m.className             = this.getName();
+        m.description           = this.getDescription();
+        m.varsClassName         = this.getVarsClassName();
         m.squaredImageDirectory = this.getSquareImageDirectory();
-        m.rawImageDirectory = this.getRawImageDirectory();
-        m.fileList = (ArrayList<String>) this.fileList.clone();
-        m.dbrootDirectory = this.getDatabaseRootdirectory();
+        m.rawImageDirectory     = this.getRawImageDirectory();
+        m.fileList              = (ArrayList<String>) this.fileList.clone();
+        m.dbrootDirectory       = this.getDatabaseRootdirectory();
+
         return m;
     }
+
     /**
      * Get the raw image directory. This is the directory the images
      * are stored in before conversion to square images for classification
@@ -149,50 +163,54 @@ public class ClassModel {
      * Updates the valid file listing in the raw image directory
      */
     public void updateFileList() {
-        if (fileList.isEmpty() == false) {
-            fileList.clear();
-        }
-
-        if (rawImageDirectory.isDirectory()) {
-            String[] files = rawImageDirectory.list(new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    String extension = name.substring(name.lastIndexOf('.') + 1);
-
-                    for (int i = 0; i < imageExtensions.length; i++) {
-                        if (extension.equalsIgnoreCase(imageExtensions[i])) {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-            }); 
-
-            // All files should have some event number that we need to sort on.
-            Arrays.sort(files, new Comparator() {
-                public int compare(Object o1, Object o2) {
-                    String file1  = (String) o1;
-                    String file2  = (String) o2;
-                    int    index1 = file1.indexOf("evt");
-                    int    index2 = file2.indexOf("evt");
-
-                    if ((index1 == -1) || (index2 == -1)) {
-                        System.err.println("ERROR: File does conform to naming specification, no evt##### found.");
-                        System.err.println("Offending file: " + file1 + " or " + file2);
-
-                        return file1.compareTo(file2);
-                    }
-
-                    String event1 = file1.substring(index1, index1 + 8);
-                    String event2 = file2.substring(index2, index2 + 8);
-
-                    return event1.compareTo(event2);
-                }
-            });
- 
-            if ((files != null) && (files.length > 0)) {
-                fileList.addAll(Arrays.asList(files));
+        try {
+            if (fileList.isEmpty() == false) {
+                fileList.clear();
             }
+
+            if (rawImageDirectory.isDirectory()) {
+                String[] files = rawImageDirectory.list(new FilenameFilter() {
+                    public boolean accept(File dir, String name) {
+                        String extension = name.substring(name.lastIndexOf('.') + 1);
+
+                        for (int i = 0; i < imageExtensions.length; i++) {
+                            if (extension.equalsIgnoreCase(imageExtensions[i])) {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    }
+                });
+
+                // All files should have some event number that we need to sort on.
+                Arrays.sort(files, new Comparator() {
+                    public int compare(Object o1, Object o2) {
+                        String file1  = (String) o1;
+                        String file2  = (String) o2;
+                        int    index1 = file1.indexOf("evt");
+                        int    index2 = file2.indexOf("evt");
+
+                        if ((index1 == -1) || (index2 == -1)) {
+                            System.err.println("ERROR: File does conform to naming specification, no evt##### found.");
+                            System.err.println("Offending file: " + file1 + " or " + file2);
+
+                            return file1.compareTo(file2);
+                        }
+
+                        String event1 = file1.substring(index1, index1 + 8);
+                        String event2 = file2.substring(index2, index2 + 8);
+
+                        return event1.compareTo(event2);
+                    }
+                });
+
+                if ((files != null) && (files.length > 0)) {
+                    fileList.addAll(Arrays.asList(files));
+                }
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(ClassModel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -260,7 +278,7 @@ public class ClassModel {
      * @param directory the name of the root directory
      */
     public void setDatabaseRoot(File directory) {
-        dbrootDirectory = directory; 
+        dbrootDirectory = directory;
     }
 
     /**

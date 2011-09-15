@@ -1,19 +1,25 @@
 /*
- * @(#)LoadLibraryWorker.java
+ * @(#)LoadModelWorker.java
  * 
- * Copyright 2010 MBARI
+ * Copyright 2011 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 
@@ -22,6 +28,10 @@ package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import org.mbari.aved.classifier.ClassModel;
+import org.mbari.aved.classifier.ClassifierLibraryJNI;
+import org.mbari.aved.classifier.TrainingModel;
+import org.mbari.aved.ui.userpreferences.UserPreferences;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -29,10 +39,6 @@ import java.io.File;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.mbari.aved.classifier.ClassModel;
-import org.mbari.aved.classifier.ClassifierLibraryJNI;
-import org.mbari.aved.classifier.TrainingModel;
-import org.mbari.aved.ui.userpreferences.UserPreferences;
 
 /**
  * Loads the classifier matlab data from the training library database
@@ -42,31 +48,32 @@ import org.mbari.aved.ui.userpreferences.UserPreferences;
  * @author dcline
  */
 public class LoadModelWorker extends ClassifierLibraryJNITask {
-    private final ClassifierModel  model;
+    private final ClassifierModel model;
 
     public LoadModelWorker(ClassifierModel model) throws Exception {
         super("");
-        this.model           = model; 
+        this.model = model;
     }
 
     @Override
     protected void run(ClassifierLibraryJNI library) throws Exception {
-
         try {
-            File dbDir = UserPreferences.getModel().getClassDatabaseDirectory();
+            File   dbDir  = UserPreferences.getModel().getClassDatabaseDirectory();
             String dbRoot = dbDir.getAbsolutePath();
 
             // Create the collected class directory if it doesn't exist
             File featuresDir = new File(dbRoot + "/features/class");
+
             if (!featuresDir.exists()) {
                 featuresDir.mkdirs();
             }
 
             // Get the collected classes in this root directory
             ClassModel[] classes = library.get_collected_classes(dbRoot);
-        
+
             // Create the training class directory if it doesn't exist
             File trainingDir = new File(dbRoot + "/training/class");
+
             if (!trainingDir.exists()) {
                 trainingDir.mkdirs();
             }
@@ -81,12 +88,10 @@ public class LoadModelWorker extends ClassifierLibraryJNITask {
             if (training != null) {
                 model.addTrainingModels(training);
             }
- 
         } catch (RuntimeException ex) {
             Logger.getLogger(LoadModelWorker.class.getName()).log(Level.SEVERE, null, ex);
-
         } catch (Exception ex) {
             Logger.getLogger(LoadModelWorker.class.getName()).log(Level.SEVERE, null, ex);
-        }  
+        }
     }
 }

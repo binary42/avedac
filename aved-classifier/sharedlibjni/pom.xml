@@ -62,7 +62,7 @@
                                     <workingDirectory>${basedir}/target/nar/lib/i386-MacOSX-g++/jni</workingDirectory>
                                     <executable>${basedir}/src/main/scripts/execute</executable>
                                     <arguments>
-                                        <cmdlineArguments>install_name_tool -change libavedsharedlib.dylib @loader_path/libavedsharedlib.dylib lib${artifactId}-${version}.jnilib</cmdlineArguments>
+                                        <cmdlineArguments>install_name_tool -change libavedsharedlib.dylib @loader_path/libavedsharedlib.dylib lib${project.artifactId}-${project.version}.jnilib</cmdlineArguments>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -74,6 +74,7 @@
                     <plugin>
                         <groupId>org.freehep</groupId>
                         <artifactId>freehep-nar-plugin</artifactId>
+                        <version>2.0-alpha-2-SNAPSHOT</version>
                         <extensions>true</extensions>
                         <configuration>
                             <libraries>
@@ -135,6 +136,7 @@
                     sets up the java path correctly.-->
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.7.1</version>
                         <configuration>
                             <skip>true</skip>
                         </configuration>
@@ -158,7 +160,7 @@
                                     <workingDirectory>${basedir}/target/nar/lib/x86_64-MacOSX-g++/jni</workingDirectory>
                                     <executable>${basedir}/src/main/scripts/execute</executable>
                                     <arguments>
-                                        <cmdlineArguments>install_name_tool -change libavedsharedlib.dylib @loader_path/libavedsharedlib.dylib lib${artifactId}-${version}.jnilib</cmdlineArguments>
+                                        <cmdlineArguments>install_name_tool -change libavedsharedlib.dylib @loader_path/libavedsharedlib.dylib lib${project.artifactId}-${project.version}.jnilib</cmdlineArguments>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -170,6 +172,7 @@
                     <plugin>
                         <groupId>org.freehep</groupId>
                         <artifactId>freehep-nar-plugin</artifactId>
+                        <version>2.0-alpha-11-SNAPSHOT</version>
                         <extensions>true</extensions>
                         <configuration>
                             <libraries>
@@ -205,7 +208,7 @@
                                     <systemIncludePath>${mcrRoot}/runtime/maci64</systemIncludePath> 
                                     <systemIncludePath>${mcrRoot}/sys/os/maci64</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/extern/include</systemIncludePath>
-                                    <systemIncludePath>/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers</systemIncludePath>
+                                    <systemIncludePath>/Developer/SDKs/MacOSX10.5.sdk/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Headers</systemIncludePath>
                                 </systemIncludePaths>
                             </cpp>
                             <linker>

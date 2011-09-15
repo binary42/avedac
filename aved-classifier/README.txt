@@ -129,10 +129,10 @@ http://www.apple.com/developer/
 
         To add environment variables that are visible to NetBeans:
 
-            On Linux, modify the nbactions-Linux.xml file, replacing the
+            On Linux, modify the nbactions-Linux32/64.xml file, replacing the
             environment variables with those in the setup file
 
-            On Mac, modify the nbactions-Mac.xml file, replacing the
+            On Mac, modify the nbactions-Mac32/64.xml file, replacing the
             environment variables with those in the setup file
 
             IMPORTANT NOTE:
@@ -143,14 +143,14 @@ http://www.apple.com/developer/
    5.6  Modifications to the Matlab library
 
         If you make any changes to the Matlab .m files, to rebuild only the
-        matlab shared library from command-line
+        matlab shared library from command-line, e.g. for Mac64 bit build
 
 	>> cd sharedlib
-	>> mvn install
+	>> mvn -PMac64 install
 
         IMPORTANT NOTE:
         Most changes in the Matlab functions will also require modifications
         and rebuilding of the matlabsharedlib/jni modules.
 
 	>> cd sharedlibjni
-	>> mvn install
+	>> mvn -PMac64 install

@@ -1,23 +1,35 @@
 /*
  * @(#)CreateTrainingLibraryController.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
+
+import org.jdesktop.swingworker.SwingWorker;
+
 import org.mbari.aved.classifier.ClassModel;
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
 import org.mbari.aved.classifier.ColorSpace;
@@ -37,8 +49,8 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.BufferedReader;
 
+import java.io.BufferedReader;
 import java.io.File;
 
 import java.util.logging.Level;
@@ -48,28 +60,28 @@ import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JList;
-import org.jdesktop.swingworker.SwingWorker;
 
 public class CreateTrainingLibraryController extends AbstractController implements ModelListener {
 
     /** True when a popup window is displayed */
-    private Boolean hasPopup = false;
+    private Boolean                            hasPopup = false;
     private final MouseClickJListActionHandler mouseClickJListActionHandler;
-    private TrainingModel trainingModel;
-    private CreateTrainingLibraryTask task;
+    private CreateTrainingLibraryTask          task;
+    private TrainingModel                      trainingModel;
 
     /**
      * Constructor
-     * @param model
+     * @param trainingModel
      */
     public CreateTrainingLibraryController(ClassifierModel model) {
         setModel(model);
         setView(new CreateTrainingLibraryView(model, this));
 
-        // Register as listener to the model
+        // Register as listener to the trainingModel
         getModel().addModelListener(this);
         mouseClickJListActionHandler = new MouseClickJListActionHandler();
         getView().addMouseClickListener(mouseClickJListActionHandler);
+        getView().selectColorSpace(ColorSpace.RGB);
 
         try {
 
@@ -83,7 +95,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         }
     }
 
-    /* Just some helper functions to access model and view */
+    /* Just some helper functions to access trainingModel and view */
     @Override
     public ClassifierModel getModel() {
         return ((ClassifierModel) super.getModel());
@@ -123,7 +135,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
     }
 
     /**
-     * Copies an item from avaiable to the selected list
+     * Copies an item from avaliable to the selected list
      */
     private void copyItemToSelected() {
         if (!getView().getAvailableList().isSelectionEmpty()) {
@@ -168,18 +180,19 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         if (actionCommand.equals("Browse")) {
             browse();
         } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
-            JComboBox box = ((JComboBox) e.getSource());
+            JComboBox  box           = ((JComboBox) e.getSource());
             ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
             ColorSpace oldColorSpace = trainingModel.getColorSpace();
 
             trainingModel.setColorSpace(newColorSpace);
-            getView().populateAvailableClassList(newColorSpace);
 
             // If a different color space, clear the selected list
             if (!newColorSpace.equals(oldColorSpace)) {
                 getView().selectAll();
                 removeItemFromSelected();
             }
+
+            getView().populateAvailableClassList(newColorSpace);
         } else if (actionCommand.equals("Stop")) {
             if (task != null) {
                 getView().setRunButton(true);
@@ -191,8 +204,8 @@ public class CreateTrainingLibraryController extends AbstractController implemen
 
             // Do some checking for valid name and number of classes
             if (trainingClassName.length() == 0) {
-                String message = new String("Please enter a new library name.");
-                NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), message);
+                String                message = "Please enter a new library name.";
+                NonModalMessageDialog dialog  = new NonModalMessageDialog((JFrame) this.getView(), message);
 
                 dialog.setVisible(true);
 
@@ -204,9 +217,9 @@ public class CreateTrainingLibraryController extends AbstractController implemen
             trainingModel.setName(trainingClassName);
 
             if (trainingModel.getNumClasses() == 0) {
-                String message = new String("Training class must have at least one class. "
-                        + "Please select at least one class.");
-                NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), message);
+                String                message = "Training class must have at least one class. "
+                                                + "Please select at least one class.";
+                NonModalMessageDialog dialog  = new NonModalMessageDialog((JFrame) this.getView(), message);
 
                 dialog.setVisible(true);
 
@@ -218,46 +231,53 @@ public class CreateTrainingLibraryController extends AbstractController implemen
             try {
 
                 // If at least one class then create
-                final SwingWorker worker = Classifier.getController().getWorker();
-                task = new CreateTrainingLibraryTask(trainingModel);
+                final SwingWorker   worker   = Classifier.getController().getWorker();
+                final TrainingModel newModel = trainingModel.copy();
+
+                task = new CreateTrainingLibraryTask(newModel);
                 Classifier.getController().addQueue(task);
                 getView().setRunButton(false);
                 getView().setStopButton(true);
 
-                /// Create a progress display thread for monitoring this task
+                // / Create a progress display thread for monitoring this task
                 Thread thread = new Thread() {
-
                     @Override
                     public void run() {
-                        BufferedReader br = Classifier.getController().getBufferedReader();
+                        BufferedReader  br              = Classifier.getController().getBufferedReader();
                         ProgressDisplay progressDisplay = new ProgressDisplay(worker,
-                                "Creating training model " + trainingModel.getName());
+                                                              "Creating training model " + newModel.getName());
+
                         progressDisplay.getView().setVisible(true);
 
                         ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, br);
+
                         progressDisplayStream.execute();
-                        while (!task.isCancelled() && !task.isFini()) {
+
+                        while (!task.isCancelled() &&!task.isFini()) {
                             try {
                                 Thread.sleep(500);
-                            } catch (InterruptedException ex) {
-                            }
+                            } catch (InterruptedException ex) {}
                         }
+
                         getView().setRunButton(true);
                         getView().setStopButton(false);
                         progressDisplay.getView().dispose();
 
-                        if (task.isFini()) { 
+                        if (task.isFini()) {
                             try {
-                                // Add to training model when successfully run
-                                getModel().addTrainingModel(trainingModel);
-                                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " training library finished");
+                                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
+                                                                   newModel.getName() + " training library finished");
+
                                 dialog.setVisible(true);
                             } catch (Exception ex) {
-                                Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex);
+                                Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE,
+                                                 null, ex);
                             }
                         } else {
                             if (task.isCancelled()) {
-                                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), trainingModel.getName() + " training library stopped");
+                                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
+                                                                   newModel.getName() + " training library stopped");
+
                                 dialog.setVisible(true);
                             }
                         }
@@ -265,9 +285,12 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                 };
 
                 thread.start();
-
             } catch (Exception ex) {
                 Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex);
+
+                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.getMessage());
+
+                dialog.setVisible(true);
 
                 return;
             }
@@ -288,16 +311,14 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
 
-                // When the database root directory change or the models are updated
-                // reset the color space
-                case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED:
-                case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED:
+            // When the database root directory change or the models are updated
+            // reset the color space
+            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
+            case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
+                ColorSpace colorSpace = getView().getColorSpace();
+                getView().populateAvailableClassList(colorSpace);
 
-                    if (trainingModel != null) {
-                        getView().selectColorSpace(trainingModel.getColorSpace());
-                    }
-
-                    break;
+                break;
             }
         }
     }
@@ -332,6 +353,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                         removeItemFromSelected();
                     }
                 } else {
+
                     // On a single click toggle selection highlight
                     // list.flipSelection();
                 }
@@ -339,10 +361,10 @@ public class CreateTrainingLibraryController extends AbstractController implemen
 
             hasPopup = false;
         } else if (((e.getID() == MouseEvent.MOUSE_PRESSED) || (e.getID() == MouseEvent.MOUSE_RELEASED))
-                && e.isPopupTrigger()) {
+                   && e.isPopupTrigger()) {
 
             // Only show popup if this is really a popup trigger
-            Point pt = e.getPoint();
+            Point                    pt    = e.getPoint();
             TrainingLibraryPopupMenu popup = new TrainingLibraryPopupMenu(getView());
 
             popup.show(list, pt.x, pt.y);
@@ -351,25 +373,23 @@ public class CreateTrainingLibraryController extends AbstractController implemen
     }
 
     private class CreateTrainingLibraryTask extends ClassifierLibraryJNITask {
-
-        TrainingModel model;
+        TrainingModel trainingModel;
 
         public CreateTrainingLibraryTask(TrainingModel model) throws Exception {
             super(model.getName());
-            this.model = model;
+            this.trainingModel = model;
         }
 
         @Override
         protected void run(ClassifierLibraryJNI library) throws Exception {
-
             try {
 
                 // Format a comma delimited list of class names for the classifier
-                String trainingClasses = new String("");
-                int numClassModels = model.getNumClasses();
+                String trainingClasses = "";
+                int    numClassModels  = trainingModel.getNumClasses();
 
                 for (int i = 0; i < numClassModels; i++) {
-                    ClassModel m = model.getClassModel(i);
+                    ClassModel m = trainingModel.getClassModel(i);
 
                     if (i != 0) {
                         trainingClasses = trainingClasses + "," + m.getName();
@@ -378,27 +398,34 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                     }
                 }
 
-                library.train_classes(this.getCancel(), trainingClasses, model.getName(),
-                        model.getDatabaseRootdirectory().toString(),
-                        model.getColorSpace(), model.getDescription());
+                library.train_classes(this.getCancel(), trainingClasses, trainingModel.getName(),
+                                      trainingModel.getDatabaseRootdirectory().toString(),
+                                      trainingModel.getColorSpace(), trainingModel.getDescription());
 
+                // Add to trainingModel when successfully run
+                getModel().addTrainingModel(trainingModel);
                 setFini();
-
             } catch (Exception ex) {
                 if (!isCancelled()) {
                     Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex);
+
+                    NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.getMessage());
+
+                    dialog.setVisible(true);
+                    setFini();
                 }
             }
+
             return;
         }
     }
+
 
     /**
      * Subclass to handles mouse clicks in
      * {@link org.mbari.aved.ui.classifier.CreateTrainingLibraryView}
      */
     class MouseClickJListActionHandler implements MouseListener {
-
         public void mouseClicked(MouseEvent e) {
             actionClickList(e);
         }

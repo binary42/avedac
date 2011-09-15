@@ -9,8 +9,9 @@
 % as a string, not a cell array
 % method1='majority';
 % method2='probability';
-% methods=[{method1} {method2}];
-function [eventids, majoritywinnerindex, probabilitywinnerindex, probability] = run_tests_ui(kill, dbroot, color_space, testclassname, trainingalias, threshold)
+% method3='maximum';
+% methods=[{method1} {method2} {method3}];
+function [eventids, majoritywinnerindex, probabilitywinnerindex, maxwinnerindex, probability] = run_tests_ui(kill, dbroot, color_space, testclassname, trainingalias, threshold)
  
 GRAY = 1;
 RGB = 2;
@@ -34,7 +35,7 @@ else
     rootname = testclassname;
 end
 
-% the test files - this should already by collected
+% the test files - these should already by collected
 data = [rootname '_data_collection_avljNL3_cl_pcsnew'];
 testclassdata  = [dbroot '/features/tests/' data '.mat'];
 names = [rootname '_names_collection_avljNL3_cl_pcsnew'];
@@ -134,7 +135,8 @@ end
 % run all methods by default
 method1='majority';
 method2='probability';
-methods=[{method1} {method2}];
+method3='maximum';
+methods=[{method1} {method2} {method3}];
  
 
 %run event_classifier with specified methods
@@ -148,6 +150,12 @@ for k = 1:length(methods)
         display(event_classifier_results);
         
         switch lower(method)
+            case {'maximum','max'}
+                % skip over the first few table column fields - these
+                % aren't needed
+                maxwinnerindex =  event_classifier_results(3:end,3) ;
+                eventids = event_classifier_results(3:end,1) ;
+                probability = event_classifier_results(3:end,4) ;
             case {'majority','major'}
                 % skip over the first few table column fields - these
                 % aren't needed
@@ -173,7 +181,7 @@ for k = 1:length(methods)
         
         numclasses = length(class_table_header);
         stats=zeros(numclasses + 1, numclasses);
-        winners=[event_classifier_results{3:end,3}]
+        winners=[event_classifier_results{3:end,3}];
         
         %create a nxn matrix and capture detections
         for ii = 1:length(class_table_header)

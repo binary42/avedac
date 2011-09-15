@@ -1,19 +1,25 @@
 /*
  * @(#)CreateTrainingLibraryView.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 
@@ -27,6 +33,7 @@ import com.jgoodies.binding.list.ArrayListModel;
 import com.jgoodies.binding.list.SelectionInList;
 import com.jgoodies.binding.value.ValueHolder;
 import com.jgoodies.binding.value.ValueModel;
+import java.util.Arrays;
 
 import org.mbari.aved.classifier.ClassModel;
 import org.mbari.aved.classifier.ColorSpace;
@@ -40,6 +47,7 @@ import org.mbari.aved.ui.classifier.CreateTrainingLibraryController.MouseClickJL
 
 import java.util.Collections;
 import java.util.Vector;
+import javax.swing.JButton;
 
 import javax.swing.JComboBox;
 import javax.swing.JList;
@@ -81,17 +89,13 @@ public class CreateTrainingLibraryView extends JFrameView {
         colorSpaceComboBox.addActionListener(actionHandler);
         newLibraryNameTextField.addActionListener(actionHandler);
         getForm().getButton(ID_REMOVE_BUTTON).addActionListener(actionHandler);
-        getForm().getButton(ID_ADD_BUTTON).addActionListener(actionHandler);
-        getForm().getButton(ID_ADD_BUTTON).addActionListener(actionHandler);
+        getForm().getButton(ID_ADD_BUTTON).addActionListener(actionHandler); 
         getForm().getButton(ID_RUN_BUTTON).addActionListener(actionHandler);
         getForm().getButton(ID_STOP_BUTTON).addActionListener(actionHandler);
 
         // Populate the color space combo box
         ArrayListModel list = new ArrayListModel();
-
-        list.add(ColorSpace.GRAY);
-        list.add(ColorSpace.RGB);
-        list.add(ColorSpace.YCBCR);
+        list.addAll(Arrays.asList(ColorSpace.values()));
 
         ListModel       listModel          = new ArrayListModel(list);
         ValueModel      selectedItemHolder = new ValueHolder();
@@ -99,8 +103,9 @@ public class CreateTrainingLibraryView extends JFrameView {
 
         colorSpaceComboBox.setModel(new ComboBoxAdapter(selectionInList));
 
+        this.getRootPane().setDefaultButton((JButton) getForm().getButton(ID_RUN_BUTTON));
         // Set default size and.getName()
-        setTitle(ApplicationInfo.getName() + "-" + "Create training library"); 
+        setTitle(ApplicationInfo.getName() + "-" + "Create training library");
     }
 
     /**
@@ -119,9 +124,7 @@ public class CreateTrainingLibraryView extends JFrameView {
         return this.selectedList;
     }
 
-    public void modelChanged(ModelEvent event) {
-        
-    }
+    public void modelChanged(ModelEvent event) {}
 
     /**
      * Populates the available classes in the given
@@ -133,13 +136,13 @@ public class CreateTrainingLibraryView extends JFrameView {
         ClassifierModel model = (ClassifierModel) getModel();
 
         // Get all available models
-        int size = model.getNumClassModels();
-        ArrayListModel list       = new ArrayListModel();
+        int            size = model.getNumClassModels();
+        ArrayListModel list = new ArrayListModel();
 
         for (int i = 0; i < size; i++) {
             ClassModel aClassModel = (ClassModel) model.getClassModel(i);
 
-            if (aClassModel.getColorSpace().equals(colorSpace)) {
+            if (aClassModel.getColorSpace().equals(colorSpace)) { 
                 list.add(aClassModel);
             }
         }
@@ -196,8 +199,7 @@ public class CreateTrainingLibraryView extends JFrameView {
 
         selectedList.setCellRenderer(renderer);
         selectedList.setSelectionInterval(0, size - 1);
-
-        ClassifierModel model   = (ClassifierModel) getModel();
+ 
         Vector<Integer> indices = new Vector<Integer>();
 
         for (int i = 0; i < size; i++) {
@@ -205,13 +207,11 @@ public class CreateTrainingLibraryView extends JFrameView {
             ListModel  list     = availableList.getModel();
             int        numAvail = list.getSize();
 
-            if (model.checkClassExists(cls)) {
-                for (int j = 0; j < numAvail; j++) {
-                    ClassModel availClass = (ClassModel) list.getElementAt(j);
+            for (int j = 0; j < numAvail; j++) {
+                ClassModel availClass = (ClassModel) list.getElementAt(j);
 
-                    if (availClass.getName().equals(cls.getName())) {
-                        indices.add(j);
-                    }
+                if (availClass.getName().equals(cls.getName())) {
+                    indices.add(j);
                 }
             }
         }
@@ -277,5 +277,13 @@ public class CreateTrainingLibraryView extends JFrameView {
      */
     void setStopButton(Boolean b) {
         getForm().getButton(ID_STOP_BUTTON).setEnabled(b);
+    }
+
+    /**
+     * Returns the currently selected color space
+     * @return
+     */
+    ColorSpace getColorSpace() {
+        return (ColorSpace) colorSpaceComboBox.getSelectedItem();
     }
 }

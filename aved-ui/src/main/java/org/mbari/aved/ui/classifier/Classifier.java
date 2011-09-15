@@ -1,25 +1,38 @@
 /*
  * @(#)Classifier.java
  * 
- * Copyright 2010 MBARI
+ * Copyright 2011 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
+import org.mbari.aved.ui.Application;
 import org.mbari.aved.ui.ApplicationModel;
+import org.mbari.aved.ui.ApplicationView;
+import org.mbari.aved.ui.message.NonModalMessageDialog;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -27,9 +40,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JFrame;
-import org.mbari.aved.ui.Application;
-import org.mbari.aved.ui.ApplicationView;
-import org.mbari.aved.ui.message.NonModalMessageDialog;
 
 /**
  * The AVED Classifier. This handles creating the components needed
@@ -40,23 +50,26 @@ import org.mbari.aved.ui.message.NonModalMessageDialog;
  * @author dcline
  */
 public final class Classifier {
-
     private static ClassifierController controller = new ClassifierController();
-    private static Preferences settings = new Preferences();
+    private static Preferences          settings   = new Preferences();
 
     public Classifier(ApplicationModel model) throws Exception {
         try {
             controller = new ClassifierController(model.getEventListModel(), model.getSummaryModel());
+
             ClassifierModel m = controller.getModel();
+
             settings = new Preferences(m);
         } catch (Exception ex) {
-            String msg = new String("Cannot create classifier. This is either " +
-                    "because the classifier libraries are missing, or your environment variables" +
-                    " MCR_ROOT/LD_LIBRARY_PATH/XAPPLRESDIR are incorrect");
+            Logger.getLogger(Classifier.class.getName()).log(Level.SEVERE, null, ex); 
+            String msg = "Cannot create classifier. This is either "
+                                    + "because the classifier libraries are missing, or your environment variables"
+                                    + " MCR_ROOT/LD_LIBRARY_PATH/XAPPLRESDIR are incorrect";
             NonModalMessageDialog dialog;
-            dialog = new NonModalMessageDialog((ApplicationView) Application.getView(),
-                    msg);
+
+            dialog = new NonModalMessageDialog((ApplicationView) Application.getView(), msg);
             dialog.setVisible(true);
+
             throw new Exception("Cannot create Classifier");
         }
     }
@@ -79,6 +92,7 @@ public final class Classifier {
     public void shutdown() {
         controller.shutdown();
     }
+
     /**
      * Brings the create class tabbed view in the Classifier to the front
      * and visible
@@ -111,6 +125,14 @@ public final class Classifier {
         controller.getView().setRunPanelVisible();
     }
 
+     /**
+     * Brings the batch run tabbed view in the Classifier to the front
+     * and visible
+     */
+    public void selectBatchRunPanelTabbedView() {
+        controller.getView().setBatchRunPanelVisible();
+    }
+
     /**
      * Test main. This build a classifier for testing ouside
      * of the main application.
@@ -118,10 +140,10 @@ public final class Classifier {
      */
     public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
-
             public void run() {
                 try {
                     Classifier c = new Classifier(new ApplicationModel());
+
                     c.getView().setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     c.getView().setVisible(true);
                 } catch (Exception ex) {
@@ -130,5 +152,4 @@ public final class Classifier {
             }
         });
     }
-
 }

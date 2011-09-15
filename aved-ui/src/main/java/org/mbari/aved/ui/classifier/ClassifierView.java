@@ -1,19 +1,25 @@
 /*
  * @(#)ClassifierView.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 
@@ -40,12 +46,13 @@ public class ClassifierView extends JFrameView {
     /** TabbedView indexes */
     private final static int CREATE_CLASS_PANEL_INDEX = 0;
     private final static int RUN_PANEL_INDEX          = 3;
+    private final static int BATCH_RUN_PANEL_INDEX    = 4;
     private final static int TEST_CLASS_PANEL_INDEX   = 2;
     private final static int TRAINING_PANEL_INDEX     = 1;
 
     ClassifierView(ClassifierModel model, ClassifierController controller) {
-        super("org/mbari/aved/ui/forms/Classifier.xml", model, controller); 
-        this.setResizable(true);  
+        super("org/mbari/aved/ui/forms/Classifier.xml", model, controller);
+        this.setResizable(true);
     }
 
     public void modelChanged(ModelEvent event) {}
@@ -88,6 +95,14 @@ public class ClassifierView extends JFrameView {
         ;
     }
 
+    void setBatchRunPanel(FormPanel form) {
+           JTabbedPane pane = getTabbedPane();
+
+        if (pane != null) {
+            pane.setComponentAt(BATCH_RUN_PANEL_INDEX, form);
+        }
+    }
+
     /**
      * Sets the Run Classifier panel
      *
@@ -98,7 +113,7 @@ public class ClassifierView extends JFrameView {
 
         if (pane != null) {
             pane.setComponentAt(RUN_PANEL_INDEX, form);
-        } 
+        }
     }
 
     /**
@@ -146,6 +161,17 @@ public class ClassifierView extends JFrameView {
     }
 
     /**
+     * Selects the Batch Run Classifier panel
+     */
+    void setBatchRunPanelVisible() {
+        JTabbedPane pane = getTabbedPane();
+
+        if (pane != null) {
+            pane.setSelectedIndex(BATCH_RUN_PANEL_INDEX);
+        }
+    }
+
+    /**
      * Gets the tabbed pane in the form
      * @return the tabbed pane
      */
@@ -155,4 +181,5 @@ public class ClassifierView extends JFrameView {
 
         return c;
     }
+
 }

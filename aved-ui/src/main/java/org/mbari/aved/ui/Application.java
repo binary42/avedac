@@ -1,34 +1,47 @@
 /*
  * @(#)Application.java
- * 
- * Copyright 2010 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Copyright 2011 MBARI
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import com.jgoodies.clearlook.ClearLookManager;
 import com.jgoodies.plaf.Options;
 import com.jgoodies.plaf.plastic.PlasticLookAndFeel;
 
 import org.mbari.aved.ui.appframework.ErrorLog;
+import org.mbari.aved.ui.classifier.Classifier;
+import org.mbari.aved.ui.message.NonModalMessageDialog;
 
 //~--- JDK imports ------------------------------------------------------------
 
 import java.awt.*;
 
 import java.io.File;
+
 import java.net.URL;
 
 import java.util.logging.Level;
@@ -39,15 +52,12 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.plaf.metal.DefaultMetalTheme;
 import javax.swing.plaf.metal.MetalLookAndFeel;
-import org.mbari.aved.ui.classifier.Classifier;
-import org.mbari.aved.ui.message.NonModalMessageDialog;
 
 public class Application {
-    public static final ErrorLog errLog = ErrorLog.getInstance();
-    private static final Application    INSTANCE = new Application();
+    public static final ErrorLog                 errLog              = ErrorLog.getInstance();
+    private static final Application             INSTANCE            = new Application();
     public static ApplicationLookandFeelSettings lookAndFeelSettings = ApplicationLookandFeelSettings.createDefault();
-    private static ApplicationController controller;
-
+    private static ApplicationController         controller;
 
     public Application() {
         try {
@@ -80,7 +90,7 @@ public class Application {
     }
 
     /**
-      * Helper function to return the <code>Classifier</code> associated with
+     *  Helper function to return the <code>Classifier</code> associated with
      * this <code>Application</code>
      * @return the Classifier singleton
      */
@@ -109,12 +119,14 @@ public class Application {
      * @author D.Cline
      */
     private static void initLookAndFeel() {
+
         String lcOSName = System.getProperty("os.name").toLowerCase();
 
         // If mac, Set Aqua (or future default Apple VM platform look-and-feel
         if (lcOSName.startsWith("mac os x")) {
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                UIManager.put("Button.defaultButtonFollowsFocus", Boolean.TRUE);
             } catch (ClassNotFoundException ex) {
                 Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
             } catch (InstantiationException ex) {
@@ -124,7 +136,6 @@ public class Application {
             } catch (UnsupportedLookAndFeelException ex) {
                 Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
             }
- 
         } else {
 
             // Otherwise, set the look and feel to a metal look
@@ -142,7 +153,7 @@ public class Application {
                 PlasticLookAndFeel.setMyCurrentTheme(lookAndFeelSettings.getSelectedTheme());
                 PlasticLookAndFeel.setTabStyle(lookAndFeelSettings.getPlasticTabStyle());
                 PlasticLookAndFeel.setHighContrastFocusColorsEnabled(
-                        lookAndFeelSettings.isPlasticHighContrastFocusEnabled());
+                    lookAndFeelSettings.isPlasticHighContrastFocusEnabled());
             } else if (lookAndFeel.getClass() == MetalLookAndFeel.class) {
                 MetalLookAndFeel.setCurrentTheme(new DefaultMetalTheme());
             }
@@ -179,14 +190,17 @@ public class Application {
      */
     private static boolean checkForJpgReader() {
         ImageIO.scanForPlugins();
+
         String[] formats = ImageIO.getReaderFormatNames();
+
         for (int i = 0; i < formats.length; i++) {
             if (formats[i].equalsIgnoreCase("jpg")) {
                 return true;
             }
         }
+
         return false;
-    } 
+    }
 
     /**
      * Create the GUI and show it.  For thread safety,
@@ -199,36 +213,35 @@ public class Application {
         initLookAndFeel();
 
         final JFrame view = Application.getView();
-        
-        SwingUtilities.invokeLater(new Runnable() {
 
+        SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 Thread change = new Thread(new Runnable() {
-
                     public void run() {
                         try {
 
-                            //URL name = getClass().getResource("/examples/2344_00_32_40_25.events.small.xml");
-                            //URL name = getClass().getResource("/examples/20060808T000000_4912_32_103.events.xml");
+                            // URL name = getClass().getResource("/examples/2344_00_32_40_25.events.small.xml");
+                            // URL name = getClass().getResource("/examples/20060808T000000_4912_32_103.events.xml");
                             // URL name = new URL("file:/Volumes/nanomiaRAID-1/JAMSTEC/20080604T063139Z_tests/20080604T063139Z-test1/20080604T063139Z-test1.events.xml");
-                            //Application.getController().importProcessedResults(new File(name.getFile()));
+                            // Application.getController().importProcessedResults(new File(name.getFile()));
 
-                            /* Jpeg readers should exist for most platforms through the javax.imageio package.
-                             This is put here just in case this is run on Linux with a pre-packaged
-                             java distribution */
+                            /*
+                             *  Jpeg readers should exist for most platforms through the javax.imageio package.
+                             * This is put here just in case this is run on Linux with a pre-packaged
+                             * java distribution
+                             */
                             if (!checkForJpgReader()) {
-                                String message = new String("You are missing the Java Advanced Imaging\n" +
-                                        "Library needed to view .jpg images. Please download \n"+
-                                        "the package for your platform here:\n"+
-                                        "https://jai.dev.java.net/binary-builds.html\n" +
-                                        "and install version 1.1.3 or better");
+                                String message = "You are missing the Java Advanced Imaging\n"
+                                                            + "Library needed to view .jpg images. Please download \n"
+                                                            + "the package for your platform here:\n"
+                                                            + "https://jai.dev.java.net/binary-builds.html\n"
+                                                            + "and install version 1.1.3 or better";
                                 NonModalMessageDialog dialog = new NonModalMessageDialog(view, message);
+
                                 dialog.setVisible(true);
                                 dialog.answer();
                                 System.exit(-1);
                             }
-
-  
                         } catch (Exception e) {
 
                             // TODO Auto-generated catch block
@@ -247,7 +260,6 @@ public class Application {
      */
     public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
-
             public void run() {
                 createAndShowGUI();
             }

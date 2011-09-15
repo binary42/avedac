@@ -1,23 +1,33 @@
 /*
  * @(#)TestClassView.java
  * 
- * Copyright 2010 MBARI
+ * Copyright 2011 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1
- * (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
+
 import com.jeta.forms.components.image.ImageComponent;
 
 import com.jgoodies.binding.adapter.ComboBoxAdapter;
@@ -47,8 +57,7 @@ import java.util.ArrayList;
 import javax.swing.*;
 
 public class TestClassView extends JFrameView {
-
-    private static final String ID_CLASS_COLORSPACE_COMBOBOX = "classcolorspacecombo";    // "
+    private static final String ID_CLASS_COLORSPACE_COMBOBOX  = "classcolorspacecombo";    // "
     private static final String ID_CLASS_DESCRIPTION_TEXTAREA = "classdescription";        // javax.swing.JTextArea
 
     /*
@@ -56,39 +65,39 @@ public class TestClassView extends JFrameView {
      * are changed in the Abeille form designer, they should be modified here
      * too
      */
-    private static final String ID_CLASS_NAME_COMBOBOX = "classnamecombo";       // javax.swing.JComboBox
-    private static final String ID_CLASS_NAME_LABEL = "classname";            // javax.swing.JLabel
-    private static final String ID_CLASS_NAME_VARS_LABEL = "classnamevars";
-    private static final String ID_IMAGE_COMPONENT = "classimage";
-    private static final String ID_IMAGE_DIRECTORY_LABEL = "imagedirectory";
-    private static final String ID_LIBRARY_CLASS_JLIST = "classesinlibrary";     // javax.swing.JList
+    private static final String ID_CLASS_NAME_COMBOBOX      = "classnamecombo";       // javax.swing.JComboBox
+    private static final String ID_CLASS_NAME_LABEL         = "classname";            // javax.swing.JLabel
+    private static final String ID_CLASS_NAME_VARS_LABEL    = "classnamevars";
+    private static final String ID_IMAGE_COMPONENT          = "classimage";
+    private static final String ID_IMAGE_DIRECTORY_LABEL    = "imagedirectory";
+    private static final String ID_LIBRARY_CLASS_JLIST      = "classesinlibrary";     // javax.swing.JList
     private static final String ID_LIBRARY_COLORSPACE_LABEL = "librarycolorspace";    // "
-    private static final String ID_LIBRARY_NAME_COMBOBOX = "libraryname";          // ""
-    private static final String ID_NUM_IMAGES_LABEL = "numclassimages";
-    private static final String ID_RUN_BUTTON = "run";                  // javax.swing.JButton
-    private static final String ID_STOP_BUTTON = "stop";                 // ""
-    private final JTextArea classDescriptionTextArea;
-    private ImageComponent classImageComponent;
-    private final JComboBox classNameComboBox, libraryNameComboBox, classColorComboBox;
-    private final JList classesInLibraryList;
-    private final JLabel numImagesLabel, classNameVarsLabel, classNameLabel, libraryColorSpaceLabel,
-            imageDirLabel;
+    private static final String ID_LIBRARY_NAME_COMBOBOX    = "libraryname";          // ""
+    private static final String ID_NUM_IMAGES_LABEL         = "numclassimages";
+    private static final String ID_RUN_BUTTON               = "run";                  // javax.swing.JButton
+    private static final String ID_STOP_BUTTON              = "stop";                 // ""
+    private final JTextArea     classDescriptionTextArea;
+    private ImageComponent      classImageComponent;
+    private final JComboBox     classNameComboBox, libraryNameComboBox, classColorComboBox;
+    private final JList         classesInLibraryList;
+    private final JLabel        numImagesLabel, classNameVarsLabel, classNameLabel, libraryColorSpaceLabel,
+                                imageDirLabel;
 
     TestClassView(ClassifierModel model, TestClassController controller) {
         super("org/mbari/aved/ui/forms/ClassifierTestClass.xml", model, controller);
 
         // load frequently accessed components
-        classNameComboBox = getForm().getComboBox(ID_CLASS_NAME_COMBOBOX);
-        libraryNameComboBox = getForm().getComboBox(ID_LIBRARY_NAME_COMBOBOX);
-        classColorComboBox = getForm().getComboBox(ID_CLASS_COLORSPACE_COMBOBOX);
-        classesInLibraryList = getForm().getList(ID_LIBRARY_CLASS_JLIST);
+        classNameComboBox        = getForm().getComboBox(ID_CLASS_NAME_COMBOBOX);
+        libraryNameComboBox      = getForm().getComboBox(ID_LIBRARY_NAME_COMBOBOX);
+        classColorComboBox       = getForm().getComboBox(ID_CLASS_COLORSPACE_COMBOBOX);
+        classesInLibraryList     = getForm().getList(ID_LIBRARY_CLASS_JLIST);
         classDescriptionTextArea = (JTextArea) getForm().getTextComponent(ID_CLASS_DESCRIPTION_TEXTAREA);
-        classNameLabel = getForm().getLabel(ID_CLASS_NAME_LABEL);
-        libraryColorSpaceLabel = getForm().getLabel(ID_LIBRARY_COLORSPACE_LABEL);
-        imageDirLabel = getForm().getLabel(ID_IMAGE_DIRECTORY_LABEL);
-        numImagesLabel = getForm().getLabel(ID_NUM_IMAGES_LABEL);
-        classNameVarsLabel = getForm().getLabel(ID_CLASS_NAME_VARS_LABEL);
-        classImageComponent = (ImageComponent) getForm().getComponentByName(ID_IMAGE_COMPONENT);
+        classNameLabel           = getForm().getLabel(ID_CLASS_NAME_LABEL);
+        libraryColorSpaceLabel   = getForm().getLabel(ID_LIBRARY_COLORSPACE_LABEL);
+        imageDirLabel            = getForm().getLabel(ID_IMAGE_DIRECTORY_LABEL);
+        numImagesLabel           = getForm().getLabel(ID_NUM_IMAGES_LABEL);
+        classNameVarsLabel       = getForm().getLabel(ID_CLASS_NAME_VARS_LABEL);
+        classImageComponent      = (ImageComponent) getForm().getComponentByName(ID_IMAGE_COMPONENT);
 
         ActionHandler actionHandler = getActionHandler();
 
@@ -101,19 +110,19 @@ public class TestClassView extends JFrameView {
         // Populate the color space combo box
         ArrayListModel list = new ArrayListModel();
 
-        list.add(ColorSpace.GRAY);
-        list.add(ColorSpace.RGB);
-        list.add(ColorSpace.YCBCR);
+        for (ColorSpace color: ColorSpace.values()) {
+            list.add(color);
+        } 
 
-        ListModel listModel = new ArrayListModel(list);
-        ValueModel selectedItemHolder = new ValueHolder();
-        SelectionInList selectionInList = new SelectionInList(listModel, selectedItemHolder);
+        ListModel       listModel          = new ArrayListModel(list);
+        ValueModel      selectedItemHolder = new ValueHolder();
+        SelectionInList selectionInList    = new SelectionInList(listModel, selectedItemHolder);
 
         classColorComboBox.setModel(new ComboBoxAdapter(selectionInList));
 
         // default to RGB color space
         classColorComboBox.setSelectedIndex(1);
-
+ 
         // Set default size and.getName()
         setTitle(ApplicationInfo.getName() + "-" + "Test Class");
         this.pack();
@@ -157,8 +166,7 @@ public class TestClassView extends JFrameView {
         return (ClassifierModel) super.getModel();
     }
 
-    public void modelChanged(ModelEvent event) {
-    }
+    public void modelChanged(ModelEvent event) {}
 
     /**
      * Loads {@link org.mbari.aved.classifier.TrainingModel}
@@ -168,7 +176,7 @@ public class TestClassView extends JFrameView {
      */
     public void loadTrainingModel(TrainingModel trainingModel) {
         if (trainingModel != null) {
-            int size = trainingModel.getNumClasses();
+            int            size      = trainingModel.getNumClasses();
             ArrayListModel listModel = new ArrayListModel();
 
             for (int i = 0; i < size; i++) {
@@ -184,8 +192,10 @@ public class TestClassView extends JFrameView {
             classesInLibraryList.setCellRenderer(renderer);
             libraryColorSpaceLabel.setText(trainingModel.getColorSpace().toString());
         } else {
+
             // Set an empty model
             ArrayListModel listModel = new ArrayListModel();
+
             classesInLibraryList.setModel(listModel);
             libraryColorSpaceLabel.setText("");
         }
@@ -203,7 +213,7 @@ public class TestClassView extends JFrameView {
             classDescriptionTextArea.setText(model.getDescription());
             classNameVarsLabel.setText(model.getVarsClassName());
 
-            File f = model.getRawImageDirectory();
+            File   f         = model.getRawImageDirectory();
             String parentDir = f.getParent();
 
             if (parentDir != null) {
@@ -213,8 +223,8 @@ public class TestClassView extends JFrameView {
                 imageDirLabel.setText(model.getRawImageDirectory().toString());
             }
 
-            ArrayList<String> fileList = model.getRawImageFileListing();
-            Integer numImages = Integer.valueOf(fileList.size());
+            ArrayList<String> fileList  = model.getRawImageFileListing();
+            Integer           numImages = Integer.valueOf(fileList.size());
 
             numImagesLabel.setText(numImages.toString());
 
@@ -276,7 +286,8 @@ public class TestClassView extends JFrameView {
      */
     public void populateClassList(ColorSpace colorSpace) {
         loadClassModel(null);
-        int size = getModel().getNumClassModels();
+
+        int            size = getModel().getNumClassModels();
         ArrayListModel list = new ArrayListModel();
 
         for (int i = 0; i < size; i++) {
@@ -287,9 +298,9 @@ public class TestClassView extends JFrameView {
             }
         }
 
-        ListModel listModel = new ArrayListModel(list);
-        ValueModel selectedItemHolder = new ValueHolder();
-        SelectionInList selectionInList = new SelectionInList(listModel, selectedItemHolder);
+        ListModel       listModel          = new ArrayListModel(list);
+        ValueModel      selectedItemHolder = new ValueHolder();
+        SelectionInList selectionInList    = new SelectionInList(listModel, selectedItemHolder);
 
         classNameComboBox.setModel(new ComboBoxAdapter(selectionInList));
 
@@ -315,7 +326,7 @@ public class TestClassView extends JFrameView {
         ClassifierModel model = (ClassifierModel) getModel();
 
         // Get all available models in the same color space
-        int size = model.getNumTrainingModels();
+        int            size                      = model.getNumTrainingModels();
         ArrayListModel trainingModelInColorSpace = new ArrayListModel();
 
         for (int i = 0; i < size; i++) {
@@ -327,9 +338,9 @@ public class TestClassView extends JFrameView {
         }
 
         // Add training libraries to the combo box
-        ListModel listModel = new ArrayListModel(trainingModelInColorSpace);
-        ValueModel selectedItemHolder = new ValueHolder();
-        SelectionInList selectionInList = new SelectionInList(listModel, selectedItemHolder);
+        ListModel       listModel          = new ArrayListModel(trainingModelInColorSpace);
+        ValueModel      selectedItemHolder = new ValueHolder();
+        SelectionInList selectionInList    = new SelectionInList(listModel, selectedItemHolder);
 
         libraryNameComboBox.setModel(new ComboBoxAdapter(selectionInList));
 

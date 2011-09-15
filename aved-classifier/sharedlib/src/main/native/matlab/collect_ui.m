@@ -53,6 +53,7 @@ if(isdir(featurerootdir) == 0)
     mkdir(featurerootdir);
 end
 
+jj=0;
 ii=0;
 data = [];
 filenames =[];
@@ -119,43 +120,45 @@ while ( ii < sz )
     imsize = size(im,1);
     
     % store resolution info 
-    resol(ii+1,:) = imsize;    
+    resol(jj+1,:) = imsize;
   
     if color_space > 1
-            if strcmp(iminfo.ColorType,'grayscale')
+            if strcmp(iminfo.ColorType,'grayscale') 
                 source = im;
                 im(:,:,1) = source; 
                 im(:,:,2) = source; 
                 im(:,:,3) = source; 
             end
             
-            if (color_space == YCBCR)
+            if (color_space == YCBCR) 
                 im = rgb2ycbcr(im);
             end
+             
             for kk=1:3
                 data = calcola_invarianti(im(:,:,kk), scale);
                 val{kk} = apply_non_lin3(data,scale);
             end
             % store feature vector (stack of feature vectors for each channel)
-            store(ii+1,:) = [val{1}, val{2}, val{3}];
+            store(jj+1,:) = [val{1}, val{2}, val{3}];
     else
-        % COMPUTE INVARIANTS
+        % COMPUTE INVARIANTS 
         im = rgb2gray(im);
         data = calcola_invarianti(im, scale); % compute invariants at different scales
         val = apply_non_lin3(data,scale); % Apply non linearity
-        store(ii+1,:) = val; % store feature vector
+        store(jj+1,:) = val; % store feature vector
     end
     
     %modified store name and size of current file
     if(~iscell(sqdirct) && isdir(sqdirct))
-        filenames{ii+1,1} = [s(ii+1).name];
+        filenames{jj+1,1} = [s(ii+1).name];
     else
-        filenames{ii+1,1} = s{1,ii+1};
+        filenames{jj+1,1} = s{1,ii+1};
     end
         
-    filenames{ii+1,2} = imsize;
-    
+    filenames{jj+1,2} = imsize;
+ 
     ii = ii + 1;
+    jj = jj + 1;
      
 end
 

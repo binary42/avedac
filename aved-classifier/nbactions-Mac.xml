@@ -7,10 +7,10 @@
                 <goal>install</goal>
             </goals>
             <properties>
-		<Env.MCR_ROOT>/Applications/MATLAB/MATLAB_Compiler_Runtime/v710</Env.MCR_ROOT>
-                <Env.MATLAB_ROOT>/Applications/MATLAB_R2009a.app</Env.MATLAB_ROOT>
-                <Env.DYLD_LIBRARY_PATH>/Users/dcline/aved/lib:/Applications/MATLAB_R2009a.app/runtime:/Applications/MATLAB_R2009a.app/bin/maci:/Applications/MATLAB_R2009a.app/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
-		<Env.XAPPLRESDIR>/Applications/MATLAB_R2009a.app/X11/app-defaults</Env.XAPPLRESDIR>
+		<Env.MCR_ROOT>/Applications/MATLAB/MATLAB_Compiler_Runtime/v714</Env.MCR_ROOT>
+                <Env.MATLAB_ROOT>/Applications/MATLAB_R2010b.app</Env.MATLAB_ROOT>
+                <Env.DYLD_LIBRARY_PATH>/Users/dcline/aved/lib:/Applications/MATLAB_R2010b.app/runtime:/Applications/MATLAB_R2010b.app/bin/maci64:/Applications/MATLAB_R2010b.app/sys/os/maci64:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
+		<Env.XAPPLRESDIR>/Applications/MATLAB_R2010b.app/X11/app-defaults</Env.XAPPLRESDIR>
             </properties>
         </action>
         <action>
@@ -19,10 +19,10 @@
                 <goal>install</goal>
             </goals>
             <properties>
-                <Env.DYLD_LIBRARY_PATH>/Users/dcline/aved/lib:/Applications/MATLAB_R2009a.app/runtime:/Applications/MATLAB_R2009a.app/bin/maci:/Applications/MATLAB_R2009a.app/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
-		<Env.MCR_ROOT>/Applications/MATLAB/MATLAB_Compiler_Runtime/v710</Env.MCR_ROOT>
-                <Env.MATLAB_ROOT>/Applications/MATLAB_R2009a.app</Env.MATLAB_ROOT>
-		<Env.XAPPLRESDIR>/Applications/MATLAB_R2009a.app/X11/app-defaults</Env.XAPPLRESDIR>
+                <Env.DYLD_LIBRARY_PATH>/Users/dcline/aved/lib:/Applications/MATLAB_R2010b.app/runtime:/Applications/MATLAB_R2010b.app/bin/maci64:/Applications/MATLAB_R2010b.app/sys/os/maci64:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
+		<Env.MCR_ROOT>/Applications/MATLAB/MATLAB_Compiler_Runtime/v714</Env.MCR_ROOT>
+                <Env.MATLAB_ROOT>/Applications/MATLAB_R2010b.app</Env.MATLAB_ROOT>
+		<Env.XAPPLRESDIR>/Applications/MATLAB_R2010b.app/X11/app-defaults</Env.XAPPLRESDIR>
             </properties>
         </action>
         <action>
@@ -31,10 +31,10 @@
                 <goal>nar:nar-integration-test</goal>
             </goals>
             <properties>
-                <Env.DYLD_LIBRARY_PATH>/Users/dcline/aved/lib:/Applications/MATLAB_R2009a.app/runtime:/Applications/MATLAB_R2009a.app/bin/maci:/Applications/MATLAB_R2009a.app/sys/os/maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
-		<Env.MCR_ROOT>/Applications/MATLAB/MATLAB_Compiler_Runtime/v710</Env.MCR_ROOT>
-                <Env.MATLAB_ROOT>/Applications/MATLAB_R2009a.app</Env.MATLAB_ROOT>
-		<Env.XAPPLRESDIR>/Applications/MATLAB_R2009a.app/X11/app-defaults</Env.XAPPLRESDIR>
+                <Env.DYLD_LIBRARY_PATH>/Users/dcline/aved/lib:/Applications/MATLAB_R2010b.app/runtime:/Applications/MATLAB_R2010b.app/bin/maci64:/Applications/MATLAB_R2010b.app/sys/os/maci64:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries</Env.DYLD_LIBRARY_PATH>
+		<Env.MCR_ROOT>/Applications/MATLAB/MATLAB_Compiler_Runtime/v714</Env.MCR_ROOT>
+                <Env.MATLAB_ROOT>/Applications/MATLAB_R2010b.app</Env.MATLAB_ROOT>
+		<Env.XAPPLRESDIR>/Applications/MATLAB_R2010b.app/X11/app-defaults</Env.XAPPLRESDIR>
             </properties>
         </action>
     </actions>
