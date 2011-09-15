@@ -79,7 +79,7 @@ void CachePreprocessStage::runStage()
   int countFrameDist = 1;  
   int cacheFrameNum;
   uint numFrameDist = dp.itsSaliencyFrameDist;
-  float minVariance = dp.itsMinVariance;
+  float minStdDev = dp.itsMinStdDev;
   string tc;
   float stddev= 0.f;
   MbariImage< PixRGB<byte> > mbariImg(itsInputFileStem);
@@ -109,12 +109,12 @@ void CachePreprocessStage::runStage()
                 itsifs->updateNext();
                 img = itsifs->readRGB();
 
-                if (dp.itsMinVariance > 0.f) {
+                if (dp.itsMinStdDev > 0.f) {
                     stddev = stdev(luminance(img));
                     LINFO("Standard deviation in frame %d:  %f", itsifs->frame(), stddev);
 
                     // if there is little deviation do not add to the average cache
-                    if (stdev(luminance(img)) <= minVariance && itsAvgCache.size() > 0) {
+                    if (stdev(luminance(img)) <= minStdDev && itsAvgCache.size() > 0) {
                         LINFO("No standard deviation in frame %d too low. Is this frame all black ? Not including this image in the average cache", itsifs->frame());
                         itsAvgCache.push_back(itsAvgCache.mean());
                     } else
@@ -144,7 +144,7 @@ void CachePreprocessStage::runStage()
           img2segment = maxRGB(itsAvgCache.clampedDiffMean(img));
 	}
 
- 	itsRv->output(img2segment, curFrame, "Segment_input"); 
+ 	itsRv->output(img2segment, curFrame, "Segment_input");
 
  	// Get the saliency input image
         if ( dp.itsSaliencyInputType == SIDiffMean) {
@@ -162,7 +162,7 @@ void CachePreprocessStage::runStage()
              img2runsaliency = rescale(img, itsDims);
         } 
 
-        itsRv->output(img, curFrame, "Input"); 
+        itsRv->output(img, curFrame, "Input");
         itsRv->output(img2runsaliency, curFrame, "Saliency_input"); 
         MPE_Log_event(2,0,"");		
         
@@ -215,14 +215,20 @@ void CachePreprocessStage::preload() {
 
         // get the standard deviation in the input image
         // if there is little deviation do not add to the average cache
-	float imgstdev = stdev(luminance(img));
-        if (imgstdev <= 5.0f && itsAvgCache.size() > 0) {
-            LINFO("Standard deviation %f in frame %d. Is this frame all black ? Not including this image in the average cache", imgstdev, itsifs->frame());
-            itsAvgCache.push_back(itsAvgCache.mean());
-        } else
-            itsAvgCache.push_back(img);
+        if (dp.itsMinStdDev > 0.f) {
+            float imgstdev = stdev(luminance(img));
+            if (imgstdev <= dp.itsMinStdDev && itsAvgCache.size() > 0) {
+                LINFO("Standard deviation %f in frame %d. Is this frame all black ? Not including this image in the average cache", imgstdev, itsifs->frame());
+                itsAvgCache.push_back(itsAvgCache.mean());
+            } else
+                itsAvgCache.push_back(img);
 
+        } else {
+            itsAvgCache.push_back(img);
+        }
+        
         mbariImg.updateData(img, itsifs->frame());
+
         if (mbariImg.getMetaData().getTC().length() > 0)
             LINFO("Caching frame %06d timecode: %s", itsifs->frame(), mbariImg.getMetaData().getTC().c_str());
         else

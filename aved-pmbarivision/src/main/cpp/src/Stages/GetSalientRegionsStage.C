@@ -422,13 +422,13 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
     // get the standard deviation in the input image
     // if there is little deviation, this image is uniform and
     // will have no saliency so return empty winners
-    if (dp.itsMinVariance > 0.f) {
+    if (dp.itsMinStdDev > 0.f) {
         float stddevlum = stdev(luminance(img));
         // get the standard deviation in the input image
         // if there is no deviation, this image is uniform and
         // will have no saliency so return empty winners
-        if (stddevlum <= dp.itsMinVariance) {
-            LINFO("##### standard deviation in luminance: %f less than or equal to minimum variance: %f. No winners will be computed !!#####", stddevlum, dp.itsMinVariance);
+        if (stddevlum <= dp.itsMinStdDev) {
+            LINFO("##### standard deviation in luminance: %f less than or equal to minimum: %f. No winners will be computed !!#####", stddevlum, dp.itsMinStdDev);
             return std::list<WTAwinner > ();
         } else {
             LINFO("##### standard deviation in luminance: %f#####", stddevlum);
