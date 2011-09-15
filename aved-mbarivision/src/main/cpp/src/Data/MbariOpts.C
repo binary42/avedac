@@ -97,7 +97,7 @@ const ModelOptionDef OPT_MDPEyeInTheSeaVideo = { MODOPT_ALIAS, "ALIASEyeInTheSea
     "Options used for processing Eye-in-the-Sea Video from the  "
     "Ocean Research and Conservation Association (ORCA)",
     "mbari-eits-video", '\0',"", 
-    "--mbari-saliency-dist=5 --mbari-tracking-mode=KalmanFilter "
+    "--mbari-tracking-mode=KalmanFilter "
     "--mbari-keep-boring-WTA-points=yes "
     "--mbari-save-non-interesting-events=yes --mbari-save-original-frame-spec "
     "--mbari-segment-algorithm-input-image=Luminance --mbari-color-space=RGB "
@@ -116,7 +116,7 @@ const ModelOptionDef OPT_MDPBenthicVideo =
     "Implements good choice of options to experiment with "
     "processing video from a moving camera traversing the sea bottom",
     "mbari-benthic-video", '\0',"",
-    "--mbari-saliency-dist=5 --mbari-max-WTA-points=10 --mbari-segment-adaptive-offset=10 "
+    "--mbari-max-WTA-points=10 --mbari-segment-adaptive-offset=10 "
     "--mbari-tracking-mode=NearestNeighbor --mbari-max-event-area=30000 "
     "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=Luminance "
     "--vc-type=OI --mbari-color-space=Gray --use-random=true  --mbari-se-size=4 "
@@ -129,7 +129,7 @@ const ModelOptionDef OPT_MDPMidwaterVideo =
    "Implements good choice of options to experiment with "
     "processing video from a moving camera traversing the midwater sea column",
     "mbari-midwater-video", '\0',"",
-    "--mbari-saliency-dist=5 --mbari-max-WTA-points=10 --mbari-segment-graph-parameters=0.75,100,50"
+    "--mbari-saliency-dist=3 --mbari-max-WTA-points=10 --mbari-segment-graph-parameters=0.75,100,50"
     "--mbari-tracking-mode=KalmanFilter  --mbari-segment-algorithm=MeanAdaptive --mbari-segment-adaptive-offset=7 "
     "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=Luminance "
     "--vc-type=I:5OC --mbari-color-space=RGB --use-random=true "
@@ -146,7 +146,7 @@ const ModelOptionDef OPT_MDPMosaicStills =
     "--mbari-keep-boring-WTA-points=yes "
     "--boring-sm-mv=0.25 "
     "--mbari-save-non-interesting-events=yes "
-    "--mbari-segment-algorithm-input-image=MaxRGB --mbari-color-space=RGB"
+    "--mbari-segment-algorithm-input-image=DiffMean --mbari-color-space=RGB"
     "--vc-type=Variance --use-random=true "
     "--mbari-saliency-input-image=Raw --mbari-cache-size=2 "
     "--mbari-max-WTA-points=25 --mbari-max-evolve-msec=15000" };
@@ -159,7 +159,7 @@ const ModelOptionDef OPT_MDPTimeLapseStills =
     "--mbari-saliency-dist=1 --mbari-tracking-mode=NearestNeighbor "
     "--mbari-keep-boring-WTA-points=yes "
     "--mbari-save-non-interesting-events=yes "
-    "--mbari-segment-algorithm-input-image=MaxRGB --mbari-color-space=RGB"
+    "--mbari-segment-algorithm-input-image=DiffMean --mbari-color-space=RGB"
     "--mbari-saliency-input-image=Raw --mbari-cache-size=10 "
     "--qtime-decay=1.0 "
     "--vc-type=Variance  --use-random=true "
@@ -175,7 +175,7 @@ const ModelOptionDef OPT_MDPTimeLapseRover =
     "--mbari-keep-boring-WTA-points=yes "
     "--qtime-decay=1.0 "
     "--mbari-save-non-interesting-events=yes "
-    "--mbari-segment-algorithm-input-image=MaxRGB --mbari-color-space=RGB"
+    "--mbari-segment-algorithm-input-image=DiffMean --mbari-color-space=RGB"
     "--mbari-saliency-input-image=Raw "
     "--vc-type=O:5IC --use-random=true  "
     "--mbari-max-WTA-points=15 --mbari-max-evolve-msec=15000" };
@@ -330,8 +330,8 @@ const ModelOptionDef OPT_MDPcolorSpace = {
 const ModelOptionDef OPT_MDPsegmentAlgorithmInputImage = {
    MODOPT_ARG(SegmentAlgorithmInputImageType), "MDPsegmentInputImage", &MOC_MBARI, OPTEXP_MRV,
    "Segment algorithm input images type",
-    "mbari-segment-algorithm-input-image", '\0', "<MaxRGB|Luminance>",
-    "MaxRGB" };
+    "mbari-segment-algorithm-input-image", '\0', "<DiffMean|Luminance>",
+    "DiffMean" };
 const ModelOptionDef OPT_MDPsaliencyInputImage = {
       MODOPT_ARG(SaliencyInputImageType), "MDPsaliencyInputImage", &MOC_MBARI, OPTEXP_MRV,
     "Saliency input image type",
