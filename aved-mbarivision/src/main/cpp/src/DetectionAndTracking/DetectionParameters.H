@@ -67,7 +67,7 @@ parameters*/
 #define DEFAULT_MASK_HEIGHT 1
 #define DEFAULT_MASK_WIDTH 1
 // Default segmentation algorithm input type
-#define DEFAULT_SEGMENT_ALGORITHM_INPUT_TYPE SAIMaxRGB
+#define DEFAULT_SEGMENT_ALGORITHM_INPUT_TYPE SAIDiffMean
 // Default segmentation algorithm type
 #define DEFAULT_SEGMENT_ALGORITHM_TYPE SAMeanAdaptiveThreshold
 // Default segmentation algorithm offset to subtract from the mean or median
@@ -82,6 +82,7 @@ parameters*/
 // Default structure element type to use for cleaning
 // up segmented images
 #define DEFAULT_SE_SIZE 2
+#define MAX_SE_SIZE 5
 // Default tracking mode to track event objects
 #define DEFAULT_TRACKING_MODE TMKalmanFilter
 // Default maximum evolve time of the brain model in msecs

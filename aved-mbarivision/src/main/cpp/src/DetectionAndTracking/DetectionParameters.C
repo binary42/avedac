@@ -230,7 +230,7 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
         p->itsTrackingMode = itsTrackingMode.getVal();
      if (itsSaliencyInputType.getVal() > 0)
         p->itsSaliencyInputType = itsSaliencyInputType.getVal();
-    if (itsCleanupStructureElementSize.getVal() > 1)
+    if (itsCleanupStructureElementSize.getVal() > 1 && itsCleanupStructureElementSize.getVal() < MAX_SE_SIZE)
         p->itsCleanupStructureElementSize = itsCleanupStructureElementSize.getVal();
     if (itsMaskPath.getVal().length() > 0)
         p->itsMaskPath = itsMaskPath.getVal().data();
