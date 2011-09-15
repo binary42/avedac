@@ -186,11 +186,25 @@ extern "C" {
 
     // Request toolkit option aliases
     REQUEST_OPTIONALIAS_NEURO(manager);
- 
+     
     // add a brain here so we can get the command options
     nub::soft_ref<StdBrain> brain(new StdBrain(manager));
     manager.addSubComponent(brain); 
-  
+
+    // initialize brain defaults 
+    manager.setOptionValString(&OPT_UseRandom, "true");
+    manager.setOptionValString(&OPT_SVdisplayFOA, "true");
+    manager.setOptionValString(&OPT_SVdisplayPatch, "false");
+    manager.setOptionValString(&OPT_SVdisplayFOALinks, "false");
+    manager.setOptionValString(&OPT_SVdisplayAdditive, "true");
+    manager.setOptionValString(&OPT_SVdisplayTime, "false");
+    manager.setOptionValString(&OPT_SVdisplayBoring, "false");
+
+    // disable model manager option for all display-related options for
+    // all stages because Xdisplay option are not enabled in parallel code.
+    manager.setOptionValString(&OPT_MRVdisplayOutput,"false");
+    manager.setOptionValString(&OPT_MRVdisplayResults,"false");
+    
     //create master Beowulf component
     nub::soft_ref<Beowulf> beowulf(new Beowulf(manager, "Beowulf", "Beowulf", true));
     beowulf->exportOptions(OPTEXP_ALL);
@@ -256,12 +270,7 @@ extern "C" {
     dp.itsMaxCost = (float) maxDist/2*maxAreaDiff;
     if(dp.itsTrackingMode == TMKalmanFilter)
       dp.itsMaxCost = pow((double)maxDistFloat,2) + pow((double)maxAreaDiff,2);
-		
-    // disable model manager option for all display-related options for
-    // all stages because Xdisplay option are not enabled in parallel code.
-    manager.setOptionValString(&OPT_MRVdisplayOutput,"false");
-    manager.setOptionValString(&OPT_MRVdisplayResults,"false"); 
-  
+		  
     // start all our ModelComponent instances  
     manager.start();
  
