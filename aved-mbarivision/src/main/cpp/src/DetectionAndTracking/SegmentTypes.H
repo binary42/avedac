@@ -57,7 +57,7 @@ void convertToString(const SegmentAlgorithmType val,
 void convertFromString(const std::string& str, SegmentAlgorithmType& val);
 
 enum SegmentAlgorithmInputImageType {
-  SAIMaxRGB = 0,
+  SAIDiffMean = 0,
   SAILuminance = 1
   // if you add a new type here, also update the names in the function below!
 };
@@ -69,7 +69,7 @@ enum SegmentAlgorithmInputImageType {
 inline const char* segmentAlgorithmInputImageType(const SegmentAlgorithmInputImageType p)
 {
   static const char n[NSEGMENT_ALGORITHM_INPUT_IMAGE_TYPES][20] = {
-    "MaxRGB", "Luminance"};
+    "DiffMean", "Luminance"};
   return n[int(p)];
 };
 
