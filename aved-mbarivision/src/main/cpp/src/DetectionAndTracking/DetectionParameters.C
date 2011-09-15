@@ -68,7 +68,7 @@ itsSegmentAdaptiveOffset(DEFAULT_SEGMENT_ALGORITHM_OFFSET),
 itsSegmentGraphParameters(DEFAULT_SEGMENT_GRAPH_PARAMETERS),
 itsCleanupStructureElementSize(DEFAULT_SE_SIZE),
 itsSaliencyInputType(DEFAULT_SALIENCY_INPUT_TYPE),
-itsMinVariance(DEFAULT_MIN_VARIANCE),
+itsMinStdDev(DEFAULT_MIN_STD_DEV),
 itsColorSpaceType(DEFAULT_COLOR_SPACE),
 itsKeepWTABoring(DEFAULT_KEEP_WTA_BORING),
 itsEventExpirationFrames(0){
@@ -100,8 +100,8 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     os << "\tsavenoninteresting:" << itsSaveNonInteresting;
     os << "\tsaveoriginalframespec:" << itsSaveOriginalFrameSpec;
     os << "\tcolorspace:" << colorSpaceType(itsColorSpaceType);
-    os << "\tminvariance:" << itsMinVariance; 
-    os << "\teventExpirationFrames:" << itsEventExpirationFrames;
+    os << "\tminstddev:" << itsMinStdDev;
+    os << "\teventexpirationframes:" << itsEventExpirationFrames;
 
     if (itsMaskPath.length() > 0) {
         os << "\tmaskpath:" << itsMaskPath;
@@ -122,7 +122,8 @@ DetectionParameters &DetectionParameters::operator=(const DetectionParameters& p
     this->itsMinEventFrames = p.itsMinEventFrames;
     this->itsMinEventArea = p.itsMinEventArea;
     this->itsMaxEventArea = p.itsMaxEventArea;
-    this->itsTrackingMode = p.itsTrackingMode; 
+    this->itsTrackingMode = p.itsTrackingMode;
+    this->itsEventExpirationFrames = p.itsEventExpirationFrames;
     this->itsSegmentAlgorithmInputType = p.itsSegmentAlgorithmInputType;
     this->itsSegmentAlgorithmType = p.itsSegmentAlgorithmType;
     this->itsSegmentAdaptiveOffset = p.itsSegmentAdaptiveOffset;
@@ -134,7 +135,7 @@ DetectionParameters &DetectionParameters::operator=(const DetectionParameters& p
     this->itsSaveNonInteresting = p.itsSaveNonInteresting;
     this->itsSaveOriginalFrameSpec = p.itsSaveOriginalFrameSpec;
     this->itsColorSpaceType = p.itsColorSpaceType;
-    this->itsMinVariance = p.itsMinVariance; 
+    this->itsMinStdDev = p.itsMinStdDev;
     this->itsMaskPath = p.itsMaskPath;
     this->itsMaskXPosition = p.itsMaskXPosition;
     this->itsMaskYPosition = p.itsMaskYPosition;
@@ -215,7 +216,7 @@ itsEventExpirationFrames(&OPT_MDPeventExpirationFrames, this),
 itsSaliencyFrameDist(&OPT_MDPsaliencyFrameDist, this),
 itsKeepWTABoring(&OPT_MDPkeepBoringWTAPoints, this),
 itsSaveNonInteresting(&OPT_MDPsaveNonInterestingEvents, this),
-itsMinVariance(&OPT_MDPminVariance, this),
+itsMinStdDev(&OPT_MDPminStdDev, this),
 itsColorSpaceType(&OPT_MDPcolorSpace, this),
 itsSaveOriginalFrameSpec(&OPT_MDPsaveOriginalFrameSpec, this){
 };
@@ -260,16 +261,18 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
         p->itsMaxEventFrames = itsMaxEventFrames.getVal();
     else
         p->itsMaxEventFrames = DEFAULT_MAX_EVENT_FRAMES;
-    if (itsMinVariance.getVal() > 0.f)
-        p->itsMinVariance = itsMinVariance.getVal();
+    if (itsMinStdDev.getVal() > 0.f)
+        p->itsMinStdDev = itsMinStdDev.getVal();
     else
-        p->itsMinVariance = DEFAULT_MIN_VARIANCE;
+        p->itsMinStdDev = DEFAULT_MIN_STD_DEV;
 
     if (itsSaliencyFrameDist.getVal() > 0)
         p->itsSaliencyFrameDist = itsSaliencyFrameDist.getVal();
 
     if (itsEventExpirationFrames.getVal() >= 0)
         p->itsEventExpirationFrames = itsEventExpirationFrames.getVal();
+    else
+        p->itsEventExpirationFrames = DEFAULT_EVENT_EXPIRATION_FRAMES;
 
     p->itsKeepWTABoring = itsKeepWTABoring.getVal();
     p->itsSaveNonInteresting = itsSaveNonInteresting.getVal();

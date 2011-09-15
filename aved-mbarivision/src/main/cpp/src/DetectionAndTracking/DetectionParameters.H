@@ -105,9 +105,13 @@ parameters*/
 #define DEFAULT_SAVE_ORG_FRAME_SPEC false
 // Default color space for computing saliency
 #define DEFAULT_COLOR_SPACE SAColorRGB
-// Default minimum frame variance for processing. Anything below
-// this will be skipped
-#define DEFAULT_MIN_VARIANCE 0.f
+// Default minimum frame standard deviation for processing. Anything below
+// this will be skipped. Can be useful for removing frames with visual noise
+// or filtering out monochrome frames
+#define DEFAULT_MIN_STD_DEV 0.f
+// Default event expiration frames. How long an event can exist
+// without being tracked before expiring.
+#define DEFAULT_EVENT_EXPIRATION_FRAMES 0
 
 // ######################################################################
 //! Class that contains event detection parameters used to filter and track events 
@@ -132,8 +136,8 @@ public:
     TrackingMode itsTrackingMode;
     //! @param itsColorSpaceType = color space used to determine saliency computation
     ColorSpaceType itsColorSpaceType;
-    //! @param mode = color space used to determine saliency computation
-    float itsMinVariance;
+    //! @param itsMinStdDev = minimum required standard deviation in frames
+    float itsMinStdDev;
     //! @param itsMaxDist = maximum distance in pixels predicted centroid must be within
     int itsMaxDist;
     //! @param itsMaxEventFrames = maximum number of frames any event can be
@@ -221,7 +225,7 @@ private:
     OModelParam<int> itsMaxEvolveTime;
     OModelParam<TrackingMode> itsTrackingMode;
     OModelParam<ColorSpaceType> itsColorSpaceType;
-    OModelParam<float> itsMinVariance; 
+    OModelParam<float> itsMinStdDev;
     OModelParam<SegmentAlgorithmInputImageType> itsSegmentAlgorithmInputType;
     OModelParam<SegmentAlgorithmType> itsSegmentAlgorithmType;
     OModelParam<int> itsSegmentAdaptiveOffset;

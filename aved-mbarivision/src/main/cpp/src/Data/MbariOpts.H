@@ -77,7 +77,7 @@ extern const ModelOptionDef OPT_MDPsaveOriginalFrameSpec;
 extern const ModelOptionDef OPT_MDPBenthicVideo;
 extern const ModelOptionDef OPT_MDPMidwaterVideo;
 extern const ModelOptionDef OPT_MDPcolorSpace;
-extern const ModelOptionDef OPT_MDPminVariance; 
+extern const ModelOptionDef OPT_MDPminStdDev;
 extern const ModelOptionDef OPT_MDPeventExpirationFrames;
 
 extern const ModelOptionDef OPT_MDPkeepBoringWTAPoints;

@@ -299,13 +299,13 @@ int main(const int argc, const char** argv) {
             ifs->updateNext();
             img = ifs->readRGB();
 
-            if (dp.itsMinVariance > 0.f) {
+            if (dp.itsMinStdDev > 0.f) {
                 stddev = stdev(luminance(img));
                 LINFO("Standard deviation in frame %d:  %f", ifs->frame(), stddev);
 
                 // get the standard deviation in the input image
                 // if there is little deviation do not add to the average cache
-                if (stddev <= dp.itsMinVariance && avgCache.size() > 0) {
+                if (stddev <= dp.itsMinStdDev && avgCache.size() > 0) {
                     LINFO("Standard deviation in frame %d too low. Is this frame all black ? Not including this image in the cache", ifs->frame());
                     avgCache.push_back(avgCache.mean());
                 } else
@@ -342,7 +342,7 @@ int main(const int argc, const char** argv) {
                 mbariImg = outCache[cacheFrameNum];
                 metadata = mbariImg.getMetaData(); 
 
-                if (dp.itsMinVariance > 0.f) {
+                if (dp.itsMinStdDev > 0.f) {
                     stddev = stdev(luminance(mbariImg));
                     LINFO("Standard deviation in frame %d:  %f", curFrame, stddev);
                 }
@@ -380,13 +380,13 @@ int main(const int argc, const char** argv) {
                 ifs->updateNext();
                 img = ifs->readRGB();
 
-                if (dp.itsMinVariance > 0.f) {
+                if (dp.itsMinStdDev > 0.f) {
                     stddev = stdev(luminance(img));
                     LINFO("Standard deviation in frame %d:  %f", ifs->frame(), stddev);
                     // get the standard deviation in the input image
 
                     // if there is little deviation do not add to the average cache
-                    if (stddev <= dp.itsMinVariance && avgCache.size() > 0) {
+                    if (stddev <= dp.itsMinStdDev && avgCache.size() > 0) {
                         LINFO("Standard deviation low in frame %d. Is this frame all black or just noise ? Not including this image in the cache", ifs->frame());
                         avgCache.push_back(avgCache.mean());
                     } else {
@@ -439,7 +439,7 @@ int main(const int argc, const char** argv) {
             // Create the binary image to segment
             if (dp.itsSegmentAlgorithmInputType == SAILuminance) {
                 img2segment = luminance(mbariImg);
-            } else if (dp.itsSegmentAlgorithmInputType == SAILuminance) {
+            } else if (dp.itsSegmentAlgorithmInputType == SAIDiffMean) {
                 img2segment = maxRGB(avgCache.clampedDiffMean(mbariImg));
             } else {
                 img2segment = maxRGB(avgCache.clampedDiffMean(mbariImg));
@@ -516,7 +516,7 @@ int main(const int argc, const char** argv) {
             --countFrameDist;
             if (countFrameDist == 0) {
                 countFrameDist = dp.itsSaliencyFrameDist;
-                if (stddev >= dp.itsMinVariance) {
+                if (stddev >= dp.itsMinStdDev) {
 
                     LINFO("Getting salient regions for frame: %06d", mbariImg.getFrameNum());
                     
@@ -540,7 +540,7 @@ int main(const int argc, const char** argv) {
                 eventSet.closeAll();
             }
 
-            // clean up small events, and those needing deletion.
+            // prune invalid events
             eventSet.cleanUp(mbariImg.getFrameNum());
 
         } // end if (!loadedEvents)

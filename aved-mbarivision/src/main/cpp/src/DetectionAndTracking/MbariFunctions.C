@@ -385,13 +385,13 @@ list<WTAwinner> getSalientWinners(
     SimStatus status = SIM_CONTINUE;
     DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters; 
  
-    if (p.itsMinVariance > 0.f) {
+    if (p.itsMinStdDev > 0.f) {
         float stddevlum = stdev(luminance(img));
         // get the standard deviation in the input image
         // if there is no deviation, this image is uniform and
         // will have no saliency so return empty winners
-        if (stddevlum <= p.itsMinVariance) {
-            LINFO("##### frame: %d standard deviation in luminance: %f less than or equal to minimum variance: %f. No winners will be computed !!#####", framenum, stddevlum, p.itsMinVariance);
+        if (stddevlum <= p.itsMinStdDev) {
+            LINFO("##### frame: %d standard deviation in luminance: %f less than or equal to minimum: %f. No winners will be computed !!#####", framenum, stddevlum, p.itsMinStdDev);
             return winners;
         } else {
             LINFO("##### frame: %d standard deviation in luminance: %f ##### ", framenum, stddevlum);

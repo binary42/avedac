@@ -107,7 +107,7 @@ const ModelOptionDef OPT_MDPEyeInTheSeaVideo = { MODOPT_ALIAS, "ALIASEyeInTheSea
     "--oricomp-type=Steerable --levelspec=1-3,2-5,3 "
     "--mbari-cache-size=2 --use-older-version=false "
     "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst "
-    "--mbari-max-event-area=30000 --mbari-min-variance=10.0 "
+    "--mbari-max-event-area=30000 --mbari-min-std-dev=10.0 "
     "--mbari-segment-algorithm=GraphCutOnly "
     "--mbari-event-expiration-frames=3 --rescale-input=320x240 "
     "--mbari-segment-graph-parameters=0.5,1500,500"  };
@@ -409,10 +409,10 @@ const ModelOptionDef OPT_MDPsaveOriginalFrameSpec =
   { MODOPT_FLAG, "OPT_MDPsaveOriginalFrameSpec", &MOC_MBARI, OPTEXP_MRV,
     "Save events in original frame size specs, but run saliency computation on reduced frame size. This does nothing if the frames are not resized with the --rescale-input option. Default is set to false",
     "mbari-save-original-frame-spec", '\0', "", "false" };
-const ModelOptionDef OPT_MDPminVariance =
-  { MODOPT_ARG_FLOAT, "OPT_MDPminVariance", &MOC_MBARI, OPTEXP_MRV,
-    "Minimum variance of input image required for processing. This is useful to remove black frames, or frames with high visual noise",
-    "mbari-min-variance", '\0.', "<float>", "0."}; 
+const ModelOptionDef OPT_MDPminStdDev =
+  { MODOPT_ARG_FLOAT, "OPT_MDPminStdDev", &MOC_MBARI, OPTEXP_MRV,
+    "Minimum std deviation of input image required for processing. This is useful to remove black frames, or frames with high visual noise",
+    "mbari-min-std-dev", '\0.', "<float>", "0."};
 const ModelOptionDef OPT_MDPeventExpirationFrames = {
    MODOPT_ARG_INT, "MDPeventExpirationFrames", &MOC_MBARI, OPTEXP_MRV,
    "How long to keep an event in memory before removing it if no bit objects found to combine with the event. Useful for noisy video or reduced frame rate video where tracking problems occur.",
