@@ -1,18 +1,27 @@
 /*
- * Copyright 2009 MBARI
+ * @(#)TranscodeProcess.java
+ * 
+ * Copyright 2011 MBARI
  *
- * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1 
- * (the "License"); you may not use this file except in compliance 
- * with the License. You may obtain a copy of the License at
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * http://www.gnu.org/copyleft/lesser.html
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
 package org.mbari.aved.mbarivision.api;
 
 import java.io.File;
@@ -43,16 +52,18 @@ public class TranscodeProcess extends Thread {
     public static String FILESTEM = "f";
     private AvedVideo outAvedVideo ;
     private File inVideoFile;
-    private boolean isVideoValid = false;
+    private boolean isInitialized = false;
+    private boolean isVideoFileValid = false;
     private OutputStream printStream = System.out;
     private boolean isRunning = false;
     private String transcodeCmd = null;
-    private String transcodeOpts= new String("");
+    private String transcodeOpts= "";
     private Process process ;
     /** Environmental parameters to use in Runtime calls*/
     private String envParams[] = null;
     private String[] validImageExtensions = {"ppm", "jpg", "gif", "png", "pnm"};
 
+ 
     /** Helper class to interrupt processes that take too long to run*/
     private class InterruptScheduler extends TimerTask {
 
@@ -77,13 +88,10 @@ public class TranscodeProcess extends Thread {
         public UpdateOutputScheduler(TranscodeProcess process) {
             this.process = process;
         }
-
+ 
         @Override
         public void run() throws AvedRuntimeException {
-            String ext = Utils.getExtension(process.getInVideoFile());
-            /**If this is  a tar archive, then find the file stem, file ext, and 
-             * number of digits it is formatted to */
-            if (ext.equals("tar") || ext.equals("gz") || ext.equals("tgz")) {
+            String ext = Utils.getExtension(process.getInVideoFile()); 
                 File directory = process.getOutTemporaryStorage();
                 if (directory.isDirectory()) {
                     String[] files = directory.list(new FilenameFilter() {
@@ -138,33 +146,32 @@ public class TranscodeProcess extends Thread {
                             throw new AvedRuntimeException("Error finding the number of digits " 
                                     + f.toString() + " is formatted to");
                         }
+                         
+                        isInitialized = true;
                     }
-                }
-            }
-
-            isRunning = false;
+                } 
+ 
             return;
         }
-    }
+    } 
 
     /**
      * Constructor of the TranscodeProcess
      * @param movie the file to transcode
      * @throws IOException if the specified file doesn't exist
      */
-    public TranscodeProcess(File movie) throws IOException {
-        //TODO: check for null variables 
+    public TranscodeProcess(File movie) throws IOException { 
         inVideoFile = movie;
         outAvedVideo = null;
         if (!this.getInVideoFile().isFile()) {
-            this.isVideoValid = false;
+            this.isVideoFileValid = false;
             throw new IOException("Video clip not found at " + this.getInVideoFile().toString());
         } else {
             String name = Utils.getNameWithoutExtension(getInVideoFile());
             int nbFrame = 0;
             File outputStorage = new File(TranscodeProcess.DEFAULT_OUTPUT_PATH + name + File.separator);
             outAvedVideo = new AvedVideo(movie.toString(), nbFrame, outputStorage);
-            isVideoValid = true;
+            isVideoFileValid = true;
         }
 
         // Get the system environment variables
@@ -183,10 +190,10 @@ public class TranscodeProcess extends Thread {
             // environment variable by default and gets installed in /opt/local/bin
             // add in /usr/bin in and /usr/local in case it is missing
             if (name.equals("PATH")) {
-                envParams[i++] = new String(name + "=" + value + ":" + "/opt/local/bin:/usr/bin:/usr/local/bin:");
+                envParams[i++] = name + "=" + value + ":" + "/opt/local/bin:/usr/bin:/usr/local/bin:";
             } else {
 
-                envParams[i++] = new String(name + "=" + value);
+                envParams[i++] = name + "=" + value;
             }
         }
     }
@@ -195,7 +202,7 @@ public class TranscodeProcess extends Thread {
      * Removes output video generated from the transcode process
      */
     public void clean() throws AvedRuntimeException {
-        if (this.isValid() && this.getOutAVEDVideo() != null && this.getInVideoFile() != null) {
+        if (this.isVideoFileValid() && this.getOutAVEDVideo() != null && this.getInVideoFile() != null) {
 
             try {
                 if (isRunning) {
@@ -214,7 +221,7 @@ public class TranscodeProcess extends Thread {
      * @param p the path where the AvedVideo will be stored
      */
     public void setOutTemporaryStorage(String p) {
-        if (this.isValid()) {
+        if (this.isVideoFileValid()) {
             getOutAVEDVideo().setOutputDirectory(new File(p));
         }
     }
@@ -223,7 +230,7 @@ public class TranscodeProcess extends Thread {
      * Returns the path where AvedVideo is stored
      */
     public File getOutTemporaryStorage() {
-        if (this.isValid() && getOutAVEDVideo() != null) {
+        if (this.isVideoFileValid() && getOutAVEDVideo() != null) {
             return getOutAVEDVideo().getOutputDirectory();
         }
         return null;
@@ -238,11 +245,12 @@ public class TranscodeProcess extends Thread {
     }
 
     /**
-     * Gets if the video is valid
+     * Gets if the video file is valid. Valid files must exist and be a file, not a
+     * directory.
      * @return if the video is valid
      */
-    public boolean isValid() {
-        return (this.isVideoValid == true);
+    public boolean isVideoFileValid() {
+        return (this.isVideoFileValid == true);
     }
 
     /**
@@ -251,7 +259,7 @@ public class TranscodeProcess extends Thread {
      */
     private int getNbFramesTranscoded() {
 
-        if (this.isValid()) {
+        if (this.isVideoFileValid()) {
             ExtensionFilter filter = new ExtensionFilter("." + outAvedVideo.getFileExt());
             File dir = getOutAVEDVideo().getOutputDirectory();
             String[] list = dir.list(filter);
@@ -262,6 +270,13 @@ public class TranscodeProcess extends Thread {
         }
     }
 
+    /**
+     * 
+     * @return true if the process is initialized
+     */
+    public boolean isInitialized() {
+        return this.isInitialized;
+    }
     /**
      * 
      * @return true if the process is running
@@ -299,13 +314,14 @@ public class TranscodeProcess extends Thread {
     @Override
     public void run() throws AvedRuntimeException {
 
-        if (!isRunning && this.isValid() && this.getOutAVEDVideo() != null && this.getInVideoFile() != null) {
+        if (!isRunning && this.isVideoFileValid() && this.getOutAVEDVideo() != null && this.getInVideoFile() != null) {
 
             // Make the output directory in case it doesn't exist
             getOutAVEDVideo().getOutputDirectory().mkdirs();
 
             // Get optional transcode command (rarely needed)
             String cmd = getTranscodeCmd();
+            
             if (cmd == null) {
                 try {
                     isRunning = true;
@@ -429,7 +445,7 @@ public class TranscodeProcess extends Thread {
 
         // Append /opt/local/bin and /usr/bin as this doesn't always get included
         // in the system path on Mac OS X  
-        String finalpath = new String(getpath + ":/opt/local/bin:/usr/bin");
+        String finalpath = getpath + ":/opt/local/bin:/usr/bin";
         String p = finalpath.substring(4);
 
         // Convert colon delimited string to an array
@@ -446,7 +462,7 @@ public class TranscodeProcess extends Thread {
             } else {
                 try {
                     System.out.println("looking for " + cmd + " in " + path);
-                    String fullcmd = new String(path + "/" + cmd);
+                    String fullcmd = path + "/" + cmd;
                     Process proc = Runtime.getRuntime().exec(fullcmd, this.envParams);
 
                     // Set a timer to interrupt the process if it does not return within the timeout period
@@ -456,13 +472,13 @@ public class TranscodeProcess extends Thread {
                         exitval = proc.waitFor();
 
                         if (exitval != 0) {
-                            return new String(path + "/" + cmd);
+                            return path + "/" + cmd;
                         }
                     } catch (InterruptedException e) {
                         // Stop the process from running
                         proc.destroy();
                         if (exitval != 0) {
-                            return new String(path + "/" + cmd);
+                            return path + "/" + cmd;
                         } else {
                             throw new Exception(fullcmd + " did not return after " + timeout + " milliseconds");
                         }
@@ -514,25 +530,27 @@ public class TranscodeProcess extends Thread {
      */
     public boolean runTranscode(File file, File outputdir, String transcodeopts) throws Exception {
 
-        String extraargs = new String("");
+        String extraargs = "";
         String ext = Utils.getExtension(file);
         String filename = file.toString();
         String filestem = Utils.getNameWithoutExtension(file);
         String timecode = null;
         boolean hasISOtimecode = false;
-        String outputfileseed = new String(outputdir.toString() + "/f");
+        String outputfileseed = outputdir.toString() + "/f";
         String lcOSName = System.getProperty("os.name").toLowerCase();
         String transcodecmd = null;
-        String tcprobecmd = null;
         String avidumpcmd = null;
         String cmd = null;
         // Set a timer to update information about the transcoded output after timeout period
         Timer timer = new Timer();
 
+        long timeout = (long) 500; 
+        timer.schedule(new UpdateOutputScheduler(this), timeout);
+        
         try {
 
             /**If this is not a tar archive, then assume it's video and we need 
-             * to find the transcode
+             * to find the transcode executable
              */
             if (!ext.equals("tar") && !ext.equals("gz") && !ext.equals("tgz")) {
                 // Get transcode path 
@@ -543,15 +561,11 @@ public class TranscodeProcess extends Thread {
                    transcodecmd = transcodecmd + " --progress_rate 100 ";
                 } else { 
                    transcodecmd = transcodecmd + " -q 1 --print_status 100";
-                }
-
-                outAvedVideo.setFileExt("ppm");
-                outAvedVideo.setFileStem("f");
-                outAvedVideo.setNbDigits(6);
+                } 
             }
             /** Check if this file has a ISO8601 timecode timestamp and extract
             timestamp from the name. This is a crude test so far that only
-            checks if there is a set of numbers appended with a T*/
+            checks for a set of numbers appended with a T*/
             String timecodestr;
             int x = filestem.lastIndexOf("T");
             if (x > 0) {
@@ -605,12 +619,12 @@ public class TranscodeProcess extends Thread {
                         }
                     }
                 }*/
-                String codec = new String("Unknown");
+                String codec = "Unknown";
                 // If have the avidump command, use it to find the codec to better
                 // control transcoding
                 try {
                     avidumpcmd = getCmdLoc("avidump");
-                    String avicmd = new String(avidumpcmd + " " + filename);
+                    String avicmd = avidumpcmd + " " + filename;
                     System.out.println("Executing " + avicmd);
                     // execute the command 
                     Process proc = Runtime.getRuntime().exec(avicmd, envParams);
@@ -626,7 +640,7 @@ public class TranscodeProcess extends Thread {
                     proc.waitFor();
 
                     // find the codec
-                    String search = new String("compressor:");
+                    String search = "compressor:";
                     for (int i = 0; i < line.size(); i++) {
                         if (line.get(i).toString().contains(search)) {
                             String tmp = line.get(i).toString();
@@ -641,41 +655,37 @@ public class TranscodeProcess extends Thread {
                 }
 
                 if (codec.equals("DX50")) {
-                    cmd = new String(transcodecmd + " -i " + filename + " -o " + outputfileseed + " -x ffmpeg,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts);
+                    cmd = transcodecmd + " -i " + filename + " -o " + outputfileseed + " -x ffmpeg,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
                 } else if (codec.equals("mpg2")) {
-                    cmd = new String(transcodecmd + " -i " + filename + " -o " + outputfileseed + " -x mpeg2,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts);
+                    cmd = transcodecmd + " -i " + filename + " -o " + outputfileseed + " -x mpeg2,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
                 } else {
-                    cmd = new String(transcodecmd + " -i " + filename + " -o " + outputfileseed + " -x ffmpeg,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts);
+                    cmd = transcodecmd + " -i " + filename + " -o " + outputfileseed + " -x ffmpeg,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
                 }
+                outputdir.mkdir();     
+                process = Runtime.getRuntime().exec(cmd, envParams);
 
             } else if (ext.equals("mpeg") || ext.equals("mpg")) {
-                cmd = new String(transcodecmd + " -i " + filename + " -x mpeg2,null -y " + outAvedVideo.getFileExt() + ",null -o " + outputfileseed + " " + extraargs + " " + transcodeopts);
+                cmd = transcodecmd + " -i " + filename + " -x mpeg2,null -y " + outAvedVideo.getFileExt() + ",null -o " + outputfileseed + " " + extraargs + " " + transcodeopts;
+                outputdir.mkdir();     
+                process = Runtime.getRuntime().exec(cmd, envParams);
             } //Run transcode or scripts needed to untar and convert to ppms
             else if (ext.endsWith("gz") || ext.endsWith("tgz")) {
 
-                // Create output directory if it doesn't exist 
-                outputdir.mkdirs();
-
                 // In a shell, format the command to unzip and untar all in one step
-                String uncompresscmd = new String("gunzip -c " + filename + " | " + "tar -x -v -C " + outputdir.toString() + " -f - ");
+                String uncompresscmd = "gunzip -c " + filename + " | " + "tar -x -v -C " + outputdir.toString() + " -f - ";
                 String[] cmdarray = {
                     "/bin/sh",
                     "-c",
                     uncompresscmd,
-                };
-                System.out.println("Executing " + uncompresscmd);
+                };              
+                outputdir.mkdir();     
                 process = Runtime.getRuntime().exec(cmdarray, envParams);
-                cmd = null;
             } else if (ext.endsWith("tar")) {
-                cmd = new String("tar " + " -C " + outputdir.toString() + " -x -v -f " + filename);
+                cmd = "tar " + " -C " + outputdir.toString() + " -x -v -f " + filename;
+                process = Runtime.getRuntime().exec(cmd, envParams);
             } else {
-                cmd = new String(transcodecmd + "-i " + filename + " -o " + outputfileseed + " -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts);
-            }
-
-            // Create output directory if it doesn't exist 
-            outputdir.mkdir();
-            if (cmd != null) {
-                System.out.println("Executing " + cmd);
+                cmd = transcodecmd + "-i " + filename + " -o " + outputfileseed + " -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
+                outputdir.mkdir();            
                 process = Runtime.getRuntime().exec(cmd, envParams);
             }
             // any error messages ?       
@@ -688,15 +698,19 @@ public class TranscodeProcess extends Thread {
             outGobbler.start();
             errGobbler.start();
 
-            long timeout = (long) 500;
-            timer.schedule(new UpdateOutputScheduler(this), timeout);
-
             int exitVal = process.waitFor();
             if (exitVal != 0) {
-                // Stop the timer
                 timer.cancel();
                 throw new AvedRuntimeException("Error running command " + cmd);
-            }
+            } 
+                
+            int numRetries = 3;
+            for (int i=0; i< numRetries; i++) {            
+            if (!isInitialized)
+                System.out.println("Sleeping");
+                Thread.sleep(timeout + 500);
+            } 
+            
         } catch (NumberFormatException ex) {
             throw new AvedRuntimeException(ex.toString());
         } catch (Exception ex) {
