@@ -245,7 +245,7 @@ public class PlayerView extends JFrameView {
      * is in and overlay the bounding box representing it
      * on the image.
      */
-    public void displayEventImage(EventObject eventObj, File frame) {
+    public void displayEventImage(EventObjectContainer eventObj, BoundingBox b,  File frame) {
         PlanarImage image = null;
 
         if (eventObj != null) {
@@ -264,8 +264,7 @@ public class PlayerView extends JFrameView {
                 image = missingImage;
             }
 
-            // Calculate the cropping coordinates from the bounding box
-            BoundingBox b       = eventObj.getBoundingBox();
+            // Calculate the cropping coordinates from the bounding box 
             int         xorigin = b.getLowerLeftX();
             int         yorigin = b.getUpperRightY();
             int         width   = b.getUpperRightX() - b.getLowerLeftX();
@@ -320,7 +319,7 @@ public class PlayerView extends JFrameView {
 
                 imageWidth  = image.getWidth();
                 imageHeight = image.getHeight();
-                jai         = new DisplayThumbnail(image, scale, width, height, upperleftorigin);
+                jai         = new DisplayThumbnail(event, image, scale, width, height, upperleftorigin);
                 imagePanel.add(jai);
                 jai.addKeyListener((KeyListener) this.getController());
                 this.validate();
@@ -383,7 +382,7 @@ public class PlayerView extends JFrameView {
         EventObject eventObj = event.getEventObject(frame);
         File        f        = event.getFrameSource(frame);
 
-        displayEventImage(eventObj, f);
+        displayEventImage(event, eventObj.getBoundingBox(), f);
     }
 
     /**

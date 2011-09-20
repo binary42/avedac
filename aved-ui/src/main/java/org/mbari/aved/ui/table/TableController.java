@@ -53,7 +53,9 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel; 
+import org.mbari.aved.ui.EventImagePopupMenu;
 
 public class TableController extends AbstractController implements ModelListener {
 
@@ -126,35 +128,40 @@ public class TableController extends AbstractController implements ModelListener
     void actionClickTable(MouseEvent e) {
         ApplicationModel model = getModel();
 
+        JTable table = (JTable) e.getSource();
+
+        // Get the event in the table
+        Point pt = e.getPoint();
+        
+        int row = eventTable.rowAtPoint(pt);
+        
+        // Translated the row index into the real model index
+        // through the sorter, since the table may be sorted
+        TableSorter sorter = getModel().getSorter();
+
+        int index = sorter.modelIndex(row);
+
+        EventObjectContainer c = model.getEventListModel().getElementAt(index);
         if (e.getID() == MouseEvent.MOUSE_CLICKED) {
-            JTable table = (JTable) e.getSource();
 
-            // Get the event in the table
-            Point p = e.getPoint();
-
-            // Translated the row index into the real model index
-            // through the sorter, since the table may be sorted
-            TableSorter sorter = getModel().getSorter();
 
             if (sorter != null) {
-                int row   = table.rowAtPoint(p);
-                int index = sorter.modelIndex(row);
 
-                // On double click, but not while a popup is showing
+                // On double click or single click, but not while a popup is showing
                 if (!hasPopup) {
 
                     // On double click launch an Event Player
                     if (e.getClickCount() == 2) {
-                        EventObjectContainer c = model.getEventListModel().getElementAt(index);
-
                         PlayerManager.getInstance().openView(c, model);
+                    } else {
+                        EventImagePopupMenu imagePopup = new EventImagePopupMenu(c);
+                        imagePopup.show((Component) e.getSource(), pt.x, pt.y);
                     }
+                    hasPopup = false;
                 }
 
-                hasPopup = false;
             }
         } else if ((e.getID() == MouseEvent.MOUSE_PRESSED) || (e.getID() == MouseEvent.MOUSE_RELEASED)) {
-            Point pt = e.getPoint();
 
             // Only show popup if this is really a popup trigger
             if (e.isPopupTrigger()) {
@@ -162,7 +169,7 @@ public class TableController extends AbstractController implements ModelListener
                 hasPopup = true;
             }
         }
-    }
+    } 
 
     /*
      * Forces fireTableChanged of the table display

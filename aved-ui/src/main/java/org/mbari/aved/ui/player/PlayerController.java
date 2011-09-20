@@ -139,7 +139,7 @@ public class PlayerController extends AbstractController implements ActionListen
             // TODO: push this logic down into the PlayerView
             // it knows how to best display the timecode
             if (eventObj != null) {
-                view.displayEventImage(eventObj, src);
+                view.displayEventImage(event, eventObj.getBoundingBox(), src);
                 view.displayTimecodeFrameString(eventObj.getFrameEventSet().getTimecode(),
                                                 eventObj.getFrameEventSet().getFrameNumber());
             }

@@ -21,13 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
-
-
 package org.mbari.aved.ui.table;
 
 //~--- non-JDK imports --------------------------------------------------------
-
 import com.jeta.forms.gui.form.FormAccessor;
 
 import org.mbari.aved.ui.ApplicationModel;
@@ -40,7 +36,7 @@ import org.mbari.aved.ui.model.EventAbstractTableModel;
 import java.awt.Color;
 import java.awt.Component;
 
-import javax.swing.*;
+import javax.swing.*; 
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
@@ -55,12 +51,10 @@ import javax.swing.table.TableColumn;
  * EditorColorTableCellRenderer into this class.
  */
 public class TableView extends JFrameView {
-    private static final String ID_TABLE         = "table";    // javax.swing.JTable
-    private static final long   serialVersionUID = 1L;
 
-    /** frequently accessed members */
-    private EventTable table;
-
+    private static final String ID_TABLE = "table";    // javax.swing.JTable
+    private static final long serialVersionUID = 1L;
+ 
     public TableView(ApplicationModel model, EventTable table, TableController controller) {
 
         // Constructor
@@ -71,7 +65,7 @@ public class TableView extends JFrameView {
         // Define the variable row height renderer to adjust the height by the thumbnail
         table.getColumnModel().getColumn(numcolumns).setCellRenderer(new VariableRowHeightRenderer());
 
-        // Disable auto resizing
+        // Enable column auto resizing
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         DefaultTableCellRenderer s = new DefaultTableCellRenderer();
@@ -87,7 +81,7 @@ public class TableView extends JFrameView {
 
         // Left-justify the all the columns except the last one that
         // is handled by the custom renderer
-        DefaultTableCellRenderer r = new DefaultTableCellRenderer();
+        DefaultTableCellRenderer r = new DefaultTableCellRenderer(); 
 
         r.setHorizontalAlignment(SwingConstants.LEFT);
 
@@ -96,16 +90,17 @@ public class TableView extends JFrameView {
         }
 
         // Replace the table in the form with the AvedTable
-        FormAccessor a        = getForm().getFormAccessor();
-        JTable       tableOld = getForm().getTable(ID_TABLE);
+        FormAccessor a = getForm().getFormAccessor();
+        JTable tableOld = getForm().getTable(ID_TABLE);
 
         a.replaceBean(tableOld, table);
-        this.table = table;
     }
 
-    public void modelChanged(ModelEvent event) {}
+    public void modelChanged(ModelEvent event) {
+    }
 
     public class VariableRowHeightRenderer extends JLabel implements TableCellRenderer {
+
         public VariableRowHeightRenderer() {
             super();
             setOpaque(true);

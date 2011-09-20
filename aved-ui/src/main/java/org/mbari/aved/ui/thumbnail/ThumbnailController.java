@@ -48,11 +48,13 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+import javax.media.jai.PlanarImage;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import org.mbari.aved.ui.EventImagePopupMenu;
 
 /**
  *
@@ -139,12 +141,12 @@ public class ThumbnailController extends AbstractController
      * On a double mouse-click opens up a {@link org.mbari.aved.ui.player.Player}
      */
     void actionClickThumbnailPicture(MouseEvent e) {
-        ThumbnailPicture thumbnail = (ThumbnailPicture) e.getSource();
 
         if (e.getID() == MouseEvent.MOUSE_CLICKED) {
 
             // On double click, but not while a popup is showing
             if (!hasPopup) {
+                ThumbnailPicture thumbnail = (ThumbnailPicture) e.getSource();
                 if (e.getClickCount() == 2) {
 
                     // Get the object container for this event id and open player
@@ -154,16 +156,21 @@ public class ThumbnailController extends AbstractController
                 } else {
 
                     // On a single click toggle selection highlight
-                    thumbnail.flipSelection();
+                    if (thumbnail.flipSelection()) {
+                        Point pt = e.getPoint();
+                        EventImagePopupMenu popup = new EventImagePopupMenu(thumbnail.getEventObjectContainer());
+                        popup.show((Component) e.getSource(), pt.x, pt.y);
+                    }
                 }
+
             }
 
             hasPopup = false;
         } else if (((e.getID() == MouseEvent.MOUSE_PRESSED) || (e.getID() == MouseEvent.MOUSE_RELEASED))
-                   && e.isPopupTrigger()) {
+                && e.isPopupTrigger()) {
 
             // Only show popup if this is really a popup trigger
-            Point          pt    = e.getPoint();
+            Point pt = e.getPoint();
             EventPopupMenu popup = new EventPopupMenu(getModel());
 
             popup.show((Component) e.getSource(), pt.x, pt.y);
@@ -236,7 +243,7 @@ public class ThumbnailController extends AbstractController
     /**
      *
      * Invoked when key is typed in the slider
-     * Currently coes nothing.
+     * Currently jumps the page down or up.
      *
      * @param event KeyEvent
      */
@@ -322,8 +329,8 @@ public class ThumbnailController extends AbstractController
 
             getView().showPageFromScroller(currentlyAt);
         }
-    }
-
+    } 
+    
     /**
      * Subclass to handles mouse clicks in {@link ThumbnailPicture}
      */

@@ -1,5 +1,5 @@
 /*
- * @(#)EventPopupMenu.java
+ * @(#)XmlFileFilter.java
  * 
  * Copyright 2011 MBARI
  *
@@ -24,39 +24,40 @@
 
 
 
-package org.mbari.aved.ui;
+package org.mbari.aved.ui.utils;
+
+//~--- non-JDK imports --------------------------------------------------------
+
 
 //~--- JDK imports ------------------------------------------------------------
 
-import java.awt.*;
+import java.io.File;
 
-import javax.swing.JPopupMenu;
+import javax.swing.filechooser.FileFilter;
 
-/**
- * Creates and displays an image icon popup
- * @author D.Cline
- */
-public class EventPopupMenu {
-    private EditMenu         mainMenu;
-    private ApplicationModel model;
-    private JPopupMenu       popupMenu;
+public class XmlFileFilter extends FileFilter {
 
-    public EventPopupMenu(ApplicationModel model) {
-        this.model = model;
+    // Accept all directories with an xml file
+    public boolean accept(File f) {
+        if (f.isDirectory()) {
+            return true;
+        }
+
+        String extension = ImageUtils.getExtension(f);
+
+        if (extension != null) {
+            if (extension.equals("XML") || extension.equals("xml")) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        return false;
     }
 
-    /**
-     * Shows the popupMenu in the same position as the invoker (e.g. mouse click postiion)
-     * @param invoker
-     * @param x
-     * @param y
-     */
-    public void show(Component invoker, int x, int y) {
-
-        // Create the popupMenu menu.
-        mainMenu  = new EditMenu(model);
-        popupMenu = new JPopupMenu(ApplicationInfo.getName() + " - Edit");
-        mainMenu.create(popupMenu, invoker, x, y);
-        popupMenu.show(invoker, x, y);
+    // The description of this filter
+    public String getDescription() {
+        return "All XML files";
     }
 }

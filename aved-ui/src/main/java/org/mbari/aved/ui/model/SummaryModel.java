@@ -30,8 +30,7 @@ package org.mbari.aved.ui.model;
 
 import aved.model.EventDataStream;
 
-import org.mbari.aved.mbarivision.api.AvedVideo;
-import org.mbari.aved.mbarivision.api.utils.Utils;
+import org.mbari.aved.mbarivision.api.AvedVideo; 
 import org.mbari.aved.ui.appframework.AbstractModel;
 import org.mbari.aved.ui.appframework.ModelEvent;
 import org.mbari.aved.ui.userpreferences.UserPreferences;

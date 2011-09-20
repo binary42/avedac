@@ -30,6 +30,10 @@ package org.mbari.aved.ui.utils;
 
 import java.awt.Container;
 import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.MediaTracker;
@@ -37,9 +41,7 @@ import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 
 import java.util.Iterator;
 
@@ -126,5 +128,47 @@ public class ImageUtils {
 
         writer.write(null, iiimage, iwp);
         writer.dispose();
+    }
+    
+    /**
+     * http://www.particle.kth.se/~lindsey/JavaCourse/Book/Part1/Tech/Chapter06/plotDemo.html#PlotPanel
+     * Return height
+     */
+    public static Dimension setFont(String name, int style, Graphics g, String msg, int box_width) {
+        int         type_size     = 12;
+        int         type_size_min = 4;
+        int         msg_width;
+        FontMetrics fm;
+
+        do {
+            Font f = new Font(name, style, type_size);    // $NON-NLS-1$
+
+            // Create the font and pass it to the Graphics context
+            // g.setFont(new Font("Monospaced", Font.PLAIN, type_size));
+            g.setFont(f);
+
+            // Get measures needed to center the message
+            fm = g.getFontMetrics();
+
+            // How many pixels wide is the string
+            msg_width = fm.stringWidth(msg);
+
+            // See if the text will fit
+            if (msg_width < box_width) {
+
+                // { x = x_box + (box_width / 2) - (msg_width / 2);}
+                break;
+            }
+
+            // Try smaller type
+            type_size -= 2;
+        } while (type_size >= type_size_min);
+
+        // Don't display the numbers if they did not fit
+        if (type_size < type_size_min) {
+            return new Dimension(0, 0);
+        }
+
+        return new Dimension(msg_width, fm.getHeight());
     }
 }

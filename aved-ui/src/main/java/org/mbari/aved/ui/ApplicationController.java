@@ -563,14 +563,14 @@ public final class ApplicationController extends AbstractController implements M
 
         chooser.addChoosableFileFilter(filter);
         chooser.setAcceptAllFileFilterUsed(false);
-        chooser.setCurrentDirectory(UserPreferences.getModel().setXmlImportDirectory());
+        chooser.setCurrentDirectory(UserPreferences.getModel().getXmlImportDirectory());
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         chooser.setDialogTitle("Choose XML to import");
         chooser.setFileFilter(filter);
 
         if (chooser.showOpenDialog((ApplicationView) getView()) == JFileChooser.APPROVE_OPTION) {
             f = chooser.getSelectedFile();
-            UserPreferences.getModel().setImportXmlDirectory(new File(f.getAbsolutePath()));
+            UserPreferences.getModel().setImportXmlDirectory(new File(f.getParent()));
         } else {
 
             // TODO: print dialog message box with something meaningful here
@@ -598,7 +598,7 @@ public final class ApplicationController extends AbstractController implements M
         if (chooser.showDialog((ApplicationView) getView(), "Save") == JFileChooser.APPROVE_OPTION) {
             f = chooser.getSelectedFile();
             System.out.println(f.toString());
-            UserPreferences.getModel().setExportXmlDirectory(new File(f.getAbsolutePath()));
+            UserPreferences.getModel().setExportXmlDirectory(new File(f.getParent()));
         } else {
 
             // TODO: print dialog message box with something meaningful here

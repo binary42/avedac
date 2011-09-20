@@ -58,8 +58,6 @@ import javax.media.jai.Interpolation;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.PlanarImage;
-import javax.media.jai.RenderedOp;
-import javax.media.jai.operator.ScaleDescriptor;
 
 /**
  * Singleton class that executes a SwingWorker to grab
@@ -393,7 +391,7 @@ public class EventImageCache {
         File source = data.getRawImageSource();
 
         // Load the image that corresponds to the best frame if it exists
-        if ((source != null) && source.exists() && source.getAbsoluteFile().canRead()) {
+    if ((source != null) && source.exists() && source.getAbsoluteFile().canRead()) {
             try {
 
                 // This is a brute force way to check if the file

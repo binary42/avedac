@@ -52,6 +52,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
+import org.mbari.aved.ui.utils.ImageUtils;
 
 /**
  *
@@ -71,13 +72,13 @@ import javax.swing.ListSelectionModel;
  *
  * @see ThumbnailPanel
  */
-class ThumbnailPicture extends JComponent {
-    private static String CLASS_DESCRIPTION     = "Class:";
-    private static String INVALID_OBJECT_ID     = "-";
-    private static String OBJECT_ID_DESCRIPTION = "Object ID:";
-    private static int    PADDING               = 5;
-    private static int    PADDINGx2             = PADDING * 2;
-    private static String TAG_DESCRIPTION       = "Tag:";
+public class ThumbnailPicture extends JComponent {
+    public static String CLASS_DESCRIPTION     = "Class:";
+    public static String INVALID_OBJECT_ID     = "-";
+    public static String OBJECT_ID_DESCRIPTION = "Object ID:";
+    public static int    PADDING               = 5;
+    public static int    PADDINGx2             = PADDING * 2;
+    public static String TAG_DESCRIPTION       = "Tag:";
 
     /** Default image to display if an image is missing */
     private static ImageIcon missingImageIcon;
@@ -217,13 +218,13 @@ class ThumbnailPicture extends JComponent {
 
             // If is valid object identifier, then name with object id
             if (eventObjectContainer.isValid()) {
-                d1 = setFont("Lucida Grande", Font.PLAIN, g, OBJECT_ID_DESCRIPTION, super.getWidth());
-                d2 = setFont("Sanserif", Font.ITALIC, g, Long.toString(eventObjectContainer.getObjectId()),
+                d1 = ImageUtils.setFont("Lucida Grande", Font.PLAIN, g, OBJECT_ID_DESCRIPTION, super.getWidth());
+                d2 = ImageUtils.setFont("Sanserif", Font.ITALIC, g, Long.toString(eventObjectContainer.getObjectId()),
                              super.getWidth());
                 textSize = new Dimension(d1.height + d2.height, d1.width + d2.width);
             } else {
-                d1 = setFont("Lucida Grande", Font.PLAIN, g, OBJECT_ID_DESCRIPTION, super.getWidth());
-                d2 = setFont("Sanserif", Font.ITALIC, g, INVALID_OBJECT_ID, super.getWidth());
+                d1 = ImageUtils.setFont("Lucida Grande", Font.PLAIN, g, OBJECT_ID_DESCRIPTION, super.getWidth());
+                d2 = ImageUtils.setFont("Sanserif", Font.ITALIC, g, INVALID_OBJECT_ID, super.getWidth());
             }
 
             // A total of three rows, including tag and class name to the textSize height
@@ -314,7 +315,7 @@ class ThumbnailPicture extends JComponent {
                 g.setColor(Color.BLACK);
 
                 // Draw the object ID descriptor in black italic
-                setFont("Sanserif", Font.ITALIC, g, OBJECT_ID_DESCRIPTION, super.getWidth());
+                ImageUtils.setFont("Sanserif", Font.ITALIC, g, OBJECT_ID_DESCRIPTION, super.getWidth());
 
                 FontMetrics fm = g.getFontMetrics();
 
@@ -329,19 +330,19 @@ class ThumbnailPicture extends JComponent {
                                    : INVALID_OBJECT_ID);
 
                 // Draw the object ID in bold
-                setFont("Sanserif", Font.BOLD, g, objectId, super.getWidth());
+                ImageUtils.setFont("Sanserif", Font.BOLD, g, objectId, super.getWidth());
                 g.drawString(objectId, textX + d1.width, textY);
 
                 if (eventObjectContainer.getTag().length() > 0) {
                     textY += fm.getMaxAscent();
 
                     // Draw the tag descriptor in italic
-                    Dimension d = setFont("Sanserif", Font.ITALIC, g, TAG_DESCRIPTION, super.getWidth());
+                    Dimension d = ImageUtils.setFont("Sanserif", Font.ITALIC, g, TAG_DESCRIPTION, super.getWidth());
 
                     g.drawString(TAG_DESCRIPTION, textX, textY);
 
                     // Draw the tag in bold
-                    setFont("Sanserif", Font.BOLD, g, eventObjectContainer.getTag(), super.getWidth());
+                    ImageUtils.setFont("Sanserif", Font.BOLD, g, eventObjectContainer.getTag(), super.getWidth());
                     g.drawString(eventObjectContainer.getTag(), textX + d.width, textY);
                 }
 
@@ -349,12 +350,12 @@ class ThumbnailPicture extends JComponent {
                     textY += fm.getMaxAscent();
 
                     // Draw the tag descriptor in italic
-                    Dimension d = setFont("Sanserif", Font.ITALIC, g, CLASS_DESCRIPTION, super.getWidth());
+                    Dimension d = ImageUtils.setFont("Sanserif", Font.ITALIC, g, CLASS_DESCRIPTION, super.getWidth());
 
                     g.drawString(CLASS_DESCRIPTION, textX, textY);
 
                     // Draw the class name in bold
-                    setFont("Sanserif", Font.BOLD, g, eventObjectContainer.getClassName(), super.getWidth());
+                    ImageUtils.setFont("Sanserif", Font.BOLD, g, eventObjectContainer.getClassName(), super.getWidth());
                     g.drawString(eventObjectContainer.getClassName(), textX + d.width, textY);
                 }
             }
@@ -363,55 +364,17 @@ class ThumbnailPicture extends JComponent {
         g.dispose();
     }
 
-    /**
-     * http://www.particle.kth.se/~lindsey/JavaCourse/Book/Part1/Tech/Chapter06/plotDemo.html#PlotPanel
-     * Return height
-     */
-    private static Dimension setFont(String name, int style, Graphics g, String msg, int box_width) {
-        int         type_size     = 12;
-        int         type_size_min = 4;
-        int         msg_width;
-        FontMetrics fm;
 
-        do {
-            Font f = new Font(name, style, type_size);    // $NON-NLS-1$
-
-            // Create the font and pass it to the Graphics context
-            // g.setFont(new Font("Monospaced", Font.PLAIN, type_size));
-            g.setFont(f);
-
-            // Get measures needed to center the message
-            fm = g.getFontMetrics();
-
-            // How many pixels wide is the string
-            msg_width = fm.stringWidth(msg);
-
-            // See if the text will fit
-            if (msg_width < box_width) {
-
-                // { x = x_box + (box_width / 2) - (msg_width / 2);}
-                break;
-            }
-
-            // Try smaller type
-            type_size -= 2;
-        } while (type_size >= type_size_min);
-
-        // Don't display the numbers if they did not fit
-        if (type_size < type_size_min) {
-            return new Dimension(0, 0);
-        }
-
-        return new Dimension(msg_width, fm.getHeight());
-    }
-
-    void flipSelection() {
+    boolean flipSelection() {
         if (listSelectionModel.isSelectedIndex(iScroller)) {
             listSelectionModel.removeSelectionInterval(iScroller, iScroller);
+            this.repaint();
+            return false;
         } else {
             listSelectionModel.addSelectionInterval(iScroller, iScroller);
+            this.repaint();
+            return true;
         }
 
-        this.repaint();
     }
 }

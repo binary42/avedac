@@ -71,7 +71,7 @@ public class VideoTranscodeWorker extends SwingWorker {
     private ApplicationModel   model;
 
     /** Simple display to show process status */
-    ProcessDisplay processDisplay;
+    private ProcessDisplay processDisplay;
 
     /** The underlying transcoder process */
     private TranscodeProcess transcodeProcess;
@@ -127,6 +127,17 @@ public class VideoTranscodeWorker extends SwingWorker {
             processDisplay.getView().dispose();
         }
     }
+    
+    /**
+     * Return the state of the transcode initialization.  Until this returns
+     * true, the state of the video file format is unknown.  Call this before
+     * doing anything with the transcode video frames.
+     * 
+     * @return 
+     */
+    public boolean isInitialized() {
+        return (transcodeProcess != null ? transcodeProcess.isInitialized():false); 
+    }
 
     /*
      * Application task. Executed in background thread. This execute the transcode
@@ -178,10 +189,11 @@ public class VideoTranscodeWorker extends SwingWorker {
             // Update the model with the new transcode directory
             model.getSummaryModel().setTranscodeDir(new File(srcDir));
             transcodeProcess.setOutTemporaryStorage(srcDir.toString());
-            model.getSummaryModel().setAVEDVideo(transcodeProcess.getOutAVEDVideo());
 
             // Start the process
-            transcodeProcess.run();
+            transcodeProcess.start();
+                        
+            model.getSummaryModel().setAVEDVideo(transcodeProcess.getOutAVEDVideo());
 
             try {
                 if (displayProgress) {
