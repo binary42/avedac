@@ -216,7 +216,7 @@ void MbariXMLParser::addDetectionParameters(DetectionParameters params) {
   DOMElement* eventsroot = itsXMLdoc->createElement(detectionparameters);
   std::ostringstream cachesizevalue, mineventareavalue, maxeventareavalue, segmentadaptiveoffset, \
     maskxposvalue, maskyposvalue, maskwidthvalue, maskheightvalue,maxWTApointsvalue, \
-  maxevolvetimevalue, maxframeseventvalue, minframeseventvalue, maxcostvalue, minvariancevalue;
+  maxevolvetimevalue, maxframeseventvalue, minframeseventvalue, maxcostvalue, minstdevvalue;
 
   // This is actually better to put into DetectionParameters.C for maintenance purposes
   //...but we will leave them here for now. These should be all the model options
@@ -236,12 +236,12 @@ void MbariXMLParser::addDetectionParameters(DetectionParameters params) {
     XMLString::release(&mineventareaxmlstring);
   }
 
-  if(minvariancevalue << params.itsMinVariance) {
-    XMLCh* minvariance = XMLString::transcode("MinVariance");
-    XMLCh* minvariancexmlstring = XMLString::transcode(minvariancevalue.str().c_str());
-    eventsroot->setAttribute(minvariance, minvariancexmlstring);
-    XMLString::release(&minvariance);
-    XMLString::release(&minvariancexmlstring);
+  if(minstdevvalue << params.itsMinStdDev) {
+    XMLCh* minstdev = XMLString::transcode("MinStdDev");
+    XMLCh* minstdevxmlstring = XMLString::transcode(minstdevvalue.str().c_str());
+    eventsroot->setAttribute(minstdev, minstdevxmlstring);
+    XMLString::release(&minstdev);
+    XMLString::release(&minstdevxmlstring);
   }
   if(maxeventareavalue << params.itsMaxEventArea) {
     XMLCh* maxeventarea = XMLString::transcode("MaxEventArea");
