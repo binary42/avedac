@@ -35,6 +35,7 @@ parameters*/
 #include "Component/ModelManager.H"
 #include "Component/ModelComponent.H"
 #include "Component/ModelOptionDef.H"
+#include "Image/Dims.H"
 
 #include "DetectionAndTracking/TrackingModes.H"
 #include "DetectionAndTracking/SaliencyTypes.H"
@@ -48,11 +49,10 @@ parameters*/
 #define DEFAULT_SALIENCY_FRAME_DIST 5
 // Default size of cache used to compute running image average
 #define DEFAULT_SIZE_AVG_CACHE 10
-// Default minimum and max size in square pixels an event can be
-// to be a valid event. These work well for NTSC size video and should
-// be scaled for larger/smaller video accordingly
-#define DEFAULT_MIN_EVENT_AREA 34
-#define DEFAULT_MAX_EVENT_AREA 20000
+// Default multiplier for determining the maximum event area
+#define MAX_SIZE_FACTOR 700
+// Default multiplier for determining the maximum tracking distance
+#define MAX_DIST_RATIO 40
 // Default maximum number of frames an event can be before closing
 // -1 = unlimited
 // 10 minutes @ 30 fps = 18000
@@ -194,7 +194,9 @@ public:
     static DetectionParametersSingleton *instance();
 
     //! client can initialize parameters through this
-    static void initialize(const DetectionParameters &d);
+    // @param foaRadius = the foa radius used for determining the default
+    // min/max event area
+    static void initialize(DetectionParameters &d, const Dims &dims, const int foaRadius);
 
     ~DetectionParametersSingleton();
 

@@ -75,6 +75,8 @@ GetSalientRegionsStage::GetSalientRegionsStage(MPI_Comm mastercomm, const char *
         nub::soft_ref<Beowulf> &beo,
         nub::soft_ref<WinnerTakeAll> &wta,
         nub::soft_ref<SimEventQueue> &seq,
+        const ShapeEstimatorMode &sem,
+ 	const int foaRadius,
         const LevelSpec &levelSpec,
         const float boringmv,
         const SimTime &boringDelay,
@@ -88,6 +90,8 @@ itsArgv(argv),
 itsBeo(beo),
 itsWta(wta),
 itsSeq(seq),
+itsSem(sem),
+itsFoaRadius(foaRadius),
 itsLevelSpec(levelSpec),
 itsMaxNormType(maxNormType),
 itsBoringmv(boringmv),
@@ -193,7 +197,7 @@ void GetSalientRegionsStage::shutdown() {
 
 // ######################################################################
 
-std::list<WTAwinner> GetSalientRegionsStage::getSalientWinnersNew(const Image< PixRGB<byte> > &img,
+std::list<WTAwinner> GetSalientRegionsStage::getSalientWinners(const Image< PixRGB<byte> > &img,
         int framenum,
         int sml,
         Image<float> &sm,
@@ -209,13 +213,10 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinnersNew(const Image< P
     // initialize the max time to simulate
     const SimTime simMaxEvolveTime = SimTime::MSECS(itsSeq->now().msecs()) + SimTime::MSECS(dp.itsMaxEvolveTime);
  
-    rutz::shared_ptr<SimEventAttentionGuidanceMapOutput>
-            agm(new SimEventAttentionGuidanceMapOutput(NULL, sm));
-    itsSeq->post(agm);
-
     while (status == SIM_CONTINUE) {
-
-        LINFO("###### evolve time now: %f msecs max evolve time: %f msecs", itsSeq->now().msecs(), simMaxEvolveTime.msecs());
+         rutz::shared_ptr<SimEventAttentionGuidanceMapOutput>
+            agm(new SimEventAttentionGuidanceMapOutput(NULL, sm));
+         itsSeq->post(agm);
 
         itsWta->evolve(*itsSeq);
 
@@ -224,6 +225,7 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinnersNew(const Image< P
 
         if (SeC<SimEventWTAwinner> e = itsSeq->check<SimEventWTAwinner > (0)) {
             WTAwinner newwin = e->winner();
+	    currwin = newwin.getSMcoords(sml);
             newwin.p.i = (int) ((float) newwin.p.i * itsScaleW);
             newwin.p.j = (int) ((float) newwin.p.j * itsScaleH); 
 
@@ -238,7 +240,18 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinnersNew(const Image< P
             } else {
                 winners.push_back(newwin);
                 ++numSpots;
-                // scan channels, finding the max
+	    }
+
+            if (numSpots >= dp.itsMaxWTAPoints) {
+              LINFO("#### found maximum number of saliency spots %d", dp.itsMaxWTAPoints);
+              rutz::shared_ptr<SimEventBreak>
+                  e(new SimEventBreak(0, "##### found maximum number of salient spots #####"));
+              itsSeq->post(e);
+            }
+			
+	    LINFO("##### time now:%f msecs max evolve time:%f msecs frame: %d #####", itsSeq->now().msecs(), simMaxEvolveTime.msecs(), framenum);
+
+               // scan channels, finding the max
                 float mx = -1.0F;
                 int bestindex = -1;
                 for (uint i = 0; i < 3; ++i) {
@@ -286,21 +299,22 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinnersNew(const Image< P
                             LINFO("Segmenting object around (%d,%d) in orientation", newwin.p.i, newwin.p.j);
                             winMapNormalized = orientation;
                             break;
-                    }
-                    inplaceNormalize(winMapNormalized, 0.0F, 1.0F);
-                    Image<byte> objectMask = segmentObjectClean(winMapNormalized, currwin);
-                    inplaceSetValMask(sm, objectMask, 0.0F);
-                }
-            }
-        } else {
-            LINFO("######No winner found time now %f", itsSeq->now().secs());
-        }
-
-        if (numSpots >= dp.itsMaxWTAPoints) {
-            LINFO("#### found maximum number of saliency spots %d", dp.itsMaxWTAPoints);
-            rutz::shared_ptr<SimEventBreak>
-                    e(new SimEventBreak(0, "##### found maximum number of salient spots #####"));
-            itsSeq->post(e);
+	        	} 
+			inplaceNormalize(winMapNormalized, 0.0F, 1.0F); 
+			Image<byte> objectMask;
+			if (itsSem == SEMnone) { 
+				objectMask.resize(sm.getDims(), true); 
+				int radius = (itsFoaRadius * objectMask.getWidth())/img.getDims().w(); 
+				LINFO("Drawing disk radius: %d/%d object around (%d, %d) saliency map dims: (%d, %d) image dims: (%d, %d) ", itsFoaRadius, radius, currwin.i, currwin.j, sm.getDims().w(), sm.getDims().h(),img.getDims().w(),img.getDims().h());
+				 drawDisk(objectMask, currwin, radius, byte(255));
+					inplaceSetValMask(sm, objectMask, 0.0F);
+					 
+			} else {
+				LINFO("Segmenting object object around (%d, %d) ", currwin.i, currwin.j);
+				Image<byte> objectMask = segmentObjectClean(winMapNormalized, currwin);
+				inplaceSetValMask(sm, objectMask, 0.0F);
+			}
+		}
         }
 
         if (itsSeq->now().msecs() >= simMaxEvolveTime.msecs()) {
@@ -435,133 +449,8 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
         }
     }
 
-    //winners = getSalientWinnersNew(img, framenum, sml, sm, intensity,color,ori);
-    winners = getSalientWinnersMaxFast(sml, sm, intensity, color, ori);
+    winners = getSalientWinners(img, framenum, sml, sm, intensity,color,ori);
 
-    return winners;
-}
-
-list<WTAwinner> GetSalientRegionsStage::getSalientWinnersMaxFast(int sml,
-        Image<float> &sm,
-        Image<float> &intensity,
-        Image<float> &color,
-        Image<float> &orientation) {
-    int numSpots = 0;
-    float maxval;
-    Point2D<int> currwin(-1, -1);
-    WTAwinner newwin = WTAwinner::NONE();
-    WTAwinner lastwinner = WTAwinner::NONE();
-    std::list<WTAwinner> winners;
-    Timer masterclock; // master clock for simulations
-    masterclock.reset();
-
-    DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
-
-    do {
-
-        // initialize a new winner
-        findMax(sm, currwin, maxval);
-
-        //rescale coordinate system
-        if (currwin.i != -1) {
-            newwin = WTAwinner::buildFromSMcoords(currwin, sml, true,
-                    masterclock.getSimTime(),
-                    maxval, false);
-
-            newwin.p.i = (int) ((float) newwin.p.i * itsScaleW);
-            newwin.p.j = (int) ((float) newwin.p.j * itsScaleH);
-
-            // if the last covert attention shift was slower than boring Delay(msecs)
-            // or the SM voltage was less than (default 3mV), mark the covert attention shift as boring:
-            if (lastwinner.t > SimTime::ZERO() &&
-                    (newwin.t - lastwinner.t > itsBoringDelay ||
-                    newwin.sv < itsBoringmv * 0.001))
-                newwin.boring = true;
-
-            if (newwin.isValid()) {
-                LINFO("##### winner #%d found at (%d,%d) with %f mV maxval %f mV at %fms %s #####",
-                        numSpots, newwin.p.i, newwin.p.j, (newwin.sv / 0.001), (maxval / 0.001), newwin.t.msecs(),
-                        newwin.boring ? "[boring] " : "");
-                winners.push_back(newwin);
-            } else {
-                LINFO("##### winner #%d invalid !! #####", numSpots);
-            }
-
-            numSpots++;
-            lastwinner = newwin;
-
-            // if a boring event detected, and not keeping boring WTA points then break simulation
-            if (newwin.boring == true && p.itsKeepWTABoring == false)
-                break;
-
-            // scan channels, finding the max
-            float mx = -1.0F;
-            int bestindex = -1;
-            for (uint i = 0; i < 3; ++i) {
-                if (currwin.i != -1) {
-                    float curr_val = 0.0f;
-                    switch (i) {
-                        case(0):
-                            curr_val = intensity.getVal(currwin);
-                            break;
-                        case(1):
-                            curr_val = color.getVal(currwin);
-                            break;
-                        case(2):
-                            curr_val = orientation.getVal(currwin);
-                            break;
-                        default:
-                            curr_val = 0.0f;
-                            break;
-                    }
-                    // do we have a new max?
-                    if (curr_val >= mx) {
-                        mx = curr_val;
-                        bestindex = i;
-                    }
-                }
-            }
-
-            //mask max object
-            if (bestindex > -1) {
-                Image<float> winMapNormalized;
-                switch (bestindex) {
-                    case(0):
-                        LINFO("Segmenting object around (%d,%d) in intensity", newwin.p.i, newwin.p.j);
-                        winMapNormalized = intensity;
-                        break;
-                    case(1):
-                        LINFO("Segmenting object around (%d,%d) in color", newwin.p.i, newwin.p.j);
-                        winMapNormalized = color;
-                        break;
-                    case(2):
-                        LINFO("Segmenting object around (%d,%d) in orientation", newwin.p.i, newwin.p.j);
-                        winMapNormalized = orientation;
-                        break;
-                    default:
-                        LINFO("Segmenting object around (%d,%d) in orientation", newwin.p.i, newwin.p.j);
-                        winMapNormalized = orientation;
-                        break;
-                }
-                inplaceNormalize(winMapNormalized, 0.0F, 1.0F);
-                Image<byte> objectMask = segmentObjectClean(winMapNormalized, currwin);
-                inplaceSetValMask(sm, objectMask, 0.0F);
-            } else
-                break;
-
-        }
-        else { // end if currwin.i != -1
-            LINFO("##### No valid winner found #####");
-        }
-
-        // find up to itsMaxNumSalSpots and evolve up to maxEvolveTime to make a list
-        if (masterclock.getSimTime().msecs() > p.itsMaxEvolveTime || numSpots >= p.itsMaxWTAPoints) {
-            LINFO("##### time limit reached or found maximum number of salient spots %d#####", p.itsMaxWTAPoints);
-            break;
-        }
-
-        LINFO("##### time %f ####  max time %f ", masterclock.getSimTime().secs(), p.itsMaxEvolveTime / 1000.0);
-    } while (masterclock.getSimTime().msecs() < p.itsMaxEvolveTime);
     return winners;
 }
 

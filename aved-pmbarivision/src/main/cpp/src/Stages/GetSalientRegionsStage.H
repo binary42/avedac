@@ -35,6 +35,7 @@
 #include "Beowulf/Beowulf.H"
 #include "Neuro/StdBrain.H"
 #include "Neuro/WinnerTakeAllStdMbari.H"
+#include "Neuro/ShapeEstimatorModes.H"
 #include "Image/fancynorm.H"
 #include "Image/Geometry2D.H"
 #include "DetectionAndTracking/MbariFunctions.H"
@@ -51,7 +52,9 @@ public:
 			 const int argc, const char **argv,
 			 nub::soft_ref<Beowulf> &beo,
 			 nub::soft_ref<WinnerTakeAll> &wta,
-		         nub::soft_ref<SimEventQueue> &seq,			 
+		         nub::soft_ref<SimEventQueue> &seq,
+    			 const ShapeEstimatorMode &sem,
+        		 const int foaRadius,
                          const LevelSpec &levelSpec,
                          const float boringmv,
                          const SimTime &boringDelay,
@@ -82,28 +85,13 @@ private:
    * @param color intensity map
    @param color conspicuity map  	
    @param orientation conspicuity map  	 */
-  std::list<WTAwinner> getSalientWinnersNew(const Image< PixRGB<byte> > &img, 
+  std::list<WTAwinner> getSalientWinners(const Image< PixRGB<byte> > &img, 
 					    int framenum,
 					    int sml,
 					    Image<float> &sm,
 					    Image<float> &intensity,
 					    Image<float> &color,
 					    Image<float> &orientation);
-   //! A fast method to scan iteratively for winning locations
-  //! returns list of SalientWinners of the most salient points
-  /*! @param sml pyramid level of the saliency map
-   * @param boringmv saliency map level (in mV) below which attention shifts will be considered 'boring'
-   * @param boringdelay attention shifts that come after an interval longer than this will be considered 'boring'
-   * @param sm the float scaled down saliency map  to scan for winners
-   * @param color intensity map
-   @param color conspicuity map  	
-   @param orientation conspicuity map  	 */
-  std::list<WTAwinner> getSalientWinnersMaxFast(int sml,
-					   Image<float> &sm,
-					   Image<float> &intensity,
-					   Image<float> &color,
-					   Image<float> &orientation );
-  
   
   // ! runs saliency filter and creates list of winners
   std::list<WTAwinner> getWinners(const Image< PixRGB<byte> > &img, int framenum);
@@ -118,6 +106,8 @@ private:
   nub::soft_ref<Beowulf> itsBeo; 
   nub::soft_ref<WinnerTakeAll> itsWta;
   nub::soft_ref<SimEventQueue> itsSeq;
+  const ShapeEstimatorMode itsSem;
+  const int itsFoaRadius;
   const char **itsArgv;
   const int itsArgc;
   LevelSpec itsLevelSpec;

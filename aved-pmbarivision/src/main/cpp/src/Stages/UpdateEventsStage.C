@@ -425,7 +425,7 @@ void UpdateEventsStage::initiateEvents(int frameNum, Image< byte > bitImg) {
                 i++;
             }
 
-            // extract salient BitObjects
+	    // extract salient BitObjects
             LINFO("Extracting salient BitObjects for frame: %d number of potential winners: %d", frameNum, wtawinners.size());
             list<BitObject> sobjs = getSalientObjects(bitImg, wtawinners); 
             if (sobjs.size() > 0) itsRv->output(showAllObjects(sobjs), frameNum, "Salient_Objects");

@@ -79,8 +79,6 @@ int main(const int argc, const char** argv) {
     //PauseWaiter p(3000000);
     //setPause(true);
 
-    const int maxSizeFactor = 200;
-    const int maxDistRatio = 40;
     const int foaSizeRatio = 19;
     const int circleRadiusRatio = 40;
 
@@ -182,41 +180,21 @@ int main(const int argc, const char** argv) {
         ifs->peekDims();
     }
 
-    // calculate the foa size and default min/max event size based on the image size
-    const int circleRadius = dims.w() / circleRadiusRatio;
-    const int maxDist = dims.w() / maxDistRatio;
-    const int foaSize = dims.w() / foaSizeRatio;
-    const int minSize = (int) (foaSize * scaleW);
-    const int maxSize = minSize * maxSizeFactor;
-
     int foaRadius;
     const string foar = manager.getOptionValString(&OPT_FOAradius);
     convertFromString(foar, foaRadius);
-
+ 
+    // calculate the foa size based on the image size if set to defaults
     // A zero foa radius indicates to set defaults from input image dims
     if (foaRadius == 0) {
+        foaRadius = dims.w() / foaSizeRatio;
         char str[256];
-        sprintf(str, "%d", foaSize);
+        sprintf(str, "%d", foaRadius);
         manager.setOptionValString(&OPT_FOAradius, str);
     }
 
     // initialize derived detection parameters
-    dp.itsMaxDist = maxDist; //pixels
-
-    // If these are set to the default, override them
-    // with derived values,  otherwise these have been
-    // set by the user so keep the user preferences 
-    if (dp.itsMinEventArea == DEFAULT_MIN_EVENT_AREA)
-        dp.itsMinEventArea = minSize; //sq pixels
-    if (dp.itsMaxEventArea == DEFAULT_MAX_EVENT_AREA)
-        dp.itsMaxEventArea = maxSize; //sq pizels
-
-    // calculate cost parameter from other derived values
-    float maxDistFloat = (float) maxDist;
-    float maxAreaDiff = pow((double) maxDistFloat, 2) / (double) 4.0;
-    dp.itsMaxCost = (float) maxDist / 2 * maxAreaDiff;
-    if (dp.itsTrackingMode == TMKalmanFilter)
-        dp.itsMaxCost = pow((double) maxDistFloat, 2) + pow((double) maxAreaDiff, 2);
+    const int circleRadius = dims.w() / circleRadiusRatio;
 
     // get reference to the SimEventQueue
     nub::ref<SimEventQueue> seq = seqc->getQ();
@@ -227,7 +205,7 @@ int main(const int argc, const char** argv) {
     int retval = 0;
 
     // set defaults for detection model parameters
-    DetectionParametersSingleton::initialize(dp);
+    DetectionParametersSingleton::initialize(dp, dims, foaRadius);
 
     // get graph parameters
     vector<float> p = segmentation.getFloatParameters(dp.itsSegmentGraphParameters);
@@ -455,7 +433,7 @@ int main(const int argc, const char** argv) {
                     bitImg = showAllObjects(sobjs);
             }
             else if (dp.itsSegmentAlgorithmType == SAMeanAdaptiveThreshold) {
-                bitImgShadow = segmentation.mean_thresh(img2segment, maxDist/2, dp.itsSegmentAdaptiveOffset);
+                bitImgShadow = segmentation.mean_thresh(img2segment, dp.itsMaxDist/2, dp.itsSegmentAdaptiveOffset);
 
                 rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_meanshadow");
 
@@ -468,7 +446,7 @@ int main(const int argc, const char** argv) {
                 }
             }
             else if (dp.itsSegmentAlgorithmType == SAMedianAdaptiveThreshold) {
-                bitImgShadow = segmentation.median_thresh(img2segment, maxDist/2, dp.itsSegmentAdaptiveOffset);
+                bitImgShadow = segmentation.median_thresh(img2segment, dp.itsMaxDist/2, dp.itsSegmentAdaptiveOffset);
 
                 rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_medianshadow");
 
@@ -481,7 +459,7 @@ int main(const int argc, const char** argv) {
                 }
             }
             else if (dp.itsSegmentAlgorithmType == SAMeanMinMaxAdaptiveThreshold) {
-                bitImgShadow = segmentation.meanMaxMin_thresh(img2segment, maxDist/2, dp.itsSegmentAdaptiveOffset);
+                bitImgShadow = segmentation.meanMaxMin_thresh(img2segment, dp.itsMaxDist/2, dp.itsSegmentAdaptiveOffset);
 
                 rv->output(bitImgShadow, mbariImg.getFrameNum(), "Segment_minmaxshadow");
 

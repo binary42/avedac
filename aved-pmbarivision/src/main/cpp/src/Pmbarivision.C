@@ -39,6 +39,7 @@
 #include "Neuro/VisualCortex.H"
 #include "Neuro/VisualCortexWeights.H"
 #include "Neuro/WinnerTakeAllConfigurator.H"
+#include "Neuro/ShapeEstimatorModes.H"
 #include "Component/ModelManager.H"
 #include "Neuro/WinnerTakeAllStdMbari.H"
 #include "Data/MbariOpts.H"
@@ -324,6 +325,10 @@ extern "C" {
         VisualCortexWeights::fromString(vcweight,
                                         &isbeo, &issurp, &isthreaded);
 
+    // get the shape estimator mode
+    const string semode = manager.getOptionValString(&OPT_ShapeEstimatorMode).c_str();
+    ShapeEstimatorMode sem; convertFromString(semode, sem); 
+
     switch(id)	{
     case(Stages::CP_STAGE):            
       s = (Stage *)new CachePreprocessStage(master, Stages::stageName(id), 
@@ -346,6 +351,8 @@ extern "C" {
                                               beowulf,
 					      wta,
 					      seq,
+					      sem,
+					      foaRadius, 
 					      levelSpec,
                                               boringmv,
                                               boringDelay,

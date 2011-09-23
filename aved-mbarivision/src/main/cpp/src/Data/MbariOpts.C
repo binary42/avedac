@@ -85,12 +85,12 @@ const ModelOptionDef OPT_MDPMosaicBenthicStills =
     "mbari-mosaic-benthic-stills", '\0',"",
     "--mbari-saliency-dist=1 --mbari-tracking-mode=None "
     "--mbari-keep-boring-WTA-points=yes "
-    "--mbari-save-non-interesting-events=yes --mbari-segment-graph-parameters=0.75,500,50 "
+    "--mbari-save-non-interesting-events=yes --mbari-segment-graph-parameters=0.75,250,50 "
     "--mbari-segment-algorithm-input-image=Luminance --mbari-color-space=Gray "
     "--mbari-saliency-input-image=Raw --levelspec=1-3,2-5,3 "
-    "--mbari-max-WTA-points=15 --mbari-max-evolve-msec=15000 "
-    "--vc-type=O --use-random=true  --mbari-segment-algorithm=GraphCutOnly "
-    "--oricomp-type=Steerable  --shape-estim-mode=None --foa-radius=20 "
+    "--mbari-max-WTA-points=30 --mbari-max-evolve-msec=15000 "
+    "--vc-type=OC --use-random=true  --mbari-segment-algorithm=GraphCutOnly "
+    "--oricomp-type=Steerable  --shape-estim-mode=None --foa-radius=60 "
     "--mbari-cache-size=1 --use-older-version=false "
     "--ior-type=Disc  --maxnorm-type=Maxnorm"  };
 const ModelOptionDef OPT_MDPEyeInTheSeaVideo = { MODOPT_ALIAS, "ALIASEyeInTheSeaVideo", &MOC_MBARI, OPTEXP_MRV,

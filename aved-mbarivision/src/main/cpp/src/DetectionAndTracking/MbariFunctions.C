@@ -460,8 +460,7 @@ list<WTAwinner> getSalientWinners(
 
                 // Evolve output frame series. It will trigger a save() on our
                 // modules as needed, before we start loading new inputs and
-                // processing them for the new time step. Leave this out for now
-                // this is causing a LeakyIntegrator exception
+                // processing them for the new time step.
                 simofs->evolve(*seq);
             }
             

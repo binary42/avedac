@@ -53,8 +53,8 @@ itsTrackingMode(DEFAULT_TRACKING_MODE),
 itsMaxDist(40),
 itsMaxEventFrames(DEFAULT_MAX_EVENT_FRAMES),
 itsMinEventFrames(DEFAULT_MIN_EVENT_FRAMES),
-itsMaxEventArea(DEFAULT_MAX_EVENT_AREA),
-itsMinEventArea(DEFAULT_MIN_EVENT_AREA),
+itsMaxEventArea(0),
+itsMinEventArea(0),
 itsSaliencyFrameDist(DEFAULT_SALIENCY_FRAME_DIST),
 itsMaskPath(""),
 itsSizeAvgCache(DEFAULT_SIZE_AVG_CACHE),
@@ -166,24 +166,32 @@ DetectionParametersSingleton::DetectionParametersSingleton(const DetectionParame
 }
 // ######################################################################
 
-void DetectionParametersSingleton::initialize(const DetectionParameters &p) {
-    DetectionParametersSingleton *d = instance();
+void DetectionParametersSingleton::initialize(DetectionParameters &p, const Dims &dims, const int foaRadius) {
+    DetectionParametersSingleton *dp = instance();
+
+    // calculate cost parameter from other derived values
     // initialize paramters
-    d->itsParameters = p;
+    const int maxDist = dims.w() / MAX_DIST_RATIO;
+    const float maxDistFloat = (float) maxDist;
+    const float maxAreaDiff = pow((double) maxDistFloat, 2) / (double) 4.0;
+    if (p.itsTrackingMode == TMKalmanFilter)
+        p.itsMaxCost = pow((double) maxDistFloat, 2) + pow((double) maxAreaDiff, 2);
+    else 
+	p.itsMaxCost = (float) maxDist / 2 * maxAreaDiff;
+    p.itsMaxDist = maxDist;
+    if (p.itsMinEventArea == 0) 
+    	p.itsMinEventArea = foaRadius;
+    if (p.itsMaxEventArea == 0) 
+    	p.itsMaxEventArea = foaRadius * MAX_SIZE_FACTOR;
+ 
+    dp->itsParameters = p;
 }
 // ######################################################################
 
 DetectionParametersSingleton* DetectionParametersSingleton::instance() {
-    //initialize with some defaults if not created already
     if (itsInstance == 0) {
-        DetectionParameters p;
-        p.itsMaxDist = 40; 
-        float maxDist = p.itsMaxDist;
-        float maxAreaDiff = pow((double) maxDist, 2) / (double) 4.0;
-        p.itsMaxCost = pow((double) maxDist, 2) + pow((double) maxAreaDiff, 2);
-        p.itsMinEventArea = DEFAULT_MIN_EVENT_AREA; //TODO: change these - should be a factor of frame size
-        p.itsMaxEventArea = DEFAULT_MAX_EVENT_AREA;
-        itsInstance = new DetectionParametersSingleton(p);
+	DetectionParameters d; 
+    	itsInstance = new DetectionParametersSingleton(d);
     }
     return itsInstance;
 }
@@ -247,12 +255,8 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
         p->itsSizeAvgCache = itsSizeAvgCache.getVal();
     if (itsMinEventArea.getVal() > 0)
         p->itsMinEventArea = itsMinEventArea.getVal();
-    else
-        p->itsMinEventArea = DEFAULT_MIN_EVENT_AREA; 
     if (itsMaxEventArea.getVal() > 0)
         p->itsMaxEventArea = itsMaxEventArea.getVal();
-    else
-        p->itsMaxEventArea = DEFAULT_MAX_EVENT_AREA;
     if (itsMinEventFrames.getVal() > 0)
         p->itsMinEventFrames = itsMinEventFrames.getVal();
     else
