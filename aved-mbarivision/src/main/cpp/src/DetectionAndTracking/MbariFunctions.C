@@ -198,7 +198,7 @@ std::list<BitObject> getSalientObjects(const Image< byte >& bitImg, const list<W
 
         region = region.getOverlap(Rectangle(Point2D<int>(0, 0), d - 1));
 
-        LDEBUG("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
+        LINFO("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
         winner.i, winner.j, convertToString(region).c_str(), p.itsMinEventArea, p.itsMaxEventArea);
 
         std::list<BitObject> sobjs = extractBitObjects(bitImg, region, \
@@ -271,7 +271,7 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg,
 
         region = region.getOverlap(Rectangle(Point2D<int>(0, 0), d - 1));
 
-        LDEBUG("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
+        LINFO("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
         winner.i, winner.j, convertToString(region).c_str(), p.itsMinEventArea, p.itsMaxEventArea);
 
         std::list<BitObject> sobjsgraph = extractBitObjects(graphBitImg, winner, region, \
@@ -359,7 +359,7 @@ std::list<WTAwinner> getGraphWinners(const Image< PixRGB<byte> >& graphBitImg,
                 win.p.j = (int) ( (float) j*scaleH);
                 win.sv = 0.f;
                 numSpots++;
-                LDEBUG("##### winner #%d found at [%d; %d]  frame: %d#####",
+                LINFO("##### winner #%d found at [%d; %d]  frame: %d#####",
                         numSpots, win.p.i, win.p.j, framenum);
                 winners.push_back(win);
             }
@@ -402,9 +402,9 @@ list<WTAwinner> getSalientWinners(
     brain->reset(MC_RECURSE);
 
     LINFO("Start at %.2fms", seq->now().msecs());
-    
+   
     // initialize the max time to simulate
-    const SimTime simMaxEvolveTime = seq->now() + SimTime::MSECS(maxEvolveTime);
+    const SimTime simMaxEvolveTime = SimTime::MSECS(seq->now().msecs()) + SimTime::MSECS(p.itsMaxEvolveTime);
 
     rutz::shared_ptr<SimEventInputFrame>
             eif(new SimEventInputFrame(brain.get(),
