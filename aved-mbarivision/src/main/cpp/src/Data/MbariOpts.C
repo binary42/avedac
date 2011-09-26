@@ -365,12 +365,12 @@ const ModelOptionDef OPT_MDPmaskHeight =
     "mbari-mask-height", '\0', "<int>", "1" };
 const ModelOptionDef OPT_MDPminEventArea =
   { MODOPT_ARG_INT, "MDPBminEventArea", &MOC_MBARI, OPTEXP_MRV,
-    "The minimum area an event must be to be candidate",
-    "mbari-min-event-area", '\0', "<int>", "34" };
+    "The minimum area an event must be to be candidate. When set to 0, defaults to foa size, which is derived from the image size.",
+    "mbari-min-event-area", '\0', "<int>", "0" };
 const ModelOptionDef OPT_MDPmaxEventArea =
   { MODOPT_ARG_INT, "MDPBmaxEventArea", &MOC_MBARI, OPTEXP_MRV,
-    "The maximum area an event can be, to be candidate",
-    "mbari-max-event-area", '\0', "<int>", "1000" };
+    "The maximum area an event can be, to be candidate. When set to 0, defaults to a multiplied factor of the foa size, which is derived from the image size.",
+    "mbari-max-event-area", '\0', "<int>", "0" };
 const ModelOptionDef OPT_MDPminEventFrames =
   { MODOPT_ARG_INT, "MDPBminEventFrames", &MOC_MBARI, OPTEXP_MRV,
     "The minimum number of frames an event must be to be candidate",

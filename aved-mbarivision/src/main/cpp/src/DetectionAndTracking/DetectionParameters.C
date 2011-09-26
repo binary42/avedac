@@ -257,6 +257,10 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
         p->itsMinEventArea = itsMinEventArea.getVal();
     if (itsMaxEventArea.getVal() > 0)
         p->itsMaxEventArea = itsMaxEventArea.getVal();
+
+    if (p->itsMinEventArea >= p->itsMaxEventArea && p->itsMinEventArea > 0 && p->itsMaxEventArea > 0)
+	p->itsMinEventArea = p->itsMaxEventArea - 1;
+	
     if (itsMinEventFrames.getVal() > 0)
         p->itsMinEventFrames = itsMinEventFrames.getVal();
     else
@@ -265,6 +269,10 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
         p->itsMaxEventFrames = itsMaxEventFrames.getVal();
     else
         p->itsMaxEventFrames = DEFAULT_MAX_EVENT_FRAMES;
+    
+    if (p->itsMinEventFrames >= p->itsMaxEventFrames && p->itsMinEventFrames > 0 && p->itsMaxEventFrames > 0 )
+	p->itsMinEventFrames = p->itsMaxEventFrames - 1;
+
     if (itsMinStdDev.getVal() > 0.f)
         p->itsMinStdDev = itsMinStdDev.getVal();
     else

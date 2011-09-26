@@ -64,8 +64,6 @@
 void initModelComponents(int argc, const char **argv);
 
 // ! Local variables
-const int maxSizeFactor = 200;
-const int maxDistRatio = 40;
 const int foaSizeRatio = 19;
 const int circleRadiusRatio = 40; 
 
@@ -156,7 +154,7 @@ extern "C" {
 
     LINFO("Creating stage:%s id: %d", Stages::stageName(id), id);
 
-    DetectionParameters dp;
+    DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
     nub::soft_ref<WinnerTakeAllConfigurator>  wtac(new WinnerTakeAllConfigurator(manager));
     manager.addSubComponent(wtac);
     nub::soft_ref<JobServerConfigurator>
@@ -241,36 +239,18 @@ extern "C" {
       ifs->peekDims();
     }
 
-    // calculate the foa size and default min/max event size based on the image size 
-    const int maxDist = dims.w() / maxDistRatio;
-    const int foaSize = dims.w() / foaSizeRatio;
-    const int minSize = (int) (foaSize*scaleW);
-    const int maxSize = minSize * maxSizeFactor;
-
     int foaRadius;
     const string foar = manager.getOptionValString(&OPT_FOAradius);
     convertFromString(foar, foaRadius);
-
+ 
+    // calculate the foa size based on the image size if set to defaults
     // A zero foa radius indicates to set defaults from input image dims
     if (foaRadius == 0) {
-      char str[256]; sprintf(str,"%d",foaSize);
-      manager.setOptionValString(&OPT_FOAradius,str);
+        foaRadius = dims.w() / foaSizeRatio;
+        char str[256];
+        sprintf(str, "%d", foaRadius);
+        manager.setOptionValString(&OPT_FOAradius, str);
     }
-    
-    // initialize derived detection parameters
-    dp.itsMaxDist = maxDist; //pixels
-
-    if (dp.itsMinEventArea == DEFAULT_MIN_EVENT_AREA)
-    dp.itsMinEventArea = minSize; //sq pixels
-    if (dp.itsMaxEventArea == DEFAULT_MAX_EVENT_AREA)
-    dp.itsMaxEventArea = maxSize; //sq pixels
-	
-    // calculate cost parameter from other parameters
-    float maxDistFloat = (float) maxDist;
-    float maxAreaDiff = pow((double)maxDistFloat,2) / (double)4.0;
-    dp.itsMaxCost = (float) maxDist/2*maxAreaDiff;
-    if(dp.itsTrackingMode == TMKalmanFilter)
-      dp.itsMaxCost = pow((double)maxDistFloat,2) + pow((double)maxAreaDiff,2);
 		  
     // start all our ModelComponent instances  
     manager.start();
@@ -278,7 +258,7 @@ extern "C" {
     nub::soft_ref<WinnerTakeAll> wta = wtac->getWTA();
 
     // initialize detection parameters
-    DetectionParametersSingleton::initialize(dp);
+    DetectionParametersSingleton::initialize(dp, dims, foaRadius);
 
     // is this a a gray scale sequence ? if so disable computing the color channels
     // to save computation time. This assumes the color channel has no weight !

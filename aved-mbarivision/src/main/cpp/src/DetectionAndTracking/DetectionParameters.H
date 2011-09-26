@@ -76,8 +76,7 @@ parameters*/
 #define DEFAULT_SEGMENT_GRAPH_PARAMETERS "0.75,500,50"
 // Default saliency input image type which is the difference
 // in the mean. This is only meaningful if there are cached
-// images to find a mean. TODO: put check for this and
-// alert user if wrong
+// images to calculate a mean. 
 #define DEFAULT_SALIENCY_INPUT_TYPE SIDiffMean
 // Default structure element type to use for cleaning
 // up segmented images

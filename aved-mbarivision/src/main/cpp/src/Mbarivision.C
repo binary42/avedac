@@ -72,8 +72,8 @@ using namespace std;
 
 int main(const int argc, const char** argv) {
 
-    // ######## Initialization of variables, reading of parameters etc.
-    DetectionParameters dp;
+    // ######## Initialization of variables, reading of parameters etc.  
+    DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
     MbariMetaData metadata;
     Segmentation segmentation;
     //PauseWaiter p(3000000);
@@ -403,7 +403,8 @@ int main(const int argc, const char** argv) {
         } // end if needFrames
 
         rv->output(mbariImg, mbariImg.getFrameNum(), "Input");
-        rv->output(avgCache.mean(), mbariImg.getFrameNum(), "Background_mean");
+
+	if (dp.itsSizeAvgCache > 1) rv->output(avgCache.mean(), mbariImg.getFrameNum(), "Background_mean");
 
         if (!loadedEvents) {
 
