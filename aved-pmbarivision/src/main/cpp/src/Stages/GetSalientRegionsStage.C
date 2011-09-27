@@ -63,6 +63,7 @@
 #include <iostream>
 #include <string>
 #include <iostream>
+#define SIGMA 20
 
 using namespace std;
 
@@ -74,6 +75,8 @@ GetSalientRegionsStage::GetSalientRegionsStage(MPI_Comm mastercomm, const char *
                                                const int argc, const char **argv,
         nub::soft_ref<Beowulf> &beo,
         nub::soft_ref<WinnerTakeAll> &wta,
+	nub::soft_ref<SaliencyMapStd> &sm,
+	nub::soft_ref<AttentionGuidanceMapStd> &agm,
         nub::soft_ref<SimEventQueue> &seq,
         const ShapeEstimatorMode &sem,
  	const int foaRadius,
@@ -89,6 +92,8 @@ itsArgc(argc),
 itsArgv(argv),
 itsBeo(beo),
 itsWta(wta),
+itsSm(sm),
+itsAgm(agm),
 itsSeq(seq),
 itsSem(sem),
 itsFoaRadius(foaRadius),
@@ -210,17 +215,19 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinners(const Image< PixR
     SimStatus status = SIM_CONTINUE;
     DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
 
-    // initialize the max time to simulate
+    // initialize the max time to simulate 
     const SimTime simMaxEvolveTime = SimTime::MSECS(itsSeq->now().msecs()) + SimTime::MSECS(dp.itsMaxEvolveTime);
- 
+
+    rutz::shared_ptr<SimEventVisualCortexOutput> e(new SimEventVisualCortexOutput(NULL, sm)); 
+    itsSeq->post(e);
+
     while (status == SIM_CONTINUE) {
-         rutz::shared_ptr<SimEventAttentionGuidanceMapOutput>
-            agm(new SimEventAttentionGuidanceMapOutput(NULL, sm));
-         itsSeq->post(agm);
 
+        itsSm->evolve(*itsSeq);
+        itsAgm->evolve(*itsSeq);
         itsWta->evolve(*itsSeq);
-
-        // switch to next time step:
+        
+	// switch to next time step:
         status = itsSeq->evolve();
 
         if (SeC<SimEventWTAwinner> e = itsSeq->check<SimEventWTAwinner > (0)) {
@@ -251,6 +258,7 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinners(const Image< PixR
 			
 	    LINFO("##### time now:%f msecs max evolve time:%f msecs frame: %d #####", itsSeq->now().msecs(), simMaxEvolveTime.msecs(), framenum);
 
+	    if (itsSem != SEMnone) { 
                // scan channels, finding the max
                 float mx = -1.0F;
                 int bestindex = -1;
@@ -278,41 +286,74 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinners(const Image< PixR
                         }
                     }
                 }
+		std::string winlabel;
 
                 //mask max object
                 if (bestindex > -1) {
-                    Image<float> winMapNormalized;
+                    Image<float> winMap; 
                     switch (bestindex) {
                         case(0):
-                            LINFO("Segmenting object around (%d,%d) in intensity", newwin.p.i, newwin.p.j);
-                            winMapNormalized = intensity;
+			    winlabel = "Intensity";
+                            winMap = intensity;
                             break;
                         case(1):
-                            LINFO("Segmenting object around (%d,%d) in color", newwin.p.i, newwin.p.j);
-                            winMapNormalized = color;
+			    winlabel = "Color";
+                            winMap = color;
                             break;
                         case(2):
-                            LINFO("Segmenting object around (%d,%d) in orientation", newwin.p.i, newwin.p.j);
-                            winMapNormalized = orientation;
+			    winlabel = "Orientation";
+                            winMap = orientation;
                             break;
                         default:
-                            LINFO("Segmenting object around (%d,%d) in orientation", newwin.p.i, newwin.p.j);
-                            winMapNormalized = orientation;
+			    winlabel = "Orientation";
+                            winMap = orientation;
                             break;
 	        	} 
+			const bool goodseed = (winMap.getVal(currwin) > 0.0F);
+                        Image<float> winMapNormalized = winMap; 
 			inplaceNormalize(winMapNormalized, 0.0F, 1.0F); 
 			Image<byte> objectMask;
-			if (itsSem == SEMnone) { 
-				objectMask.resize(sm.getDims(), true); 
-				int radius = (itsFoaRadius * objectMask.getWidth())/img.getDims().w(); 
-				LINFO("Drawing disk radius: %d/%d object around (%d, %d) saliency map dims: (%d, %d) image dims: (%d, %d) ", itsFoaRadius, radius, currwin.i, currwin.j, sm.getDims().w(), sm.getDims().h(),img.getDims().w(),img.getDims().h());
-				 drawDisk(objectMask, currwin, radius, byte(255));
-					inplaceSetValMask(sm, objectMask, 0.0F);
-					 
-			} else {
-				LINFO("Segmenting object object around (%d, %d) ", currwin.i, currwin.j);
-				Image<byte> objectMask = segmentObjectClean(winMapNormalized, currwin);
-				inplaceSetValMask(sm, objectMask, 0.0F);
+			Dims indims = img.getDims();
+
+			// if we found a good seed point, use it to segment the
+      			// object. Otherwise, we failed, so let's just return a disk:
+      			if (goodseed)
+        		{
+          			LDEBUG("Segmenting object around (%d, %d) in %s.",
+                 		newwin.p.i, newwin.p.j, winlabel.c_str());
+          			objectMask = segmentObjectClean(winMapNormalized, currwin);
+        		}
+      			else
+        		{
+          			LDEBUG("Drawing disk object around (%d, %d) in %s.",
+                 		newwin.p.i, newwin.p.j, winlabel.c_str());
+          			objectMask.resize(winMap.getDims(), true);
+          			drawDisk(objectMask, currwin,
+                   		(itsFoaRadius * objectMask.getWidth()) / indims.w(), byte(255));
+        		}
+
+
+			Image<byte> objMask2(objectMask); 
+			objMask2.setVal((newwin.p.i * objectMask.getWidth()) / indims.w(), (newwin.p.j * objectMask.getHeight()) / indims.h(), byte(255));
+      		 	Image<byte> iorMask = lowPass3(objMask2) * (winMapNormalized + 0.25F);
+	
+			// inplaceSetValMask(sm, iorMask, 0.0F); 
+			Image<float> temp = scaleBlock(objectMask, indims);
+            		itsSmoothMask = convGauss<float>(temp, SIGMA, SIGMA, 5);
+            		inplaceNormalize(itsSmoothMask, 0.0F, 3.0F);
+            		inplaceClamp(itsSmoothMask, 0.0F, 1.0F);
+
+      			// update the cumulative smooth mask:
+      			if (itsCumMask.initialized())
+        		   itsCumMask = takeMax(itsCumMask, itsSmoothMask);
+      			else
+        		   itsCumMask = itsSmoothMask;
+
+      			rutz::shared_ptr<SimEventShapeEstimatorOutput>
+        		e(new SimEventShapeEstimatorOutput(NULL, winMap, objectMask, iorMask,
+                                          itsSmoothMask, itsCumMask,
+                                          winlabel, true));
+      			itsSeq->post(e);
 			}
 		}
         }
@@ -413,9 +454,9 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
 
     // output is     now typically in the (0.0..8.0) range;
     // typical images are in (0..4) range; we want input current in nA
-    //sminput *= 1e-9F;
-    //getMinMax(sminput, mi, ma);
-    //LINFO("Salmap input range is [%f .. %f] nA", mi * 1.0e9F, ma * 1.0e9F);
+    sminput *= 1e-9F;
+    getMinMax(sminput, mi, ma);
+    LINFO("Salmap input range is [%f .. %f] nA", mi * 1.0e9F, ma * 1.0e9F);
 
     // inject saliency map input into saliency map:
     if (sminput.initialized())
