@@ -34,6 +34,8 @@
 #include "Image/Point2D.H"
 #include "Beowulf/Beowulf.H"
 #include "Neuro/StdBrain.H"
+#include "Neuro/SaliencyMap.H"
+#include "Neuro/AttentionGuidanceMap.H"
 #include "Neuro/WinnerTakeAllStdMbari.H"
 #include "Neuro/ShapeEstimatorModes.H"
 #include "Image/fancynorm.H"
@@ -52,6 +54,8 @@ public:
 			 const int argc, const char **argv,
 			 nub::soft_ref<Beowulf> &beo,
 			 nub::soft_ref<WinnerTakeAll> &wta,
+       			 nub::soft_ref<SaliencyMapStd> &sm,
+	 	         nub::soft_ref<AttentionGuidanceMapStd> &agm,
 		         nub::soft_ref<SimEventQueue> &seq,
     			 const ShapeEstimatorMode &sem,
         		 const int foaRadius,
@@ -104,8 +108,10 @@ private:
   void sendImage(const Image< PixRGB<byte> >& img, int framenum);
   
   nub::soft_ref<Beowulf> itsBeo; 
+  nub::soft_ref<SaliencyMapStd> itsSm;
   nub::soft_ref<WinnerTakeAll> itsWta;
   nub::soft_ref<SimEventQueue> itsSeq;
+  nub::soft_ref<AttentionGuidanceMapStd> itsAgm;
   const ShapeEstimatorMode itsSem;
   const int itsFoaRadius;
   const char **itsArgv;
@@ -116,6 +122,10 @@ private:
   float itsBoringmv;
   SimTime itsBoringDelay;
   float itsScaleW, itsScaleH;
+  // keep a copy of our last smooth mask so we can save it
+  Image<float> itsSmoothMask;
+  // our cumulative smooth mask
+  Image<float> itsCumMask;
 };
 
 #endif // !defined(GETSALIENTREGIONS_H)
