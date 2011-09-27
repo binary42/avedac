@@ -40,8 +40,8 @@
 #include "Neuro/VisualCortexWeights.H"
 #include "Neuro/WinnerTakeAllConfigurator.H"
 #include "Neuro/ShapeEstimatorModes.H"
+#include "Neuro/AttentionGuidanceMap.H"
 #include "Component/ModelManager.H"
-#include "Neuro/WinnerTakeAllStdMbari.H"
 #include "Data/MbariOpts.H"
 #include "Stages/SegmentStage.H"
 #include "Stages/GetSalientRegionsStage.H"
@@ -163,6 +163,10 @@ extern "C" {
     nub::soft_ref<SimEventQueueConfigurator>
             seqc(new SimEventQueueConfigurator(manager));
     manager.addSubComponent(seqc);
+    nub::soft_ref<SaliencyMapStd> sm(new SaliencyMapStd(manager));
+    manager.addSubComponent(sm);  
+    nub::soft_ref<AttentionGuidanceMapStd> agm(new AttentionGuidanceMapStd(manager));
+    manager.addSubComponent(agm);  
     nub::soft_ref<InputFrameSeries> ifs(new InputFrameSeries(manager));
     manager.addSubComponent(ifs);			
     nub::soft_ref<OutputFrameSeries> ofs(new OutputFrameSeries(manager));
@@ -330,6 +334,8 @@ extern "C" {
                                               argc, argv,
                                               beowulf,
 					      wta,
+					      sm,
+					      agm,
 					      seq,
 					      sem,
 					      foaRadius, 
