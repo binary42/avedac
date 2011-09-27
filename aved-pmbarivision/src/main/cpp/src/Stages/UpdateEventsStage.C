@@ -57,8 +57,7 @@ UpdateEventsStage::UpdateEventsStage(MPI_Comm mastercomm, const char *name,  \
                                      const std::string& inputFileStem,  \
                                      const FrameRange &framerange)
 : Stage(mastercomm, name),
-itsAvgCache(DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache),
-itsOutCache(DetectionParametersSingleton::instance()->itsParameters.itsSizeAvgCache),
+itsOutCache(10),
 itsEventSet(DetectionParametersSingleton::instance()->itsParameters, inputFileStem),
 itsInputFileStem(inputFileStem),
 itsFrameRange(framerange),
@@ -202,9 +201,6 @@ void UpdateEventsStage::runStage() {
 
                             // store input RGB image in itsRGBOutCache to use for video overlay
                             itsRGBOutCache.push_back(mbariRGBImg);
-
-                            // store input RGB image ing itsAvgCache for use in color segmentation
-                            itsAvgCache.push_back(mbariRGBImg);
 
                             // store received segmented bit image from Stages::SG_STAGE in itsOutCache
                             mbariBitImg.updateData(*img, frameNum);
