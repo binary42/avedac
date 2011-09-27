@@ -91,8 +91,8 @@ int Segmentation::getMinSize(const vector< float > & v) {
 
 // ######################################################################
 
-Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, const int min_size, const Image < PixRGB<byte> >&input) {
-       //printf("processing\n");
+Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, const int min_size, const Image < PixRGB<byte> >&input) { 
+  LDEBUG("processing with sigma: %f k: %f minsize: %f ",sigma,k,min_size);
   int num_ccs;
 
     image<rgb> *im = new image<rgb > (input.getWidth(), input.getHeight());
@@ -121,8 +121,7 @@ Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, con
 
     delete im;
     delete seg;
-    //printf("got %d components\n", num_ccs);
-    //printf("done! uff...thats hard work.\n");
+    LDEBUG("got %d components\n", num_ccs);
     return output;
 }
 // ######################################################################
