@@ -102,10 +102,8 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& graphBitImg,
     PixRGB<byte> color = graphBitImg.getVal(seed);
     const PixRGB<byte> black = PixRGB<byte>(0,0,0);
 
-    // if this isn't a masked point,
-    // create a binary representation of this image
-    // with the color at the center of the seed
-    // as 1 and everything else 0
+    // create a binary representation with the 1 equal to the 
+    // color at the center of the seed everything else 0
     Image< PixRGB<byte> >::const_iterator sptr = graphBitImg.begin();
     Image<byte>::iterator rptr = bitImg.beginw();
     if (color != black) {
