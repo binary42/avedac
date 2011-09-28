@@ -45,13 +45,13 @@ public class KnowledgeBaseUtil {
     private static final Logger log = LoggerFactory.getLogger(KnowledgeBaseUtil.class);
 
     /**
-     *      * Checks to see if the knowldegebase is available
+     * Checks to see if the MBARI knowledge base is available.  This currently
+     * only works within the MBARI firewall.
      *           
-     *                * @return true if the knowledgebase is available, false otherwise
+     * @return true if the knowledgebase is available, false otherwise
      */
     public static boolean isKnowledgebaseAvailable() {
-        return false;
-        /*boolean available = false;
+        boolean available = false;
 
         try {
             Injector injector = (Injector) Lookup.getGuiceInjectorDispatcher().getValueObject();
@@ -64,6 +64,6 @@ public class KnowledgeBaseUtil {
             log.info("Failed to connect to knowledebase", e);
         }
 
-        return available;*/
+        return available;
     }
 }
