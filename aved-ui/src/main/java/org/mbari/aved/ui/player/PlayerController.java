@@ -168,16 +168,17 @@ public class PlayerController extends AbstractController implements ActionListen
 
     private void updateButtonStates() {
         PlayerView view = ((PlayerView) getView());
-
-        // Disable the next button if this is the last event in the sequence
-        if (eventListModel.isLastEvent(event)) {
+        int              row   = tableSorter.viewIndex((eventListModel.getIndexOf(event)));
+        
+        // Disable the next button if this is the last table row
+        if (row == eventListModel.getSize() - 1) {
             view.disableNextButton();
         } else {
             view.enableNextButton();
         }
 
-        // Disable the prev button if this is the first event in the sequence
-        if (eventListModel.isFirstEvent(event)) {
+        // Disable the prev button if this is the first table row
+        if (row == 0) {
             view.disablePrevButton();
         } else {
             view.enablePrevButton();
@@ -214,13 +215,13 @@ public class PlayerController extends AbstractController implements ActionListen
                 timer.start();
             }
         }
-    }
+    }  
 
     private void stepPrev() {
 
         // Translated the row index into the real eventListModel index
         // through the tableSorter, since the table may be sorted
-        PlayerView       view  = ((PlayerView) getView());
+        PlayerView       view  = ((PlayerView) getView()); 
         int              row   = tableSorter.viewIndex((eventListModel.getIndexOf(event)));
         int              index = 0;
         ApplicationModel m     = (ApplicationModel) getModel();
@@ -233,7 +234,7 @@ public class PlayerController extends AbstractController implements ActionListen
         ApplicationModel   model = Application.getModel();
         ListSelectionModel lsm   = model.getListSelectionModel();
 
-        lsm.setSelectionInterval(index, index);
+        lsm.setSelectionInterval(row, row);
     }
 
     private void stepNext() {
@@ -244,7 +245,7 @@ public class PlayerController extends AbstractController implements ActionListen
         int              row   = tableSorter.viewIndex((eventListModel.getIndexOf(event)));
         int              index = 0;
         ApplicationModel m     = (ApplicationModel) getModel();
-
+        
         index = tableSorter.modelIndex(++row);
         event = eventListModel.getElementAt(index);
         PlayerManager.getInstance().openView(event, m, view.getLocation());
@@ -253,7 +254,7 @@ public class PlayerController extends AbstractController implements ActionListen
         ApplicationModel   model = Application.getModel();
         ListSelectionModel lsm   = model.getListSelectionModel();
 
-        lsm.setSelectionInterval(index, index);
+        lsm.setSelectionInterval(row, row);
     }
 
     /*
@@ -263,8 +264,7 @@ public class PlayerController extends AbstractController implements ActionListen
      * If it's the last frame, restart the timer to get a long pause between loops
      */
     public void actionPerformed(ActionEvent e) {
-        updateButtonStates();
-
+     
         String     actionCommand = e.getActionCommand();
         PlayerView view          = ((PlayerView) getView());
 
@@ -345,6 +345,8 @@ public class PlayerController extends AbstractController implements ActionListen
             frameNo = 0;
             stop();
         }
+
+        updateButtonStates(); 
     }
 
     public void keyTyped(KeyEvent e) {}
