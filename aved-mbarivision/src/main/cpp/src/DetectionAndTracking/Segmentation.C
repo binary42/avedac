@@ -92,7 +92,7 @@ int Segmentation::getMinSize(const vector< float > & v) {
 // ######################################################################
 
 Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, const int min_size, const Image < PixRGB<byte> >&input) { 
-  LDEBUG("processing with sigma: %f k: %f minsize: %f ",sigma,k,min_size);
+  LDEBUG("processing with sigma: %f k: %d minsize: %d ",sigma,k,min_size);
   int num_ccs;
 
     image<rgb> *im = new image<rgb > (input.getWidth(), input.getHeight());
