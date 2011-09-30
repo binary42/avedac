@@ -63,6 +63,9 @@
 #include <iostream>
 #include <string>
 #include <iostream>
+
+// Maximum number of conspicuity maps
+#define MAX_NUM_CMAPS 7
 #define SIGMA 20
 
 using namespace std;
@@ -337,7 +340,6 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinners(const Image< PixR
 			objMask2.setVal((newwin.p.i * objectMask.getWidth()) / indims.w(), (newwin.p.j * objectMask.getHeight()) / indims.h(), byte(255));
       		 	Image<byte> iorMask = lowPass3(objMask2) * (winMapNormalized + 0.25F);
 	
-			// inplaceSetValMask(sm, iorMask, 0.0F); 
 			Image<float> temp = scaleBlock(objectMask, indims);
             		itsSmoothMask = convGauss<float>(temp, SIGMA, SIGMA, 5);
             		inplaceNormalize(itsSmoothMask, 0.0F, 3.0F);
@@ -374,9 +376,9 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinners(const Image< PixR
 
 list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &img, int framenum) {
     std::list<WTAwinner> winners;
-    Image<float> cmap[NBCMAP]; // array of conspicuity maps
-    int32 cmapframe[NBCMAP]; // array of cmap frame numbers
-    for (int i = 0; i < NBCMAP; i++) cmapframe[i] = -1;
+    Image<float> cmap[MAX_NUM_CMAPS]; // array of conspicuity maps
+    int32 cmapframe[MAX_NUM_CMAPS]; // array of cmap frame numbers
+    for (int i = 0; i < MAX_NUM_CMAPS; i++) cmapframe[i] = -1;
     int sml = itsLevelSpec.mapLevel(); // pyramid level of saliency map
     DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
 
@@ -386,7 +388,7 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
     Image<float> ori = sm;
 
     int reccmaps = 0;
-    int numcmaps = NBCMAP;
+    int numcmaps = 7;
     Timer masterclock; // master clock for simulations
     masterclock.reset();
     float mi, ma;
@@ -503,7 +505,7 @@ void GetSalientRegionsStage::sendImage(const Image< PixRGB<byte> >& img, int fra
     Image<byte> lum = luminance(img);
 
     if (itsWeights.chanOw != 0.f) {
-        LDEBUG("######## sending luminance to BEO_45,BEO_90,BEO_135");
+        LDEBUG("######## sending luminance to BEO_ORI0,BEO_45,BEO_90,BEO_135");
         // first, send off luminance to orientation slaves:
         smsg.reset(framenum, BEO_ORI0);
         smsg.addImage(lum);
@@ -516,15 +518,8 @@ void GetSalientRegionsStage::sendImage(const Image< PixRGB<byte> >& img, int fra
         itsBeo->send(smsg);
     }
 
-    if (itsWeights.chanIw != 0.f) {
-        LDEBUG("####### sending luminance to BEO_LUMINANCE");
-        // finally, send to luminance slave:
-        smsg.setAction(BEO_LUMINANCE);
-        itsBeo->send(smsg);
-    }
-
     if (itsWeights.chanCw != 0.f) {
-        LDEBUG("######### sending luminance to BEO_REDGREEN BEO_BLUEYELLOW");
+        LDEBUG("######### sending r/g/b/y luminance to BEO_REDGREEN,BEO_BLUEYELLOW");
         // compute RG and BY and send them off:
         Image<byte> r, g, b, y;
         getRGBY(img, r, g, b, y, (byte) 25);
@@ -535,6 +530,13 @@ void GetSalientRegionsStage::sendImage(const Image< PixRGB<byte> >& img, int fra
         smsg.reset(framenum, BEO_BLUEYELLOW);
         smsg.addImage(b);
         smsg.addImage(y);
+        itsBeo->send(smsg);
+    }
+
+    if (itsWeights.chanIw != 0.f) {
+        LDEBUG("####### sending luminance to BEO_LUMINANCE");
+        // finally, send to luminance slave:
+        smsg.setAction(BEO_LUMINANCE);
         itsBeo->send(smsg);
     }
 }
