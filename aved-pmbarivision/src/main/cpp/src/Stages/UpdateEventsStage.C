@@ -280,8 +280,16 @@ void UpdateEventsStage::updateEvents() {
             }
 
             // last frame? -> close everyone
-            if (mbariImg.getFrameNum() == itsFrameRange.getLast())
+            if (mbariImg.getFrameNum() == itsFrameRange.getLast()) {
                 itsEventSet.closeAll();
+
+            	// send exit signal to controller
+            	if (mbariImg.getFrameNum() == itsFrameRange.getLast()) {
+                  int flag = 1;
+                  LINFO("SHUTDOWN %s sending message MASTER_SHUTDOWN to Controller", Stage::name());
+                  MPI_Send(&flag, 1, MPI_INT, Stages::CONTROLLER, MASTER_SHUTDOWN, Stage::mastercomm());
+            	}
+	    }
 
             // prune invalid events
             itsEventSet.cleanUp(mbariImg.getFrameNum());
@@ -372,13 +380,6 @@ void UpdateEventsStage::updateEvents() {
             }// end of saving enumerated list of events
 
             LINFO("########## current frame: %d  ##### end frame: %d", mbariImg.getFrameNum(), itsFrameRange.getLast());
-
-            // if last frame, send exit signal to controller
-            if (mbariImg.getFrameNum() == itsFrameRange.getLast()) {
-                int flag = 1;
-                LINFO("SHUTDOWN %s sending message MASTER_SHUTDOWN to Controller", Stage::name());
-                MPI_Send(&flag, 1, MPI_INT, Stages::CONTROLLER, MASTER_SHUTDOWN, Stage::mastercomm());
-            }
             // clean up Caches and vector sets
             if (!itsOutCache.empty())
                 itsOutCache.pop_front();
