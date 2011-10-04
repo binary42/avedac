@@ -102,9 +102,9 @@ void SegmentStage::runStage() {
                     Image<byte> bitImgShadow, bitImgHighlight;
                     Image< PixRGB<byte > > graphBitImg;
                     Image<byte> bitImg(img2segment->getDims(), ZEROS);
+                    std::list<WTAwinner> winlistGraph;
 
-                    graphBitImg = segmentation.runGraph(sigma, k, min_size, *img2segment);
-                    std::list<WTAwinner> winlistGraph = getGraphWinners(graphBitImg, framenum, 1.0f, 1.0f);
+                    graphBitImg = segmentation.runGraph(sigma, k, min_size, winlistGraph, 1.0f, 1.0f, *img2segment);
                     list<BitObject> sobjs = getSalientObjects(graphBitImg, winlistGraph);
 
                     if (dp.itsSegmentAlgorithmType == SAGraphCutOnly) {
