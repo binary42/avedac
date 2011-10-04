@@ -396,9 +396,6 @@ list<WTAwinner> getSalientWinners(
         }
     }
 
-    // reset the brain
-    brain->reset(MC_RECURSE);
-
     LINFO("Start at %.2fms", seq->now().msecs());
    
     // initialize the max time to simulate
