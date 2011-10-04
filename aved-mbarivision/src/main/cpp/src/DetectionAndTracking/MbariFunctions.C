@@ -397,7 +397,9 @@ list<WTAwinner> getSalientWinners(
     }
 
     LINFO("Start at %.2fms", seq->now().msecs());
-   
+  
+    brain->reset(MC_RECURSE);
+ 
     // initialize the max time to simulate
     const SimTime simMaxEvolveTime = SimTime::MSECS(seq->now().msecs()) + SimTime::MSECS(p.itsMaxEvolveTime);
 

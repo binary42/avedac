@@ -35,8 +35,10 @@
 #include "DetectionAndTracking/TrackingModes.H"
 #include "DetectionAndTracking/DetectionParameters.H"
 #include "Util/StringConversions.H"
+#include "Neuro/WTAwinner.H"
 
 #include <vector>
+#include <list>
 
 using namespace std;
 
@@ -48,7 +50,7 @@ public:
 
   Segmentation();
   virtual ~Segmentation();
-  Image< PixRGB<byte> > runGraph(const float sigma, const int k, const int min_size, const Image < PixRGB<byte> > &image);
+  Image< PixRGB<byte> > runGraph(const float sigma, const int k, const int min_size, list<WTAwinner> &winners, float scaleW, float scaleH, const Image < PixRGB<byte> > &image);
   float getSigma(const vector< float > & v);
   int getK(const vector< float > & v);
   int getMinSize(const vector< float > & v);

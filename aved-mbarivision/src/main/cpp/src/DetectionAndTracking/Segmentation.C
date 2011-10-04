@@ -91,9 +91,10 @@ int Segmentation::getMinSize(const vector< float > & v) {
 
 // ######################################################################
 
-Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, const int min_size, const Image < PixRGB<byte> >&input) { 
+Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, const int min_size, 
+        std::list<WTAwinner> &winners, float scaleW, float scaleH,
+        const Image < PixRGB<byte> >&input) {
   LDEBUG("processing with sigma: %f k: %d minsize: %d ",sigma,k,min_size);
-  int num_ccs;
 
     image<rgb> *im = new image<rgb > (input.getWidth(), input.getHeight());
 
@@ -108,7 +109,7 @@ Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, con
         }
 
     // run segmentation
-    image <rgb> *seg = segment_image(im, sigma, k, min_size, &num_ccs);
+    image <rgb> *seg = segment_image(im, sigma, k, min_size, winners, scaleW, scaleH);
 
     // initialize the output image with the segmented results
     Image < PixRGB<byte> > output = input;
@@ -120,8 +121,7 @@ Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, con
         }
 
     delete im;
-    delete seg;
-    LDEBUG("got %d components\n", num_ccs);
+    delete seg; 
     return output;
 }
 // ######################################################################

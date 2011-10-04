@@ -424,9 +424,8 @@ int main(const int argc, const char** argv) {
                 img2segment = maxRGB(avgCache.clampedDiffMean(mbariImg));
             }
 
-            graphBitImg = segmentation.runGraph(sigma, k, min_size, img2segment);
-             
-            winlistGraph = getGraphWinners(graphBitImg, mbariImg.getFrameNum(), 1.0f, 1.0f);
+            graphBitImg = segmentation.runGraph(sigma, k, min_size, winlistGraph, 1.0f, 1.0f, img2segment);
+              
             list<BitObject> sobjs = getSalientObjects(graphBitImg, winlistGraph);
 
             if (dp.itsSegmentAlgorithmType == SAGraphCutOnly) {

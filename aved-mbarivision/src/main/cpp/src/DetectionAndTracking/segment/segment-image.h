@@ -57,10 +57,12 @@ static inline float diff(image<float> *r, image<float> *g, image<float> *b,
  * sigma: to smooth the image.
  * c: constant for treshold function.
  * min_size: minimum component size (enforced by post-processing stage).
- * num_ccs: number of connected components in the segmentation.
+ * winners: each color is awarded a winner. These are assigned to a winner-take-all mapping
+ * scaleW: amount to scale X seedWinner
+ * scaleH: amount to scale H seedWinner.
  */
 image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
-			  int *num_ccs) {
+			  std::list<WTAwinner> &winners, float scaleW, float scaleH) {
   int width = im->width();
   int height = im->height();
 
@@ -132,19 +134,45 @@ image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
       u->join(a, b);
   }
   delete [] edges;
-  *num_ccs = u->num_sets();
-
+  
   image<rgb> *output = new image<rgb>(width, height);
 
   // pick random colors for each component
   rgb *colors = new rgb[width*height];
   for (int i = 0; i < width*height; i++)
     colors[i] = random_rgb();
- 
+
+    bool found;
+    rgb seedColor;
+    std::list<rgb> seedColors;
+
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
       int comp = u->find(y * width + x);
       imRef(output, x, y) = colors[comp];
+        seedColor = colors[comp];
+
+            found = false;
+            // add new colors to the list
+            std::list<rgb>::const_iterator iter = seedColors.begin();
+            while (iter != seedColors.end()) {
+                rgb color = (*iter);
+                if (color == seedColor) {
+                    found = true;
+                    break;
+                }
+            iter++;
+            }
+            if (found == false) {
+                seedColors.push_back(seedColor);
+                WTAwinner win = WTAwinner::NONE();
+                win.p.i = (int) ( (float) x*scaleW);
+                win.p.j = (int) ( (float) y*scaleH);
+                win.sv = 0.f;
+                //LINFO("##### winner #%d found at [%d; %d]  frame: %d#####",
+               //         numSpots, win.p.i, win.p.j, framenum);
+               winners.push_back(win);
+            }
     }
   }  
   delete [] colors;  
