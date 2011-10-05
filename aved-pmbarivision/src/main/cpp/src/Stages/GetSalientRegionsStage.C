@@ -242,14 +242,14 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinners(const Image< PixR
             LINFO("#### winner #%d found at [%d; %d] with %f voltage frame: %d ",
                     numSpots, newwin.p.i, newwin.p.j, newwin.sv, framenum);
 
+	    winners.push_back(newwin);
+            ++numSpots;
+	    
             // if a boring event detected, and not keeping boring WTA points then break simulation
             if (newwin.boring && dp.itsKeepWTABoring == false) {
                 rutz::shared_ptr<SimEventBreak>
                         e(new SimEventBreak(0, "Boring event detected"));
                 itsSeq->post(e);
-            } else {
-                winners.push_back(newwin);
-                ++numSpots;
 	    }
 
             if (numSpots >= dp.itsMaxWTAPoints) {

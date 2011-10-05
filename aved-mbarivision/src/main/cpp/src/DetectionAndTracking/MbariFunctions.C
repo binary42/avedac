@@ -429,15 +429,15 @@ list<WTAwinner> getSalientWinners(
 
                 LINFO("##### winner #%d found at [%d; %d] with %f voltage frame: %d#####",
                         numSpots, win.p.i, win.p.j, win.sv, framenum);
+		
+		winners.push_back(win);
+                numSpots++;
 
                 // if a boring event detected, and not keeping boring WTA points then break simulation
                 if (win.boring && p.itsKeepWTABoring == false) {
                     rutz::shared_ptr<SimEventBreak>
                             e(new SimEventBreak(0, "##### boring event detected #####"));
                     seq->post(e);
-                } else {
-                    winners.push_back(win);
-                    numSpots++;
                 }
 
                 if (numSpots >= maxNumSalSpots) {
