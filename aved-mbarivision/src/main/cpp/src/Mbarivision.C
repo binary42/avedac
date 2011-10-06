@@ -162,9 +162,6 @@ int main(const int argc, const char** argv) {
         }
     }
 
-    // get a reference to our original frame source
-    const nub::ref<FrameIstream> ref = ifs->getFrameSource();
-
     // get the dimensions of the input frames
     Dims dims = ifs->peekDims();
     float scaleW = 1.0f;
@@ -173,6 +170,8 @@ int main(const int argc, const char** argv) {
     // if the user has selected to retain the original dimensions in the events
     // get the scaling factors, and unset the resizing in the input frame series
     if (dp.itsSaveOriginalFrameSpec) {
+        // get a reference to our original frame source
+        const nub::ref<FrameIstream> ref = ifs->getFrameSource();
         const Dims origDims = ref->peekDims();
         scaleW = (float) origDims.w() / (float) dims.w();
         scaleH = (float) origDims.h() / (float) dims.h();

@@ -56,6 +56,10 @@
 #include "Image/colorDefs.H"
 #include "Stages/SalientWinner.H"
 #include "Utils/Const.H"
+#include "Image/fancynorm.H"
+#include "Image/Pixels.H"
+#include "Image/LevelSpec.H"
+#include "Image/PyramidOps.H"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -138,6 +142,7 @@ void GetSalientRegionsStage::runStage() {
 
     do {
 
+        itsSeq->evolve();
         framenum = receiveData((void**) &img, RGBBYTEIMAGE, Stages::CP_STAGE, MPI_ANY_TAG, Stage::mastercomm(), &status, &request);
         Stages::stageID id = static_cast<Stages::stageID> (status.MPI_SOURCE);
         LDEBUG("%s received frame: %d MSG_DATAREADY from Source: %d", Stage::name(), framenum, status.MPI_SOURCE);
@@ -218,6 +223,13 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinners(const Image< PixR
     SimStatus status = SIM_CONTINUE;
     DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
 
+    LINFO("#######Searching for winners in frame: %d ", framenum);
+
+    // reset brain components
+    itsSm->reset(MC_RECURSE);
+    itsAgm->reset();
+    itsWta->reset(MC_RECURSE);
+    
     // initialize the max time to simulate 
     const SimTime simMaxEvolveTime = SimTime::MSECS(itsSeq->now().msecs()) + SimTime::MSECS(dp.itsMaxEvolveTime);
 
@@ -234,13 +246,15 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinners(const Image< PixR
         status = itsSeq->evolve();
 
         if (SeC<SimEventWTAwinner> e = itsSeq->check<SimEventWTAwinner > (0)) {
+
+            WTAwinner newwinraw = e->winner();
             WTAwinner newwin = e->winner();
 	    currwin = newwin.getSMcoords(sml);
             newwin.p.i = (int) ((float) newwin.p.i * itsScaleW);
             newwin.p.j = (int) ((float) newwin.p.j * itsScaleH); 
 
-            LINFO("#### winner #%d found at [%d; %d] with %f voltage frame: %d ",
-                    numSpots, newwin.p.i, newwin.p.j, newwin.sv, framenum);
+            LINFO("#### currwin [%d,%d] intensity: %d %d winner #%d found at [%d; %d] with %f voltage frame: %d ",
+                    currwin.i, currwin.j, intensity.getWidth(), intensity.getHeight(), numSpots, newwin.p.i, newwin.p.j, newwin.sv, framenum);
 
 	    winners.push_back(newwin);
             ++numSpots;
@@ -337,7 +351,7 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinners(const Image< PixR
 
 
 			Image<byte> objMask2(objectMask); 
-			objMask2.setVal((newwin.p.i * objectMask.getWidth()) / indims.w(), (newwin.p.j * objectMask.getHeight()) / indims.h(), byte(255));
+			objMask2.setVal((newwinraw.p.i * objectMask.getWidth()) / indims.w(), (newwinraw.p.j * objectMask.getHeight()) / indims.h(), byte(255));
       		 	Image<byte> iorMask = lowPass3(objMask2) * (winMapNormalized + 0.25F);
 	
 			Image<float> temp = scaleBlock(objectMask, indims);
@@ -361,7 +375,7 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinners(const Image< PixR
         }
 
         if (itsSeq->now().msecs() >= simMaxEvolveTime.msecs()) {
-            LINFO("##### time limit reached time now:%f msecs max evolve time:%f msecs #####", itsSeq->now().msecs(), simMaxEvolveTime.msecs());
+            LINFO("##### time limit reached time now:%f msecs max evolve time:%f msecs frame: %d #####", itsSeq->now().msecs(), simMaxEvolveTime.msecs(), framenum);
             rutz::shared_ptr<SimEventBreak>
                     e(new SimEventBreak(0, "##### time limit reached #####"));
             itsSeq->post(e);
@@ -370,7 +384,6 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinners(const Image< PixR
 
     // print final memory allocation stats
     LINFO("Simulation terminated. Found %d numspots", numSpots);
-
     return winners;
 }
 
@@ -414,7 +427,7 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
         // add all the orientation channels together, max normalize and weight
         for (int i = 3; i < NBCMAP; i++) {
             LDEBUG("sml: %d image: %dx%d ori: %dx%d cmap: %dx%d", sml, img.getWidth(), img.getHeight(), ori.getWidth(), ori.getHeight(), cmap[i].getWidth(), cmap[i].getHeight());
-            ori += cmap[i];
+            ori += rescale(cmap[i], sm.getDims());
         }
         ori = maxNormalize(ori, 0.0f, 0.0f, itsMaxNormType);
         getMinMax(ori, mi, ma);
@@ -427,7 +440,7 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
     // add in the r/g b/w color map computations if a color image
     if (itsWeights.chanCw != 0.f) {
         // add all the color channels together, max normalize and weight
-        color = cmap[1] + cmap[2];
+        color = rescale(cmap[1], sm.getDims()) + rescale(cmap[2], sm.getDims());
         color = maxNormalize(color, 0.0f, 0.0f, itsMaxNormType);
         getMinMax(color, mi, ma);
         LDEBUG("Color final range [%f .. %f]", mi, ma);
@@ -438,7 +451,7 @@ list<WTAwinner> GetSalientRegionsStage::getWinners(const Image< PixRGB<byte> > &
 
     if (itsWeights.chanIw != 0.f) {
         // maxnormalize and weight intensity channel
-        intensity = cmap[0];
+        intensity = rescale(cmap[0], sm.getDims());
         maxNormalize(intensity, 0.0f, 0.0f, itsMaxNormType);
         getMinMax(intensity, mi, ma);
         LDEBUG("Intensity final range [%f .. %f]", mi, ma);
