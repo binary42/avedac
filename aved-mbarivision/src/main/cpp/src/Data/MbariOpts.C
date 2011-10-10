@@ -84,15 +84,15 @@ const ModelOptionDef OPT_MDPMosaicBenthicStills =
     "processing still images from a still or moving camera traversing the sea bottom",
     "mbari-mosaic-benthic-stills", '\0',"",
     "--mbari-saliency-dist=1 --mbari-tracking-mode=None "
-    "--mbari-keep-boring-WTA-points=yes "
-    "--mbari-save-non-interesting-events=yes --mbari-segment-graph-parameters=0.75,250,50 "
+    "--mbari-keep-boring-WTA-points=yes --mbari-max-WTA-points=20 "
+    "--mbari-save-non-interesting-events=yes --mbari-segment-graph-parameters=0.95,500,250 "
     "--mbari-segment-algorithm-input-image=Luminance --mbari-color-space=RGB "
-    "--mbari-saliency-input-image=Raw --levelspec=0-2,1-4,3 "
-    "--mbari-max-WTA-points=20 --mbari-max-evolve-msec=15000 "
-    "--vc-type=C:200I --use-random=true  --mbari-segment-algorithm=GraphCutOnly " 
-    "--shape-estim-mode=SaliencyMap --foa-radius=60 "
-    "--mbari-cache-size=1 --use-older-version=false "
-    "--ior-type=Disc  --maxnorm-type=Maxnorm"  };
+    "--mbari-saliency-input-image=Raw --levelspec=0-3,2-5,2 --mbari-save-original-frame-spec "
+    "--mbari-max-evolve-msec=2000 --vc-type=OC:5I --use-random=true --mbari-segment-algorithm=GraphCutOnly " 
+    "--shape-estim-mode=ConspicuityMap --foa-radius=30 --fovea-radius=30 "
+    "--mbari-cache-size=1 --use-older-version=false --ori-interaction=SubtractMean "
+    "--num-orient=16 --gabor-intens=20.0 --rescale-input=960x540 --ior-type=ShapeEst "
+    "--maxnorm-type=FancyOne"  };
 const ModelOptionDef OPT_MDPEyeInTheSeaVideo = { MODOPT_ALIAS, "ALIASEyeInTheSeaVideo", &MOC_MBARI, OPTEXP_MRV,
     "Options used for processing Eye-in-the-Sea Video from the  "
     "Ocean Research and Conservation Association (ORCA)",
