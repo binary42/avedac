@@ -231,6 +231,15 @@ extern "C" {
     float scaleW = 1.0f;
     float scaleH = 1.0f;
 
+    // store rgb image in cache; sometimes this fails due to NFS error so retry a few times 
+    int ntrys = 0; 
+    do { 
+        dims = ifs->peekDims();
+    } while (!dims.isEmpty() && ntrys++ < 3); 
+
+    if (ntrys == 3) 
+      LERROR("Error reading frame dimensions");
+
     // if the user has selected to retain the original dimensions in the events
     // get the scaling factors, and unset the resizing in the input frame series
     if (dp.itsSaveOriginalFrameSpec) {

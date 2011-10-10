@@ -87,12 +87,29 @@ void UpdateEventsStage::initStage() {
         // get the starting and ending timecodes from the frames
         nub::ref<FrameIstream> rep = itsifs->getFrameSource();
 
-        rep->setFrameNumber(itsFrameRange.getFirst());
-        tmpimg = rep->readRGB();
+        rep->setFrameNumber(itsFrameRange.getFirst()); 
+
+	// store rgb image in cache; sometimes this fails due to NFS error so retry a few times 
+	int ntrys = 0; 
+	do { 
+	  tmpimg = rep->readRGB(); 
+	} while (!tmpimg.initialized() && ntrys++ < 3);
+
+	if (ntrys == 3) 
+		LERROR("Error reading frame %06d after 3 tries", itsFrameRange.getFirst());
+
         mstart.updateData(tmpimg, itsFrameRange.getFirst());
  
         rep->setFrameNumber(itsFrameRange.getLast());
-        tmpimg = rep->readRGB();
+
+	ntrys = 0;
+	do { 
+	  tmpimg = rep->readRGB(); 
+	} while (!tmpimg.initialized() && ntrys++ < 3);
+
+	if (ntrys == 3) 
+		LERROR("Error reading frame %06d after 3 tries", itsFrameRange.getLast());
+
         mend.updateData(tmpimg, itsFrameRange.getLast());
 
         // create the XML document

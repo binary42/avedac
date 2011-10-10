@@ -107,7 +107,15 @@ void CachePreprocessStage::runStage()
                     break;
                 }
                 itsifs->updateNext();
-                img = itsifs->readRGB();
+
+	        // store rgb image in cache; sometimes this fails due to NFS error so retry a few times
+                int ntrys = 0;
+                do {
+                    img = itsifs->readRGB();
+                 } while (!img.initialized() && ntrys++ < 3);
+        
+                if (ntrys == 3)
+                     LERROR("Error reading frame %06d after 3 tries", itsifs->frame());
 
                 if (dp.itsMinStdDev > 0.f) {
                     stddev = stdev(luminance(img));
@@ -211,7 +219,15 @@ void CachePreprocessStage::preload() {
             break;
         }
         itsifs->updateNext();
-        img = itsifs->readRGB();
+ 
+	// store rgb image in cache; sometimes this fails due to NFS error so retry a few times
+        int ntrys = 0;
+        do {
+             img = itsifs->readRGB();
+         } while (!img.initialized() && ntrys++ < 3);
+        
+        if (ntrys == 3)
+               LERROR("Error reading frame %06d after 3 tries", itsifs->frame());
 
         // get the standard deviation in the input image
         // if there is little deviation do not add to the average cache

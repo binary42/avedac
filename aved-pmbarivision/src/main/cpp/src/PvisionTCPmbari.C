@@ -267,8 +267,14 @@ void computeCMAP(const Image<float>& fima, const PyramidType ptyp,
         getMinMax(submap, mi, ma);
         LDEBUG("mapnumber:%d(%d,%d): raw range [%f .. %f]", mapn, lev, lev + delta, mi, ma);
 
-        submap = downSize(submap, cmap.getWidth(), cmap.getHeight());
-        LDEBUG("downSizing %dx%d",cmap.getWidth(), cmap.getHeight());
+	if (submap.getWidth() / cmap.getWidth() < 1 || submap.getHeight() / cmap.getHeight() < 1 ) {
+          LDEBUG("rescaling submap: %dx%d cmap: %dx%d", submap.getWidth(), submap.getHeight(), cmap.getWidth(), cmap.getHeight());
+          submap = rescale(submap, Dims(cmap.getWidth(), cmap.getHeight()));
+        }
+	else {
+          LDEBUG("downSizing submap: %dx%d cmap:%dx%d",submap.getWidth(), submap.getHeight(), cmap.getWidth(), cmap.getHeight());
+          submap = downSize(submap, cmap.getWidth(), cmap.getHeight());
+	}
 
         if (normtyp == VCXNORM_FANCY) {
           submap = maxNormalize(submap, 0.0f, 0.0f, normtyp);
