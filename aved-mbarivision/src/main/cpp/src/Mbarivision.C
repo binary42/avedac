@@ -178,8 +178,6 @@ int main(const int argc, const char** argv) {
         scaleH = (float) scaledDims.h() / (float) dims.h();
     }
 
-    LINFO("------>SCALEW: %f SCALEH: %f", scaleW, scaleH);
-
     int foaRadius;
     const string foar = manager.getOptionValString(&OPT_FOAradius);
     convertFromString(foar, foaRadius);
