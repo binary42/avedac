@@ -65,7 +65,7 @@ namespace MbariVisualEvent {
     Token (BitObject bo, uint frame);
 	
     //!constructor with the location being the centroid of the BitObject
-    Token (BitObject bo, uint frame, const MbariMetaData& m);
+    Token (BitObject bo, uint frame, const MbariMetaData& m, float w, float h);
 	
     //!read the Token from the input stream is
     Token (std::istream& is);
@@ -106,6 +106,9 @@ namespace MbariVisualEvent {
 	
     //! write the Token's position to the output streeam os
     void writePosition(std::ostream& os) const;
+
+    //! scaling factors for writing to the output stream os
+    float scaleW, scaleH;
 
      //! copy operator
     Token & operator=(const Token& tk);
@@ -351,10 +354,10 @@ namespace MbariVisualEvent {
     void insert(VisualEvent *event);
 	
     //! initiate new events for all BitObjects in bos if they aren't tracked yet
-    void initiateEventsColor(std::list<BitObject>& bos, int frameNum, const MbariMetaData &metadata);
+    void initiateEventsColor(std::list<BitObject>& bos, int frameNum, const MbariMetaData &metadata, float scaleW, float scaleH);
 	
     //! initiate new events for all BitObjects in bos if they aren't tracked yet
-    void initiateEvents(std::list<BitObject>& bos, int frameNum, const MbariMetaData &metadata);
+    void initiateEvents(std::list<BitObject>& bos, int frameNum, const MbariMetaData &metadata, float scaleW, float scaleH);
 	
     //! if obj intersects with any of the event at frameNum
     bool doesIntersect(BitObject& obj, int frameNum);

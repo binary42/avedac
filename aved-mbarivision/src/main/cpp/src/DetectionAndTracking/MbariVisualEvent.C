@@ -60,7 +60,9 @@ namespace MbariVisualEvent {
       angle(0.0F),
       foe(0.0F,0.0F),
       frame_nr(0),
-      written(false)
+      written(false),
+      scaleW(1.0f),
+      scaleH(1.0f)
   {}
   // ######################################################################
   Token::Token (BitObject bo, uint frame)
@@ -71,7 +73,9 @@ namespace MbariVisualEvent {
       angle(0.0F),
       foe(0.0F,0.0F),
       frame_nr(frame),
-      written(false) {
+      written(false),
+      scaleW(1.0f),
+      scaleH(1.0f) {
     }
     // ######################################################################
     Token &Token::operator=(const Token& tk) {
@@ -82,9 +86,11 @@ namespace MbariVisualEvent {
         this->location = tk.location;
         this->prediction = tk.prediction;
         this->written = tk.written;
+        this->scaleW = tk.scaleW;
+        this->scaleH = tk.scaleH;
     }    
     // ######################################################################
-    Token::Token(BitObject bo, uint frame, const MbariMetaData& m)
+    Token::Token(BitObject bo, uint frame, const MbariMetaData& m, float w, float h)
     : bitObject(bo),
       location(bo.getCentroidXY()),
       prediction(),
@@ -93,7 +99,9 @@ namespace MbariVisualEvent {
       foe(0.0F,0.0F),
       frame_nr(frame),
       mbarimetadata(m),
-      written(false)
+      written(false),
+      scaleW(w),
+      scaleH(h) 
   { }
 	
   // ######################################################################
@@ -107,7 +115,7 @@ namespace MbariVisualEvent {
   {
     if(written == false) {
       os << frame_nr << ' ';
-      mbarimetadata.writeToStream(os);  
+      mbarimetadata.writeToStream(os); 
       location.writeToStream(os);
       prediction.writeToStream(os);
       line.writeToStream(os);
@@ -686,12 +694,13 @@ namespace MbariVisualEvent {
     }
     else    {
       // associate the best fitting guy
-      Token tk(*lObj, frameNum, metadata);
+      Token tl = currEvent->getToken(frameNum);
+      Token tk(*lObj, frameNum, metadata, tl.scaleW, tl.scaleH);
       tk.bitObject.computeSecondMoments();
       currEvent->assign(tk, curFOE, frameNum);
       LINFO("Event %i - token found at %g, %g area: %d",currEvent->getEventNum(),
-            currEvent->getToken(frameNum).location.x(), 
-            currEvent->getToken(frameNum).location.y(),
+            tl.location.x(), 
+            tl.location.y(),
             tk.bitObject.getArea());
     }
 	    
@@ -801,12 +810,13 @@ namespace MbariVisualEvent {
     else {
       // associate this token to the best fitting guy
       Vector2D emtpy(0.F,0.F);
-      Token tk(*lObj, frameNum, metadata);
+      Token tl = currEvent->getToken(frameNum);
+      Token tk(*lObj, frameNum, metadata, tl.scaleW, tl.scaleH);
       tk.bitObject.computeSecondMoments();
       currEvent->assign(tk, emtpy, frameNum);
       LINFO("Event %i - token found at %g, %g area: %d",currEvent->getEventNum(),
-            currEvent->getToken(frameNum).location.x(), 
-            currEvent->getToken(frameNum).location.y(),
+            tl.location.x(), 
+            tl.location.y(),
             area1);
     }    
 	   
@@ -844,7 +854,7 @@ namespace MbariVisualEvent {
 	
   // ######################################################################
   void VisualEventSet::initiateEventsColor(std::list<BitObject>& bos, int frameNum, \
-                                      const MbariMetaData &metadata)
+                                      const MbariMetaData &metadata, float scaleW, float scaleH)
   {
     if (startframe == -1) {startframe = frameNum; endframe = frameNum;}
     if (frameNum > endframe) endframe = frameNum;  
@@ -854,7 +864,7 @@ namespace MbariVisualEvent {
     //  go through all the remaining BitObjects and create new events for them
     for (currObj = bos.begin(); currObj != bos.end(); ++currObj)
       {
-        itsColorEvents.push_back(new VisualEvent(Token(*currObj, frameNum, metadata), itsDetectionParms));
+        itsColorEvents.push_back(new VisualEvent(Token(*currObj, frameNum, metadata, scaleW, scaleH), itsDetectionParms));
         LINFO("assigning object of area: %i to new event %i",currObj->getArea(),
               itsColorEvents.back()->getEventNum());
       }
@@ -862,7 +872,7 @@ namespace MbariVisualEvent {
 	
   // ######################################################################
   void VisualEventSet::initiateEvents(std::list<BitObject>& bos, int frameNum, \
-                                      const MbariMetaData &metadata)
+                                      const MbariMetaData &metadata, float scaleW, float scaleH )
   {
     if (startframe == -1) {startframe = frameNum; endframe = frameNum;}
     if (frameNum > endframe) endframe = frameNum;  
@@ -885,7 +895,7 @@ namespace MbariVisualEvent {
     // now go through all the remaining BitObjects and create new events for them
     for (currObj = bos.begin(); currObj != bos.end(); ++currObj)
       {
-        itsEvents.push_back(new VisualEvent(Token(*currObj, frameNum, metadata), itsDetectionParms));
+        itsEvents.push_back(new VisualEvent(Token(*currObj, frameNum, metadata, scaleW, scaleH), itsDetectionParms));
         LINFO("assigning object of area: %i to new event %i",currObj->getArea(),
               itsEvents.back()->getEventNum());
       }

@@ -99,8 +99,6 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
  @param maxEvolveTime the maximum time to evolve the brain before stopping
  @param maxNumSalSpots the maximum number of salient locations extracted before stopping
  @param framenum the frame number 
- @param scaleW the scale factor in width between the original frame input and image
- @param scaleH the scale factor in height between the original frame input and image
  sent to the brain 
  *
  *If either @param maxEolveTime or @param maxNumSalSpots
@@ -113,9 +111,7 @@ list<WTAwinner> getSalientWinners(
         nub::soft_ref<SimEventQueue> seq,
         float maxEvolveTime,
         int maxNumSalSpots,
-        int framenum,
-        float scaleW,
-        float scaleH);
+        int framenum);
 
 
 //! returns the winners in the graph based segmented color bit image
@@ -123,9 +119,7 @@ list<WTAwinner> getSalientWinners(
  * here we use it to extract winners based on colorized values
  */
 std::list<WTAwinner> getGraphWinners(const Image<PixRGB<byte> >& graphBitImg,
-        int framenum,
-        float scaleW,
-        float scaleH);
+        int framenum);
  
 //! returns the BitObjects at the most winning locations points
 /*!*@param bitImg a binary image used for extracting BitObjects at the 

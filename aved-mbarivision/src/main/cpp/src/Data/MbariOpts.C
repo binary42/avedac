@@ -89,9 +89,9 @@ const ModelOptionDef OPT_MDPMosaicBenthicStills =
     "--mbari-segment-algorithm-input-image=Luminance --mbari-color-space=RGB "
     "--mbari-saliency-input-image=Raw --levelspec=0-3,2-5,2 --mbari-save-original-frame-spec "
     "--mbari-max-evolve-msec=2000 --vc-type=OC:5I --use-random=true --mbari-segment-algorithm=GraphCutOnly " 
-    "--shape-estim-mode=ConspicuityMap --foa-radius=30 --fovea-radius=30 "
+    "--shape-estim-mode=ConspicuityMap --foa-radius=60 --fovea-radius=60 "
     "--mbari-cache-size=1 --use-older-version=false --ori-interaction=SubtractMean "
-    "--num-orient=16 --gabor-intens=20.0 --rescale-input=960x540 --ior-type=ShapeEst "
+    "--num-orient=16 --gabor-intens=20.0 --rescale-input=1920x1277 --ior-type=ShapeEst "
     "--maxnorm-type=FancyOne"  };
 const ModelOptionDef OPT_MDPEyeInTheSeaVideo = { MODOPT_ALIAS, "ALIASEyeInTheSeaVideo", &MOC_MBARI, OPTEXP_MRV,
     "Options used for processing Eye-in-the-Sea Video from the  "

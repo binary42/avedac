@@ -162,22 +162,23 @@ int main(const int argc, const char** argv) {
         }
     }
 
-    // get the dimensions of the input frames
+    // get the dimensions of the raw input frames
     Dims dims = ifs->peekDims();
     float scaleW = 1.0f;
-    float scaleH = 1.0f;
+    float scaleH = 1.0f; 
+
+    // get a reference to our original frame source including scaling 
+    const nub::ref<FrameIstream> ref = ifs->getFrameSource(); 
+    const Dims scaledDims = ref->peekDims();
 
     // if the user has selected to retain the original dimensions in the events
-    // get the scaling factors, and unset the resizing in the input frame series
+    // get the scaling factors
     if (dp.itsSaveOriginalFrameSpec) {
-        // get a reference to our original frame source
-        const nub::ref<FrameIstream> ref = ifs->getFrameSource();
-        const Dims origDims = ref->peekDims();
-        scaleW = (float) origDims.w() / (float) dims.w();
-        scaleH = (float) origDims.h() / (float) dims.h();
-        ifs->setModelParamVal(string("InputFrameDims"), Dims(0, 0), MC_RECURSE);
-        ifs->peekDims();
+        scaleW = (float) scaledDims.w() / (float) dims.w();
+        scaleH = (float) scaledDims.h() / (float) dims.h();
     }
+
+    LINFO("------>SCALEW: %f SCALEH: %f", scaleW, scaleH);
 
     int foaRadius;
     const string foar = manager.getOptionValString(&OPT_FOAradius);
@@ -186,7 +187,7 @@ int main(const int argc, const char** argv) {
     // calculate the foa size based on the image size if set to defaults
     // A zero foa radius indicates to set defaults from input image dims
     if (foaRadius == 0) {
-        foaRadius = dims.w() / foaSizeRatio;
+        foaRadius = scaledDims.w() / foaSizeRatio;
         char str[256];
         sprintf(str, "%d", foaRadius);
         manager.setOptionValString(&OPT_FOAradius, str);
@@ -386,15 +387,15 @@ int main(const int argc, const char** argv) {
             // Get the saliency input image
             if (dp.itsSaliencyInputType == SIDiffMean) {
                 if (dp.itsSizeAvgCache > 1) {
-                    img2runsaliency = rescale(avgCache.clampedDiffMean(mbariImg), dims);
+                    img2runsaliency = avgCache.clampedDiffMean(mbariImg);
                 } else
                     LFATAL("ERROR - must specify an imaging cache size "
                         "to use the DiffMean option. Try setting the"
                         "--mbari-cache-size option to something > 1");
             } else if (dp.itsSaliencyInputType == SIRaw) {
-                img2runsaliency = rescale(mbariImg, dims);
+                img2runsaliency = mbariImg;
             } else {
-                img2runsaliency = rescale(mbariImg, dims);
+                img2runsaliency = mbariImg;
             }
 
             rv->output(img2runsaliency, curFrame, "Saliency_input");
@@ -486,8 +487,7 @@ int main(const int argc, const char** argv) {
             rv->output(bitImgMasked, mbariImg.getFrameNum(), "Segment_output");
 
             // update the events with the segmented  images
-            eventSet.updateEvents(bitImgMasked,
-                    curFOE, mbariImg.getFrameNum(), metadata);
+            eventSet.updateEvents(bitImgMasked, curFOE, mbariImg.getFrameNum(), metadata);
 
             // is counter at 0?
             --countFrameDist;
@@ -499,7 +499,7 @@ int main(const int argc, const char** argv) {
                     
                     std::list<WTAwinner> winlist = getSalientWinners(simofs,
                             img2runsaliency, brain, seq, dp.itsMaxEvolveTime, dp.itsMaxWTAPoints,
-                            mbariImg.getFrameNum(), scaleW, scaleH);
+                            mbariImg.getFrameNum());
 
                     if (winlist.size() > 0) rv->output(showAllWinners(winlist, mbariImg, dp.itsMaxDist), mbariImg.getFrameNum(), "Winners");
 
@@ -508,7 +508,7 @@ int main(const int argc, const char** argv) {
                     if (sobjs.size() > 0) rv->output(showAllObjects(sobjs), mbariImg.getFrameNum(), "Salient_Objects");
 
                     // initiate events with these objects
-                    eventSet.initiateEvents(sobjs, mbariImg.getFrameNum(), metadata);
+                    eventSet.initiateEvents(sobjs, mbariImg.getFrameNum(), metadata, scaleW, scaleH);
                 }
             }
 

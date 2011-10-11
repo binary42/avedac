@@ -590,14 +590,14 @@ void MbariXMLParser::add(bool saveNonInterestingEvents,
 	  XMLString::release(&currsizevalue);
 
 	  Point2D<int> p = tke.bitObject.getCentroid();
-	  s6 << p.i;
+	  s6 << (int)((float)p.i*tke.scaleW);
 	  XMLCh* currxstring = XMLString::transcode("CurrX");
 	  XMLCh* currxvalue = XMLString::transcode(s6.str().c_str());
 	  eventObject->setAttribute(currxstring, currxvalue);
 	  XMLString::release(&currxstring);
 	  XMLString::release(&currxvalue);
 
-	  s7 << p.i;
+	  s7 << (int)((float)p.j*tke.scaleH);
 	  XMLCh* currystring = XMLString::transcode("CurrY");
 	  XMLCh* curryvalue = XMLString::transcode(s7.str().c_str());
 	  eventObject->setAttribute(currystring, curryvalue);
@@ -606,7 +606,10 @@ void MbariXMLParser::add(bool saveNonInterestingEvents,
 
 	  Rectangle r = tke.bitObject.getBoundingBox();
 	  std::ostringstream llx,lly,urx,ury;
-	  llx << r.left(); lly << r.bottomI(); urx << r.rightI(); ury << r.top();
+	  llx << (int)((float)r.left()*tke.scaleW); 
+	  lly << (int)((float)r.bottomI()*tke.scaleH); 
+	  urx << (int)((float)r.rightI()*tke.scaleW);
+	  ury << (int)((float)r.top()*tke.scaleH);
 
 	  // create bounding box element and add attributes
 	  XMLCh* boundingboxstring = XMLString::transcode("BoundingBox");
