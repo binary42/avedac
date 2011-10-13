@@ -324,7 +324,9 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg,
 // ######################################################################
 
 std::list<WTAwinner> getGraphWinners(const Image< PixRGB<byte> >& graphBitImg,
-        int framenum) {
+        int framenum,
+	float scaleW,
+	float scaleH) {
 
     std::list<PixRGB<byte> > colors; 
     std::list<WTAwinner> winners;
@@ -351,6 +353,8 @@ std::list<WTAwinner> getGraphWinners(const Image< PixRGB<byte> >& graphBitImg,
             if (found == false) {
                 colors.push_back(seedColor);
                 WTAwinner win = WTAwinner::NONE();
+		win.p.i = (int) ( (float) i*scaleW);
+		win.p.j = (int) ( (float) j*scaleH);
                 win.sv = 0.f;
                 numSpots++;
                 LINFO("##### winner #%d found at [%d; %d]  frame: %d#####",
@@ -371,7 +375,9 @@ list<WTAwinner> getSalientWinners(
         nub::soft_ref<SimEventQueue> seq,
         float maxEvolveTime,
         int maxNumSalSpots,
-        int framenum
+        int framenum,
+	float scaleW,
+	float scaleH
         ) {
     std::list<WTAwinner> winners;
     int numSpots = 0;
@@ -402,7 +408,6 @@ list<WTAwinner> getSalientWinners(
             eif(new SimEventInputFrame(brain.get(),
             GenericFrame(img),
             framenum));
-
     seq->post(eif);
  
     try { 
@@ -419,6 +424,8 @@ list<WTAwinner> getSalientWinners(
             if (SeC<SimEventWTAwinner> e = seq->check<SimEventWTAwinner > (0)) {
 
                 WTAwinner win = e->winner();
+		win.p.i = (int) ((float) win.p.i * scaleW);
+		win.p.j = (int) ((float) win.p.j * scaleH);
 
                 LINFO("##### winner #%d found at [%d; %d] with %f voltage frame: %d#####",
                         numSpots, win.p.i, win.p.j, win.sv, framenum);

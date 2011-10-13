@@ -85,21 +85,21 @@ const ModelOptionDef OPT_MDPMosaicBenthicStills =
     "mbari-mosaic-benthic-stills", '\0',"",
     "--mbari-saliency-dist=1 --mbari-tracking-mode=None "
     "--mbari-keep-boring-WTA-points=yes --mbari-max-WTA-points=20 "
-    "--mbari-save-non-interesting-events=yes --mbari-segment-graph-parameters=0.95,500,250 "
+    "--mbari-save-non-interesting-events=yes --mbari-segment-graph-parameters=0.90,500,50 "
     "--mbari-segment-algorithm-input-image=Luminance --mbari-color-space=RGB "
-    "--mbari-saliency-input-image=Raw --levelspec=0-3,2-5,2 --mbari-save-original-frame-spec "
-    "--mbari-max-evolve-msec=2000 --vc-type=OC:5I --use-random=true --mbari-segment-algorithm=GraphCutOnly " 
-    "--shape-estim-mode=ConspicuityMap --foa-radius=60 --fovea-radius=60 "
+    "--mbari-saliency-input-image=Raw --levelspec=0-3,2-5,2 --mbari-save-original-frame-dims "
+    "--mbari-max-evolve-msec=2500 --vc-type=OC:5I --use-random=true --mbari-segment-algorithm=GraphCutOnly " 
+    "--shape-estim-mode=ConspicuityMap --foa-radius=30 --fovea-radius=30 "
     "--mbari-cache-size=1 --use-older-version=false --ori-interaction=SubtractMean "
-    "--num-orient=16 --gabor-intens=20.0 --rescale-input=1920x1277 --ior-type=ShapeEst "
-    "--maxnorm-type=FancyOne"  };
+    "--num-orient=16 --gabor-intens=20.0 --rescale-input=1064x708 --ior-type=ShapeEst "
+    "--maxnorm-type=FancyOne --mbari-rescale-saliency-input=850x566 --mbari-se-size=1 "  };
 const ModelOptionDef OPT_MDPEyeInTheSeaVideo = { MODOPT_ALIAS, "ALIASEyeInTheSeaVideo", &MOC_MBARI, OPTEXP_MRV,
     "Options used for processing Eye-in-the-Sea Video from the  "
     "Ocean Research and Conservation Association (ORCA)",
     "mbari-eits-video", '\0',"", 
     "--mbari-tracking-mode=KalmanFilter "
     "--mbari-keep-boring-WTA-points=yes "
-    "--mbari-save-non-interesting-events=yes --mbari-save-original-frame-spec "
+    "--mbari-save-non-interesting-events=yes --mbari-save-original-frame-dims "
     "--mbari-segment-algorithm-input-image=Luminance --mbari-color-space=RGB "
     "--mbari-saliency-input-image=Raw --mbari-cache-size=2 "
     "--mbari-max-WTA-points=15 --mbari-max-evolve-msec=1000 "
@@ -405,10 +405,14 @@ const ModelOptionDef OPT_MDPsaveNonInterestingEvents =
   { MODOPT_FLAG, "OPT_MDPsaveNonInterestingEvents", &MOC_MBARI, OPTEXP_MRV,
     "Save non-interesting events. Default is to remove non-interesting events, set to true to save",
     "mbari-save-non-interesting-events", '\1', "", "false" };
-const ModelOptionDef OPT_MDPsaveOriginalFrameSpec =
-  { MODOPT_FLAG, "OPT_MDPsaveOriginalFrameSpec", &MOC_MBARI, OPTEXP_MRV,
-    "Save events in original frame size specs, but run saliency computation on reduced frame size. This does nothing if the frames are not resized with the --rescale-input option. Default is set to false",
-    "mbari-save-original-frame-spec", '\0', "", "false" };
+const ModelOptionDef OPT_MDPsaveOriginalFrameDims =
+  { MODOPT_FLAG, "OPT_MDPsaveOriginalFrameDims", &MOC_MBARI, OPTEXP_MRV,
+    "Save XML events in original frame size dimension, but run algorithm on reduced frame size. This does nothing if the frames are not resized with the --rescale-input option. Default is set to false",
+    "mbari-save-original-frame-dims", '\0', "", "false" };
+const ModelOptionDef OPT_MDPsaliencyInputFrameDims =
+  { MODOPT_ARG(Dims), "OPT_MDPsaliencyInputFrameDims", &MOC_MBARI, OPTEXP_MRV,
+    "Rescale saliency input image frame to fixed dims, or 0x0 for no rescaling",
+    "mbari-rescale-saliency-input", '\0', "<width>x<height>", "0x0" };
 const ModelOptionDef OPT_MDPminStdDev =
   { MODOPT_ARG_FLOAT, "OPT_MDPminStdDev", &MOC_MBARI, OPTEXP_MRV,
     "Minimum std deviation of input image required for processing. This is useful to remove black frames, or frames with high visual noise",

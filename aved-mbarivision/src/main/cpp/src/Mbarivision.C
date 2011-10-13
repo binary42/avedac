@@ -163,20 +163,36 @@ int main(const int argc, const char** argv) {
     }
 
     // get the dimensions of the raw input frames
-    Dims dims = ifs->peekDims();
-    float scaleW = 1.0f;
-    float scaleH = 1.0f; 
+    Dims scaledDims = ifs->peekDims();
+    float scaleWevents = 1.0f;
+    float scaleHevents = 1.0f; 
+    float scaleWwinners = 1.0f;
+    float scaleHwinners = 1.0f; 
 
-    // get a reference to our original frame source including scaling 
+    // get a reference to (potentially) scaled input frames
     const nub::ref<FrameIstream> ref = ifs->getFrameSource(); 
-    const Dims scaledDims = ref->peekDims();
+    const Dims dims = ref->peekDims();
 
     // if the user has selected to retain the original dimensions in the events
     // get the scaling factors
-    if (dp.itsSaveOriginalFrameSpec) {
-        scaleW = (float) scaledDims.w() / (float) dims.w();
-        scaleH = (float) scaledDims.h() / (float) dims.h();
+    if (dp.itsSaveOriginalFrameDims) {
+        scaleWevents = (float) dims.w() / (float) scaledDims.w();
+        scaleHevents = (float) dims.h() / (float) scaledDims.h();
     }
+
+    const string sinput = manager.getOptionValString(&OPT_MDPsaliencyInputFrameDims);
+    Dims sinputDims; convertFromString(sinput, sinputDims);
+    if (sinputDims.w() == 0 && sinputDims.h() == 0) {
+	sinputDims = scaledDims;
+    }
+    else {
+        scaleWwinners = (float) scaledDims.w() / (float) sinputDims.w();
+        scaleHwinners = (float) scaledDims.h() / (float) sinputDims.h();
+    }
+    
+    LINFO("Raw input dims: %dx%d", dims.w(), dims.h());
+    LINFO("Scaled input dims: %dx%d", scaledDims.w(), scaledDims.h());
+    LINFO("Saliency input dims: %dx%d", sinputDims.w(), sinputDims.h());
 
     int foaRadius;
     const string foar = manager.getOptionValString(&OPT_FOAradius);
@@ -185,14 +201,14 @@ int main(const int argc, const char** argv) {
     // calculate the foa size based on the image size if set to defaults
     // A zero foa radius indicates to set defaults from input image dims
     if (foaRadius == 0) {
-        foaRadius = scaledDims.w() / foaSizeRatio;
+        foaRadius = sinputDims.w() / foaSizeRatio;
         char str[256];
         sprintf(str, "%d", foaRadius);
         manager.setOptionValString(&OPT_FOAradius, str);
     }
 
     // initialize derived detection parameters
-    const int circleRadius = dims.w() / circleRadiusRatio;
+    const int circleRadius = sinputDims.w() / circleRadiusRatio;
 
     // get reference to the SimEventQueue
     nub::ref<SimEventQueue> seq = seqc->getQ();
@@ -203,7 +219,7 @@ int main(const int argc, const char** argv) {
     int retval = 0;
 
     // set defaults for detection model parameters
-    DetectionParametersSingleton::initialize(dp, dims, foaRadius);
+    DetectionParametersSingleton::initialize(dp, scaledDims, foaRadius);
 
     // get graph parameters
     vector<float> p = segmentation.getFloatParameters(dp.itsSegmentGraphParameters);
@@ -385,15 +401,15 @@ int main(const int argc, const char** argv) {
             // Get the saliency input image
             if (dp.itsSaliencyInputType == SIDiffMean) {
                 if (dp.itsSizeAvgCache > 1) {
-                    img2runsaliency = avgCache.clampedDiffMean(mbariImg);
+                    img2runsaliency = rescale(avgCache.clampedDiffMean(mbariImg),sinputDims);
                 } else
                     LFATAL("ERROR - must specify an imaging cache size "
                         "to use the DiffMean option. Try setting the"
                         "--mbari-cache-size option to something > 1");
             } else if (dp.itsSaliencyInputType == SIRaw) {
-                img2runsaliency = mbariImg;
+                img2runsaliency = rescale(mbariImg, sinputDims);
             } else {
-                img2runsaliency = mbariImg;
+                img2runsaliency = rescale(mbariImg, sinputDims);
             }
 
             rv->output(img2runsaliency, curFrame, "Saliency_input");
@@ -497,7 +513,7 @@ int main(const int argc, const char** argv) {
                     
                     std::list<WTAwinner> winlist = getSalientWinners(simofs,
                             img2runsaliency, brain, seq, dp.itsMaxEvolveTime, dp.itsMaxWTAPoints,
-                            mbariImg.getFrameNum());
+                            mbariImg.getFrameNum(), scaleWwinners, scaleHwinners);
 
                     if (winlist.size() > 0) rv->output(showAllWinners(winlist, mbariImg, dp.itsMaxDist), mbariImg.getFrameNum(), "Winners");
 
@@ -506,7 +522,7 @@ int main(const int argc, const char** argv) {
                     if (sobjs.size() > 0) rv->output(showAllObjects(sobjs), mbariImg.getFrameNum(), "Salient_Objects");
 
                     // initiate events with these objects
-                    eventSet.initiateEvents(sobjs, mbariImg.getFrameNum(), metadata, scaleW, scaleH);
+                    eventSet.initiateEvents(sobjs, mbariImg.getFrameNum(), metadata, scaleWevents, scaleHevents);
                 }
             }
 
