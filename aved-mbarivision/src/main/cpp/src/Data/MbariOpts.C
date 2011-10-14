@@ -109,7 +109,7 @@ const ModelOptionDef OPT_MDPEyeInTheSeaVideo = { MODOPT_ALIAS, "ALIASEyeInTheSea
     "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst "
     "--mbari-max-event-area=30000 --mbari-min-std-dev=10.0 "
     "--mbari-segment-algorithm=GraphCutOnly "
-    "--mbari-event-expiration-frames=3 --rescale-input=320x240 "
+    "--mbari-event-expiration-frames=3 --mbari-rescale-saliency-input=320x240 "
     "--mbari-segment-graph-parameters=0.5,1500,500"  };
 const ModelOptionDef OPT_MDPBenthicVideo =
   { MODOPT_ALIAS, "ALIASBenthicVideo", &MOC_MBARI, OPTEXP_MRV,
