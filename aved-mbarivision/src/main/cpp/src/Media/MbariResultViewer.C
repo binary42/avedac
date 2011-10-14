@@ -750,7 +750,8 @@ void MbariResultViewer::saveVisualEventSetToXML(std::list<MbariVisualEvent::Visu
     if (!XMLfileCreated)
         LFATAL("Error: Create an XML document first with createXMLDocument()");
     else {
-		itsXMLParser->add(itsSaveNonInterestingEvents, eventList, eventframe, eventframetimecode);
+	    itsXMLParser->add(itsSaveNonInterestingEvents, eventList, eventframe, eventframetimecode);
+            itsXMLParser->writeDocument(itsSaveXMLEventSetName.getVal().c_str());
 	}
 
     if (fr.getLast() == eventframe) {
