@@ -523,6 +523,11 @@ int main(const int argc, const char** argv) {
 
                     // initiate events with these objects
                     eventSet.initiateEvents(sobjs, mbariImg.getFrameNum(), metadata, scaleWevents, scaleHevents);
+
+		    // if not tracking, close all events
+		    if (dp.itsTrackingMode == TMNone) {
+			eventSet.closeAll(); 
+		    } 
                 }
             }
 
@@ -618,6 +623,12 @@ int main(const int argc, const char** argv) {
             list<VisualEvent *>::iterator i;
             for (i = eventListToSave.begin(); i != eventListToSave.end(); ++i)
                 (*i)->flagForDelete();
+
+	    //run clean-up again for non-tracking case
+	    if (dp.itsTrackingMode == TMNone) {
+            	eventSet.cleanUp(mbariImg.getFrameNum());
+	    }
+
             while (!eventFrameList.empty()) eventFrameList.pop_front();
             while (!eventListToSave.empty()) eventListToSave.pop_front();
         }
