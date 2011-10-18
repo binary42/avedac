@@ -39,13 +39,11 @@ import org.jdesktop.swingworker.SwingWorker;
 import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.message.NonModalMessageDialog;
 import org.mbari.aved.ui.model.EventObjectContainer;
-import org.mbari.aved.ui.model.SummaryModel;
 import org.mbari.aved.ui.progress.ProgressDisplay;
 import org.mbari.aved.ui.utils.URLUtils;
 
 //~--- JDK imports ------------------------------------------------------------
 
-import java.awt.Cursor;
 
 import java.io.File;
 import java.io.InputStream;
@@ -233,7 +231,7 @@ public class ImportXMLWorker extends SwingWorker {
                 // assume it is in the same path as the XML,
                 // and set its root to the same path as the XML
                 if (video.getParent() == null) {
-                    String v = "file:" + xmlFile.getParent() + "/" + video.getName();
+                   String v = "file:" + xmlFile.getParent() + "/" + video.getName();
 
                     model.getSummaryModel().setInputSourceURL(new URL(v));
                 } else {
@@ -241,7 +239,10 @@ public class ImportXMLWorker extends SwingWorker {
                 }
             }
         } else {
-            model.getSummaryModel().setInputSourceURL(null);
+            // if no video source identify, set it to a default AVI file
+            // this is completely arbitrary
+            String defaultSource = "file:" + xmlFile.getParent() + "/" + xmlFile.getName() + ".avi";
+            model.getSummaryModel().setInputSourceURL(new URL(defaultSource));
         }
 
         long                 key   = 0;

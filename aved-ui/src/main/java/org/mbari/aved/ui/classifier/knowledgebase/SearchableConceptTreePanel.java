@@ -267,7 +267,7 @@ public class SearchableConceptTreePanel extends SearchableTreePanel {
         Concept          c           = concept;
 
         while (c != null) {
-            conceptList.add(c);
+            conceptList.add(c); 
             c = (Concept) c.getParentConcept();
         }
 

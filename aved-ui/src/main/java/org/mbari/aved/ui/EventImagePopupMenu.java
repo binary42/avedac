@@ -105,11 +105,13 @@ public class EventImagePopupMenu {
     public void show(Component invoker, int x, int y) {
 
         // Create the popupMenu menu. 
-        popupMenu = new JPopupMenu(ApplicationInfo.getName() + " Event: " + Long.toString(event.getObjectId()));
-        popupMenu.setToolTipText(event.getShortDescription());
-        popupMenu.add(imagePanel);
-        displayImage();
-        popupMenu.show(invoker, x, y);
+        if (event != null) {
+            popupMenu = new JPopupMenu(ApplicationInfo.getName() + " Event: " + Long.toString(event.getObjectId()));
+            popupMenu.setToolTipText(event.getShortDescription());
+            popupMenu.add(imagePanel);
+            displayImage();
+            popupMenu.show(invoker, x, y);
+        }
     }
 
     /**
@@ -142,12 +144,10 @@ public class EventImagePopupMenu {
             }
 
             // TODO: push this logic down into the PlayerView
-            // it knows how to best display the timecode
-            if (eventObj != null) {
+            // it knows how to best display the timecode 
                 displayEventImage(eventObj, src);
                 //TODO: add this in displayTimecodeFrameString(eventObj.getFrameEventSet().getTimecode(),
-                //            eventObj.getFrameEventSet().getFrameNumber());
-            }
+                //            eventObj.getFrameEventSet().getFrameNumber()); 
         } catch (FrameOutRangeException e) {
 
             // If image is missing display message
@@ -171,7 +171,7 @@ public class EventImagePopupMenu {
     public void displayEventImage(EventObject eventObj, File frame) {
         PlanarImage image = null;
 
-        if (eventObj != null) {
+        if (eventObj != null && frame != null) {
             try {
 
                 // Load up the frame, or use missing image it is undefined

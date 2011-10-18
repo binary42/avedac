@@ -15,6 +15,25 @@
     <version>0.4.3-SNAPSHOT</version>
     <url>http://maven.apache.org</url>
     <build>
+        <!-- Grab the properties to filter by -->
+        <filters>
+            <filter>src/main/app-filters/${environment}.properties</filter> 
+        </filters>   
+        <!-- Make sure that filtering is turned on so when the properties files
+			are copied, the proper substitutions happen -->
+        <resources>
+            <resource>
+                <directory>src/main/app-resources</directory> 
+                <filtering>true</filtering>
+            </resource>           
+            <resource>
+                <directory>src/main/app-filters</directory>
+                <filtering>true</filtering>
+            </resource>       
+            <resource>
+                <directory>src/main/resources</directory>  
+            </resource>                                 
+        </resources> 
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -26,13 +45,12 @@
             </plugin>
         </plugins>
     </build>
-    <profiles>
+    <profiles> 
+         <!-- for incrementing the version in the About box dialog -->
         <profile>
             <id>version-increment</id>
             <build>
                 <plugins>
-                    <!-- This creates the version info used to display in the
-                    About box dialog-->
                     <plugin>
                         <artifactId>maven-antrun-plugin</artifactId>
                         <executions>
@@ -81,13 +99,15 @@
         </profile>
         <profile>
             <id>Linux32</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
+            <activation> 
                 <os>
                     <name>Linux</name>
                     <arch>i386</arch>
                 </os>
-            </activation>
+            </activation>     
+            <properties>
+                <environment>external</environment> 
+            </properties>         
             <dependencies>
                 <dependency>
                     <groupId>org.mbari.aved.classifier</groupId>
@@ -107,7 +127,7 @@
             </dependencies>
             <build>
                 <plugins>
-                    <!--This plugin will unpack and include the necessarily libraries for
+                    <!--This plugin will unpack and include the necessary libraries for
             deploying this on a separate machine-->
                     <plugin>
                         <groupId>org.mbari.aved.classifier</groupId>
@@ -232,7 +252,10 @@
                     <name>Linux</name>
                     <arch>amd64</arch>
                 </os>
-            </activation>
+            </activation>       
+            <properties>
+                <environment>external</environment> 
+            </properties>    
             <dependencies>
                 <dependency>
                     <groupId>org.mbari.aved.classifier</groupId>
@@ -252,7 +275,7 @@
             </dependencies>
             <build>
                 <plugins>
-                    <!--This plugin will unpack and include the necessarily libraries for
+                    <!--This plugin will unpack and include the necessary libraries for
             deploying this on a separate machine-->
                     <plugin>
                         <groupId>org.mbari.aved.classifier</groupId>
@@ -367,13 +390,15 @@
         </profile>
         <profile>
             <id>Mac32</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
+            <activation> 
                 <os>
                     <name>MacOSX</name>
                     <arch>i386</arch>
                 </os>
-            </activation>
+            </activation>     
+            <properties>
+                <environment>external</environment> 
+            </properties>    
             <dependencies>
                 <dependency>
                     <groupId>org.mbari.aved.classifier</groupId>
@@ -393,7 +418,7 @@
             </dependencies>
             <build>
                 <plugins>
-                    <!--This plugin will unpack and include the necessarily libraries for
+                    <!--This plugin will unpack and include the necessary libraries for
             deploying this on a separate machine-->
                     <plugin>
                         <groupId>org.mbari.aved.classifier</groupId>
@@ -415,7 +440,7 @@
 
                     <!-- This plugin will create an assembly of examples, 
                     and dynamic libraries needed for executing the  user interface -->
-                   <plugin>
+                    <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
                         <inherited>false</inherited>
                         <executions>
@@ -494,13 +519,15 @@
 
         <profile>
             <id>Mac64</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
+            <activation> 
                 <os>
                     <name>MacOSX</name>
                     <arch>x86_64</arch>
-                </os>
+                </os> 
             </activation>
+            <properties>
+                <environment>external</environment> 
+            </properties>    
             <dependencies>
                 <dependency>
                     <groupId>org.mbari.aved.classifier</groupId>
@@ -520,7 +547,7 @@
             </dependencies>
             <build>
                 <plugins>
-                    <!--This plugin will unpack and include the necessarily libraries for
+                    <!--This plugin will unpack and include the necessary libraries for
             deploying this on a separate machine-->
                     <plugin>
                         <groupId>org.mbari.aved.classifier</groupId>
@@ -542,7 +569,7 @@
 
                     <!-- This plugin will create an assembly of examples,
                     and dynamic libraries needed for executing the user interface -->
-                   <plugin>
+                    <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
                         <inherited>false</inherited>
                         <executions>
@@ -765,7 +792,7 @@
             <artifactId>foxtrot</artifactId>
             <version>2.0</version>
         </dependency>
-         <dependency>
+        <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>3.0</version>
@@ -775,6 +802,26 @@
             <artifactId>vars-knowledgebase</artifactId>
             <version>6.0.4-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>vars-redux</groupId>
+            <artifactId>vars-shared-ui</artifactId>
+            <version>6.0.4-SNAPSHOT</version>
+        </dependency>   
+        <dependency>
+            <groupId>vars-redux</groupId>
+            <artifactId>vars-jpa</artifactId>
+            <version>6.0.4-SNAPSHOT</version>
+        </dependency> 
+        <dependency>
+            <groupId>vars-redux</groupId>
+            <artifactId>vars-core</artifactId>
+            <version>6.0.4-SNAPSHOT</version>
+        </dependency>   
+        <dependency>
+            <groupId>org.bushe</groupId>
+            <artifactId>eventbus</artifactId>
+            <version>1.4</version>
+        </dependency> 
         <dependency>
             <groupId>com.l2fprod</groupId>
             <artifactId>l2fprod</artifactId>
@@ -799,11 +846,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>1.5.6</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mbari</groupId>
-            <artifactId>mbarix4j</artifactId>
-            <version>1.5</version>
         </dependency> 
         <dependency>
             <groupId>com.jgoodies</groupId>
@@ -830,15 +872,16 @@
             <artifactId>vars-castor</artifactId>
             <version>5.1</version>
             <scope>compile</scope>
-        </dependency>
+        </dependency>     
+        <dependency>
+            <groupId>org.mbari</groupId>
+            <artifactId>mbarix4j</artifactId>
+            <version>1.8.3</version>
+            <scope>compile</scope>
+        </dependency> 
         <dependency>
             <groupId>org.mbari</groupId>
             <artifactId>vars-conf</artifactId>
-            <version>5.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mbari</groupId>
-            <artifactId>vars-core</artifactId>
             <version>5.1</version>
         </dependency>
         <dependency>
@@ -865,6 +908,18 @@
             <groupId>xerces</groupId>
             <artifactId>xerces</artifactId>
             <version>1.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.swinglabs</groupId>
+            <artifactId>swingx-core</artifactId>
+            <version>1.6.2-2</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.mbari</groupId>
+            <artifactId>vars-core</artifactId>
+            <version>5.1</version>
+            <type>jar</type>
         </dependency>
     </dependencies>
     <properties>

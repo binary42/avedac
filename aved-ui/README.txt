@@ -24,7 +24,7 @@ or
 
 3) Unzip the created zip files in the target directory
 
-4) Open then PackageMaker document and drag in the entire folder aved-ui-0.4.3-SNAPSHOT-mac64-assembly and  aved-ui-0.4.3-SNAPSHOT
+4) Open the Mac PackageMaker document and drag in the entire folder aved-ui-0.4.3-SNAPSHOT-mac64-assembly and  aved-ui-0.4.3-SNAPSHOT
 
 5) In the Configuration tab, set the Destination for both folders to /Applications/AVEDac, and set the distribution title to AVEDac
 

@@ -465,7 +465,7 @@ public final class ApplicationController extends AbstractController implements M
     }
 
     /**
-     * Helper function to import video files to associate with a XML file
+     * Helper function to import mpeg video clips of results to associate with a XML file
      *
      * @param xmlfile
      *            The xmlfile to associate with the video files
@@ -525,6 +525,7 @@ public final class ApplicationController extends AbstractController implements M
 
         return null;
     }
+    
 
     /** Starts a separate worker to export the processed results */
     private void runExportXML(File xmlfile) throws Exception {

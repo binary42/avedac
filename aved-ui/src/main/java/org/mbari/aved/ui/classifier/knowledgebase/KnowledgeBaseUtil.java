@@ -28,14 +28,22 @@ package org.mbari.aved.ui.classifier.knowledgebase;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-
 import com.google.inject.Injector;
+
+import org.mbari.aved.ui.utils.PropertiesUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import vars.ToolBelt;
+
 import vars.knowledgebase.Concept;
 import vars.knowledgebase.ConceptDAO;
 import vars.knowledgebase.ui.Lookup;
+
+//~--- JDK imports ------------------------------------------------------------
+
+import java.util.Properties;
 
 /**
  *  * Utility to check if MBARI knowledge base is available
@@ -45,23 +53,33 @@ public class KnowledgeBaseUtil {
     private static final Logger log = LoggerFactory.getLogger(KnowledgeBaseUtil.class);
 
     /**
+     * This is a properties object to house the properties related to the DSS
+     * deployment
+     */
+    private static final Properties avedacProperties = PropertiesUtils.getAVEDacProperties();
+
+    /**
      * Checks to see if the MBARI knowledge base is available.  This currently
      * only works within the MBARI firewall.
-     *           
-     * @return true if the knowledgebase is available, false otherwise
+     *
+     * @return true if the VARS knowledgebase is available, false otherwise
      */
     public static boolean isKnowledgebaseAvailable() {
         boolean available = false;
+        
+        boolean enabled   = Boolean.valueOf(avedacProperties.getProperty("vars.enable"));
 
-        try {
-            Injector injector = (Injector) Lookup.getGuiceInjectorDispatcher().getValueObject();
-            ToolBelt toolBelt = injector.getInstance(ToolBelt.class);
-            ConceptDAO dao = toolBelt.getKnowledgebaseDAOFactory().newConceptDAO();
-            Concept    root = dao.findRoot();
+        if (enabled) {
+            try {
+                Injector   injector = (Injector) Lookup.getGuiceInjectorDispatcher().getValueObject();
+                ToolBelt   toolBelt = injector.getInstance(ToolBelt.class);
+                ConceptDAO dao      = toolBelt.getKnowledgebaseDAOFactory().newConceptDAO();
+                Concept    root     = dao.findRoot();
 
-            available = (root != null);
-        } catch (Exception e) {
-            log.info("Failed to connect to knowledebase", e);
+                available = (root != null);
+            } catch (Exception e) {
+                log.info("Failed to connect to knowledebase", e);
+            }
         }
 
         return available;
