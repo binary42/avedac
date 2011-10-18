@@ -123,6 +123,8 @@ public class EventXmlDirectoryModel extends Model {
 
     static private List<File> getFileListingNoSort(File aStartingDir) throws FileNotFoundException {
         List<File> result       = new ArrayList<File>();
+	
+	try {
         File[]     filesAndDirs = aStartingDir.listFiles();
         List<File> filesDirs    = Arrays.asList(filesAndDirs);
 
@@ -134,11 +136,16 @@ public class EventXmlDirectoryModel extends Model {
             } else {
                 List<File> list = getFileListingNoSort(file);
 
-                for (File f : list) {
+		if (list != null) {
+                  for (File f : list) {
                     result.add(f);
-                }
+                  }	
+		}
             }
         }
+        } catch (Exception ex) {
+            Logger.getLogger(EventXmlDirectoryModel.class.getName()).log(Level.SEVERE, null, ex);
+	}
 
         return result;
     }

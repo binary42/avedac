@@ -31,7 +31,7 @@ you need:
         c++ build, or otherwise.
 
         Download Maven from http://maven.apache.org/download.html
-	version 2.2.1
+	version 3.0.2
 
 	Maven is a Java tool, so you must have Java installed in order to
 	proceed. More precisely, you need a Java Development Kit (JDK), the Java
@@ -49,18 +49,21 @@ you need:
     1.4. The Java Advanced Imaging Binary version 1.1.3 for Linux/MacOSX
 	from here:
 	
-	https://jai.dev.java.net/binary-builds.html
+        http://download.java.net/media/jai/builds/release/1_1_3/
 
-    1.5. The The Java Advanced Imaging Image I/O Tools for Linux/MacOSX
+	Installation instructions are here:
+
+        http://download.java.net/media/jai/builds/release/1_1_3/INSTALL.html
+
+    1.5. The The Java Advanced Imaging Image I/O Tools version 1.1.0 for Linux/MacOSX
          from here:
 
-	https://jai-imageio.dev.java.net/binary-builds.html
-
+	http://download.java.net/media/jai-imageio/builds/release/1.1/
 
     1.6. A Matlab installation on your machine that includes a license for:
 
-        a.  The Matlab Image Processing Toolkit version: 4.11 (R2010b)
-        b.  The Matlab Compiler version: 4.11 (R2010b)
+        a.  The Matlab Image Processing Toolkit version: 4.11 (R2010b) or higher 
+        b.  The Matlab Compiler version: 4.11 (R2010b) or higher 
 
 
         Matlab is required to build the aved-classifier module
