@@ -560,7 +560,7 @@ public class TranscodeProcess extends Thread {
                 if (lcOSName.startsWith("mac")) {
                    transcodecmd = transcodecmd + " --progress_rate 100 ";
                 } else { 
-                   transcodecmd = transcodecmd + " -q 1 --print_status 100";
+                   transcodecmd = transcodecmd + " -q 1 ";
                 } 
             }
             /** Check if this file has a ISO8601 timecode timestamp and extract
