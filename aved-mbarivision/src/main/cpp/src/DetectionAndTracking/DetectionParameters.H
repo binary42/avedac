@@ -101,7 +101,7 @@ parameters*/
 #define DEFAULT_SAVE_NON_INTERESTING false
 // Default way to handle saving events in the original
 // frame size specification
-#define DEFAULT_SAVE_ORG_FRAME_DIMS false
+#define DEFAULT_SAVE_ORG_FRAME_SPEC false
 // Default color space for computing saliency
 #define DEFAULT_COLOR_SPACE SAColorRGB
 // Default minimum frame standard deviation for processing. Anything below
@@ -126,12 +126,10 @@ public:
     int itsMaxWTAPoints;
     //! @param  itsSaveNonInteresting = true if want to keep non-interesting events 
     bool itsSaveNonInteresting;
-    //! @param  itsSaveOriginalFrameDims = true if want to save events in original frame size
-    bool itsSaveOriginalFrameDims;
+    //! @param  itsSaveOriginalFrameSpec = true if want to save events in original frame size
+    bool itsSaveOriginalFrameSpec;
      //! @param itsEventExpirationFrames= How long to keep an event in memory before removing it if no bit objects
     // found to combine with the event. Useful for noisy video or reduced frame rate video where tracking problems occur
-    Dims itsSaliencyInputFrameDims;
-     //! @param itsSaliencyInputFrameDims= Frame dimension of saliency input image. 
     int itsEventExpirationFrames;
     //! @param itsTrackingMode = tracking mode used to find event
     TrackingMode itsTrackingMode;
@@ -235,7 +233,6 @@ private:
     OModelParam<std::string> itsSegmentGraphParameters;
     OModelParam<int> itsCleanupStructureElementSize;
     OModelParam<SaliencyInputImageType> itsSaliencyInputType;
-    OModelParam<Dims> itsSaliencyInputFrameDims;
     OModelParam<std::string> itsMaskPath;
     OModelParam<int> itsMaskXPosition;
     OModelParam<int> itsMaskYPosition;
@@ -250,7 +247,7 @@ private:
     OModelParam<int> itsEventExpirationFrames;
     OModelParam<bool> itsKeepWTABoring;
     OModelParam<bool> itsSaveNonInteresting;
-    OModelParam<bool> itsSaveOriginalFrameDims; 
+    OModelParam<bool> itsSaveOriginalFrameSpec; 
 };
 
 #endif

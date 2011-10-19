@@ -111,9 +111,7 @@ list<WTAwinner> getSalientWinners(
         nub::soft_ref<SimEventQueue> seq,
         float maxEvolveTime,
         int maxNumSalSpots,
-        int framenum,
-	float scaleW,
-	float scaleH);
+        int framenum);
 
 
 //! returns the winners in the graph based segmented color bit image
@@ -121,9 +119,7 @@ list<WTAwinner> getSalientWinners(
  * here we use it to extract winners based on colorized values
  */
 std::list<WTAwinner> getGraphWinners(const Image<PixRGB<byte> >& graphBitImg,
-        int framenum,
-	float scaleW,
-	float scaleH);
+        int framenum);
  
 //! returns the BitObjects at the most winning locations points
 /*!*@param bitImg a binary image used for extracting BitObjects at the 

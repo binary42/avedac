@@ -48,8 +48,7 @@ DetectionParameters::DetectionParameters()
 : itsMaxEvolveTime(DEFAULT_MAX_EVOLVE_TIME),
 itsMaxWTAPoints(DEFAULT_MAX_WTA_POINTS),
 itsSaveNonInteresting(DEFAULT_SAVE_NON_INTERESTING),
-itsSaveOriginalFrameDims(DEFAULT_SAVE_ORG_FRAME_DIMS),
-itsSaliencyInputFrameDims(Dims(0,0)),
+itsSaveOriginalFrameSpec(DEFAULT_SAVE_ORG_FRAME_SPEC),
 itsTrackingMode(DEFAULT_TRACKING_MODE),
 itsMaxDist(40),
 itsMaxEventFrames(DEFAULT_MAX_EVENT_FRAMES),
@@ -89,7 +88,6 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     os << "\tsegmentalgorithmtype:" << segmentAlgorithmType(itsSegmentAlgorithmType);
     os << "\tsegmentadaptivemoffset:" << itsSegmentAdaptiveOffset;
     os << "\tsaliencyinputimagetype:" << saliencyInputImageType(itsSaliencyInputType);
-    os << "\tsaliencyinputframedims:" << convertToString(itsSaliencyInputFrameDims);
     os << "\tsegmentgraphparameters:" << itsSegmentGraphParameters;
     os << "\tcleanupelementsize:" << itsCleanupStructureElementSize;
     os << "\tminframes:" << itsMinEventFrames;
@@ -100,7 +98,7 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     os << "\tmaxevolvetime(msecs):" << itsMaxEvolveTime;
     os << "\tmaxwtapoints:" << itsMaxWTAPoints;
     os << "\tsavenoninteresting:" << itsSaveNonInteresting;
-    os << "\tsaveoriginalframedims:" << itsSaveOriginalFrameDims;
+    os << "\tsaveoriginalframespec:" << itsSaveOriginalFrameSpec;
     os << "\tcolorspace:" << colorSpaceType(itsColorSpaceType);
     os << "\tminstddev:" << itsMinStdDev;
     os << "\teventexpirationframes:" << itsEventExpirationFrames;
@@ -132,11 +130,10 @@ DetectionParameters &DetectionParameters::operator=(const DetectionParameters& p
     this->itsSegmentGraphParameters = p.itsSegmentGraphParameters;
     this->itsCleanupStructureElementSize = p.itsCleanupStructureElementSize;
     this->itsSaliencyInputType = p.itsSaliencyInputType;
-    this->itsSaliencyInputFrameDims = p.itsSaliencyInputFrameDims;
     this->itsSaliencyFrameDist = p.itsSaliencyFrameDist;
     this->itsKeepWTABoring = p.itsKeepWTABoring;
     this->itsSaveNonInteresting = p.itsSaveNonInteresting;
-    this->itsSaveOriginalFrameDims = p.itsSaveOriginalFrameDims;
+    this->itsSaveOriginalFrameSpec = p.itsSaveOriginalFrameSpec;
     this->itsColorSpaceType = p.itsColorSpaceType;
     this->itsMinStdDev = p.itsMinStdDev;
     this->itsMaskPath = p.itsMaskPath;
@@ -213,7 +210,6 @@ itsSegmentAdaptiveOffset(&OPT_MDPsegmentAdaptiveOffset, this),
 itsSegmentGraphParameters(&OPT_MDPsegmentGraphParameters, this),
 itsCleanupStructureElementSize(&OPT_MDPcleanupSESize, this),
 itsSaliencyInputType(&OPT_MDPsaliencyInputImage, this),
-itsSaliencyInputFrameDims(&OPT_MDPsaliencyInputFrameDims, this),
 itsMaskPath(&OPT_MDPmaskPath, this),
 itsMaskXPosition(&OPT_MDPmaskXPosition, this),
 itsMaskYPosition(&OPT_MDPmaskYPosition, this),
@@ -230,7 +226,7 @@ itsKeepWTABoring(&OPT_MDPkeepBoringWTAPoints, this),
 itsSaveNonInteresting(&OPT_MDPsaveNonInterestingEvents, this),
 itsMinStdDev(&OPT_MDPminStdDev, this),
 itsColorSpaceType(&OPT_MDPcolorSpace, this),
-itsSaveOriginalFrameDims(&OPT_MDPsaveOriginalFrameDims, this){
+itsSaveOriginalFrameSpec(&OPT_MDPsaveOriginalFrameSpec, this){
 };
 // ######################################################################
 
@@ -292,7 +288,7 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
 
     p->itsKeepWTABoring = itsKeepWTABoring.getVal();
     p->itsSaveNonInteresting = itsSaveNonInteresting.getVal();
-    p->itsSaveOriginalFrameDims = itsSaveOriginalFrameDims.getVal();
+    p->itsSaveOriginalFrameSpec = itsSaveOriginalFrameSpec.getVal();
     p->itsColorSpaceType = itsColorSpaceType.getVal();
     p->itsSegmentAlgorithmInputType = itsSegmentAlgorithmInputType.getVal();
     p->itsSegmentAlgorithmType = itsSegmentAlgorithmType.getVal();

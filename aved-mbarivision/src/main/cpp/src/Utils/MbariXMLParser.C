@@ -304,21 +304,14 @@ void MbariXMLParser::addDetectionParameters(DetectionParameters params) {
   XMLString::release(&saliencyinputtype);
   XMLString::release(&saliencyinputtypexmlstring);
 
-  std::string sifdimsstring = convertToString(params.itsSaliencyInputFrameDims);
-  XMLCh* sifdims = XMLString::transcode("SaliencyInputFrameDims");
-  XMLCh* sifdimsxmlstring = XMLString::transcode(sifdimsstring.c_str());
-  eventsroot->setAttribute(sifdims, sifdimsxmlstring);
-  XMLString::release(&sifdims); 
-  XMLString::release(&sifdimsxmlstring);
-
   XMLCh* savenoninteresting = XMLString::transcode("SaveNonInteresting");
   XMLCh* savenoninterestingxmlstring =  XMLString::transcode(params.itsSaveNonInteresting ? "1" :"0");
   eventsroot->setAttribute(savenoninteresting,savenoninterestingxmlstring);
   XMLString::release(&savenoninteresting);
   XMLString::release(&savenoninterestingxmlstring);
 
-  XMLCh* saveoriginalframespec = XMLString::transcode("SaveOriginalFrameDims");
-  XMLCh* saveoriginalframespecxmlstring =  XMLString::transcode(params.itsSaveOriginalFrameDims ? "1" :"0");
+  XMLCh* saveoriginalframespec = XMLString::transcode("SaveOriginalFrameSpec");
+  XMLCh* saveoriginalframespecxmlstring =  XMLString::transcode(params.itsSaveOriginalFrameSpec ? "1" :"0");
   eventsroot->setAttribute(saveoriginalframespec,saveoriginalframespecxmlstring);
   XMLString::release(&saveoriginalframespec);
   XMLString::release(&saveoriginalframespecxmlstring);
