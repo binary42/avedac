@@ -1,5 +1,5 @@
 /*
- * @(#)EventPopupMenu.java
+ * @(#)EventImagePopupMenu.java
  * 
  * Copyright 2011 MBARI
  *
@@ -21,54 +21,58 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+
+
 package org.mbari.aved.ui;
 
-//~--- JDK imports ------------------------------------------------------------
+//~--- non-JDK imports --------------------------------------------------------
+
 import aved.model.BoundingBox;
 import aved.model.EventObject;
-import java.awt.*;
 
-import javax.swing.JPopupMenu; 
-import org.mbari.aved.ui.player.DisplayThumbnail;
-import java.awt.Point;
-
-import java.awt.event.MouseEvent;
-import java.io.File;
-import javax.media.jai.JAI;
-import javax.media.jai.PlanarImage;
 import org.mbari.aved.ui.exceptions.FrameOutRangeException;
+import org.mbari.aved.ui.model.EventObjectContainer;
+import org.mbari.aved.ui.player.DisplayThumbnail;
 import org.mbari.aved.ui.thumbnail.ImageChangeUtil;
 
-import java.awt.Color;
+//~--- JDK imports ------------------------------------------------------------
+
+import java.awt.*;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import  org.mbari.aved.ui.thumbnail.ThumbnailPicture;
+import java.awt.Point;
+import java.awt.event.MouseEvent;
+
+import java.io.File;
+
 import java.net.URL;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.ImageIcon;
+import javax.media.jai.JAI;
+import javax.media.jai.PlanarImage;
+
 import javax.swing.JPanel;
-import org.mbari.aved.ui.model.EventObjectContainer;
+import javax.swing.JPopupMenu;
 
 /**
  * Creates and displays popupMenu with a single image of the "best"
  * representation of an Event
- * 
+ *
  * @author D.Cline
  */
 public class EventImagePopupMenu {
 
-    private JPopupMenu popupMenu;
     /** Default image to display upon missing frame exceptions */
     private static PlanarImage missingImage;
-    private int imageHeight = 0;
+    private int                imageHeight = 0;
+
     /** Current viewport width/height for jai */
-    private int imageWidth = 0;
+    private int                  imageWidth = 0;
     private EventObjectContainer event;
-    private JPanel imagePanel;
+    private JPanel               imagePanel;
+
     /**
      * The thumbnail to display in a popup window
      * We use the DisplayThumbnail class which is a
@@ -78,13 +82,10 @@ public class EventImagePopupMenu {
      * scaling
      */
     private DisplayThumbnail jai;
-
-    private void actionClickTable(MouseEvent e) {
-        this.popupMenu.setVisible(false);
-    }
+    private JPopupMenu       popupMenu;
 
     public EventImagePopupMenu(EventObjectContainer event) {
-        this.event = event;
+        this.event      = event;
         this.imagePanel = new JPanel();
 
         // Get a static copy of default image to display upon transformation errors
@@ -96,6 +97,10 @@ public class EventImagePopupMenu {
         }
     }
 
+    private void actionClickTable(MouseEvent e) {
+        this.popupMenu.setVisible(false);
+    }
+
     /**
      * Shows the popupMenu in the same position as the invoker (e.g. mouse click position)
      * @param invoker
@@ -104,7 +109,7 @@ public class EventImagePopupMenu {
      */
     public void show(Component invoker, int x, int y) {
 
-        // Create the popupMenu menu. 
+        // Create the popupMenu menu.
         if (event != null) {
             popupMenu = new JPopupMenu(ApplicationInfo.getName() + " Event: " + Long.toString(event.getObjectId()));
             popupMenu.setToolTipText(event.getShortDescription());
@@ -121,12 +126,11 @@ public class EventImagePopupMenu {
      */
     private void displayImage() {
 
-
         // Get the image sequence, and display the image
         try {
-            File src = null;
+            File        src      = null;
             EventObject eventObj = null;
-            int num = event.getBestEventFrame();
+            int         num      = event.getBestEventFrame();
 
             eventObj = event.getEventObject(num);
 
@@ -135,30 +139,27 @@ public class EventImagePopupMenu {
             try {
                 src = event.getFrameSource(num);
             } catch (Exception e) {
-
-                // TODO Auto-generated catch block
                 src = null;
-                e.printStackTrace();
+                Logger.getLogger(EventImagePopupMenu.class.getName()).log(Level.SEVERE, null, e);
 
                 return;
             }
 
             // TODO: push this logic down into the PlayerView
-            // it knows how to best display the timecode 
-                displayEventImage(eventObj, src);
-                //TODO: add this in displayTimecodeFrameString(eventObj.getFrameEventSet().getTimecode(),
-                //            eventObj.getFrameEventSet().getFrameNumber()); 
+            // it knows how to best display the timecode
+            displayEventImage(eventObj, src);
+
+            // TODO: add this in displayTimecodeFrameString(eventObj.getFrameEventSet().getTimecode(),
+            // eventObj.getFrameEventSet().getFrameNumber());
         } catch (FrameOutRangeException e) {
 
             // If image is missing display message
             // Create the yes/no dialog
             String message = "Error: " + e.getMessage();
+
             Logger.getLogger(EventImagePopupMenu.class.getName()).log(Level.SEVERE, null, e);
-
         } catch (Exception e) {
-
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            Logger.getLogger(EventImagePopupMenu.class.getName()).log(Level.SEVERE, null, e);
         }
     }
 
@@ -171,13 +172,13 @@ public class EventImagePopupMenu {
     public void displayEventImage(EventObject eventObj, File frame) {
         PlanarImage image = null;
 
-        if (eventObj != null && frame != null) {
+        if ((eventObj != null) && (frame != null)) {
             try {
 
                 // Load up the frame, or use missing image it is undefined
                 image = ((frame != null)
-                        ? JAI.create("fileload", frame.toString())
-                        : missingImage);
+                         ? JAI.create("fileload", frame.toString())
+                         : missingImage);
             } catch (IllegalArgumentException ex) {
                 image = missingImage;
             }
@@ -188,11 +189,11 @@ public class EventImagePopupMenu {
             }
 
             // Calculate the cropping coordinates from the bounding box
-            BoundingBox b = eventObj.getBoundingBox();
-            int xorigin = b.getLowerLeftX();
-            int yorigin = b.getUpperRightY();
-            int width = b.getUpperRightX() - b.getLowerLeftX();
-            int height = b.getLowerLeftY() - b.getUpperRightY();
+            BoundingBox b       = eventObj.getBoundingBox();
+            int         xorigin = b.getLowerLeftX();
+            int         yorigin = b.getUpperRightY();
+            int         width   = b.getUpperRightX() - b.getLowerLeftX();
+            int         height  = b.getLowerLeftY() - b.getUpperRightY();
 
             // If the bounding box is beyond the image image size, adjust
             // this. This can occur if there is a discrepancy  between the
@@ -220,24 +221,23 @@ public class EventImagePopupMenu {
 
                 // Scale JAI if the image is larger than 60% of the main display
                 // TODO: this is somewhat arbitrary and really should be scaled by
-                // the total available size, and not just the JAI component 
-                Dimension d = Application.getView().getSize();
-                float scale = 1.0f;
-                float factor = 0.60f;
+                // the total available size, and not just the JAI component
+                Dimension d      = Application.getView().getSize();
+                float     scale  = 1.0f;
+                float     factor = 0.60f;
 
                 if ((image.getWidth() >= factor * d.width) || (image.getHeight() >= factor * d.height)) {
                     scale = ImageChangeUtil.calcTheta(image.getWidth(), image.getHeight(), factor * d.width,
-                            factor * d.height);
+                                                      factor * d.height);
                 }
 
-                imageWidth = image.getWidth();
+                imageWidth  = image.getWidth();
                 imageHeight = image.getHeight();
-                jai = new DisplayThumbnail(event, image, scale, width, height, upperleftorigin);
+                jai         = new DisplayThumbnail(event, image, scale, width, height, upperleftorigin);
                 imagePanel.add(jai);
             }
 
             image = null;
         }
     }
-      
 }

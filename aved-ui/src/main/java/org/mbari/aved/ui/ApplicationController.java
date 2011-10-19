@@ -1,6 +1,6 @@
 /*
  * @(#)ApplicationController.java
- *
+ * 
  * Copyright 2011 MBARI
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -55,8 +55,8 @@ import org.mbari.aved.ui.userpreferences.UserPreferencesModel.VideoPlayoutMode;
 import org.mbari.aved.ui.utils.ExcelExporter;
 import org.mbari.aved.ui.utils.ImageFileFilter;
 import org.mbari.aved.ui.utils.ParseUtils;
-import org.mbari.aved.ui.utils.XmlFileFilter;
 import org.mbari.aved.ui.utils.URLUtils;
+import org.mbari.aved.ui.utils.XmlFileFilter;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -251,7 +251,6 @@ public final class ApplicationController extends AbstractController implements M
             exportProcessedResults(browseForXMLExport());
         } catch (Exception e) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, e);
-            e.printStackTrace();
         }
     }
 
@@ -287,7 +286,6 @@ public final class ApplicationController extends AbstractController implements M
         }
     }
 
-
     /** Exports the model data to XML file */
     private void exportProcessedResults(File xmlfile) {
         File newfile = xmlfile;
@@ -307,8 +305,8 @@ public final class ApplicationController extends AbstractController implements M
                 if (newfile != null) {
                     if (newfile.exists() &&!newfile.canWrite()) {
                         String message = "Warning: " + newfile.getName() + " cannot be written."
-                                                    + "\nCould be locked by another application, "
-                                                    + "or is read-only. Check the file.";
+                                         + "\nIt could be locked by another application, "
+                                         + "or is read-only. Check the file.";
                         NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), message);
 
                         dialog.setVisible(true);
@@ -318,9 +316,9 @@ public final class ApplicationController extends AbstractController implements M
                         }
                     } else if (newfile.exists() && newfile.canWrite()) {
                         String message = "Warning: " + newfile.getName() + " exists"
-                                                    + "\n\nExporting the results to this file will "
-                                                    + "permanently erase the original contents. "
-                                                    + "Are you sure you want to save to this file ?";
+                                         + "\n\nExporting the results to this file will "
+                                         + "permanently erase the original contents. "
+                                         + "Are you sure you want to save to this file ?";
                         NonModalYesNoDialog dialog = new NonModalYesNoDialog((JFrame) this.getView(), message);
 
                         dialog.setVisible(true);
@@ -348,8 +346,6 @@ public final class ApplicationController extends AbstractController implements M
         File xmlfile = null;
 
         try {
-
-            // First search for XML file
             xmlfile = browseForXMLImport();
             importProcessedResults(xmlfile);
         } catch (Exception e) {
@@ -363,20 +359,13 @@ public final class ApplicationController extends AbstractController implements M
      */
     public void importProcessedResults(File xmlfile) {
         try {
-            if (xmlfile != null) {
-                if (xmlfile.exists()) {
+            if ((xmlfile != null) && xmlfile.exists()) {
 
-                    // Import the processed results
-                    runImportXML(xmlfile);
-                } else {
-
-                    // TODO: display message
-                }
+                // Import the processed results
+                runImportXML(xmlfile);
             }
-        } catch (Exception e) {
-
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        } catch (Exception ex) {
+            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -422,10 +411,9 @@ public final class ApplicationController extends AbstractController implements M
                     } else {
 
                         // if can't find a file return and don't transcode.
-                        String question =
-                            "A local file reference to the video input source associated with the\n"
-                                       + xmlfile.getName()
-                                       + " has not been found.\n\n Would you like to search for it now ? ";
+                        String question = "A local file reference to the video input source associated with the\n"
+                                          + xmlfile.getName()
+                                          + " has not been found.\n\n Would you like to search for it now ? ";
                         NonModalYesNoDialog dialog = new NonModalYesNoDialog(Application.getView(), question);
 
                         dialog.setVisible(true);
@@ -443,7 +431,7 @@ public final class ApplicationController extends AbstractController implements M
                             } catch (MalformedURLException ex) {
                                 Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                             } catch (Exception e1) {
-                                e1.printStackTrace();
+                                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, e1);
                             }
                         }
 
@@ -500,9 +488,8 @@ public final class ApplicationController extends AbstractController implements M
 
                 // Create the dialog
                 String question = "The mpeg encoded video results associated with the " + xmlfile.getName()
-                                             + " has not been found. \n\n"
-                                             + "This is not required, but can be useful when "
-                                             + "editing the results. Would you like to search for it now ? ";
+                                  + " has not been found. \n\n" + "This is not required, but can be useful when "
+                                  + "editing the results. Would you like to search for it now ? ";
                 NonModalYesNoDialog dialog = new NonModalYesNoDialog((ApplicationView) getView(), question);
 
                 dialog.setVisible(true);
@@ -512,27 +499,24 @@ public final class ApplicationController extends AbstractController implements M
                         return browseForVideoClip(f);
                     } catch (MalformedURLException ex) {
                         Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (Exception e1) {
-                        e1.printStackTrace();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-            } catch (Exception e) {
-
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            } catch (Exception ex) {
+                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 
         return null;
     }
-    
 
     /** Starts a separate worker to export the processed results */
     private void runExportXML(File xmlfile) throws Exception {
-        SummaryModel summary =  this.getModel().getSummaryModel();
+        SummaryModel summary = this.getModel().getSummaryModel();
+
         if ((xmlfile != null) && (this.getModel() != null) && (this.getModel().getSummaryModel() != null)) {
-            ExportXMLWorker thread = new ExportXMLWorker(xmlfile, this, summary,
-                                        summary.getEventDataStream());
+            ExportXMLWorker thread = new ExportXMLWorker(xmlfile, this, summary, summary.getEventDataStream());
 
             thread.execute();
         }
@@ -660,8 +644,8 @@ public final class ApplicationController extends AbstractController implements M
                 } else {
                     return null;
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (Exception ex) {
+                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
 
                 return clipurl;
             }
@@ -696,8 +680,8 @@ public final class ApplicationController extends AbstractController implements M
                 } else {
                     return null;
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (Exception ex) {
+                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
 
                 return clip;
             }
@@ -732,8 +716,8 @@ public final class ApplicationController extends AbstractController implements M
                 } else {
                     return null;
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (Exception ex) {
+                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
 
                 return clip;
             }
@@ -746,36 +730,20 @@ public final class ApplicationController extends AbstractController implements M
         String actionCommand = event.getActionCommand();
 
         try {
-
-            // System.out.println(actionCommand);
             SummaryModel model = getModel().getSummaryModel();
             File         v     = new File(UserPreferences.getModel().getImportVideoDir().toString());
 
             if (actionCommand.equals("BrowseMaster")) {
                 File f;
 
-                try {
-                    if ((f = browseForVideoClip(v)) != null) {
-                        model.setInputSourceURL(f.toURL());
-                    }
-                } catch (Exception e) {
-
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                if ((f = browseForVideoClip(v)) != null) {
+                    model.setInputSourceURL(f.toURL());
                 }
-            }
-
-            if (actionCommand.equals("BrowseResults")) {
+            } else if (actionCommand.equals("BrowseResults")) {
                 File f;
 
-                try {
-                    if ((f = browseForVideoClip(v)) != null) {
-                        model.setMpegUrl(f.toURL());
-                    }
-                } catch (Exception e) {
-
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                if ((f = browseForVideoClip(v)) != null) {
+                    model.setMpegUrl(f.toURL());
                 }
             }
         } catch (Exception ex) {
@@ -830,17 +798,42 @@ public final class ApplicationController extends AbstractController implements M
                                             launcher.openURLinBrowser(urlString);
                                             view.setDefaultCursor();
                                         } catch (Exception ex) {
-                                            ex.printStackTrace();
+                                            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE,
+                                                             null, ex);
                                         }
                                     }
                                 } else if (mode == VideoPlayoutMode.OTHER) {
+                                    String file = null;
 
-                                    // launch separate process to play video
-                                    // TODO: add error handling/display for bogus commands
-                                    String cmd = mode.command + " " + model.getInputSourceURL().getFile();
+                                    if (e.getSource().equals(view.getMpegLabel()) && (model.getMpegUrl() != null)) {
+                                        file = model.getMpegUrl().getFile();
+                                    }
 
-                                    System.out.println("Executing " + cmd);
-                                    Runtime.getRuntime().exec(cmd);
+                                    if (e.getSource().equals(view.getMasterLabel())
+                                            && (model.getInputSourceURL() != null)) {
+                                        file = model.getInputSourceURL().getFile();
+                                    }
+
+                                    if (file != null) {
+
+                                        // launch separate process to play video
+                                        String cmd = mode.command + " " + model.getInputSourceURL().getFile();
+
+                                        System.out.println("Executing " + cmd);
+
+                                        try {
+                                            Runtime.getRuntime().exec(cmd);
+                                        } catch (Exception ex) {
+                                            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE,
+                                                             null, ex);
+
+                                            NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
+                                                                               "Cannot execute " + cmd + " "
+                                                                               + ex.getMessage());
+
+                                            dialog.setVisible(true);
+                                        }
+                                    }
                                 } else {
 
                                     // TODO: launch err message - cannot find
@@ -848,7 +841,7 @@ public final class ApplicationController extends AbstractController implements M
                                     // variable ?
                                 }
                             } catch (Exception ex) {
-                                ex.printStackTrace();
+                                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                             }
                         }
                     });
@@ -870,7 +863,7 @@ public final class ApplicationController extends AbstractController implements M
                     // in a subdirectory makes for easy deletion later
                     SummaryModel model      = getModel().getSummaryModel();
                     File         s          = model.getFrameSourceDir();
-                    File testingDir = new File(s + "/testimages_" + s.getName());
+                    File         testingDir = new File(s + "/testimages_" + s.getName());
 
                     if (!testingDir.exists()) {
                         testingDir.mkdir();
@@ -921,6 +914,7 @@ public final class ApplicationController extends AbstractController implements M
 
                 case SummaryModelEvent.INPUT_SOURCE_URL_CHANGED :
                     runImportLogic(getModel().getSummaryModel());
+
                     break;
 
                 default :
@@ -981,7 +975,6 @@ public final class ApplicationController extends AbstractController implements M
      */
     public static void download(URL url, File target) throws Exception {
         try {
-
             Application.getView().setBusyCursor();
 
             // create/overwrite target
@@ -997,7 +990,6 @@ public final class ApplicationController extends AbstractController implements M
             out.flush();
             out.close();
             Application.getView().setDefaultCursor();
-
         } catch (Exception e) {
 
             // if can't find a file, delete empty file, display message,
@@ -1016,9 +1008,8 @@ public final class ApplicationController extends AbstractController implements M
 
     public void windowClosing(WindowEvent e) {
         if (Application.getModel().getEventListModel().getSize() > 0) {
-            String question = "About to shut down the application. "
-                                         + "Are you sure you saved your data ?\n";
-            ModalYesNoDialog dialog = new ModalYesNoDialog(Application.getView(), question);
+            String           question = "About to shut down the application. " + "Are you sure you saved your data ?\n";
+            ModalYesNoDialog dialog   = new ModalYesNoDialog(Application.getView(), question);
 
             dialog.setVisible(true);
 
@@ -1060,9 +1051,15 @@ public final class ApplicationController extends AbstractController implements M
         Thread searchMpeg = new Thread(new Runnable() {
             public void run() {
                 EventListModel model = getModel().getEventListModel();
-
+                SummaryModel summary = getModel().getSummaryModel();
+                URL         v = summary.getInputSourceURL();
+                String s = ParseUtils.parseFileNameRemoveDirectory(v.toString());
                 try {
-                    model.loadImageCacheData();
+                    if (s.toLowerCase().endsWith("tar.gz") || s.toLowerCase().endsWith("tar"))
+                        model.loadImageCacheDataByFrame();
+                    else
+                        model.loadImageCacheDataByEvent();
+                    
                 } catch (Exception ex) {
                     Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -1142,6 +1139,7 @@ public final class ApplicationController extends AbstractController implements M
     public static void runImportLogic(final SummaryModel model) {
         Thread downloadUrlThread = new Thread(new Runnable() {
             public void run() {
+
                 /**
                  * When the input source changes, search for the video source
                  * associated with it and copy it to the scratch directory
@@ -1162,8 +1160,7 @@ public final class ApplicationController extends AbstractController implements M
                         }
 
                         if (tmpDir != null) {
-                            String v = tmpDir.toString() + "/"
-                                                  + ParseUtils.parseFileNameRemoveDirectory(url.getFile());
+                            String v = tmpDir.toString() + "/" + ParseUtils.parseFileNameRemoveDirectory(url.getFile());
 
                             file = new File(v);
                         } else {
@@ -1198,7 +1195,7 @@ public final class ApplicationController extends AbstractController implements M
 
                                 /**
                                  * Can't find the file automatically so prompt
-                                 * the user tfor one.
+                                 * the user for one.
                                  */
                                 URL u = searchVideoSource(model.getXmlFile(), url);
 
@@ -1228,14 +1225,18 @@ public final class ApplicationController extends AbstractController implements M
                         if (localFile.exists()) {
                             model.setTranscodeSource(localFile);
                         } else {
+                            try {
+                                /**
+                                 * Can't find the file automatically so prompt
+                                 * the user for one.
+                                 */
+                                URL u = searchVideoSource(model.getXmlFile(), url);
 
-                            /**
-                             * Can't find the file automatically so prompt
-                             * the user for one.
-                             */
-                            URL u = searchVideoSource(model.getXmlFile(), url);
-
-                            model.setTranscodeSource(new File(u.getFile()));
+                                model.setTranscodeSource(new File(u.getFile()));
+                                model.setInputSourceURL(u);
+                            } catch (MalformedURLException ex) {
+                                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         }
                     }
                 }

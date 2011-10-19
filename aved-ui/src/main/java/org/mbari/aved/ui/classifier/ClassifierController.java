@@ -1,6 +1,6 @@
 /*
  * @(#)ClassifierController.java
- *
+ * 
  * Copyright 2011 MBARI
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -61,6 +61,8 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.media.jai.PlanarImage;
 
 /**
  *
@@ -324,9 +326,11 @@ public class ClassifierController extends AbstractController implements ModelLis
 
                             data.initialize(bestFrameNo);
 
-                            EventObject object = event.getEventObject(bestFrameNo);
+                            EventObject object   = event.getEventObject(bestFrameNo);
+                            PlanarImage original = EventImageCache.loadImage(event.getFrameSource(bestFrameNo));
 
-                            if ((object != null) && EventImageCache.createCroppedImageOfEvent(data, object)) {
+                            if (((object != null) && (original != null))
+                                    && EventImageCache.createCroppedImageOfEvent(original, data, object)) {
                                 classModel.addToTrainingSet(data.getImageSource());
                             }
                         } catch (Exception ex) {

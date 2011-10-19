@@ -231,6 +231,7 @@ public class ThumbnailController extends AbstractController
             }
         }
     }
+    
 
     /**
      * Invoked when key is typed in the slider.

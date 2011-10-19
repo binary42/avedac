@@ -124,7 +124,7 @@ public class EventImageCache {
     /**
      * Starts the image loader thread to load new image cache data
      */
-    public void loadImageCache(EventListModel eventListModel) throws Exception {
+    public void loadImageCache(EventListModel eventListModel, boolean loadByFrame) throws Exception {
         reset();
 
         try {
@@ -151,6 +151,7 @@ public class EventImageCache {
                 update();
                 iKeepRunning = true;
                 thread       = new ImageLoader(this, eventListModel);
+                thread.loadByFrame = loadByFrame;
                 thread.execute();
             } else {
                 System.out.println("Image cache empty - no images to load");
@@ -241,7 +242,13 @@ public class EventImageCache {
      */
     private boolean createBestCroppedImageOfEvent(EventImageCacheData data)
             throws MissingFrameException, FrameOutRangeException {
-        return createCroppedImageOfEvent(data, data.getEvent());
+        PlanarImage original = loadImage(data.getRawImageSource());
+
+        if (original != null) {
+            return createCroppedImageOfEvent(original, data, data.getEvent());
+        }
+
+        return false;
     }
 
     /**
@@ -376,22 +383,14 @@ public class EventImageCache {
     }
 
     /**
-     * Creates the best cropped image of an event. Saves the event
-     * to a jpg on disk. An exception is thrown if the image file
-     * cannot be found
-     * @param data image cache data to store the image data in
-     * @param bestEvtObj Object to crop
-     * @return
-     * @throws org.mbari.aved.ui.exceptions.MissingFrameException
+     * Load the image from a given file source if it exists
+     * @param source file source
+     * @return image or null if doesn't exist of cannot be read
      */
-    public static boolean createCroppedImageOfEvent(EventImageCacheData data, EventObject bestEvtObj)
-            throws MissingFrameException, FrameOutRangeException {
+    public static PlanarImage loadImage(File source) {
 
-        // Get the best frame number and event that corresponds to it
-        File source = data.getRawImageSource();
-
-        // Load the image that corresponds to the best frame if it exists
-    if ((source != null) && source.exists() && source.getAbsoluteFile().canRead()) {
+        // 
+        if ((source != null) && source.exists() && source.getAbsoluteFile().canRead()) {
             try {
 
                 // This is a brute force way to check if the file
@@ -404,77 +403,136 @@ public class EventImageCache {
                 long j = source.length();
 
                 if (i != j) {
-                    return false;
+                    return null;
                 }
 
                 // Load the image that corresponds to the best frame
                 PlanarImage original = JAI.create("fileload", source.toString());
 
-                // Create a ParameterBlock with information for the cropping.
-                ParameterBlock pb = new ParameterBlock();
-
-                pb.addSource(original);
-
-                // Calculate the cropping coordinates from the bounding box
-                BoundingBox b       = bestEvtObj.getBoundingBox();
-                int         xorigin = b.getLowerLeftX();
-                int         yorigin = b.getUpperRightY();
-                int         width   = b.getUpperRightX() - b.getLowerLeftX();
-                int         height  = b.getLowerLeftY() - b.getUpperRightY();
-
-                // If the clip bounds are beyond the original image size, adjust
-                if (xorigin + width > original.getWidth()) {
-                    width = original.getWidth() - xorigin;
-                }
-
-                if (yorigin + height > original.getHeight()) {
-                    height = original.getHeight() - yorigin;
-                }
-
-                // If width or height is zero, adjust to 1 to avoid cropping error
-                if (width == 0) {
-                    width = 1;
-                }
-
-                if (height == 0) {
-                    height = 1;
-                }
-                
-                pb.add((float) xorigin);    // x origin
-                pb.add((float) yorigin);    // y origin
-                pb.add((float) width);      // width
-                pb.add((float) height);     // height
-
-                File outputFile = data.getImageSource();
-
-                // If the file already exists, then return
-                if (outputFile.exists()) {
-                    return true;
-                }
-
-                PlanarImage output = null;
-
-                // Create the output image by cropping the input image.JAI
-                output = JAI.create("crop", pb, null);
-
-                // Store the cropped image in jpg format in the best quality
-                JPEGEncodeParam param = new JPEGEncodeParam();
-
-                param.setQuality(1.0f);
-
-                if ((outputFile != null)
-                        && (JAI.create("filestore", output.getAsBufferedImage(), outputFile.toString(), "jpeg", param)
-                            != null)) {
-                    output.dispose();
-
-                    return true;
-                }
+                return original;
             } catch (InterruptedException ex) {
                 Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IllegalArgumentException e) {}
         }
 
+        return null;
+    }
+
+    /**
+     * Creates the best cropped image of an event. Saves the event
+     * to a jpg on disk. An exception is thrown if the image file
+     * cannot be found
+     * @param original planar image to crop event image from
+     * @param data image cache data to store the image data in
+     * @param bestEvtObj Object to crop
+     * @return
+     * @throws org.mbari.aved.ui.exceptions.MissingFrameException
+     */
+    public static boolean createCroppedImageOfEvent(PlanarImage original, EventImageCacheData data,
+            EventObject bestEvtObj)
+            throws MissingFrameException, FrameOutRangeException {
+
+        // Load the image that corresponds to the best frame
+        try {
+            File outputFile = data.getImageSource();
+
+            // If the file already exists, then return
+            if (outputFile.exists()) {
+                return true;
+            }
+
+            // Create a ParameterBlock with information for the cropping.
+            ParameterBlock pb = new ParameterBlock();
+
+            pb.addSource(original);
+
+            // Calculate the cropping coordinates from the bounding box
+            BoundingBox b       = bestEvtObj.getBoundingBox();
+            int         xorigin = b.getLowerLeftX();
+            int         yorigin = b.getUpperRightY();
+            int         width   = b.getUpperRightX() - b.getLowerLeftX();
+            int         height  = b.getLowerLeftY() - b.getUpperRightY();
+
+            // If the clip bounds are beyond the original image size, adjust
+            if (xorigin + width > original.getWidth()) {
+                width = original.getWidth() - xorigin;
+            }
+
+            if (yorigin + height > original.getHeight()) {
+                height = original.getHeight() - yorigin;
+            }
+
+            // If width or height is zero, adjust to 1 to avoid cropping error
+            if (width == 0) {
+                width = 1;
+            }
+
+            if (height == 0) {
+                height = 1;
+            }
+
+            pb.add((float) xorigin);    // x origin
+            pb.add((float) yorigin);    // y origin
+            pb.add((float) width);      // width
+            pb.add((float) height);     // height
+
+            // Create the output image by cropping the input image.JAI
+            PlanarImage output = JAI.create("crop", pb, null);
+
+            // Store the cropped image in jpg format in the best quality
+            JPEGEncodeParam param = new JPEGEncodeParam();
+
+            param.setQuality(1.0f);
+
+            if ((outputFile != null)
+                    && (JAI.create("filestore", output.getAsBufferedImage(), outputFile.toString(), "jpeg", param)
+                        != null)) {
+                output.dispose();
+
+                return true;
+            }
+        } catch (IllegalArgumentException ex) {
+            Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         return false;
+    }
+
+    private int grabEventsByFrame(PlanarImage original, int bestFrame, int index)
+            throws MissingFrameException, FrameOutRangeException {
+        int numEventsInFrame = 0;
+
+        synchronized (syncArrays) {
+            EventObjectContainer ec = null;
+
+            do {
+                if (index >= eventListModel.getSize()) {
+                    return numEventsInFrame;
+                }
+
+                EventImageCacheData data = null;
+
+                // Get the EventImageCacheData at this index
+                data = imageCacheDataList.get(index);
+                ec   = data.getEventObjectContainer();
+
+                // If the best frame match, initialize and crop
+                if (ec.getBestEventFrame() == bestFrame) {
+                    data.initialize(bestFrame);
+                    ec.setIsBlackChecked();
+
+                    if (createCroppedImageOfEvent(original, data, data.getEvent())) {
+                        ec.setEventImageCacheData(data);
+                        index++;
+                        numEventsInFrame++;
+                    }
+                } else {
+                    return numEventsInFrame;
+                }
+            } while (ec.getBestEventFrame() == bestFrame);
+        }
+
+        return numEventsInFrame;
     }
 
     /**
@@ -485,7 +543,7 @@ public class EventImageCache {
      * if found an image to represent the index. Note, this
      * doesn't not necessary mean that the image is valid. This
      * could return a default image to give some visual
-     * indicattion to the user of the error.
+     * indication to the user of the error.
      *
      *  Call within block synced by: syncArrays
      *
@@ -590,6 +648,81 @@ public class EventImageCache {
     }
 
     /**
+     * Grabs and loads events by frame
+     * Returns the number of total loaded
+     */
+    public int loadNextFrame() {
+        if ((cacheNextIndex < indexsToCache.length) && iKeepRunning) {
+            int         index     = -1;
+            int         bestFrame = -1;
+            PlanarImage original  = null;
+
+            index = indexsToCache[cacheNextIndex];
+
+            /*
+             *  System.out.println("EventImageCache total loaded: " + totalLoaded + " total needed:"
+             *                  + imageCacheDataList.size() + " Indexes to cache: " + indexsToCache.length
+             *                  + " cacheNextIndex:" + cacheNextIndex);
+             */
+
+            if (index > -1) {
+                synchronized (syncArrays) {
+
+                    // Get the EventImageCacheData at this index
+                    EventImageCacheData data = imageCacheDataList.get(index);
+
+                    if (data != null) {
+                        EventObjectContainer ec = data.getEventObjectContainer();
+
+                        // initialize a new best frame
+                        if (bestFrame != ec.getBestEventFrame()) {
+                            bestFrame = ec.getBestEventFrame();
+                            original  = loadImage(data.getRawImageSource());
+
+                            if (original != null) {
+                                int i = 0;
+
+                                try {
+                                    i = grabEventsByFrame(original, bestFrame, index);
+                                } catch (FrameOutRangeException ex) {}
+                                catch (MissingFrameException ex) {}
+                                catch (Exception ex) {
+                                    Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+
+                                if (i > 0) {
+
+                                    // If grabbed all images in frame, increment the loaded count appropriately
+                                    for (int j = 0; j < i; j++) {
+                                        indexsToCache[cacheNextIndex++] = -1;
+                                        totalLoaded++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If loaded all the images then end the SwingWorker
+            if (totalLoaded >= indexsToCache.length) {
+                iKeepRunning   = false;
+                cacheNextIndex = 0;
+            }
+
+            // If exceeded the total to cache and haven't loaded everything
+            // then reset the next index back to zero. This will continue
+            // this threads attempts to load images.
+            if ((cacheNextIndex >= indexsToCache.length) && (totalLoaded < indexsToCache.length)) {
+                iKeepRunning   = true;
+                cacheNextIndex = 0;
+            }
+        }
+
+        return totalLoaded;
+    }
+
+    /**
      * Grabs and loads the next needed index
      * Returns the number of total loaded
      */
@@ -616,8 +749,6 @@ public class EventImageCache {
                                 totalLoaded++;
 
                                 break;
-                            } else {
-                                System.out.println("");
                             }
                         }
                     } catch (FrameOutRangeException ex) {
@@ -660,6 +791,13 @@ public class EventImageCache {
     }
 
     /**
+     * Public method to reset the cache
+     */
+    public void clear() {
+        reset();
+    }
+
+    /**
      * Helper class for reporting the stats of loading
      * to the View classes in the SwingWorker thread
      */
@@ -679,6 +817,7 @@ public class EventImageCache {
      *
      */
     private class ImageLoader extends SwingWorker<Void, ImageLoadStats> {
+        boolean         loadByFrame = false;
         EventImageCache cache;
         EventListModel  model;
 
@@ -722,7 +861,13 @@ public class EventImageCache {
 
                 while (cache.iKeepRunning) {
                     try {
-                        int totalLoaded = cache.loadNextIndex();
+                        int totalLoaded = 0;
+
+                        if (loadByFrame) {
+                            totalLoaded = cache.loadNextFrame();
+                        } else {
+                            totalLoaded = cache.loadNextIndex();
+                        }
 
                         if ((totalLoaded - ttllast > refreshcnt) || (totalLoaded == ttl)) {
                             publish(new ImageLoadStats(totalLoaded, ttl));

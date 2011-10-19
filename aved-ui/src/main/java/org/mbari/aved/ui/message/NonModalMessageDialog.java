@@ -85,6 +85,13 @@ public class NonModalMessageDialog extends JDialog implements ActionListener {
         button.requestFocusInWindow();
     }
 
+    @Override
+    public void setVisible(boolean bln) {
+        pack();
+        setResizable(false);
+        super.setVisible(bln);
+    }
+
     // Use synchronization to insure only one
     // thread can call answer at one time
     synchronized public boolean answer() {

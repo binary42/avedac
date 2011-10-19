@@ -100,6 +100,13 @@ public class ModalYesNoDialog extends JDialog implements ActionListener {
         return isYes;
     }
 
+    @Override
+    public void setVisible(boolean bln) {
+        pack();
+        setResizable(false);
+        super.setVisible(bln);
+    }
+
     // Also use synchronization to insure only one
     // one thread can call this method.
     synchronized public void actionPerformed(ActionEvent e) {

@@ -354,22 +354,22 @@ public class PlayerController extends AbstractController implements ActionListen
     public void keyPressed(KeyEvent e) {
 
         // If right arrow key
-        if ((e.getKeyCode() == 39) && e.isActionKey()) {
+        if ((e.getKeyCode() == KeyEvent.VK_RIGHT)) {
             play(Mode.SingleStep, Direction.Forward);
         }
 
         // If up arrow key
-        if ((e.getKeyCode() == 38) && e.isActionKey()) {
+        if ((e.getKeyCode() == KeyEvent.VK_UP)) {
             stepPrev();
         }
 
         // If down arrow key
-        if ((e.getKeyCode() == 40) && e.isActionKey()) {
+        if ((e.getKeyCode() == KeyEvent.VK_DOWN)) {
             stepNext();
         }
 
         // If left arrow key
-        if ((e.getKeyCode() == 37) && e.isActionKey()) {
+        if ((e.getKeyCode() == KeyEvent.VK_LEFT)) {
             play(Mode.SingleStep, Direction.Reverse);
         }
 

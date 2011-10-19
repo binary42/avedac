@@ -101,6 +101,13 @@ public class ModalYesNoNeverDialog extends JDialog implements ActionListener {
         return isYes;
     }
 
+    @Override
+    public void setVisible(boolean bln) {
+        pack();
+        setResizable(false);
+        super.setVisible(bln);
+    }
+
     synchronized public boolean isNever() {
         return isNever;
     }

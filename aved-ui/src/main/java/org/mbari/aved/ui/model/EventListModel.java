@@ -100,7 +100,7 @@ public class EventListModel extends AbstractModel implements ListModel, BoundedR
      */
     public void reset() {
         if (imageCache != null) {
-            imageCache.reset();
+            imageCache.clear();
         }
 
         imageCache = null;
@@ -907,9 +907,23 @@ public class EventListModel extends AbstractModel implements ListModel, BoundedR
      * the video source is changed and subsequent
      * transcoded output frames change
      */
-    public void loadImageCacheData() throws Exception {
+    public void loadImageCacheDataByEvent() throws Exception {
         imageCache = new EventImageCache();
-        imageCache.loadImageCache(this);
+        imageCache.loadImageCache(this, false);
+    }
+    /**
+     * Starts the image cache model image loader
+     * This will populate the image cache model with
+     * buffered images by loading event images by frame.
+     * This should only be used in cases for still frames
+     * where we assume events are only 1 frame long. In this case  
+     * it is more efficient to load all events in a given
+     * frame, rather than event-wise as in video where the 
+     * best frame can be 
+     */
+    public void loadImageCacheDataByFrame() throws Exception{
+        imageCache = new EventImageCache();
+        imageCache.loadImageCache(this, true);
     }
 
     /**
@@ -937,6 +951,7 @@ public class EventListModel extends AbstractModel implements ListModel, BoundedR
     public int getValue() {
         return this.jumpToIndex;
     }
+
 
     public class EventListModelEvent extends ModelEvent {
 
