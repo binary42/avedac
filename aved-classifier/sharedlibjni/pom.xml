@@ -85,6 +85,7 @@
                             </libraries>
                             <cpp>
                                 <systemIncludePaths>
+                                    <systemIncludePath>${project.parent.basedir}/sharedlib/target/nar/include</systemIncludePath>
                                     <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/runtime/maci</systemIncludePath>
@@ -202,6 +203,7 @@
                                     <include>**/*.cxx</include>
                                 </includes>
                                 <systemIncludePaths>
+                                    <systemIncludePath>${project.parent.basedir}/sharedlib/target/nar/include</systemIncludePath>
                                     <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/runtime/maci64</systemIncludePath> 
@@ -268,6 +270,7 @@
                                     <option>-fPIC</option>
                                 </options>
                                 <systemIncludePaths>
+                                    <systemIncludePath>${project.parent.basedir}/sharedlib/target/nar/include</systemIncludePath>
                                     <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/runtime/glnx86</systemIncludePath>
@@ -343,6 +346,7 @@
                                     <option>-pthread</option>
                                 </options>
                                 <systemIncludePaths>
+                                    <systemIncludePath>${project.parent.basedir}/sharedlib/target/nar/include</systemIncludePath>
                                     <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/runtime/glnxa64</systemIncludePath>
