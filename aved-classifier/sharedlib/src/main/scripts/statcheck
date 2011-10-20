@@ -21,9 +21,7 @@ done
 # Crude check for OS, if not Linux, assume MacOSX
 # stat commands are different for these operating sysems
 if [ `uname | grep Linux` ]; then
-  filea=$(stat -c %s "$input")
-  fileb=$(stat -c %s "$output")
-  if [ "$fila" -ne "$fileb" ]; then
+  if [ `stat --printf=%s "$input"` -ne `stat --printf=%s "$output"` ]; then
     echo "Copying $input to $dest"
     cp $input $dest 
   fi
