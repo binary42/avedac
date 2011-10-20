@@ -7,8 +7,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.mbari.aved.classifier</groupId>
-    <artifactId>sharedlibjni</artifactId>
-    <packaging>nar</packaging>
+    <artifactId>sharedlibjni</artifactId>  
     <version>0.4.3-SNAPSHOT</version>
     <name>AVED classifier JNI library</name>
     <url>http://www.mbari.org</url>
@@ -330,6 +329,7 @@
                         <groupId>org.freehep</groupId>
                         <artifactId>freehep-nar-plugin</artifactId>
                         <extensions>true</extensions>
+                        <version>2.0-alpha-11-SNAPSHOT</version>
                         <configuration>
                             <libraries>
                                 <library>
@@ -371,6 +371,7 @@
                         <configuration>
                             <skip>true</skip>
                         </configuration>
+                        <version>2.10</version>
                     </plugin>
                 </plugins>
             </build>
