@@ -7,7 +7,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.mbari.aved.classifier</groupId>
-    <artifactId>sharedlibjni</artifactId>  
+    <artifactId>sharedlibjni</artifactId>
+    <packaging>nar</packaging>  
     <version>0.4.3-SNAPSHOT</version>
     <name>AVED classifier JNI library</name>
     <url>http://www.mbari.org</url>
@@ -38,6 +39,7 @@
                     sets up the java path correctly.-->
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.7.1</version>
                         <configuration>
                             <skip>true</skip>
                         </configuration>
@@ -58,8 +60,8 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <workingDirectory>${basedir}/target/nar/lib/i386-MacOSX-g++/jni</workingDirectory>
-                                    <executable>${basedir}/src/main/scripts/execute</executable>
+                                    <workingDirectory>${project.basedir}/target/nar/lib/i386-MacOSX-g++/jni</workingDirectory>
+                                    <executable>${project.basedir}/src/main/scripts/execute</executable>
                                     <arguments>
                                         <cmdlineArguments>install_name_tool -change libavedsharedlib.dylib @loader_path/libavedsharedlib.dylib lib${project.artifactId}-${project.version}.jnilib</cmdlineArguments>
                                     </arguments>
@@ -73,20 +75,21 @@
                     <plugin>
                         <groupId>org.freehep</groupId>
                         <artifactId>freehep-nar-plugin</artifactId>
-                        <version>2.0-alpha-2-SNAPSHOT</version>
+                        <version>2.0-alpha-11-SNAPSHOT</version>
                         <extensions>true</extensions>
                         <configuration>
                             <libraries>
                                 <library>
                                     <type>jni</type>
                                     <narSystemPackage>org.mbari.aved.classifier</narSystemPackage>
+                                    <narSystemDirectory>{project.basedir}/target/nar/nar-generated</narSystemDirectory>
                                     <linkCPP>true</linkCPP>
                                 </library>
                             </libraries>
                             <cpp>
                                 <systemIncludePaths>
                                     <systemIncludePath>${project.parent.basedir}/sharedlib/target/nar/include</systemIncludePath>
-                                    <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
+                                    <systemIncludePath>${project.basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/runtime/maci</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/bin/glnx86</systemIncludePath>
@@ -157,8 +160,8 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <workingDirectory>${basedir}/target/nar/lib/x86_64-MacOSX-g++/jni</workingDirectory>
-                                    <executable>${basedir}/src/main/scripts/execute</executable>
+                                    <workingDirectory>${project.basedir}/target/nar/lib/x86_64-MacOSX-g++/jni</workingDirectory>
+                                    <executable>${project.basedir}/src/main/scripts/execute</executable>
                                     <arguments>
                                         <cmdlineArguments>install_name_tool -change libavedsharedlib.dylib @loader_path/libavedsharedlib.dylib lib${project.artifactId}-${project.version}.jnilib</cmdlineArguments>
                                     </arguments>
@@ -179,6 +182,7 @@
                                 <library>
                                     <type>jni</type>
                                     <narSystemPackage>org.mbari.aved.classifier</narSystemPackage>
+                                    <narSystemDirectory>{project.basedir}/target/nar/nar-generated</narSystemDirectory>
                                     <linkCPP>true</linkCPP>
                                 </library>
                             </libraries>
@@ -204,7 +208,7 @@
                                 </includes>
                                 <systemIncludePaths>
                                     <systemIncludePath>${project.parent.basedir}/sharedlib/target/nar/include</systemIncludePath>
-                                    <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
+                                    <systemIncludePath>${project.basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/runtime/maci64</systemIncludePath> 
                                     <systemIncludePath>${mcrRoot}/sys/os/maci64</systemIncludePath>
@@ -261,6 +265,7 @@
                                 <library>
                                     <type>jni</type>
                                     <narSystemPackage>org.mbari.aved.classifier</narSystemPackage>
+                                    <narSystemDirectory>{project.basedir}/target/nar/nar-generated</narSystemDirectory>
                                     <linkCPP>true</linkCPP>
                                 </library>
                             </libraries>
@@ -271,7 +276,7 @@
                                 </options>
                                 <systemIncludePaths>
                                     <systemIncludePath>${project.parent.basedir}/sharedlib/target/nar/include</systemIncludePath>
-                                    <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
+                                    <systemIncludePath>${project.basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/runtime/glnx86</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/sys/os/glnx86</systemIncludePath>
@@ -296,6 +301,7 @@
                      sets up the java path correctly.-->
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.7.1</version>
                         <configuration>
                             <skip>true</skip>
                         </configuration>
@@ -325,6 +331,15 @@
             <build>
                 <defaultGoal>install</defaultGoal>
                 <plugins>
+                    <!--Skip the surefire test goal because we are using the nar one that
+                     sets up the java path correctly.-->
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.10</version>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
                         <!-- Creates the JNI layer for Linux environments.
                         This requires properties in the parent pom like
                         ${installPath}, ${mcrRoot}, etc.-->
@@ -338,16 +353,29 @@
                                 <library>
                                     <type>jni</type>
                                     <narSystemPackage>org.mbari.aved.classifier</narSystemPackage>
+                                    <narSystemDirectory>{project.basedir}/target/nar/nar-generated</narSystemDirectory>
                                     <linkCPP>true</linkCPP>
                                 </library>
                             </libraries>
-                            <cpp>
+                            <c>
+                                <name>gcc</name>
+                                <includes>
+                                    <include>**/*.c</include> 
+                                </includes>
+                            </c> 
+			    <cpp>
+                                <name>g++</name>
+                                <includes>
+                                    <include>**/*.cc</include>
+                                    <include>**/*.cpp</include>
+                                    <include>**/*.cxx</include>
+                                </includes>
                                 <options>
                                     <option>-pthread</option>
                                 </options>
                                 <systemIncludePaths>
                                     <systemIncludePath>${project.parent.basedir}/sharedlib/target/nar/include</systemIncludePath>
-                                    <systemIncludePath>${basedir}/target/nar/javah-include</systemIncludePath>
+                                    <systemIncludePath>${project.basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/runtime/glnxa64</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/sys/os/glnxa64</systemIncludePath>
@@ -367,15 +395,6 @@
                                 </libs>
                             </linker>
                         </configuration>
-                    </plugin>
-                    <!--Skip the surefire test goal because we are using the nar one that
-                     sets up the java path correctly.-->
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                        <version>2.10</version>
                     </plugin>
                 </plugins>
             </build>

@@ -45,18 +45,20 @@ public class AVEDClassifierLibraryJNITestLib extends TestCase {
     public void testAVEDClassifierLibraryJNI() throws Exception {
         String dbRoot = System.getProperty("user.home");
         String logfile = System.getProperty("user.home") + "/matlablog.txt";
+        System.out.println("dbRoot: " + dbRoot);
+	System.out.println("Matlab logfile: " + logfile);
+
         ClassifierLibraryJNI app = new ClassifierLibraryJNI(this);
 
         try {
             System.out.println("initialize library");
             String lcOSName = System.getProperty("os.name").toLowerCase();
         
-
             // If running from Mac
             if (lcOSName.startsWith("mac os x")) {
                 app.initLib(logfile, 1);
             } else {
-                app.initLib(logfile, 0);
+                app.initLib(logfile, 1);
             }
 
             System.out.println("Getting training classes");

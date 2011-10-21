@@ -1,13 +1,12 @@
 /*
- * MATLAB Compiler: 4.14 (R2010b)
- * Date: Wed Jun 22 20:51:55 2011
+ * MATLAB Compiler: 4.16 (R2011b)
+ * Date: Thu Oct 20 13:37:05 2011
  * Arguments: "-B" "macro_default" "-v" "-W" "lib:libavedsharedlib" "-T"
  * "link:lib" "-I"
- * "/Users/dcline/NetBeansProjects/avedac/aved-classifier/sharedlib/src/main/nat
- * ive/matlab" "-I"
- * "/Users/dcline/NetBeansProjects/avedac/aved-classifier/sharedlib/src/main/nat
- * ive/matlab/netlab" "-g" "-G" "run_tests_ui" "collect_ui" "collect_tests"
- * "collect_class" "assign_class" "test_class" "train_classes_ui" 
+ * "/home/aved/avedac/aved-classifier/sharedlib/src/main/native/matlab" "-I"
+ * "/home/aved/avedac/aved-classifier/sharedlib/src/main/native/matlab/netlab"
+ * "-g" "-G" "run_tests_ui" "collect_ui" "collect_tests" "collect_class"
+ * "assign_class" "test_class" "train_classes_ui" 
  */
 
 #ifndef __libavedsharedlib_h
