@@ -36,7 +36,7 @@ public class AVEDClassifierLibraryJNITestMatlabdb extends TestCase {
     public void testAVEDClassifierLibraryJNI() throws Exception {
         String dbRoot = System.getProperty("user.home");
         String logfile = System.getProperty("user.home") + "/matlablog.txt";
-        ClassifierLibraryJNI app = new ClassifierLibraryJNI(this);
+        ClassifierLibraryJNI app = new ClassifierLibraryJNI(this, true);
 
         System.out.println("initialize library");
         String lcOSName = System.getProperty("os.name").toLowerCase();

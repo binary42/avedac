@@ -62,7 +62,7 @@ public class TestClass {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    ClassifierLibraryJNI library  = new ClassifierLibraryJNI(this);
+                    ClassifierLibraryJNI library  = new ClassifierLibraryJNI(this, false);
                     ClassifierModel      model    = new ClassifierModel();
                     File                 dbDir    = UserPreferences.getModel().getClassDatabaseDirectory();
                     String               dbRoot   = dbDir.getAbsolutePath();

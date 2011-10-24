@@ -48,7 +48,7 @@ public class AVEDClassifierLibraryJNITestLib extends TestCase {
         System.out.println("dbRoot: " + dbRoot);
 	System.out.println("Matlab logfile: " + logfile);
 
-        ClassifierLibraryJNI app = new ClassifierLibraryJNI(this);
+        ClassifierLibraryJNI app = new ClassifierLibraryJNI(this, true);
 
         try {
             System.out.println("initialize library");
@@ -58,7 +58,7 @@ public class AVEDClassifierLibraryJNITestLib extends TestCase {
             if (lcOSName.startsWith("mac os x")) {
                 app.initLib(logfile, 1);
             } else {
-                app.initLib(logfile, 1);
+                app.initLib(logfile, 0);
             }
 
             System.out.println("Getting training classes");

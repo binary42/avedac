@@ -82,7 +82,7 @@
                                 <library>
                                     <type>jni</type>
                                     <narSystemPackage>org.mbari.aved.classifier</narSystemPackage>
-                                    <narSystemDirectory>{project.basedir}/target/nar/nar-generated</narSystemDirectory>
+                                    <narSystemDirectory>${project.basedir}/target/nar/nar-generated</narSystemDirectory>
                                     <linkCPP>true</linkCPP>
                                 </library>
                             </libraries>
@@ -182,7 +182,7 @@
                                 <library>
                                     <type>jni</type>
                                     <narSystemPackage>org.mbari.aved.classifier</narSystemPackage>
-                                    <narSystemDirectory>{project.basedir}/target/nar/nar-generated</narSystemDirectory>
+                                    <narSystemDirectory>${project.basedir}/target/nar/nar-generated</narSystemDirectory>
                                     <linkCPP>true</linkCPP>
                                 </library>
                             </libraries>
@@ -265,7 +265,7 @@
                                 <library>
                                     <type>jni</type>
                                     <narSystemPackage>org.mbari.aved.classifier</narSystemPackage>
-                                    <narSystemDirectory>{project.basedir}/target/nar/nar-generated</narSystemDirectory>
+                                    <narSystemDirectory>${project.basedir}/target/nar/nar-generated</narSystemDirectory>
                                     <linkCPP>true</linkCPP>
                                 </library>
                             </libraries>
@@ -335,11 +335,11 @@
                      sets up the java path correctly.-->
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.10</version>
+                        <version>2.7.1</version>
                         <configuration>
                             <skip>true</skip>
                         </configuration>
-                    </plugin>
+                    </plugin> 
                         <!-- Creates the JNI layer for Linux environments.
                         This requires properties in the parent pom like
                         ${installPath}, ${mcrRoot}, etc.-->
@@ -353,16 +353,10 @@
                                 <library>
                                     <type>jni</type>
                                     <narSystemPackage>org.mbari.aved.classifier</narSystemPackage>
-                                    <narSystemDirectory>{project.basedir}/target/nar/nar-generated</narSystemDirectory>
+                                    <narSystemDirectory>${project.basedir}/target/nar/nar-generated</narSystemDirectory>
                                     <linkCPP>true</linkCPP>
                                 </library>
-                            </libraries>
-                            <c>
-                                <name>gcc</name>
-                                <includes>
-                                    <include>**/*.c</include> 
-                                </includes>
-                            </c> 
+                            </libraries> 
 			    <cpp>
                                 <name>g++</name>
                                 <includes>
@@ -383,9 +377,9 @@
                                     <systemIncludePath>${mcrRoot}/sys/java/jre/glnxa64/jre/lib/amd64/server</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/sys/java/jre/glnxa64/jre/lib/amd64</systemIncludePath>
                                     <systemIncludePath>${mcrRoot}/extern/include</systemIncludePath>
-                                </systemIncludePaths>
+                                 </systemIncludePaths>
                             </cpp>
-                            <linker>
+                            <linker>  
                                 <libs>
                                     <lib>
                                         <directory>${mcrRoot}/runtime/glnxa64</directory>

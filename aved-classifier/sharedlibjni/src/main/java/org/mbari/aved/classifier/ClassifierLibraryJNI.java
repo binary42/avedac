@@ -38,31 +38,41 @@ import org.mbari.aved.classifier.NarSystem;
  */
 public class ClassifierLibraryJNI {
 
-    public ClassifierLibraryJNI(Object classToUse) throws Exception {
+    public ClassifierLibraryJNI(Object classToUse, boolean test) throws Exception {
 
         try {
-            String lcOSName = System.getProperty("os.name").toLowerCase();
-            // If running from Mac use system loader
-            if (lcOSName.startsWith("mac os x")) {
-                System.out.println("Loading libsharedlib");
-                NarSystem.loadLibrary(); 
-            } else {
-                // If running from Linux, then assume running from an executable
-                // jar, so use the absolute path
-                System.out.println(classToUse.toString());
-                String path = getPathToJarfileDir(classToUse);
-                String loadFile = null;
-                if (path != null) {
-                    loadFile = new String(path + "/lib/" + "libsharedlib-0.4.3-SNAPSHOT");
-                    loadFile = loadFile + ".so";
-                    System.out.println("Loading " + loadFile);
-                    System.load(loadFile);
-                }
-            }
+
+	    if (test == true) { 
+		System.out.println("Loading libsharedlib"); 
+		NarSystem.loadLibrary(); 
+	    }
+	    else {
+		String lcOSName = System.getProperty("os.name").toLowerCase();
+            	// If running from Mac use system loader
+            	if (lcOSName.startsWith("mac os x")) {
+                	System.out.println("Loading libsharedlib");
+                	NarSystem.loadLibrary(); 
+            	} else {
+                	// If running from Linux, then assume running from an executable
+                	// jar, so use the absolute path
+                	System.out.println("Loading libsharedlib");
+			String path = getPathToJarfileDir(classToUse); 
+
+                  	if (path != null) {
+                    	  String loadFile = path + "/lib/" + "libsharedlib-0.4.3-SNAPSHOT.so";
+                    	  System.out.println("Loading " + loadFile);
+                    	  System.load(loadFile);
+                  	}
+		  	else {
+                    	  NarSystem.loadLibrary(); 
+		  	} 
+		}
+	    }
         } catch (URISyntaxException ex) {
+            String message = "ERROR: could not load library sharedlibjni:" + ex.getMessage();
             Logger.getLogger(ClassifierLibraryJNI.class.getName()).log(Level.SEVERE, null, ex);
         } catch (UnsatisfiedLinkError u) {
-            String message = new String("ERROR: could not load library sharedlibjni:" + u.getMessage());
+            String message = "ERROR: could not load library sharedlibjni:" + u.getMessage();
             Logger.getLogger(ClassifierLibraryJNI.class.getName()).log(Level.SEVERE, null, message);
             throw new Exception(message);
         }
@@ -79,9 +89,9 @@ public class ClassifierLibraryJNI {
      */
     public static String getPathToJarfileDir(Object classToUse) throws URISyntaxException {
         String url = classToUse.getClass().getResource("/" + classToUse.getClass().getName().replaceAll("\\.", "/") + ".class").toString();
-        System.out.println(url);
+        System.out.println("URL: " + url);
         url = url.substring(4).replaceFirst("/[^/]+\\.jar!.*$", "/");
-        System.out.println(url);
+        System.out.println("URL: " + url);
         try {
             File dir = new File(new URL(url).toURI());
             url = dir.getAbsolutePath();
@@ -91,7 +101,7 @@ public class ClassifierLibraryJNI {
         } catch (URISyntaxException ue) {
             url = null;
         }
-        System.out.println(url);
+        System.out.println("Path to jar file: " + url);
         return url;
     }
 
