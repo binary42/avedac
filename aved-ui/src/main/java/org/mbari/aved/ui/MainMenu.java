@@ -106,7 +106,7 @@ public class MainMenu implements ModelListener {
     public static String       ORGANIZE_CLASSES        = "Organize classes";
     public static String       PREFERENCES             = "Preferences";
     public static String       RUN_CLASSIFIER          = "Run";
-    public static String       BATCH_RUN_CLASSIFIER           = "Batch process";
+    public static String       BATCH_RUN_CLASSIFIER    = "Batch process";
     public static String       SAVE_EVENTS             = "Save events";
     public static String       SAVE_EVENTS_AS          = "Save events as...";
     public static String       STREAM_PROCESS          = "Video stream";

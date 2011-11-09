@@ -34,24 +34,27 @@ import org.mbari.aved.classifier.TrainingModel;
 
 import java.util.ArrayList;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List; 
+import java.util.Set;
 import javax.swing.table.AbstractTableModel;
 
 /**
- *
+ * AbstractTableModel encapsulating ArrayList of BatchProcessDataModel 
+ * objects and customizes TableModel columns to reflect classes
+ * in given TrainingModel
+ * 
  * @author dcline
  */
 public class BatchProcessAbstractTableModel extends AbstractTableModel {
-    private ArrayList<BatchProcessDataModel> list        = new ArrayList<BatchProcessDataModel>();
-    private ArrayList<String>                columnNames = new ArrayList<String>();
-
-    /**
-     *     Replaces the list model
-     *     @param model
-     */
-    public BatchProcessAbstractTableModel(ArrayList<BatchProcessDataModel> list, TrainingModel trainingModel) {
-        this.list = list;
-        changeClassColumns(trainingModel); 
-        fireTableDataChanged();
+    private LinkedList<BatchProcessDataModel>      list        = new LinkedList<BatchProcessDataModel>();
+    private ArrayList<String>                      columnNames = new ArrayList<String>();
+    private HashMap<String, BatchProcessDataModel> hmapFilenames = new HashMap<String, BatchProcessDataModel>();
+        
+    public BatchProcessAbstractTableModel() { 
     }
 
     public void changeClassColumns(TrainingModel trainingModel) {
@@ -71,9 +74,9 @@ public class BatchProcessAbstractTableModel extends AbstractTableModel {
             }
         }
 
-        this.fireTableStructureChanged();
-    }
-
+        fireTableStructureChanged();
+    }     
+ 
     public int getRowCount() {
         return list.size();
     }
@@ -100,11 +103,24 @@ public class BatchProcessAbstractTableModel extends AbstractTableModel {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    public void remove(BatchProcessDataModel m) {
+        hmapFilenames.remove(m.getFile().getAbsolutePath());
+        
+        if (list.contains(m))
+            list.remove(m);
+    }
+    
+    void add(BatchProcessDataModel m) {
+        // Don't add duplicates. Use a hash map to speed up the lookup
+        if (!hmapFilenames.containsKey(m.getFile().getAbsolutePath())) {
+            hmapFilenames.put(m.getFile().getAbsolutePath(), m);  
+            list.add(m);
+        }  
+    }
+    
     public void clear() {
-        if (this.list != null) {
-            this.list = null;
-        }
-
+        list.clear(); 
         fireTableDataChanged();
     }
+
 }

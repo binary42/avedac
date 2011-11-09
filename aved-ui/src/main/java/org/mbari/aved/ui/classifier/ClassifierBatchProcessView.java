@@ -1,6 +1,6 @@
 /*
  * @(#)ClassifierBatchProcessView.java
- *
+ * 
  * Copyright 2011 MBARI
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,12 +35,13 @@ import com.jgoodies.binding.list.ArrayListModel;
 
 import org.mbari.aved.classifier.TrainingModel;
 import org.mbari.aved.ui.appframework.JFrameView;
-import org.mbari.aved.ui.appframework.ModelEvent;
-import org.mbari.aved.ui.classifier.ClassifierBatchProcessController.MouseClickJListActionHandler;
+import org.mbari.aved.ui.appframework.Model;
+import org.mbari.aved.ui.appframework.ModelEvent; 
 
 //~--- JDK imports ------------------------------------------------------------
 
 import java.awt.Cursor;
+
 import java.io.File;
 
 import java.util.ArrayList;
@@ -48,6 +49,7 @@ import java.util.ArrayList;
 import javax.swing.JList;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import org.mbari.aved.ui.classifier.ClassifierBatchProcessController.MouseClickJListActionHandler;
 
 /**
  *
@@ -65,9 +67,9 @@ public class ClassifierBatchProcessView extends JFrameView {
     private static final String ID_BROWSE_EXPORT_BUTTON        = "browseExportDir";       // javax.swing.JButton
     private static final String ID_BROWSE_IMPORT_BUTTON        = "browseImportDir";       // javax.swing.JButton
     private static final String ID_CLEAR_ALL_AVAILABLE_BUTTON  = "clearAllAvailable";     // javax.swing.JButton
+    private static final String ID_EXPORT_DIRECTORY_JLIST      = "exportDirectory";    // javax.swing.JFormattedTextField
     private static final String ID_EXPORT_EXCEL_BUTTON         = "exportXls";             // javax.swing.JButton
     private static final String ID_IMPORT_DIRECTORY_JLIST      = "importDirectory";    // javax.swing.JFormattedTextField
-    private static final String ID_EXPORT_DIRECTORY_JLIST      = "exportDirectory";    // javax.swing.JFormattedTextField
     private static final String ID_REMOVE_ALL_SELECTED_BUTTON  = "removeAllSelected";     // javax.swing.JButton
     private static final String ID_REMOVE_BUTTON               = "remove";                // javax.swing.JButton
     private static final String ID_SELECT_ALL_AVAILABLE_BUTTON = "selectAllAvailable";    // javax.swing.JButton
@@ -77,8 +79,8 @@ public class ClassifierBatchProcessView extends JFrameView {
     /** Busy and wait cursor */
     public final static Cursor busyCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
     private final JList        availableList;
-    private final JTextField   importDirectoryTextField,exportDirectoryTextField;
-    private final JTable       selectedTable;
+    private final JTextField   importDirectoryTextField, exportDirectoryTextField;
+    private final JTable       selectedTable; 
 
     public ClassifierBatchProcessView(ClassifierModel model, ClassifierBatchProcessController controller) {
 
@@ -99,8 +101,7 @@ public class ClassifierBatchProcessView extends JFrameView {
         getForm().getButton(ID_REMOVE_BUTTON).addActionListener(actionHandler);
         getForm().getButton(ID_BROWSE_IMPORT_BUTTON).addActionListener(actionHandler);
         getForm().getButton(ID_BROWSE_EXPORT_BUTTON).addActionListener(actionHandler);
-        getForm().getButton(ID_EXPORT_EXCEL_BUTTON).addActionListener(actionHandler);
-        populateTable(new ArrayList<BatchProcessDataModel>(), controller.getModel().getTrainingModel(0));
+        getForm().getButton(ID_EXPORT_EXCEL_BUTTON).addActionListener(actionHandler); 
     }
 
     /** Sets the busy cursor for this view. Use this to disable the user mouse during long operations */
@@ -134,7 +135,7 @@ public class ClassifierBatchProcessView extends JFrameView {
     void setImportDirectory(File directory) {
         importDirectoryTextField.setText(directory.toString());
     }
-    
+
     JList getAvailableList() {
         return availableList;
     }
@@ -149,24 +150,14 @@ public class ClassifierBatchProcessView extends JFrameView {
         availableList.addMouseListener(mouseClickJListActionHandler);
     }
 
-    /**
-     * Adds a model to the table
-     * @param list
-     */
-    void populateTable(ArrayList<BatchProcessDataModel> list, TrainingModel trainingModel) {
-        selectedTable.setModel(new BatchProcessAbstractTableModel(list, trainingModel));
-    }
-
-    BatchProcessAbstractTableModel getTableModel() {
-        return (BatchProcessAbstractTableModel) selectedTable.getModel();
-    }
-
     public void replaceClassifierRunPanel(FormPanel panel) {
-        FormAccessor accessor = getForm().getFormAccessor("main"); 
+        FormAccessor accessor = getForm().getFormAccessor("main");
+
         accessor.replaceBean("classifierRun", panel);
     }
 
     JTable getSelectedTable() {
-        return this.selectedTable;
-    }
+        return selectedTable;
+    } 
+     
 }

@@ -81,7 +81,7 @@ public class ClassifierLibraryJNITask {
     public final synchronized String getCancel() {
         return this.matlabCancel;
     }
-
+ 
     protected void run(ClassifierLibraryJNI library) throws Exception {
         throw new UnsupportedOperationException("Not supported yet.");
     }

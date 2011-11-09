@@ -40,9 +40,6 @@ import org.mbari.aved.ui.message.NonModalMessageDialog;
 
 import java.awt.*;
 
-import java.io.File;
-
-import java.net.URL;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

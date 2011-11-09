@@ -32,8 +32,7 @@ import aved.model.EventObject;
 
 import org.mbari.aved.classifier.ClassifierLibraryJNI;
 import org.mbari.aved.classifier.TrainingModel;
-import org.mbari.aved.ui.classifier.table.TableModel;
-import org.mbari.aved.ui.model.EventImageCache;
+import org.mbari.aved.ui.classifier.table.TableModel; 
 import org.mbari.aved.ui.model.EventImageCacheData;
 import org.mbari.aved.ui.model.EventListModel;
 import org.mbari.aved.ui.model.EventObjectContainer;
@@ -45,6 +44,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.mbari.aved.ui.model.EventImageCache;
 
 /**
  *

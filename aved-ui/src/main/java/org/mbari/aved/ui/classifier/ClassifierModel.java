@@ -201,6 +201,16 @@ public class ClassifierModel extends AbstractModel {
             notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASS_MODELS_UPDATED, m.getName()));
         }
     }
+    
+    /**
+     * Notify listeners that the specific class model has been updated
+     * @param model 
+     */
+    public void notifyChanged(ClassModel model) {
+          synchronized (syncArrays) { 
+            notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASS_MODELS_UPDATED, model.getName()));
+        }
+    }
 
     /**
      * Remove a class model from the list
@@ -340,9 +350,7 @@ public class ClassifierModel extends AbstractModel {
                 ClassModel model = i.next();
 
                 if (m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())) {
-                    classModelList.remove(model);
-                    classModelList.add(m);
-
+                    classModelList.remove(model); 
                     break;
                 }
             }
@@ -355,9 +363,9 @@ public class ClassifierModel extends AbstractModel {
      * Gets the class model with the given class name.
      *
      * @param className
-     * @return the class model if found, otherwise throws exception
+     * @return the class model if found, otherwise returns null
      */
-    public ClassModel getClassModel(String className) throws Exception {
+    public ClassModel getClassModel(String className) {
         synchronized (syncArrays) {
             Iterator<ClassModel> i = classModelList.iterator();
 
@@ -369,7 +377,7 @@ public class ClassifierModel extends AbstractModel {
                 }
             }
 
-            throw new Exception("Class Model with name: " + className + " not found");
+            return null;
         }
     }
 
@@ -403,19 +411,26 @@ public class ClassifierModel extends AbstractModel {
     }
 
     /**
+     * notify model listeners the training model selected has changed
+     * @param name 
+     */
+    void notifyTrainingModelChanged(String name) {
+        this.notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODEL_SELECTION_CHANGE, name));
+    }
+
+    /**
      *
      * @author dcline
      */
     public class ClassifierModelEvent extends ModelEvent {
-
-        /**
-         * Indicates that the class model has changed
-         */
+ 
         public static final int CLASSIFIER_DBROOT_MODEL_CHANGED = 0;
         public static final int CLASS_MODELS_UPDATED            = 2;
+        public static final int CLASS_MODELS_FILE_ADDED         = 5;
         public static final int JNI_TASK_COMPLETED              = 4;
         public static final int TRAINING_DIR_UPDATED            = 1;
         public static final int TRAINING_MODELS_UPDATED         = 3;
+        public static final int TRAINING_MODEL_SELECTION_CHANGE = 6;
 
         /**
          * Constructor for this custom ModelEvent. Basically just like ModelEvent.
@@ -426,7 +441,7 @@ public class ClassifierModel extends AbstractModel {
          * @param message a message about the event
          */
         public ClassifierModelEvent(Object obj, int type, String message) {
-            super(obj, type, "ClassifierModelEvent:" + message);
+            super(obj, type, message);
         }
     }
 }

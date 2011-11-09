@@ -86,7 +86,7 @@ public class ClassModelListRenderer extends JLabel implements ListCellRenderer {
         // confusion as the classifier can only work in one
         // color space at a time, e.g. classes in different
         // color spaces cannot be mixed
-        if (colorSpace.equals(ColorSpace.GRAY)) {
+        if (colorSpace != null && colorSpace.equals(ColorSpace.GRAY)) {
 
             // This isn't necessarily how the image is rendered in the Matlab
             // code, but it makes it easier to see the thumbnails

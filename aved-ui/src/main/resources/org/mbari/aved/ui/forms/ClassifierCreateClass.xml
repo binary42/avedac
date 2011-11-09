@@ -26,8 +26,8 @@
    </super>
    <at name="id">/Users/dcline/NetBeansProjects/avedac/aved-ui/src/main/resources/org/mbari/aved/ui/forms/ClassifierCreateClass.xml</at>
    <at name="path">ClassifierCreateClass.xml</at>
-   <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:50DLU:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,FILL:DEFAULT:GROW(1.0),BOTTOM:DEFAULT:GROW(1.0)</at>
-   <at name="colspecs">RIGHT:DEFAULT:NONE,FILL:6PX:NONE,FILL:250PX:GROW(1.0),FILL:4PX:NONE,FILL:DEFAULT:NONE,FILL:4PX:NONE,FILL:MIN:GROW(1.0),FILL:DEFAULT:NONE,FILL:5PX:NONE,FILL:DEFAULT:NONE</at>
+   <at name="rowspecs">CENTER:25DLU:NONE,CENTER:5DLU:NONE,CENTER:50DLU:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,FILL:DEFAULT:GROW(1.0),BOTTOM:DEFAULT:GROW(1.0)</at>
+   <at name="colspecs">RIGHT:200PX:NONE,FILL:4PX:NONE,FILL:250PX:GROW(1.0),FILL:4PX:NONE,FILL:DEFAULT:NONE,FILL:4PX:NONE,FILL:MIN:GROW(1.0),FILL:DEFAULT:NONE,FILL:4PX:NONE,FILL:DEFAULT:NONE</at>
    <at name="components">
     <object classname="java.util.LinkedList">
      <item >
@@ -247,7 +247,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">2</at>
             <at name="height">28</at>
-            <at name="width">409</at>
+            <at name="width">492</at>
             <at name="name">classname</at>
             <at name="toolTipText">The predicted class name this event was assigned to be. This can either be a VARS concept, or a user-defined class name. This corresponds to the AVEDac classifier prediction. </at>
             <at name="border">
@@ -359,8 +359,8 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="lineWrap">true</at>
             <at name="scrollableTracksViewportWidth">true</at>
-            <at name="height">259</at>
-            <at name="width">405</at>
+            <at name="height">216</at>
+            <at name="width">488</at>
             <at name="name">classdescription</at>
             <at name="columns">20</at>
             <at name="toolTipText">Optional description of the class </at>
@@ -454,7 +454,7 @@
               </at>
              </object>
             </at>
-            <at name="width">409</at>
+            <at name="width">492</at>
             <at name="name">imagedirectory</at>
             <at name="background" object="color">236,233,216</at>
             <at name="actionCommand">imageDirComboBoxChanged</at>
@@ -574,7 +574,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">2</at>
             <at name="height">28</at>
-            <at name="width">409</at>
+            <at name="width">492</at>
             <at name="name">classsnamevars</at>
             <at name="toolTipText">(MBARI internal only), if the VARS knowledge base is available , select the class from the tree on the right. The VARS class doesn&apos;t necessarily need to match the predicted class. (External use), this can be any name, but is generally the lowest taxonomic classification of the animal that can be identified</at>
             <at name="border">
@@ -695,7 +695,7 @@
               <at name="name">items</at>
              </object>
             </at>
-            <at name="width">409</at>
+            <at name="width">492</at>
             <at name="name">colorspace</at>
             <at name="background" object="color">236,233,216</at>
             <at name="actionCommand">colorSpaceComboBoxChanged</at>
@@ -812,7 +812,7 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="height">16</at>
-            <at name="width">409</at>
+            <at name="width">492</at>
             <at name="name">classimage</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
@@ -1045,8 +1045,8 @@
           <at name="classname">javax.swing.JPanel</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
-            <at name="height">540</at>
-            <at name="width">338</at>
+            <at name="height">505</at>
+            <at name="width">420</at>
             <at name="name">knowledgebase</at>
             <at name="background" object="color">255,255,255</at>
             <at name="autoscrolls">true</at>

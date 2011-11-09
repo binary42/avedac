@@ -190,8 +190,7 @@ public class ClassImageDirectorySynopsisView extends JPanel implements Dockable,
         if (!file.renameTo(moved)) {
             return false;
         }
-
-        model.updateFileList();
+ 
         updateLabel(moved);
         imageStack.add(moved);
 
@@ -311,8 +310,7 @@ public class ClassImageDirectorySynopsisView extends JPanel implements Dockable,
             labelPanel.add(new JLabel(model.getName()));
         }
 
-        labelPanel.repaint();
-        model.updateFileList();
+        labelPanel.repaint(); 
     }
 
     public ClassImageDirectoryModel getModel() {

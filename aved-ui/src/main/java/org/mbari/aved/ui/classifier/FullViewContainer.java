@@ -102,6 +102,9 @@ public class FullViewContainer extends JPanel implements Dockable {
 
         button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                File dir = UserPreferences.getModel().getLastClassImageImportDirectory();
+                chooser.setCurrentDirectory(dir);
+                
                 int choice = chooser.showDialog(FullViewContainer.this, "Choose Dir");
 
                 if (choice == JFileChooser.APPROVE_OPTION) {
@@ -114,7 +117,7 @@ public class FullViewContainer extends JPanel implements Dockable {
                     final ClassImageDirectoryModel model = new ClassImageDirectoryModel();
 
                     model.setDirectory(file);
-                    UserPreferences.getModel().setClassTrainingDirectory(file);
+                    UserPreferences.getModel().setClassImportDirectory(file);
                     FullViewContainer.this.remove(fullView);
                     fullView = new ClassImageDirectoryFullView(model, 0);
                     FullViewContainer.this.add(fullView);

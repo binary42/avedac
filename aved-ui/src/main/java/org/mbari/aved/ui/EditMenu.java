@@ -80,6 +80,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
+import org.mbari.aved.ui.classifier.knowledgebase.KnowledgeBaseUtil;
 
 /**
  * Creates and manages a mainMenu, either as a mainMenu mainMenu
@@ -280,6 +281,7 @@ public class EditMenu extends JFrame {
         classNewKbMenuItem = new JMenuItem(VARS_KB);
         classNewKbMenuItem.addActionListener(menuItemHandler);
         subMenuClass.add(classNewKbMenuItem);
+        
         classNewCustomMenuItem = new JMenuItem(CLASS_NEW_CUSTOM);
         classNewCustomMenuItem.addActionListener(menuItemHandler);
         subMenuClassNew.add(classNewCustomMenuItem);
@@ -892,6 +894,11 @@ public class EditMenu extends JFrame {
                         subMenuClass.getItem(j).setEnabled(true);
                     }
                 }
+                
+                // Disable VARS lookup if VARS is not enabled
+                if (!KnowledgeBaseUtil.isKnowledgebaseAvailable()) {
+                    classNewKbMenuItem.setEnabled(false);
+                } 
 
                 cnt = subMenuId.getItemCount();
 

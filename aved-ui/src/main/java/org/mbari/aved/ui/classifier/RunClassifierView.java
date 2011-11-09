@@ -56,14 +56,13 @@ public class RunClassifierView extends JFrameView {
      * If any of the component name are changed in the Abeille form designer, they
      * should be modified here too
      */
-    private static final String ID_VOTING_METHOD_COMBOBOX   = "votingmethodcombo";       // javax.swing.JComboBox
+    private static final String ID_VOTING_METHOD_COMBOBOX   = "votingmethod";            // javax.swing.JComboBox
     private static final String ID_CLASSES_IN_LIBRARY_JLIST = "classes";                 // javax.swing.JLIST
     private static final String ID_COLORSPACE_COMBOBOX      = "colorspace";              // javax.swing.JComboBox
     private static final String ID_LIBRARY_NAME_COMBO       = "libraryname";             // javax.swing.JComboBox
     private static final String ID_PROBABILITY_THRESH_TEXT  = "probabilitythreshold";    // javax.swing.JTextField
     private static final String ID_RUN_BUTTON               = "run";                     // javax.swing.JButton
     private static final String ID_STOP_BUTTON              = "stop";                    // ""
-
 
     /* Some frequently accessed variables */
     private final JList      classesInLibraryList;
@@ -111,9 +110,13 @@ public class RunClassifierView extends JFrameView {
         votingMethodComboBox.setModel(new ComboBoxAdapter(selectionVotingInList));
 
         // default to majority
-        votingMethodComboBox.setSelectedIndex(0);
-
+        votingMethodComboBox.setSelectedIndex(0); 
+        
+        // default to RGB color space
+        colorSpaceComboBox.setSelectedIndex(1);
+        
         this.getRootPane().setDefaultButton((JButton) getForm().getButton(ID_RUN_BUTTON));
+        
         // Set default size and.getName()
         setTitle(ApplicationInfo.getName() + "-" + "Run classifier library");
         this.pack();
@@ -189,7 +192,7 @@ public class RunClassifierView extends JFrameView {
 
         // Select the first one
         if (!selectionInList.isEmpty()) {
-            libraryNameComboBox.setSelectedIndex(0);
+            libraryNameComboBox.setSelectedIndex(0); 
         }
     }
 
@@ -239,6 +242,9 @@ public class RunClassifierView extends JFrameView {
         classesInLibraryList.setModel(listModel);
     }
 
+    TrainingModel getTrainingModel() {
+        return (TrainingModel) libraryNameComboBox.getSelectedItem(); 
+    }
     /**
      * Selects the library by name.
      * @param name the name of the library
@@ -271,5 +277,6 @@ public class RunClassifierView extends JFrameView {
             return false;
         }
     }
+
 
 }

@@ -102,17 +102,11 @@ public class PreferencesController extends AbstractController {
             File      newDir = (File) box.getSelectedItem();
 
             getModel().setClassTrainingImageDirectory(newDir);
-        } else if (op.equals("DbrootDirComboBoxChanged")) {
-            JComboBox box    = ((JComboBox) e.getSource());
-            File      newDir = (File) box.getSelectedItem();
-
-            if (newDir != null) {
-                getModel().setDatabaseRoot(newDir);
-            }
+            getModel().setDatabaseRoot(newDir);
         } else if (op.equals("Close")) {
             getView().setVisible(false);
         } else {
-            System.out.println("#############Something unknown changed in ClassifierSettingsController: " + op);
+            System.out.println("#############Something unknown changed in PreferencesController: " + op);
         }
     }
 }

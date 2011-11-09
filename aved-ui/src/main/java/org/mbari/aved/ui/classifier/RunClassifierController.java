@@ -1,6 +1,6 @@
 /*
  * @(#)RunClassifierController.java
- *
+ * 
  * Copyright 2011 MBARI
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -57,11 +57,9 @@ import java.util.logging.Logger;
 import javax.swing.JComboBox;
 
 public class RunClassifierController extends AbstractController implements ModelListener {
- 
     private EventListModel      eventListModel;
     private SummaryModel        summaryModel;
     private RunClassifierWorker task;
-    private TrainingModel       trainingModel;
 
     RunClassifierController(ClassifierModel model) {
         setModel(model);
@@ -69,27 +67,6 @@ public class RunClassifierController extends AbstractController implements Model
 
         // Register as listener to the models
         getModel().addModelListener(this);
-
-        // Create an empty trainingModel to start with
-        trainingModel = new TrainingModel();
-
-        File dbroot = UserPreferences.getModel().getClassDatabaseDirectory();
-
-        try {
-
-            // Create the directory if it doesn't exist
-            if (!dbroot.exists()) {
-                dbroot.mkdirs();
-            }
-
-            trainingModel.setDatabaseRoot(dbroot);
-
-            ColorSpace colorSpace = trainingModel.getColorSpace();
-
-            getView().selectColorSpace(colorSpace);
-        } catch (Exception ex) {
-            Logger.getLogger(RunClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
 
     public void setEventListModel(final EventListModel eventListModel) {
@@ -112,7 +89,7 @@ public class RunClassifierController extends AbstractController implements Model
     public RunClassifierView getView() {
         return ((RunClassifierView) super.getView());
     }
-  
+
     public void run() {
         if ((eventListModel != null) && (summaryModel != null)) {
             if (eventListModel.getSize() == 0) {
@@ -136,17 +113,15 @@ public class RunClassifierController extends AbstractController implements Model
                     }
 
                     // If at least one class then create
-                    final SwingWorker worker           = Classifier.getController().getWorker();
-                    final float       minProbThreshold = getView().getProbabilityThreshold();
+                    final SwingWorker   worker           = Classifier.getController().getWorker();
+                    final float         minProbThreshold = getView().getProbabilityThreshold();
+                    final TrainingModel trainingModel    = getView().getTrainingModel().copy();
 
                     // Get the voting method used for determining the winner
                     final VotingMethod method  = getView().getVotingMethod();
                     File               testDir = summaryModel.getTestImageDirectory();
 
                     task = new RunClassifierWorker(trainingModel, minProbThreshold, testDir, eventListModel, method);
-                    Classifier.getController().addQueue(task);
-                    getView().setRunButton(false);
-                    getView().setStopButton(true);
 
                     // / Create a progress display thread for monitoring this task
                     Thread thread = new Thread() {
@@ -163,6 +138,9 @@ public class RunClassifierController extends AbstractController implements Model
                                                                               br);
 
                             progressDisplayStream.execute();
+                            Classifier.getController().addQueue(task);
+                            getView().setRunButton(false);
+                            getView().setStopButton(true);
 
                             while (!task.isCancelled() &&!task.isFini()) {
                                 try {
@@ -231,7 +209,7 @@ public class RunClassifierController extends AbstractController implements Model
             JComboBox  box           = ((JComboBox) e.getSource());
             ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
             String     lastSelection = UserPreferences.getModel().getTrainingLibrarySelection();
-
+             
             // Populate the libraries in the new color space
             getView().populateTrainingLibraryList(newColorSpace);
 
@@ -246,9 +224,8 @@ public class RunClassifierController extends AbstractController implements Model
                 Classifier.getController().kill(task);
             }
         } else if (actionCommand.equals("availLibraryNameComboBoxChanged")) {
-            JComboBox box = ((JComboBox) e.getSource());
-
-            trainingModel = (TrainingModel) box.getSelectedItem();
+            JComboBox     box           = ((JComboBox) e.getSource());
+            TrainingModel trainingModel = (TrainingModel) box.getSelectedItem();
 
             if (trainingModel != null) {
                 getView().loadModel(trainingModel);
@@ -268,7 +245,11 @@ public class RunClassifierController extends AbstractController implements Model
             // reset the color space
             case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
             case ClassifierModel.ClassifierModelEvent.TRAINING_MODELS_UPDATED :
-                getView().populateTrainingLibraryList(trainingModel.getColorSpace());
+                if (getView().getTrainingModel() != null) {
+                    getView().populateTrainingLibraryList(getView().getTrainingModel().getColorSpace());
+                } else {
+                    getView().populateTrainingLibraryList(ColorSpace.RGB);
+                }
 
                 break;
             }

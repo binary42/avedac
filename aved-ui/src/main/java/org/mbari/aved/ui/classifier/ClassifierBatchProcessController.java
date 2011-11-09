@@ -29,7 +29,7 @@ package org.mbari.aved.ui.classifier;
 //~--- non-JDK imports --------------------------------------------------------
 
 import com.jgoodies.binding.list.ArrayListModel;
-
+ 
 import org.mbari.aved.classifier.TrainingModel;
 import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.appframework.ModelEvent;
@@ -50,18 +50,14 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JFileChooser;
 import javax.swing.JList;
 import javax.swing.JTable;
+import org.mbari.aved.ui.model.TableSorter;
 
 /**
  *
@@ -69,11 +65,10 @@ import javax.swing.JTable;
  */
 public class ClassifierBatchProcessController extends AbstractController
         implements ModelListener, PropertyChangeListener {
-    private ArrayList<BatchProcessDataModel>       list              = new ArrayList<BatchProcessDataModel>();
-    private EventXmlDirectoryModel                 xmlDirModel       = new EventXmlDirectoryModel();
-    private HashMap<String, BatchProcessDataModel> hmapSelectedFiles = new HashMap<String, BatchProcessDataModel>();
+    private EventXmlDirectoryModel                 xmlDirModel       = new EventXmlDirectoryModel(); 
     private File                                   outputDir;
     private RunClassifierBatch                     runClassifierBatch;
+    private BatchProcessAbstractTableModel         abstractTableModel = new BatchProcessAbstractTableModel();
 
     ClassifierBatchProcessController(ClassifierModel model) {
         setModel(model);
@@ -93,7 +88,18 @@ public class ClassifierBatchProcessController extends AbstractController
         File exportDir = UserPreferences.getModel().getXmlExportDirectory();
 
         getView().setExportDirectory(exportDir);
-        outputDir = exportDir;
+        outputDir = exportDir;         
+    
+        // Create the sorter and intialize it in the model
+        TableSorter sorter = new TableSorter(abstractTableModel);
+
+        // getModel().initializeSorter(sorter);
+        // Initialize the table headers, so the sorter knows what to sort on
+        sorter.setTableHeader(getView().getSelectedTable().getTableHeader());
+
+        // Set the model in the event table
+        getView().getSelectedTable().setModel(sorter); 
+                             
     }
 
     @Override
@@ -229,7 +235,20 @@ public class ClassifierBatchProcessController extends AbstractController
         }
     }
 
-    public void modelChanged(ModelEvent event) {}
+    public void modelChanged(ModelEvent event) {
+        /**
+         * When the classifier training library changes, update the columns names in the table 
+         */
+        if (event instanceof ClassifierModel.ClassifierModelEvent) {
+            switch (event.getID()) {
+                case ClassifierModel.ClassifierModelEvent.TRAINING_MODEL_SELECTION_CHANGE:
+
+                    if (runClassifierBatch.getTrainingModel() != null) {
+                        abstractTableModel.changeClassColumns(runClassifierBatch.getTrainingModel());
+                    }
+            }
+        }
+    }
 
     /**
      * Handles property changes on the directory browser
@@ -238,8 +257,10 @@ public class ClassifierBatchProcessController extends AbstractController
      */
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals("fileList")) {
-            list.clear();
-
+                 
+            abstractTableModel.clear();  
+            abstractTableModel.fireTableDataChanged();
+            
             List<File>     l         = xmlDirModel.getFileList();
             ArrayListModel listModel = new ArrayListModel();
 
@@ -256,65 +277,37 @@ public class ClassifierBatchProcessController extends AbstractController
      */
     private void copyItemToSelected() {
         if (!getView().getAvailableList().isSelectionEmpty()) {
-
+  
             // getClassTotal user selected items and indices
             Object item[] = getView().getAvailableList().getSelectedValues();
 
-            // create new batch process data modesl for these
+            // add to the model
             for (int i = 0; i < item.length; i++) {
-                File                  f = (File) item[i];
-                BatchProcessDataModel m = new BatchProcessDataModel(f);
+                File f = (File) item[i];
+                abstractTableModel.add(new BatchProcessDataModel(f));
+            } 
+            
+            abstractTableModel.fireTableDataChanged(); 
 
-                hmapSelectedFiles.put(f.getName(), m);
-            }
-
-            // add to the table
-            list.clear();
-            list.addAll(sort());
-            getView().populateTable(list, runClassifierBatch.getTrainingModel());
         }
-    }
-
-    private ArrayList<BatchProcessDataModel> sort() {
-        ArrayList<BatchProcessDataModel> list = new ArrayList<BatchProcessDataModel>();
-
-        // Sort and convert to an ArrayList
-        Set      set  = hmapSelectedFiles.keySet();
-        String[] keys = new String[set.size()];
-
-        set.toArray(keys);
-
-        List<String> tmpkeyList = Arrays.asList(keys);
-
-        Collections.sort(tmpkeyList);
-
-        for (String dbKey : tmpkeyList) {
-            list.add(hmapSelectedFiles.get(dbKey));
-        }
-
-        return list;
     }
 
     /**
      * Remove selected items from selected class JList
      */
     private void removeItemFromSelected() {
-        if (getView().getSelectedTable().getSelectedRowCount() > 0) {
-
+        if (getView().getSelectedTable().getSelectedRowCount() > 0) { 
+  
             // getClassTotal user selected items and indices
             int item[] = getView().getSelectedTable().getSelectedRows();
 
-            // create new batch process data model for these
+            // remove from the model
             for (int i = 0; i < item.length; i++) {
-                BatchProcessDataModel m = list.get(item[i]);
-
-                hmapSelectedFiles.remove(m.getFile().getName());
+                BatchProcessDataModel m = (BatchProcessDataModel) abstractTableModel.getValueAt(i, -1);
+                abstractTableModel.remove(m);
             }
-
-            // add to the table
-            list.clear();
-            list.addAll(sort());
-            getView().populateTable(list, runClassifierBatch.getTrainingModel());
+            
+            abstractTableModel.fireTableDataChanged();    
         }
     }
 
@@ -347,6 +340,14 @@ public class ClassifierBatchProcessController extends AbstractController
 
     File getOutputDir() {
         return outputDir;
+    }
+
+    /**
+     * Helper function to return the abstract table model
+     * @return 
+     */
+    BatchProcessAbstractTableModel getAbstractModel() {
+        return this.abstractTableModel;
     }
 
     /**

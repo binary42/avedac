@@ -61,7 +61,6 @@ import vars.shared.ui.tree.ConceptTreePanel;
 
 import java.awt.Component;
 import java.awt.Image;
-import java.awt.event.MouseListener;
 import java.awt.event.WindowListener;
 
 import java.io.File;
@@ -149,9 +148,6 @@ public class CreateClassView extends JFrameView {
 
         colorSpaceComboBox.setModel(new ComboBoxAdapter(selectionInList));
 
-        // default to RGB color space
-        colorSpaceComboBox.setSelectedIndex(1);
-
         // Insert a default icon
         URL url = Application.class.getResource("/org/mbari/aved/ui/images/missingframeexception.jpg");
 
@@ -213,6 +209,14 @@ public class CreateClassView extends JFrameView {
      */
     ColorSpace getColorSpace() {
         return (ColorSpace) colorSpaceComboBox.getSelectedItem();
+    }
+    
+    /**
+     * Set the color space
+     * @return the @{link org.mbari.aved.classifier.ColorSpace}
+     */
+    void setColorSpace(ColorSpace color) {
+        colorSpaceComboBox.setSelectedItem(color);
     }
 
     /**
@@ -303,9 +307,7 @@ public class CreateClassView extends JFrameView {
 
         try {
             ArrayList<String> fileList = model.getRawImageFileListing();
-
-            Thread.sleep(500);
-
+ 
             Integer numImages = Integer.valueOf(fileList.size());
 
             numImagesLabel.setText(numImages.toString());
@@ -355,6 +357,14 @@ public class CreateClassView extends JFrameView {
 
         classImageComponent.setIcon(icon);
         getForm().repaint();
+    }
+    
+    /**
+     * Gets the image directory selected in the JComboBox
+     * @param f
+     */
+    File getSelectImageDirectory() {
+        return (File) dirComboBox.getSelectedItem();
     }
 
     /**

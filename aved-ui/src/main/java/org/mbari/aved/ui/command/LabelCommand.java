@@ -33,7 +33,7 @@ import org.mbari.aved.ui.model.EventObjectContainer;
 
 //~--- JDK imports ------------------------------------------------------------
 
-import java.util.ArrayList;
+import java.util.ArrayList; 
 
 public class LabelCommand extends AbstractCommand {
     private String                          id = "";
@@ -93,7 +93,7 @@ public class LabelCommand extends AbstractCommand {
             model.setIdAll(containers, id);
             model.setClassAll(containers, className);
             model.setPredictedClass(containers, predictedClassName, 1.0f);
-            model.setTagAll(containers, tag);
+            model.setTagAll(containers, tag); 
         }
     }
 
@@ -114,5 +114,5 @@ public class LabelCommand extends AbstractCommand {
             model.add(c);
             containers = c;
         }
-    }
+    } 
 }

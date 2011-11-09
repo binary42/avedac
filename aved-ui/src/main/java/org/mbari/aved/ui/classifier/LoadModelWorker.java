@@ -56,7 +56,7 @@ public class LoadModelWorker extends ClassifierLibraryJNITask {
     }
 
     @Override
-    protected void run(ClassifierLibraryJNI library) throws Exception {
+    protected void run(ClassifierLibraryJNI library) {
         try {
             File   dbDir  = UserPreferences.getModel().getClassDatabaseDirectory();
             String dbRoot = dbDir.getAbsolutePath();
@@ -82,11 +82,11 @@ public class LoadModelWorker extends ClassifierLibraryJNITask {
             TrainingModel[] training = library.get_training_classes(dbRoot);
 
             if (classes != null) {
-                model.addClassModels(classes);
+               model.addClassModels(classes);
             }
 
             if (training != null) {
-                model.addTrainingModels(training);
+               model.addTrainingModels(training);
             }
         } catch (RuntimeException ex) {
             Logger.getLogger(LoadModelWorker.class.getName()).log(Level.SEVERE, null, ex);

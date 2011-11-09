@@ -67,7 +67,7 @@ public class EventAbstractTableModel extends AbstractModel {
 
     /**
      * Abstract table model class that contains a custom
-     * table model for handling table event notfications
+     * table model for handling table event notifications
      * for AVED metadata
      */
     private CustomTableModel customTableModel = null;

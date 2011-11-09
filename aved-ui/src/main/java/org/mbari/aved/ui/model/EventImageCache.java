@@ -35,6 +35,7 @@ import org.jdesktop.swingworker.SwingWorker;
 
 import org.mbari.aved.ui.exceptions.FrameOutRangeException;
 import org.mbari.aved.ui.exceptions.MissingFrameException;
+import org.mbari.aved.ui.utils.ImageUtils;
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -149,8 +150,8 @@ public class EventImageCache {
                 }
 
                 update();
-                iKeepRunning = true;
-                thread       = new ImageLoader(this, eventListModel);
+                iKeepRunning       = true;
+                thread             = new ImageLoader(this, eventListModel);
                 thread.loadByFrame = loadByFrame;
                 thread.execute();
             } else {
@@ -262,121 +263,20 @@ public class EventImageCache {
      */
     public static boolean createSquaredImageOfEvent(EventImageCacheData data, EventObject bestEvtObj)
             throws MissingFrameException, FrameOutRangeException {
+        File        source   = data.getRawImageSource();
+        PlanarImage original = loadImage(source);
 
-        // Get the best frame number and event that corresponds to it
-        File source = data.getRawImageSource();
-
-        // Load the image that corresponds to the best frame if it exists
-        if ((source != null) && source.exists() && source.getAbsoluteFile().canRead()) {
+        if (createCroppedImageOfEvent(original, data, bestEvtObj)) {
             try {
+                String imgInFilePath  = data.getImageSource().toString();
+                String imgOutFilePath = imgInFilePath;
 
-                // This is a brute force way to check if the file
-                // is still being written to because of file locking
-                // inconsistencies
-                long i = source.length();
+                ImageUtils.squareJpegThumbnail(imgInFilePath, imgOutFilePath);
 
-                Thread.sleep(4);
-
-                long j = source.length();
-
-                if (i != j) {
-                    return false;
-                }
-
-                // Load the image that corresponds to the best frame
-                PlanarImage original = JAI.create("fileload", source.toString());
-
-                // Create a ParameterBlock with information for the cropping.
-                ParameterBlock pb = new ParameterBlock();
-
-                pb.addSource(original);
-
-                // Calculate the cropping coordinates from the bounding box
-                BoundingBox b       = bestEvtObj.getBoundingBox();
-                int         xorigin = b.getLowerLeftX();
-                int         yorigin = b.getUpperRightY();
-                int         width   = b.getUpperRightX() - b.getLowerLeftX();
-                int         height  = b.getLowerLeftY() - b.getUpperRightY();
-
-                // If the clip bounds are beyond the original image size, adjust
-                if (xorigin + width > original.getWidth()) {
-                    width = original.getWidth() - xorigin;
-                }
-
-                if (yorigin + height > original.getHeight()) {
-                    height = original.getHeight() - yorigin;
-                }
-
-                // If width or height is zero, adjust to 1 to avoid cropping error
-                if (width == 0) {
-                    width = 1;
-                }
-
-                if (height == 0) {
-                    height = 1;
-                }
-
-                pb.add((float) xorigin);    // x origin
-                pb.add((float) yorigin);    // y origin
-                pb.add((float) width);      // width
-                pb.add((float) height);     // height
-
-                File outputFile = data.getImageSource();
-
-                // If the file already exists, then return
-                if (outputFile.exists()) {
-                    return true;
-                }
-
-                PlanarImage output = null;
-
-                // Create the output image by cropping the input image.JAI
-                output = JAI.create("crop", pb, null);
-
-                // Now square up the image for classification
-                float yScale = 0.f;
-                float xScale = 0.f;
-
-                width  = output.getWidth();
-                height = output.getHeight();
-
-                if (width > height) {
-                    xScale = 1.0f;
-                    yScale = (float) width / (float) height;
-                } else {
-                    xScale = (float) height / (float) width;
-                    yScale = 1.0f;
-                }
-
-                ParameterBlockJAI paramScale = new ParameterBlockJAI("Scale");
-
-                paramScale.addSource(output);
-                paramScale.setParameter("xScale", xScale);
-                paramScale.setParameter("yScale", yScale);
-                paramScale.setParameter("interpolation", Interpolation.getInstance(Interpolation.INTERP_NEAREST));
-
-                // hint with border extender
-                RenderingHints hint = new RenderingHints(JAI.KEY_BORDER_EXTENDER,
-                                          BorderExtender.createInstance(BorderExtender.BORDER_COPY));
-
-                // scale
-                PlanarImage scaledImg = JAI.create("Scale", paramScale, hint);
-
-                // Store the cropped image in jpg format in the best quality
-                JPEGEncodeParam param = new JPEGEncodeParam();
-
-                param.setQuality(1.0f);
-
-                if ((outputFile != null)
-                        && (JAI.create("filestore", scaledImg.getAsBufferedImage(), outputFile.toString(), "jpeg",
-                                       param) != null)) {
-                    output.dispose();
-
-                    return true;
-                }
-            } catch (InterruptedException ex) {
-                return false;
-            } catch (IllegalArgumentException e) {}
+                return true;
+            } catch (Exception ex) {
+                Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
 
         return false;
@@ -389,7 +289,7 @@ public class EventImageCache {
      */
     public static PlanarImage loadImage(File source) {
 
-        // 
+        //
         if ((source != null) && source.exists() && source.getAbsoluteFile().canRead()) {
             try {
 
@@ -664,7 +564,6 @@ public class EventImageCache {
              *                  + imageCacheDataList.size() + " Indexes to cache: " + indexsToCache.length
              *                  + " cacheNextIndex:" + cacheNextIndex);
              */
-
             if (index > -1) {
                 synchronized (syncArrays) {
 
@@ -798,6 +697,15 @@ public class EventImageCache {
     }
 
     /**
+     * Public method to get the elements in the cache
+     */
+    public EventImageCacheData get(int index) {
+        synchronized (syncArrays) {
+            return imageCacheDataList.get(index);
+        }
+    }
+
+    /**
      * Helper class for reporting the stats of loading
      * to the View classes in the SwingWorker thread
      */
@@ -857,7 +765,9 @@ public class EventImageCache {
             if (cache != null) {
                 int ttl        = cache.size();
                 int ttllast    = 0;
-                int refreshcnt = 7;
+                int refreshcnt = ((ttl > 50)
+                                  ? 50
+                                  : ttl);
 
                 while (cache.iKeepRunning) {
                     try {

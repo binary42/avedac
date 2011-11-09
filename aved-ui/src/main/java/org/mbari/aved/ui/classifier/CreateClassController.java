@@ -1,6 +1,6 @@
 /*
  * @(#)CreateClassController.java
- *
+ * 
  * Copyright 2011 MBARI
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -68,13 +68,14 @@ import java.util.logging.Logger;
 
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
-import javax.swing.JTree;
+import javax.swing.JTree; 
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
 
 class CreateClassController extends AbstractController implements ModelListener, WindowListener, TreeSelectionListener {
-    private static final ClassModel classModel = new ClassModel();
+    private final static String     SQUARE_PATH = "/square";
+    private ClassModel classModel  = new ClassModel() {};
     private static CreateClassTask  task;
 
     CreateClassController(ClassifierModel model, EventListModel eventListModel) {
@@ -90,6 +91,9 @@ class CreateClassController extends AbstractController implements ModelListener,
 
         // Disable delete
         getView().setEnabledDeleteButton(false);
+        
+        // Default to RGB
+        getView().setColorSpace(ColorSpace.RGB);
     }
 
     @Override
@@ -132,15 +136,24 @@ class CreateClassController extends AbstractController implements ModelListener,
                     }
 
                     getView().setEnabledDeleteButton(true);
-
-                    File d = UserPreferences.getModel().getClassDatabaseDirectory();
-
-                    classModel.setDatabaseRoot(d);
-                    classModel.setRawImageDirectory(directory);
-                    classModel.setDescription(directory.getName());
-                    classModel.setName(directory.getName());
-                    classModel.setVarsClassName(directory.getName());
-                    classModel.setColorSpace(getView().getColorSpace());
+                     
+                    ClassModel m = getModel().getClassModel(directory.getName());
+                    
+                      if (m != null) {
+                        classModel = m.copy();
+                        classModel.setColorSpace(getView().getColorSpace());
+                        classModel.updateFileList();
+                    } else {
+                        File d = UserPreferences.getModel().getClassDatabaseDirectory();
+                        classModel.setDatabaseRoot(d);
+                        classModel.setRawImageDirectory(directory);
+                        classModel.setDescription(directory.getName());
+                        classModel.setName(directory.getName());
+                        classModel.setVarsClassName(directory.getName());
+                        classModel.setColorSpace(getView().getColorSpace());
+                        classModel.updateFileList();
+                    }
+                   
                     getView().loadModel(classModel);
                 } else {
                     getView().setEnabledDeleteButton(false);
@@ -156,10 +169,8 @@ class CreateClassController extends AbstractController implements ModelListener,
             JComboBox  box        = ((JComboBox) e.getSource());
             ColorSpace colorSpace = (ColorSpace) box.getSelectedItem();
 
-            if (classModel != null) {
-                classModel.setColorSpace(colorSpace);
-                getView().loadModel(classModel);
-            }
+            classModel.setColorSpace(colorSpace);
+            getView().loadModel(classModel);
         } else if (actionCommand.equals("Delete")) {
             try {
                 File imageDirectory = classModel.getRawImageDirectory();
@@ -254,7 +265,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                 // Check if you have permission to write to the target
                 // parent directory
                 File rootPath = newModel.getRawImageDirectory();
-                File path     = new File(rootPath.toString() + "/square/");
+                File path     = new File(rootPath.toString() + SQUARE_PATH);
                 File parent   = new File(path.getParent());
 
                 if (!parent.canWrite()) {
@@ -271,52 +282,56 @@ class CreateClassController extends AbstractController implements ModelListener,
                 // Create the command for class creation and add it to the queue
                 final SwingWorker worker = Classifier.getController().getWorker();
 
-                task = new CreateClassTask(worker, newModel);
-                Classifier.getController().addQueue(task);
-                getView().setRunButton(false);
-                getView().setStopButton(true);
-
                 // / Create a progress display thread for monitoring this task
                 Thread thread = new Thread() {
                     @Override
                     public void run() {
-                        BufferedReader  br              = Classifier.getController().getBufferedReader();
-                        ProgressDisplay progressDisplay = new ProgressDisplay(worker,
-                                                              "Creating class " + newModel.getName());
+                        try {
+                            BufferedReader  br              = Classifier.getController().getBufferedReader();
+                            ProgressDisplay progressDisplay = new ProgressDisplay(worker,
+                                                                  "Creating class " + newModel.getName());
 
-                        progressDisplay.getView().setVisible(true);
+                            progressDisplay.getView().setVisible(true);
 
-                        ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, br);
+                            ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay,
+                                                                              br);
 
-                        progressDisplayStream.execute();
+                            progressDisplayStream.execute();
+                            task = new CreateClassTask(worker, newModel);
+                            Classifier.getController().addQueue(task);
+                            getView().setRunButton(false);
+                            getView().setStopButton(true);
 
-                        while (!task.isCancelled() &&!task.isFini()) {
-                            try {
-                                Thread.sleep(3000);
-                            } catch (InterruptedException ex) {}
-                        }
-
-                        getView().setRunButton(true);
-                        getView().setStopButton(false);
-                        progressDisplay.getView().dispose();
-
-                        // Add the model only after successfully created
-                        if (task.isFini() && (getModel() != null)) {
-                            try {
-                                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
-                                                                   newModel.getName() + " class creation finished");
-
-                                dialog.setVisible(true);
-                            } catch (Exception ex) {
-                                Logger.getLogger(CreateClassController.class.getName()).log(Level.SEVERE, null, ex);
+                            while (!task.isCancelled() &&!task.isFini()) {
+                                try {
+                                    Thread.sleep(3000);
+                                } catch (InterruptedException ex) {}
                             }
-                        } else {
-                            if (task.isCancelled()) {
-                                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
-                                                                   newModel.getName() + " classcreation stopped");
 
-                                dialog.setVisible(true);
+                            getView().setRunButton(true);
+                            getView().setStopButton(false);
+                            progressDisplay.getView().dispose();
+
+                            // Add the model only after successfully created
+                            if (task.isFini() && (getModel() != null)) {
+                                try {
+                                    NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
+                                                                       newModel.getName() + " class creation finished");
+
+                                    dialog.setVisible(true);
+                                } catch (Exception ex) {
+                                    Logger.getLogger(CreateClassController.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            } else {
+                                if (task.isCancelled()) {
+                                    NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
+                                                                       newModel.getName() + " class creation stopped");
+
+                                    dialog.setVisible(true);
+                                }
                             }
+                        } catch (Exception ex) {
+                            Logger.getLogger(CreateClassController.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 };
@@ -362,7 +377,8 @@ class CreateClassController extends AbstractController implements ModelListener,
                 if ((dir != null) && dir.isDirectory()) {
                     for (int i = 0; i < subdirs.length; i++) {
                         if (subdirs[i].getName().equals(dir.getName())) {
-                            getView().selectImageDirectory(dir); 
+                            getView().selectImageDirectory(dir);
+
                             break;
                         }
 
@@ -389,12 +405,12 @@ class CreateClassController extends AbstractController implements ModelListener,
 
             // When the class directory changes or class models are updated
             // update the available classes
-            case ClassifierModel.ClassifierModelEvent.TRAINING_DIR_UPDATED :
-            case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
+            case ClassifierModel.ClassifierModelEvent.TRAINING_DIR_UPDATED :   
+            case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED : 
                 updateClasses();
-
-                break;
+                break;  
             }
+            
         }
     }
 
@@ -440,13 +456,12 @@ class CreateClassController extends AbstractController implements ModelListener,
             super(newClassModel.getName());
             this.newClassModel = newClassModel;
         }
-
-        @Override
-        protected void run(ClassifierLibraryJNI library) throws Exception {
+ 
+        protected void run(ClassifierLibraryJNI library)  {
             ArrayList<String> filePaths = newClassModel.getRawImageFileListing();
             LibraryImage[]    imageset  = new LibraryImage[filePaths.size()];
             File              rootPath  = newClassModel.getRawImageDirectory();
-            File              path      = new File(rootPath.toString() + "/square/");
+            File              path      = new File(rootPath.toString() + SQUARE_PATH);
 
             newClassModel.setSquareImageDirectory(path);
 
@@ -458,7 +473,6 @@ class CreateClassController extends AbstractController implements ModelListener,
                 String message = "Incorrect write permission to " + parent.toString();
 
                 Logger.getLogger(CreateClassController.class.getName()).log(Level.SEVERE, null, message);
-
                 return;
             }
 
@@ -510,7 +524,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                     return;
                 }
 
-                imageset[i] = new LibraryImage(imageFileOut);
+                imageset[i] = new LibraryImage(imageFileOut) {};
             }
 
             // Get a input stream on the matlab log file to display in
@@ -523,6 +537,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                                       newClassModel.getDatabaseRootdirectory().toString(),
                                       newClassModel.getVarsClassName(), newClassModel.getDescription(),
                                       newClassModel.getColorSpace());
+                newClassModel.updateFileList();
                 getModel().addClassModel(newClassModel);
                 this.setFini();
             } catch (Exception ex) {
@@ -544,7 +559,7 @@ class CreateClassController extends AbstractController implements ModelListener,
             this.classModel = classModel;
         }
 
-        protected void run(ClassifierLibraryJNI library) throws Exception {
+        protected void run(ClassifierLibraryJNI library) {
             try {
 
                 // Delete the class

@@ -53,6 +53,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStreamReader;
 
 import java.util.ArrayList;
@@ -169,15 +170,15 @@ public class ClassifierController extends AbstractController implements ModelLis
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
             case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
-                try {
-                    LoadModelWorker task = new LoadModelWorker(this.getModel());
+                    try {
+                        LoadModelWorker task = new LoadModelWorker(this.getModel());
 
-                    this.addQueue(task);
-                } catch (Exception ex) {
-                    Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                        this.addQueue(task);
+                    } catch (Exception ex) {
+                        Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
 
-                break;
+                    break;
             }
         }
 
@@ -192,49 +193,49 @@ public class ClassifierController extends AbstractController implements ModelLis
             switch (e.getID()) {
             case EventListModelEvent.MULTIPLE_ENTRIES_CHANGED :
 
-                // Get the list of model indexes that have changes
+                    // Get the list of model indexes that have changes
                 ArrayList<Integer> a    = e.getModelIndexes();
                 Iterator<Integer>  iter = a.iterator();
 
-                // Go through each, creating directories if needed and adding
-                // the images to the model
-                while (iter.hasNext()) {
+                    // Go through each, creating directories if needed and adding
+                    // the images to the model
+                    while (iter.hasNext()) {
                     File                 f   = UserPreferences.getModel().getClassImageDirectory();
-                    EventObjectContainer eoc = eventListModel.getElementAt(iter.next());
+                        EventObjectContainer eoc = eventListModel.getElementAt(iter.next());
 
-                    if ((eoc != null) && (eoc.getClassName().length() > 0)) {
-                        try {
-                            String className = eoc.getClassName();
+                        if ((eoc != null) && (eoc.getClassName().length() > 0)) {
+                            try {
+                                String className = eoc.getClassName();
                             File   dir       = new File(f + "/" + className + "//");
 
-                            if (!dir.exists()) {
-                                if (f.canWrite()) {
-                                    dir.mkdir();
-                                } else {
+                                if (!dir.exists()) {
+                                    if (f.canWrite()) {
+                                        dir.mkdir();
+                                    } else {
 
-                                    // TODO: display error message to user here
-                                    return;
+                                        // TODO: display error message to user here
+                                        return;
+                                    }
                                 }
+
+                                // create a new model with some reasonable defaults
+                                ClassModel newModel = new ClassModel() {};
+
+                                newModel.setRawImageDirectory(dir);
+                                newModel.setName(className);
+                                newModel.setVarsClassName(eoc.getClassName());
+                                newModel.setDescription(eoc.getClassName());
+
+                                AddClassImageWorker thread = new AddClassImageWorker(newModel, eoc);
+
+                                thread.execute();
+                            } catch (Exception ex) {
+                                Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
                             }
-
-                            // create a new model with some reasonable defaults
-                            ClassModel newModel = new ClassModel();
-
-                            newModel.setRawImageDirectory(dir);
-                            newModel.setName(className);
-                            newModel.setVarsClassName(eoc.getClassName());
-                            newModel.setDescription(eoc.getClassName());
-
-                            AddClassImageWorker thread = new AddClassImageWorker(newModel, eoc);
-
-                            thread.execute();
-                        } catch (Exception ex) {
-                            Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-                }
             default :
-                break;
+                    break;
             }
         }
     }
@@ -359,7 +360,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         private boolean                               isInitialized = false;
         private final Queue<ClassifierLibraryJNITask> queue         = new LinkedList<ClassifierLibraryJNITask>();
         private final File                            logFile       = getDefaultMatlabLog();
-        private final ClassifierLibraryJNI            jniLibrary    = new ClassifierLibraryJNI(this, true);
+        private final ClassifierLibraryJNI            jniLibrary    = new ClassifierLibraryJNI(this, true) {};
 
         ClassifierLibraryJNITaskWorker() throws Exception {}
 
@@ -383,8 +384,8 @@ public class ClassifierController extends AbstractController implements ModelLis
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException ex) {}
+                    }
                 }
-            }
 
             closeLibrary();
 
@@ -460,9 +461,16 @@ public class ClassifierController extends AbstractController implements ModelLis
                     InputStreamReader isr = new InputStreamReader(fis);
 
                     br = new BufferedReader(isr);
+
+                    // skip to the end of the file
+                    do {
+                    } while (br.readLine() != null);
                 } catch (FileNotFoundException ex) {
                     Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null,
-                                     "ERROR: cannot write to log file " + logFile.getAbsolutePath());
+                            "ERROR: cannot write to log file " + logFile.getAbsolutePath() + " "
+                            + ex.getMessage());
+                } catch (IOException ex) {
+                    Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
 

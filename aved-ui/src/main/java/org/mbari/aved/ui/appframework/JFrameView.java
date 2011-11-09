@@ -35,6 +35,9 @@ import com.jeta.forms.components.panel.FormPanel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.swing.*;
 
 /**
@@ -96,17 +99,12 @@ abstract public class JFrameView extends JFrame implements View, ModelListener {
         public void actionPerformed(final ActionEvent e) {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    Thread change = new Thread(new Runnable() {
-                        public void run() {
-                            try {
-                                getController().actionPerformed(e);
-                            } catch (Exception ex) {
-                                System.out.println(ex.getCause());
-                            }
-                        }
-                    });
-
-                    change.start();
+                    try {
+                        getController().actionPerformed(e);
+                    } catch (Exception ex) {
+                        Logger.getLogger(JFrameView.class.getName()).log(Level.SEVERE, null, ex);
+                        System.out.println(ex.getCause());
+                    }
                 }
             });
         }

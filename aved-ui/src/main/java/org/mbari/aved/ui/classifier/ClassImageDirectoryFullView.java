@@ -286,8 +286,7 @@ public class ClassImageDirectoryFullView extends JPanel implements Dockable, Cla
         if (!file.renameTo(moved)) {
             return false;
         }
-
-        model.updateFileList();
+ 
         this.refresh(moved);
 
         return true;
@@ -467,8 +466,7 @@ public class ClassImageDirectoryFullView extends JPanel implements Dockable, Cla
             imagePanel.remove(label);
             imagePanel.revalidate();
             imagePanel.repaint();
-            counter = 1;
-            model.updateFileList();
+            counter = 1; 
 
             List fileList = model.getFileList();
 

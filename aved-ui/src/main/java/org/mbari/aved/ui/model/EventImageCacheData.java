@@ -194,7 +194,7 @@ public class EventImageCacheData {
      *
      * @throws FrameOutRangeException
      */
-    EventObject getEvent() throws FrameOutRangeException {
+    public EventObject getEvent() throws FrameOutRangeException {
 
         // Get the best frame number and event that corresponds to it
         int bestFrameNum = eventObjectContainer.getBestEventFrame();
@@ -207,13 +207,13 @@ public class EventImageCacheData {
      *
      * @return the EventObjectContainer
      */
-    EventObjectContainer getEventObjectContainer() {
+    public EventObjectContainer getEventObjectContainer() {
         return eventObjectContainer;
     }
 
     /**
      * Returns the image source for this thumbnail
-     * @return file with raw image source.
+     * @return file with image source.
      */
     public File getImageSource() {
         return eventImageFile;
@@ -221,9 +221,9 @@ public class EventImageCacheData {
 
     /**
      * Returns the raw image source from which this thumbnail came from
-     * @return the raw image source name or nul if none found.
+     * @return the raw image source name or null if none found.
      */
-    File getRawImageSource() {
+    public File getRawImageSource() {
 
         // Get the best frame number and event that corresponds to it
         int bestFrameNum = eventObjectContainer.getBestEventFrame();

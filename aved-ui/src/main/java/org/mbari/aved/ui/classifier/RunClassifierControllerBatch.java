@@ -1,6 +1,6 @@
 /*
  * @(#)RunClassifierControllerBatch.java
- *
+ * 
  * Copyright 2011 MBARI
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -47,7 +47,6 @@ import org.mbari.aved.ui.model.SummaryModel;
 import org.mbari.aved.ui.model.TableSorter;
 import org.mbari.aved.ui.progress.ProgressDisplay;
 import org.mbari.aved.ui.progress.ProgressDisplayStream;
-import org.mbari.aved.ui.table.AvedTable;
 import org.mbari.aved.ui.table.EventTable;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
 import org.mbari.aved.ui.utils.ExcelExporter;
@@ -68,51 +67,24 @@ import java.util.logging.Logger;
 
 import javax.swing.JComboBox;
 import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableModel;
+import javax.swing.table.TableModel; 
 
 public class RunClassifierControllerBatch extends AbstractController implements ModelListener {
     private final ClassifierBatchProcessController controller;
     private ExportXMLWorker                        exportXmlWorker;
     private ImportXMLWorker                        importXmlWorker;
     private RunClassifierWorker                    runClassifierWorker;
-    private TrainingModel                          trainingModel;
     private VideoTranscodeWorker                   transcodeWorker;
     private final ClassifierBatchProcessView       view;
 
     RunClassifierControllerBatch(ClassifierModel model, ClassifierBatchProcessController controller) {
         setModel(model);
-        setView(new RunClassifierView(this.getModel(), this));
+        setView(new RunClassifierView(model, this));
         this.view       = controller.getView();
         this.controller = controller;
 
         // Register as listener to the models
         getModel().addModelListener(this);
-
-        // Create an empty trainingModel to start with
-        trainingModel = new TrainingModel();
-
-        File dbroot = UserPreferences.getModel().getClassDatabaseDirectory();
-
-        try {
-
-            // Create the directory if it doesn't exist
-            if (!dbroot.exists()) {
-                dbroot.mkdirs();
-            }
-
-            trainingModel.setDatabaseRoot(dbroot);
-
-            ColorSpace colorSpace = trainingModel.getColorSpace();
-
-            getView().selectColorSpace(colorSpace);
-        } catch (Exception ex) {
-            Logger.getLogger(RunClassifierControllerBatch.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    public TrainingModel getTrainingModel() {
-        return trainingModel;
     }
 
     /* Just some helper functions to access trainingModel and view */
@@ -192,13 +164,9 @@ public class RunClassifierControllerBatch extends AbstractController implements 
     /**
      *    Export the results in simple Excel format.
      */
-    public void exportProcessedResultsAsXls(File f, JTable table) {
+    public void exportProcessedResultsAsXls(File f, JTable table) throws IOException {
         if (f != null) {
-            try {
-                ExcelExporter.exportTable(table, f);
-            } catch (IOException ex) {
-                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            ExcelExporter.exportTable(table, f);
         }
     }
 
@@ -207,6 +175,23 @@ public class RunClassifierControllerBatch extends AbstractController implements 
 
         if (table != null) {
 
+            // Check output directory before starting
+            if (!controller.getOutputDir().exists()) {                
+              NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), 
+                      controller.getOutputDir()
+                      + " does not exist");
+              dialog.setVisible(true);    
+              return;
+            }
+            
+            if (!controller.getOutputDir().canWrite()) {
+              NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
+                      " cannot write to " +                      
+                      controller.getOutputDir());
+              dialog.setVisible(true);    
+              return;
+            }
+            
             // Temporarily turn off this user preference to not add all the
             // predicted images to the library during assignment
             final boolean isAddTrainingImages = UserPreferences.getModel().getAddTrainingImages();
@@ -214,18 +199,19 @@ public class RunClassifierControllerBatch extends AbstractController implements 
             if (isAddTrainingImages) {
                 UserPreferences.getModel().setAddLabeledTrainingImages(false);
             }
-
+            
+            // Initialize button states
             getView().setRunButton(false);
             getView().setStopButton(true);
 
-            final float minProbThreshold = getView().getProbabilityThreshold();
-
-            // Get the voting method used for determining the winner
+            // Initialize variables used in thread
             final VotingMethod                     method          = getView().getVotingMethod();
             final RunClassifierControllerBatch     runController   = this;
+            final TrainingModel                    trainingModel   = getTrainingModel().copy();
             final ClassifierBatchProcessController batchController = this.controller;
-            final BatchProcessAbstractTableModel   tmodel          = view.getTableModel();
-            final int                              size            = tmodel.getRowCount();
+            final float minProbThreshold = getView().getProbabilityThreshold();
+            final BatchProcessAbstractTableModel   tmodel          = batchController.getAbstractModel();
+            final int                              size            = view.getSelectedTable().getRowCount();
 
             // Create a progress display thread for monitoring this task
             Thread thread = new Thread() {
@@ -390,9 +376,7 @@ public class RunClassifierControllerBatch extends AbstractController implements 
                                     File exportXlsFile =
                                         new File(exportXmlFile.getParent() + "/"
                                                  + ParseUtils.removeFileExtension(exportXmlFile.getName()) + ".xls");
-
-                                    // Creates the custom event JTable to customize how the table is rendered
-
+ 
                                     // Creates the custom event JTable to customize how the table is rendered
                                     EventTable eventTable = new EventTable();
 
@@ -457,14 +441,18 @@ public class RunClassifierControllerBatch extends AbstractController implements 
         } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
             JComboBox  box           = ((JComboBox) e.getSource());
             ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
-            String     lastSelection = UserPreferences.getModel().getTrainingLibrarySelection();
+            String lastSelection = UserPreferences.getModel().getTrainingLibrarySelection();
 
-            // Populate the libraries in the new color space
-            getView().populateTrainingLibraryList(newColorSpace);
+            if (getView() != null) {
+                // Populate the libraries in the new color space
+                if (newColorSpace != null) {
+                    getView().populateTrainingLibraryList(newColorSpace);
+                }
 
-            // Set the library
-            if (getView().selectLibrary(lastSelection) == false) {
-                getView().clearClassModelList();
+                // Set the library
+                if (getView().selectLibrary(lastSelection) == false) {
+                    getView().clearClassModelList();
+                }
             }
         } else if (actionCommand.equals("Stop")) {
             if (importXmlWorker != null) {
@@ -487,20 +475,13 @@ public class RunClassifierControllerBatch extends AbstractController implements 
             getView().setRunButton(true);
             getView().setStopButton(false);
         } else if (actionCommand.equals("availLibraryNameComboBoxChanged")) {
-            JComboBox box = ((JComboBox) e.getSource());
-
-            trainingModel = (TrainingModel) box.getSelectedItem();
+            JComboBox     box           = ((JComboBox) e.getSource());
+            TrainingModel trainingModel = (TrainingModel) box.getSelectedItem();
 
             if (trainingModel != null) {
-                getView().loadModel(trainingModel);
-
                 String selection = trainingModel.getName();
-
-                UserPreferences.getModel().setTrainingLibrarySelection(selection);
-
-                BatchProcessAbstractTableModel tmodel = view.getTableModel();
-
-                tmodel.changeClassColumns(trainingModel);
+                UserPreferences.getModel().setTrainingLibrarySelection(selection);     
+                getModel().notifyTrainingModelChanged(trainingModel.getName());
             }
         }
     }
@@ -513,10 +494,20 @@ public class RunClassifierControllerBatch extends AbstractController implements 
             // reset the color space
             case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
             case ClassifierModel.ClassifierModelEvent.TRAINING_MODELS_UPDATED :
-                getView().populateTrainingLibraryList(trainingModel.getColorSpace());
+                TrainingModel trainingModel = getTrainingModel();
+
+                if (trainingModel != null) {
+                    getView().populateTrainingLibraryList(trainingModel.getColorSpace());
+                } else {
+                    getView().populateTrainingLibraryList(ColorSpace.RGB);
+                }
 
                 break;
             }
         }
+    }
+
+    TrainingModel getTrainingModel() {
+        return getView().getTrainingModel();
     }
 }

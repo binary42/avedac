@@ -24,7 +24,7 @@
     </at>
     <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
    </super>
-   <at name="id">/home/aved/aved/avedac/aved-ui/src/main/resources/org/mbari/aved/ui/forms/UserPreferences.xml</at>
+   <at name="id">/Users/dcline/NetBeansProjects/avedac/aved-ui/src/main/resources/org/mbari/aved/ui/forms/UserPreferences.xml</at>
    <at name="path">UserPreferences.xml</at>
    <at name="rowspecs">FILL:DEFAULT:NONE</at>
    <at name="colspecs">FILL:PREF:GROW(1.0)</at>
@@ -47,7 +47,7 @@
          </at>
          <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
         </super>
-        <at name="id">embedded.8090200</at>
+        <at name="id">embedded.525926259</at>
         <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:DEFAULT:NONE</at>
         <at name="colspecs">FILL:473PX:GROW(1.0),FILL:DEFAULT:NONE</at>
         <at name="components">
@@ -77,8 +77,8 @@
                <at name="properties">
                 <object classname="com.jeta.forms.store.support.PropertyMap">
                  <at name="text">User Preferences</at>
-                 <at name="height">26</at>
-                 <at name="width">738</at>
+                 <at name="height">27</at>
+                 <at name="width">1197</at>
                  <at name="name">Test Comp</at>
                  <at name="fill">
                   <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
@@ -183,9 +183,9 @@
                <at name="classname">javax.swing.JTabbedPane</at>
                <at name="properties">
                 <object classname="com.jeta.forms.store.support.PropertyMap">
-                 <at name="height">160</at>
+                 <at name="height">168</at>
                  <at name="componentCount">2</at>
-                 <at name="width">665</at>
+                 <at name="width">1114</at>
                  <at name="name">tabbedpane</at>
                  <at name="border">
                   <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
@@ -240,7 +240,7 @@
                            </at>
                            <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
                           </super>
-                          <at name="id">embedded.2404208</at>
+                          <at name="id">embedded.1113773527</at>
                           <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:DEFAULT:NONE,CENTER:DEFAULT:GROW(1.0)</at>
                           <at name="colspecs">FILL:DEFAULT:NONE,FILL:5PX:NONE,FILL:DEFAULT:GROW(1.0),FILL:5PX:NONE,FILL:DEFAULT:NONE</at>
                           <at name="components">
@@ -271,14 +271,14 @@
                                   <object classname="com.jeta.forms.store.support.PropertyMap">
                                    <at name="text">Play video  in default player</at>
                                    <at name="selected">true</at>
-                                   <at name="height">17</at>
+                                   <at name="height">23</at>
                                    <at name="buttonGroup">
                                     <object classname="com.jeta.forms.store.properties.ButtonGroupProperty">
                                      <at name="name">buttonGroup</at>
                                      <at name="groupname">1</at>
                                     </object>
                                    </at>
-                                   <at name="width">200</at>
+                                   <at name="width">214</at>
                                    <at name="name">playervlc</at>
                                    <at name="background" object="color">255,255,255</at>
                                    <at name="actionCommand">PlayoutDefault</at>
@@ -335,14 +335,14 @@
                                   <object classname="com.jeta.forms.store.support.PropertyMap">
                                    <at name="text">Choose external video player</at>
                                    <at name="selected">true</at>
-                                   <at name="height">17</at>
+                                   <at name="height">23</at>
                                    <at name="buttonGroup">
                                     <object classname="com.jeta.forms.store.properties.ButtonGroupProperty">
                                      <at name="name">buttonGroup</at>
                                      <at name="groupname">1</at>
                                     </object>
                                    </at>
-                                   <at name="width">200</at>
+                                   <at name="width">214</at>
                                    <at name="name">playerother</at>
                                    <at name="background" object="color">255,255,255</at>
                                    <at name="actionCommand">PlayoutOther</at>
@@ -398,8 +398,8 @@
                                  <at name="properties">
                                   <object classname="com.jeta.forms.store.support.PropertyMap">
                                    <at name="enabled">false</at>
-                                   <at name="height">25</at>
-                                   <at name="width">336</at>
+                                   <at name="height">29</at>
+                                   <at name="width">747</at>
                                    <at name="name">videoplayer</at>
                                    <at name="border">
                                     <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
@@ -454,8 +454,8 @@
                                   <object classname="com.jeta.forms.store.support.PropertyMap">
                                    <at name="enabled">false</at>
                                    <at name="text">Browse</at>
-                                   <at name="height">25</at>
-                                   <at name="width">80</at>
+                                   <at name="height">29</at>
+                                   <at name="width">88</at>
                                    <at name="name">browseplayer</at>
                                    <at name="actionCommand">BrowsePlayer</at>
                                    <at name="border">
@@ -614,8 +614,8 @@
                            </at>
                            <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
                           </super>
-                          <at name="id">embedded.7068493</at>
-                          <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:50PX:NONE,CENTER:DEFAULT:GROW(1.0)</at>
+                          <at name="id">embedded.1390684177</at>
+                          <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:DEFAULT:NONE,CENTER:DEFAULT:GROW(1.0)</at>
                           <at name="colspecs">LEFT:179PX:NONE,FILL:5PX:NONE,FILL:DEFAULT:GROW(1.0),FILL:5PX:NONE,FILL:DEFAULT:NONE</at>
                           <at name="components">
                            <object classname="java.util.LinkedList">
@@ -644,9 +644,8 @@
                                  <at name="properties">
                                   <object classname="com.jeta.forms.store.support.PropertyMap">
                                    <at name="text">Ask before deleting events</at>
-                                   <at name="height">17</at>
-                                   <at name="opaque">false</at>
-                                   <at name="width">545</at>
+                                   <at name="height">23</at>
+                                   <at name="width">970</at>
                                    <at name="name">askbeforedelete</at>
                                    <at name="actionCommand">AskBeforeDelete</at>
                                    <at name="toolTipText">Check this to be prompted before deleting any event with a warning message</at>
@@ -702,7 +701,7 @@
                                  <at name="classname">javax.swing.JComboBox</at>
                                  <at name="properties">
                                   <object classname="com.jeta.forms.store.support.PropertyMap">
-                                   <at name="height">22</at>
+                                   <at name="height">27</at>
                                    <at name="selectedItem">
                                     <object classname="com.jeta.forms.store.properties.ListItemProperty">
                                      <at name="name">listitem</at>
@@ -740,7 +739,7 @@
                                      </at>
                                     </object>
                                    </at>
-                                   <at name="width">361</at>
+                                   <at name="width">786</at>
                                    <at name="name">scratchdir</at>
                                    <at name="background" object="color">236,233,216</at>
                                    <at name="actionCommand">ScratchDirComboBoxChanged</at>
@@ -799,8 +798,8 @@
                                   <object classname="com.jeta.forms.store.support.PropertyMap">
                                    <at name="horizontalAlignment">4</at>
                                    <at name="text">Scratch directory:</at>
-                                   <at name="height">15</at>
-                                   <at name="width">106</at>
+                                   <at name="height">16</at>
+                                   <at name="width">110</at>
                                    <at name="name"></at>
                                    <at name="fill">
                                     <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
@@ -859,8 +858,8 @@
                                  <at name="properties">
                                   <object classname="com.jeta.forms.store.support.PropertyMap">
                                    <at name="text">Browse</at>
-                                   <at name="height">25</at>
-                                   <at name="width">80</at>
+                                   <at name="height">29</at>
+                                   <at name="width">88</at>
                                    <at name="name">browsescratchdir</at>
                                    <at name="actionCommand">BrowseScratchDir</at>
                                    <at name="border">
@@ -1028,8 +1027,8 @@
                <at name="properties">
                 <object classname="com.jeta.forms.store.support.PropertyMap">
                  <at name="text">Close</at>
-                 <at name="height">25</at>
-                 <at name="width">69</at>
+                 <at name="height">29</at>
+                 <at name="width">79</at>
                  <at name="name">close</at>
                  <at name="actionCommand">Close</at>
                  <at name="border">

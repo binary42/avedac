@@ -207,7 +207,10 @@ public class TableController extends AbstractController implements ModelListener
 
             // This will scroll the table to the last loaded image
             case EventListModel.EventListModelEvent.NUM_LOADED_IMAGES_CHANGED :
-
+                
+                if (!listmodel.getValueIsAdjusting()) {  
+                    tablemodel.getTableModel().fireTableDataChanged();  
+                }
                 // uncomment if you want the table to scroll as it is loading
                 // int numchanged = e.getFlag();
                 // eventTable.scrollRectToVisible(eventTable.getCellRect(numchanged, 1, true));
@@ -228,20 +231,9 @@ public class TableController extends AbstractController implements ModelListener
                 break;
 
             case EventListModel.EventListModelEvent.MULTIPLE_ENTRIES_CHANGED :
-                if (!listmodel.getValueIsAdjusting()) {
-                    CustomTableModel   model2        = tablemodel.getTableModel();
-                    ArrayList<Integer> modelIndexes2 = e.getModelIndexes();
-                    ArrayList<Integer> rowIndexes2   = getTranslatedIndexes(modelIndexes2);
-
-                    if (rowIndexes2.size() > 0) {
-                        int firstRow  = rowIndexes2.get(0);
-                        int lastIndex = rowIndexes2.size() - 1;
-                        int lastRow   = rowIndexes2.get(lastIndex);
-
-                        model2.fireTableRowsUpdated(firstRow, lastRow);
-                    }
+                if (!listmodel.getValueIsAdjusting()) {  
+                    tablemodel.getTableModel().fireTableDataChanged();  
                 }
-
                 break;
 
             case EventListModel.EventListModelEvent.LIST_CLEARED :

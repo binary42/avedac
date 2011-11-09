@@ -138,7 +138,7 @@ public final class Classifier {
      * of the main application.
      * @param args
      */
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 try {
@@ -151,5 +151,5 @@ public final class Classifier {
                 }
             }
         });
-    }
+    }*/
 }

@@ -577,7 +577,7 @@ public final class UserPreferencesModel extends AbstractModel {
      * imported from
      * @param f the directory to set
      */
-    public void setClassTrainingDirectory(File f) {
+    public void setClassImportDirectory(File f) {
         put(IMAGE_IMPORT_DIR, f.getAbsolutePath());
     }
 

@@ -81,15 +81,17 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         getModel().addModelListener(this);
         mouseClickJListActionHandler = new MouseClickJListActionHandler();
         getView().addMouseClickListener(mouseClickJListActionHandler);
-        getView().selectColorSpace(ColorSpace.RGB);
-
         try {
 
             // Create a default library
             File dbroot = UserPreferences.getModel().getClassDatabaseDirectory();
 
-            trainingModel = new TrainingModel();
+            trainingModel = new TrainingModel() {};
             trainingModel.setDatabaseRoot(dbroot);
+
+            // Default to RGB color space
+            getView().selectColorSpace(ColorSpace.RGB);
+
         } catch (Exception ex) {
             Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -381,7 +383,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         }
 
         @Override
-        protected void run(ClassifierLibraryJNI library) throws Exception {
+        protected void run(ClassifierLibraryJNI library) {
             try {
 
                 // Format a comma delimited list of class names for the classifier

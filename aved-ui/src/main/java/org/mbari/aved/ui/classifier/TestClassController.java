@@ -1,6 +1,6 @@
 /*
  * @(#)TestClassController.java
- *
+ * 
  * Copyright 2011 MBARI
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -154,9 +154,6 @@ class TestClassController extends AbstractController implements ModelListener {
                     final SwingWorker worker = Classifier.getController().getWorker();
 
                     task = new RunTestClassTask(classModel, trainingModel);
-                    Classifier.getController().addQueue(task);
-                    getView().setRunButton(false);
-                    getView().setStopButton(true);
 
                     // / Create a progress display thread for monitoring this task
                     Thread thread = new Thread() {
@@ -173,6 +170,9 @@ class TestClassController extends AbstractController implements ModelListener {
                                                                               br);
 
                             progressDisplayStream.execute();
+                            Classifier.getController().addQueue(task);
+                            getView().setRunButton(false);
+                            getView().setStopButton(true);
 
                             while (!task.isCancelled() &&!task.isFini()) {
                                 try {
@@ -264,7 +264,7 @@ class TestClassController extends AbstractController implements ModelListener {
         }
 
         @Override
-        protected void run(ClassifierLibraryJNI library) throws Exception {
+        protected void run(ClassifierLibraryJNI library) {
 
             // Get a input stream on the matlab log file to display in
             // the progress display window
@@ -370,9 +370,9 @@ class TestClassController extends AbstractController implements ModelListener {
                 Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
                 this.setFini();
 
-                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), 
-                        "Class " + classModel.getName() + " out of sync. Recreate class "
-                        + "and associated training libraries containing the class");
+                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
+                                                   "Class " + classModel.getName() + " out of sync. Recreate class "
+                                                   + "and associated training libraries containing the class");
 
                 dialog.setVisible(true);
             }

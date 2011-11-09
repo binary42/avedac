@@ -189,7 +189,7 @@ public class DockingContainer extends JPanel {
                 }
             });
             this.add(button);
-            dockKey = new DockKey("Add More Folders");
+            dockKey = new DockKey("Add more directories");
             dockKey.setCloseEnabled(false);
             dockKey.setMaximizeEnabled(false);
             dockKey.setTooltip("Select directories that will be available to drag images to and from");

@@ -90,7 +90,7 @@ public final class ApplicationController extends AbstractController implements M
      * and mpeg of the results
      */
     private boolean isSaveAs = false;
-
+ 
     /** Classifier */
     private Classifier classifier;
 
@@ -110,7 +110,7 @@ public final class ApplicationController extends AbstractController implements M
     /** Worker to handle transcoding video files */
     private VideoTranscodeWorker transcodeWorker;
 
-    public ApplicationController() throws Exception {
+    public ApplicationController() throws Exception {            
         setModel(new ApplicationModel());
         setView(new ApplicationView((ApplicationModel) getModel(), this));
 
@@ -144,8 +144,8 @@ public final class ApplicationController extends AbstractController implements M
 
             // needed on mac os x to display menus in the mac convention
             System.setProperty("apple.laf.useScreenMenuBar", "true");
-        }
-
+        }  
+        
         MainMenu menu = new MainMenu(getModel());
 
         getView().setJMenuBar(menu.buildJJMenuBar());
@@ -156,7 +156,7 @@ public final class ApplicationController extends AbstractController implements M
         // Initialize the summary view mouse listener
         ((ApplicationView) getView()).getSummaryView().addMouseListener(new MouseClickFileActionHandler());
 
-        try {
+        /*try {
 
             // TODO: add the AbstractLogger, and ErrorHandler to this launcher,
             // otherwise will simply print stack traces
@@ -174,8 +174,9 @@ public final class ApplicationController extends AbstractController implements M
         } catch (UnsupportedOperatingSystemException e1) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, e1);
         }
-
-        getView().setVisible(true);
+        */ 
+ 
+        getView().setVisible(true); 
     }
 
     /**
@@ -198,7 +199,7 @@ public final class ApplicationController extends AbstractController implements M
     }
 
     /**
-     * Shutsdown the application
+     * Shutdown the application gracefully
      */
     public void shutdown() {
         reset();
@@ -1247,7 +1248,7 @@ public final class ApplicationController extends AbstractController implements M
     }
 
     /**
-     * Helper funtion to return the classifier
+     * Helper function to return the classifier
      * @return the classifier singleton
      */
     Classifier getClassifier() {
