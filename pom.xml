@@ -288,6 +288,11 @@
     </repositories>
     <pluginRepositories>
         <pluginRepository>
+            <id>mbari-maven-repository</id>
+            <name>MBARI Maven Repository</name>
+            <url>http://mbari-maven-repository.googlecode.com/svn/repository/</url>
+        </pluginRepository>
+        <pluginRepository>
             <id>central</id>
             <name>Maven Plugin Repository</name>
             <url>http://repo1.maven.org/maven2</url>
