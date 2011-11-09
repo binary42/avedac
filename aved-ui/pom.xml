@@ -77,6 +77,9 @@
          <!-- for incrementing the version in the About box dialog -->
         <profile>
             <id>version-increment</id>
+            <properties>
+               <environment>external</environment>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
