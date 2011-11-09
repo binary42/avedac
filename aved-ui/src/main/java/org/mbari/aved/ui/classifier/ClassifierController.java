@@ -360,7 +360,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         private boolean                               isInitialized = false;
         private final Queue<ClassifierLibraryJNITask> queue         = new LinkedList<ClassifierLibraryJNITask>();
         private final File                            logFile       = getDefaultMatlabLog();
-        private final ClassifierLibraryJNI            jniLibrary    = new ClassifierLibraryJNI(this, true) {};
+        private final ClassifierLibraryJNI            jniLibrary    = new ClassifierLibraryJNI(this, false) {};
 
         ClassifierLibraryJNITaskWorker() throws Exception {}
 
