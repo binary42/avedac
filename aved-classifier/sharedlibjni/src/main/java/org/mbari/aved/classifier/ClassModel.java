@@ -1,6 +1,6 @@
 /*
  * @(#)ClassModel.java
- *
+ * 
  * Copyright 2011 MBARI
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -87,9 +87,9 @@ public class ClassModel implements Comparable<ClassModel> {
         m.description           = this.getDescription();
         m.varsClassName         = this.getVarsClassName();
         m.squaredImageDirectory = this.getSquareImageDirectory();
-        m.rawImageDirectory     = this.getRawImageDirectory();
-        m.fileList              = (ArrayList<String>) this.fileList.clone();
-        m.dbrootDirectory       = this.getDatabaseRootdirectory();
+        m.rawImageDirectory     = this.getRawImageDirectory(); 
+        m.fileList        = (ArrayList<String>) this.fileList.clone();
+        m.dbrootDirectory = this.getDatabaseRootdirectory();
 
         return m;
     }
@@ -166,6 +166,7 @@ public class ClassModel implements Comparable<ClassModel> {
         try {
             if (fileList.isEmpty() == false) {
                 fileList.clear();
+                fileList.trimToSize();
             }
 
             if (rawImageDirectory.isDirectory()) {
@@ -205,8 +206,10 @@ public class ClassModel implements Comparable<ClassModel> {
                     }
                 });
 
+                System.out.println("FileList size: " + Integer.toString(fileList.size()) + " Adding files of length: " + Integer.toString(files.length));
                 if ((files != null) && (files.length > 0)) {
                     fileList.addAll(Arrays.asList(files));
+                    fileList.trimToSize();
                 }
             }
         } catch (Exception ex) {
@@ -264,9 +267,6 @@ public class ClassModel implements Comparable<ClassModel> {
             } catch (Exception ex) {
                 Logger.getLogger(ClassModel.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-            updateFileList();
-
             return true;
         }
 
@@ -286,8 +286,6 @@ public class ClassModel implements Comparable<ClassModel> {
      * @return the sorted file listing
      */
     public ArrayList<String> getRawImageFileListing() {
-        updateFileList();
-
         return fileList;
     }
 

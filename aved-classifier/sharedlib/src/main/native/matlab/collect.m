@@ -55,8 +55,7 @@ function [filenames, resolfiles, datafiles] = collect(kill, dirct, pattern, dbro
 
     %resolution, data and test files
     resolfiles={};
-    datafiles={};
-    testmfiles={};
+    datafiles={}; 
 
     % check if directory exists to save output to, if not create it
     if(isdir(dbroot) == 0)
@@ -66,22 +65,21 @@ function [filenames, resolfiles, datafiles] = collect(kill, dirct, pattern, dbro
     %initialize string to concatenate class names to
     str = '';
     basedir = '';
-    
-    % MAIN LOOP: OUT -> class, IN -> index
+     
     for jj = 1 : lc
         
         % if kill signaled return 
         if (isKill(kill))
             error('Killing collect');
         end
-
-        jj = 0;
+ 
         ii = 0;
-        store = [];
-        resol = [];
+        mm = 0;  
         ppat = '';
         filenames = '';
-        
+        store = [];
+        resol = [];
+      
         %*modified store the file names for all jpeg or ppm images
         if(length(pat) > 1)
             ppat = [ pat{cl(jj)} '/' ];
@@ -101,9 +99,9 @@ function [filenames, resolfiles, datafiles] = collect(kill, dirct, pattern, dbro
         s = [s1 s2 s3];
 
         if(~isempty(ppat))
-            fprintf(1,'Collecting %s',ppat);
+            fprintf(1,'\nCollecting %s',ppat);
         else            
-            fprintf(1,'Collecting %s',dirct);
+            fprintf(1,'\nCollecting %s',dirct);
         end
         
         %set the basedirectory to the same
@@ -115,72 +113,74 @@ function [filenames, resolfiles, datafiles] = collect(kill, dirct, pattern, dbro
         end
         
         ttl = length(s);
+        
         %*added comment now loop on this struct array of images
         while ( ii < ttl ) 
             
             % if kill signaled return
             if (isKill(kill))
                 error('Killing collect');
-            end
-            
+            end 
             
             %*added  - get filename from struct array
-            filename = [basedir '/' s(ii+1).name];          
+            filename = [basedir '/' s(ii+1).name];      
             
-            %*modified  - read in the images
+            % update status in console 
+            fprintf(1,'\nCollecting %d of %d filename: %s', ii + 1, ttl, filename );
+            
+            %*modified  - read in the image
             im = imread( filename );        
-
+             
             %*added - read file info         
             iminfo = imfinfo(filename);
-
+             
             %if image is not square throw it out
             if( iminfo.Height ~= iminfo.Width )
-                fprintf(1,'\n%s image not square - image will be excluded', filename);
+                fprintf(1,'\n%s image %d of %d not square - image will be excluded', ii, ttl, filename); 
                 ii = ii + 1;
                 continue;
             end
             
-            filenames{jj+1,1} = [s(ii+1).name];
+            % store resolution info 
+            resol(mm+1) = size(im,1);
+            
+            filenames{mm+1,1} = [s(ii+1).name]; 
             
             if color_space > 1
-                if strcmp(iminfo.ColorType,'grayscale') 
+                if strcmp(iminfo.ColorType,'grayscale')  
                     source = im;
                     im(:,:,1) = source;
                     im(:,:,2) = source;
                     im(:,:,3) = source;
                 end
                 
-                if (color_space == YCBCR)  
+                if (color_space == YCBCR)   
                     im = rgb2ycbcr(im);
-                end
-                 
-                for kk=1:3
+                end 
+                
+                for kk=1:3 
                     data = calcola_invarianti(im(:,:,kk), scale);
                     val{kk} = apply_non_lin3(data,scale);
                 end
+                            
                 % store feature vector (stack of feature vectors for each channel)
-                store(jj+1,:) = [val{1}, val{2}, val{3}];
+                store(mm+1,:) = double([val{1}, val{2}, val{3}]); 
             else
                 % COMPUTE INVARIANTS 
                 im = rgb2gray(im);
                 data = calcola_invarianti(im, scale); % compute invariants at different scales
                 val = apply_non_lin3(data,scale); % Apply non linearity
-                store(jj+1,:) = val; % store feature vector
-            end
-
-            % store resolution info 
-            resol(jj+1) = size(im,1);
+                store(mm+1,:) = double(val); % store feature vector
+            end 
              
-            ii = ii + 1;
-            jj = jj + 1;
+            ii = ii + 1; 
+            mm = mm + 1;
 
-            % update status in console 
-            fprintf(1,'Collecting %d of %d\r', ii, ttl );
             
         end
         
         %modified - store the resolution, data and file names from linear 3d application
-        if (size(filenames,1) > 1)
+        if (size(filenames,1) > 0)
             
             %append the color space to the name to make it unique
             if (color_space == RGB)
@@ -191,24 +191,24 @@ function [filenames, resolfiles, datafiles] = collect(kill, dirct, pattern, dbro
                 rootname = [str '_ycbcr'];
             else
                 rootname = str;
-            end
+            end             
+    
+            d=[dbroot rootname '_data_collection_avljNL3_cl_pcsnew.mat'];
+            r=[dbroot rootname '_resol_collection_avljNL3_cl_pcsnew.mat'];
+            n=[dbroot rootname '_names_collection_avljNL3_cl_pcsnew.mat'];
             
-            d=[dbroot rootname '_data_collection_avljNL3_cl_pcsnew' ];
-            r=[dbroot rootname '_resol_collection_avljNL3_cl_pcsnew'];
-            n=[dbroot rootname '_names_collection_avljNL3_cl_pcsnew'] ;
-            
-            fprintf(1, '\nSaving collection to %s', d);
+            fprintf(1, 'Saving to %s\n', d);
             save(d,'store');
             
-            fprintf(1, '\nSaving collection to %s', r);
+            fprintf(1, 'Saving to %s\n', r);
             save(r,'resol'); 
                         
-            fprintf(1, '\nSaving collection to %s', n);
+            fprintf(1, 'Saving to %s\n', n);
             save(n, 'filenames');
             
             resolfiles{end+1} = r;
             datafiles{end+1} = d; 
-            %n{end+1} = [n '.mat'];
+            filenames{end+1} = n;
         end
         
         fprintf(1,'\n');

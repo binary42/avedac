@@ -1,6 +1,6 @@
 /*
  * @(#)TrainingModel.java
- *
+ * 
  * Copyright 2011 MBARI
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -50,6 +50,7 @@ public class TrainingModel {
     private String                name                = "-";
     private File                  dbrootDirectory     = new File("");
     private ArrayList<ClassModel> classModels         = new ArrayList<ClassModel>();
+    final String                  syncArrays          = "syncArrays";
 
     /**
      * Get the number of classes in the model. Note that a training class
@@ -67,16 +68,18 @@ public class TrainingModel {
     public TrainingModel copy() {
         TrainingModel m = new TrainingModel();
 
-        m.color           = this.color;
-        m.name            = this.name;
-        m.description     = this.description;
-        m.dbrootDirectory = this.dbrootDirectory;
+        synchronized (syncArrays) {
+            m.color           = this.color;
+            m.name            = this.name;
+            m.description     = this.description;
+            m.dbrootDirectory = this.dbrootDirectory;
 
-        for (ClassModel model : classModels) {
-            m.classModels.add(model.copy());
+            for (ClassModel model : classModels) {
+                m.classModels.add(model.copy());
+            }
+
+            Collections.sort(m.classModels);
         }
-
-        Collections.sort(m.classModels);
 
         return m;
     }
@@ -90,9 +93,11 @@ public class TrainingModel {
      * otherwise true
      */
     public void addClassModel(ClassModel model) {
-        checkClassExists(model);
-        classModels.add(model);
-        Collections.sort(classModels);
+        synchronized (syncArrays) {
+            checkClassExists(model);
+            classModels.add(model);
+            Collections.sort(classModels);
+        }
     }
 
     /**
@@ -105,12 +110,10 @@ public class TrainingModel {
         while (i.hasNext()) {
             ClassModel model = i.next();
 
-            if (newModel.getName().equals(model.getName())
-                    && newModel.getColorSpace().equals(model.getColorSpace())) {
+            if (newModel.getName().equals(model.getName()) && newModel.getColorSpace().equals(model.getColorSpace())) {
                 classModels.remove(model);
             }
         }
- 
     }
 
     /**
@@ -120,8 +123,10 @@ public class TrainingModel {
      * given index
      */
     public ClassModel getClassModel(int i) {
-        if (i < classModels.size()) {
-            return classModels.get(i);
+        synchronized (syncArrays) {
+            if (i < classModels.size()) {
+                return classModels.get(i);
+            }
         }
 
         return null;
@@ -134,9 +139,9 @@ public class TrainingModel {
      * @param model
      */
     public boolean removeClassModel(ClassModel model) {
-        boolean rc = classModels.remove(model);
-
-        return rc;
+        synchronized (syncArrays) {
+            return classModels.remove(model);
+        }    
     }
 
     /**

@@ -22,7 +22,7 @@ dx = dd;
 dy = dd';
 
 ima_g = double(ima);
-
+ 
 for s = SS,
     
     ima_x = conv2(ima_g,dx,'same');

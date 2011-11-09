@@ -12,7 +12,7 @@
 % method3='maximum';
 % methods=[{method1} {method2} {method3}];
 function [eventids, majoritywinnerindex, probabilitywinnerindex, maxwinnerindex, probability] = run_tests_ui(kill, dbroot, color_space, testclassname, trainingalias, threshold)
- 
+         
 GRAY = 1;
 RGB = 2;
 YCBCR = 3;
@@ -23,50 +23,6 @@ if(size(testclassname,1) > 1)
 end
 
 fprintf(1,'TESTING %s STARTING...\n', testclassname)
-
-%append the color space to the name to make it unique
-if (color_space == RGB)
-    rootname = [testclassname '_rgb'];
-elseif (color_space == GRAY)
-    rootname = [testclassname '_gray'];
-elseif (color_space == YCBCR)
-    rootname = [testclassname '_ycbcr'];
-else
-    rootname = testclassname;
-end
-
-% the test files - these should already by collected
-data = [rootname '_data_collection_avljNL3_cl_pcsnew'];
-testclassdata  = [dbroot '/features/tests/' data '.mat'];
-names = [rootname '_names_collection_avljNL3_cl_pcsnew'];
-testclassfiles  = [dbroot '/features/tests/' names '.mat'];
-resol = [rootname '_resol_collection_avljNL3_cl_pcsnew'];
-testclassresol  = [dbroot '/features/tests/' resol '.mat'];
-
-%load and test class data
-if(~exist(testclassdata, 'file'))
-    error('Error - file %s does not exist', testclassdata);
-end
-if(~exist(testclassfiles,'file'))
-    error('Error -  file %s does not exist', testclassfiles);
-end
-if(~exist(testclassresol,'file'))
-    error('Error -  file %s does not exist', testclassresol);
-end
-
-fprintf(1,'Loading %s\n',testclassdata);
-load(testclassdata);
-tcd = store;
-
-fprintf(1,'Loading %s\n',testclassresol);
-load(testclassresol);
-tcr = resol;
-
-fprintf(1,'Loading %s\n',testclassfiles);
-load(testclassfiles);
-tcf = filenames;
-
-ttlfiles = size(filenames,1)-1;
 
 %initialize the classifier with the training classes
 trd = [dbroot '/training/class/' trainingalias '_training_data.mat'];
@@ -83,6 +39,47 @@ fprintf(1, 'Loading training class data in %s\n', trd);
 load(trd);
 fprintf(1, 'Loading training classes in %s\n', trcl);
 load(trcl);
+
+%append the color space to the name to make it unique
+if (color_space == RGB)
+    rootname = [testclassname '_rgb'];
+elseif (color_space == GRAY)
+    rootname = [testclassname '_gray'];
+elseif (color_space == YCBCR)
+    rootname = [testclassname '_ycbcr'];
+else
+    rootname = testclassname;
+end
+
+% the test files - these should already by collected 
+d  = [dbroot '/features/tests/' rootname '_data_collection_avljNL3_cl_pcsnew.mat'];
+n = [dbroot '/features/tests/' rootname '_names_collection_avljNL3_cl_pcsnew.mat']; 
+r = [dbroot '/features/tests/' rootname '_resol_collection_avljNL3_cl_pcsnew.mat']; 
+
+%load and test class data
+if(~exist(d, 'file'))
+    error('Error - file %s does not exist', d);
+end
+if(~exist(n,'file'))
+    error('Error -  file %s does not exist', n);
+end
+if(~exist(r,'file'))
+    error('Error -  file %s does not exist', r);
+end
+
+fprintf(1,'Loading %s\n',d);
+load(d);
+tcd = store;
+
+fprintf(1,'Loading %s\n',r);
+load(r);
+tcr = resol;
+
+fprintf(1,'Loading %s\n',n);
+load(n);
+tcf = filenames;
+
+ttlfiles = size(filenames,1)-1;
 
 %test classes aganst training classes
 [recfiles, storeprob, classindex, probtable] = test_ljmNL3(kill, classnames, tcf, tcd, tcr, ris, threshold);

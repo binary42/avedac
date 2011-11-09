@@ -10,7 +10,7 @@
 % @param threshold the probability threshold between 0-1.0
 %        
 function [testfiles, finalclassindex, finalstoreprob] = test_class(kill, dbroot, testclassname, trainingalias, threshold, colorspace)
-
+        
 GRAY = 1;
 RGB = 2;
 YCBCR = 3;
@@ -126,7 +126,7 @@ class_table_header = [{'Unknown'}, classnames];
 % detections for each class
 
 fprintf(1, '\nTotal classes: %d\n', length(class_table_header));
-fprintf(1, 'Total files tested: %d\n', ttlfiles);
+fprintf(1, 'Total files tested: %d\n', numtest);
 
 %if in the class we are testing put the total in the last row
 %otherwise, the total is zero because we are only testing within the
@@ -172,5 +172,5 @@ save([saveresultsname '-storeprob.mat'], 'storeprob');
 
 fprintf(1,'Saving event classifier results to %s\n', [saveresultsname '-recfiles.mat']);
 save([saveresultsname '-recfiles.mat'], 'recfiles');
- 
+         
 end

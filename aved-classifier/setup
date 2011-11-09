@@ -3,10 +3,6 @@
 # Copyright (c) MBARI 2009
 # Date: December 28, 2009 - Created
 #
-if [ ! "$MATLAB_ROOT" ]; then
-  echo "Error - set MATLAB_ROOT enviroment variable"
-  exit -1
-fi
 if [ ! "$MCR_ROOT" ]; then
   echo "Error - set MCR_ROOT enviroment variable"
   exit -1
@@ -28,7 +24,6 @@ fi
 export XAPPLRESDIR=$MCR_ROOT/X11/app-defaults
 export MATLAB_JAVA=$JAVA_HOME/jre
 export MCR_ROOT=$MCR_ROOT
-export MATLAB_ROOT=$MATLAB_ROOT
 export JAVA_HOME=$JAVA_HOME
 _ACEOF
 
@@ -38,7 +33,7 @@ _ACEOF
    echo "export LD_LIBRARY_PATH=$MCR_ROOT/runtime/glnx86:$MCR_ROOT/bin/glnx86:$MCR_ROOT/sys/os/glnx86:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/native_threads:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386/server:$MCR_ROOT/sys/java/jre/glnx86/jre/lib/i386" >> $out
   else 
     echo "Setting 64-bit Linux environment variables" 
-    echo "export LD_LIBRARY_PATH=$MATLAB_ROOT/runtime/glnxa64:$MATLAB_ROOT/bin/glnxa64:$MATLAB_ROOT/sys/os/glnxa64:$JAVA_HOME/jre/lib/i386" >> $out
+    echo "export LD_LIBRARY_PATH=$MCR_ROOT/runtime/glnxa64:$MCR_ROOT/bin/glnxa64:$MCR_ROOT/sys/os/glnxa64:$JAVA_HOME/jre/lib/i386" >> $out
   fi 
 
 else
@@ -49,14 +44,13 @@ if [ -f ~/.bashrc ]; then
 fi
 export XAPPLRESDIR=$MCR_ROOT/X11/app-defaults
 export MCR_ROOT=$MCR_ROOT
-export MATLAB_ROOT=$MATLAB_ROOT
 _ACEOF
 
   maci="maci"
   ioreg="`/usr/sbin/ioreg -l -p IODeviceTree | grep firmware-abi`"
   if [ "`echo $ioreg | grep EFI64`" ]; then
    echo "Mac has 64-bit firmware"
-    if [ "`echo $uname | grep x86_64`" ]; then
+    if [ "`uname -a | grep 64`" ]; then
       maci="maci64"
     fi
   fi
@@ -66,8 +60,7 @@ _ACEOF
   else
       echo "Setting MacOSX 32-bit environment variables"
   fi
-
-  echo "export DYLD_LIBRARY_PATH=$MCR_ROOT/runtime/$maci:$MCR_ROOT/bin/glnx86:$MCR_ROOT/sys/os/$maci:/System/Library/Frameworks/JavaVM.framework/JavaVM:/System/Library/Frameworks/JavaVM.framework/Libraries" >> $out
+  echo "export DYLD_LIBRARY_PATH=$MCR_ROOT/runtime/$maci:$MCR_ROOT/bin/$maci:$MCR_ROOT/sys/os/$maci" >> $out
 fi
 
 source $out

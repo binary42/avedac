@@ -11,7 +11,19 @@
     <packaging>pom</packaging>
     <name>AVED classifier</name>
     <version>0.4.3-SNAPSHOT</version>
-    <description>AVED Classifier</description> 
+    <description>AVED Classifier</description>
+    <build>
+        <plugins> 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.4.3</version>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
     <modules>
         <!-- Mojo to unpack libraries into target directories -->
         <module>narmojo</module>
@@ -19,5 +31,8 @@
         <module>sharedlib</module>
         <!-- Final JNI layer -->
         <module>sharedlibjni</module>
-    </modules>  
+    </modules>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 </project>

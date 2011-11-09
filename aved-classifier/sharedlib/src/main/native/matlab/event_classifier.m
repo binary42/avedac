@@ -172,7 +172,7 @@ while  ii <= maxlen
 
             %if a tie for the maximum probability, or all probabilities are
             %the same, or all probabilities are less than 30% of the total frames,
-            %then break default to UNK
+            %then break default to Unknown
             if(length(b) > 1 | isempty(b) | isempty(a))
                 winner = 1;
             else
@@ -191,7 +191,7 @@ while  ii <= maxlen
                 winner = winner(1);
             end
 
-            %if no winner, set to UNK category
+            %if no winner, set to Unknown category
             if isempty(winner)
                 winner = 1;
             end            
@@ -204,12 +204,12 @@ while  ii <= maxlen
     end     
 
     %reset the start index and event id
-    eventid = id;     %eventid=2, eventid=3, eventid=4
+    eventid = id;     
     eventstr = {str};
 
     %reset the start and end indices
-    sfi = efi+1;            %sfi=2 sfi=3 sfi=4
-    efi = sfi;    %efi=2 efi=3 efi=4
+    sfi = efi+1;       
+    efi = sfi;   
 
 end %end iterate through all the files
 

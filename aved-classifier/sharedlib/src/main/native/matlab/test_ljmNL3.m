@@ -38,6 +38,7 @@ CMttls = zeros(ncltr+1,1);
 mog = ris.mog;
 mediatot = ris.mediatot;
 FLD = ris.FLD;
+ 
 
 % name of the classes from training and test set and new matrix to store
 % file names
@@ -71,14 +72,11 @@ for jj=1:ncltr
         % update status in console 
         a = [classes{jj}];
         
-        fprintf(1,'testing %d of %d for class: %s\r', ii, nclts, a );
-        
-        % TODO: need a check here for dimension because color
-        % has 3x the dimension as grayscale and the following line
-        % fails in this case 
+        fprintf(1,'testing %d of %d for class: %s\r', ii, nclts, a ); 
+             
         val = val - mediatot;
-        val = (FLD' * val')';
-        
+        val = (FLD' * val')'; 
+         
         for jjj= 1:ncltr
             dprobab(jjj) = gmmprob( mog(jjj).mix, val );
         end
@@ -88,7 +86,6 @@ for jj=1:ncltr
             estimate = 0;
             storeprob(ii) = Mp;
         else
-            fprintf(1, 'sum probability %f \r', sum(dprobab));
             sum(dprobab);
             prob = dprobab/sum(dprobab);
             Mp = max(prob);

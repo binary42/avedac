@@ -31,7 +31,7 @@
 %Modified by dcline@mbari.org  Mar 25, 2010 appended color space to
 %metadata name 
         
-function [filenames,store] = collect_ui(kill, rawdirct, sqdirct, classname, dbroot, color_space, varsclassname, description)
+function [filenames] = collect_ui(kill, rawdirct, sqdirct, classname, dbroot, color_space, varsclassname, description)
 
 GRAY = 1;
 RGB = 2;
@@ -41,11 +41,7 @@ if ( (color_space ~= GRAY) && (color_space ~= RGB) && (color_space ~= YCBCR) )
     color_space = GRAY;
     fprintf(1, '\nWarning: Color space should be 1, 2, or 3. Converting to 1 (GRAY).\n');
 end
-
-%resolution and data files
-resolfiles={};
-datafiles={};
-
+ 
 featurerootdir=[dbroot '/features/class/'];
 
 % check if directory exists to save output to, if not create it
@@ -53,9 +49,10 @@ if(isdir(featurerootdir) == 0)
     mkdir(featurerootdir);
 end
 
-jj=0;
 ii=0;
-data = [];
+mm=0;   
+store = [];
+resol = [];
 filenames =[];
 scale = 3;
 sz = 0; 
@@ -107,7 +104,7 @@ while ( ii < sz )
     im = imread( filename );
     
     %*added - read file info
-    iminfo = imfinfo(filename);
+    iminfo = imfinfo(filename); 
     
     %if image is not square throw it out
     if( iminfo.Height ~= iminfo.Width )
@@ -120,52 +117,50 @@ while ( ii < sz )
     imsize = size(im,1);
     
     % store resolution info 
-    resol(jj+1,:) = imsize;
-  
+    resol(mm+1,:) = imsize;
+      
+    %modified store name and size of current file
+    if(~iscell(sqdirct) && isdir(sqdirct))
+        filenames{mm+1,1} = [s(ii+1).name];
+    else
+        filenames{mm+1,1} = s{1,ii+1};
+    end
+       
     if color_space > 1
-            if strcmp(iminfo.ColorType,'grayscale') 
+            if strcmp(iminfo.ColorType,'grayscale')  
                 source = im;
                 im(:,:,1) = source; 
                 im(:,:,2) = source; 
                 im(:,:,3) = source; 
             end
             
-            if (color_space == YCBCR) 
+            if (color_space == YCBCR)             
                 im = rgb2ycbcr(im);
-            end
-             
+            end 
+                    
             for kk=1:3
                 data = calcola_invarianti(im(:,:,kk), scale);
                 val{kk} = apply_non_lin3(data,scale);
             end
+                        
             % store feature vector (stack of feature vectors for each channel)
-            store(jj+1,:) = [val{1}, val{2}, val{3}];
+            store(mm+1,:) = double([val{1}, val{2}, val{3}]); 
     else
         % COMPUTE INVARIANTS 
         im = rgb2gray(im);
         data = calcola_invarianti(im, scale); % compute invariants at different scales
         val = apply_non_lin3(data,scale); % Apply non linearity
-        store(jj+1,:) = val; % store feature vector
-    end
-    
-    %modified store name and size of current file
-    if(~iscell(sqdirct) && isdir(sqdirct))
-        filenames{jj+1,1} = [s(ii+1).name];
-    else
-        filenames{jj+1,1} = s{1,ii+1};
-    end
-        
-    filenames{jj+1,2} = imsize;
- 
+        store(mm+1,:) = double(val); % store feature vector
+    end    
+         
     ii = ii + 1;
-    jj = jj + 1;
+    mm = mm + 1;
      
 end
 
-
 fprintf(1, '\n');                     
 
-if(sz > 1)
+if(sz > 0)
     %append the color space to the name to make it unique
     if (color_space == RGB)
         rootname = [classname '_rgb'];
@@ -178,32 +173,32 @@ if(sz > 1)
     end
     
     %modified - store the data from linear 3d application
-    str = [featurerootdir rootname '_data_collection_avljNL3_cl_pcsnew' '.mat'];
-    fprintf(1, 'Saving %s\n', str);
-    save(str,'store');
+    d = [featurerootdir rootname '_data_collection_avljNL3_cl_pcsnew.mat'];
+    r = [featurerootdir rootname '_resol_collection_avljNL3_cl_pcsnew.mat']; 
+    n = [featurerootdir rootname '_names_collection_avljNL3_cl_pcsnew.mat']; 
+    m = [featurerootdir rootname '_metadata_collection_avljNL3_cl_pcsnew.mat'];
     
-    %modified - store the resolution from linear 3d application
-    str = [featurerootdir rootname '_resol_collection_avljNL3_cl_pcsnew' '.mat'];
-    fprintf(1, 'Saving %s\n', str);
-    save(str,'resol');
+    fprintf(1, '\nSaving to %s', d);
+    save(d,'store');
     
-    %modified - store name of class files from the directory
-    str = [featurerootdir rootname '_names_collection_avljNL3_cl_pcsnew' '.mat'];
-    fprintf(1, 'Saving %s\n', str);
-    save(str,'filenames');
+    fprintf(1, '\nSaving to %s', r);
+    save(r,'resol'); 
     
-    str = [featurerootdir rootname '_metadata_collection_avljNL3_cl_pcsnew' '.mat'];
-    fprintf(1, 'Saving %s\n', str);
+    fprintf(1, '\nSaving to %s', n);
+    save(n, 'filenames');     
+    
     class_metadata.raw_directory = rawdirct;
     class_metadata.square_directory = sqdirct;
     class_metadata.classname = classname;
     class_metadata.dbroot = dbroot;
     class_metadata.varsclassname = varsclassname;
     class_metadata.description = description; 
-    class_metadata.color_space = color_space; 
-    save(str,'class_metadata'); 
+    class_metadata.color_space = color_space;
+    
+    fprintf(1, '\nSaving %s', m); 
+    save(m,'class_metadata'); 
             
 end
-
+            
 end
 

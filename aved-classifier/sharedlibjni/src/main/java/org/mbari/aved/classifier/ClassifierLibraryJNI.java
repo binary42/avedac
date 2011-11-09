@@ -43,7 +43,7 @@ public class ClassifierLibraryJNI {
         try {
 
 	    if (test == true) { 
-		System.out.println("Loading libsharedlib"); 
+		System.out.println("Loading library libsharedlib"); 
 		NarSystem.loadLibrary(); 
 	    }
 	    else {

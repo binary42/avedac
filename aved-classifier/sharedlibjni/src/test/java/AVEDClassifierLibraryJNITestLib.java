@@ -26,7 +26,6 @@ import org.mbari.aved.classifier.TrainingModel;
 
 //~--- JDK imports ------------------------------------------------------------
 
-import java.io.*;
 
 public class AVEDClassifierLibraryJNITestLib extends TestCase {
 

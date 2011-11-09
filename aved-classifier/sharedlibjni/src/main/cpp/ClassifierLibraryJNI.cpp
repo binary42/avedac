@@ -302,12 +302,20 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
     }
     
     try {
-        fprintf(stderr, "Initializing mcl\n");
+        fprintf(stderr, "Initializing mclmcr\n");
+        if (!mclmcrInitialize()) {
+            ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the MCL properly");
+            env->ReleaseStringUTFChars(jmatlablog, matlablog);
+            return;
+        }
+        
+        fprintf(stderr, "Initializing mcr\n");
         if (!mclInitializeApplication(options, 4)) {
             ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the MCR properly");
             env->ReleaseStringUTFChars(jmatlablog, matlablog);
             return;
         }
+        
         fprintf(stderr, "Initializing Matlab library\n");
         // Initialize the library of MATLAB functions
         if (!libavedsharedlibInitialize()) {
