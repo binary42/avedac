@@ -274,6 +274,8 @@ mxArray *ClassStringToMxArray(JNIEnv *env, jstring str) {
 JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initLib
 (JNIEnv *env, jobject obj, jstring jmatlablog, jint jnojvm) {
 
+    fprintf(stderr, "Initializing Matlab library\n");
+    
     const char *matlablog = env->GetStringUTFChars(jmatlablog, 0);
 
     // Do some checking
@@ -301,14 +303,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
       options[3] = "-nodisplay"; //duplicate to fill in
     }
     
-    try {
-        fprintf(stderr, "Initializing mclmcr\n");
-        if (!mclmcrInitialize()) {
-            ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the MCL properly");
-            env->ReleaseStringUTFChars(jmatlablog, matlablog);
-            return;
-        }
-        
+    try { 
         fprintf(stderr, "Initializing mcr\n");
         if (!mclInitializeApplication(options, 4)) {
             ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the MCR properly");
@@ -316,7 +311,6 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_initL
             return;
         }
         
-        fprintf(stderr, "Initializing Matlab library\n");
         // Initialize the library of MATLAB functions
         if (!libavedsharedlibInitialize()) {
             ThrowByName(env, "java/lang/RuntimeException", "Could not initialize the AVED Classifier MATLAB library");
