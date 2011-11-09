@@ -38,45 +38,16 @@ import org.mbari.aved.classifier.NarSystem;
  */
 public class ClassifierLibraryJNI {
 
-    public ClassifierLibraryJNI(Object classToUse, boolean test) throws Exception {
+    public ClassifierLibraryJNI() throws Exception {
 
-        try {
-
-	    if (test == true) { 
-		System.out.println("Loading library libsharedlib"); 
-		NarSystem.loadLibrary(); 
-	    }
-	    else {
-		String lcOSName = System.getProperty("os.name").toLowerCase();
-            	// If running from Mac use system loader
-            	if (lcOSName.startsWith("mac os x")) {
-                	System.out.println("Loading libsharedlib");
-                	NarSystem.loadLibrary(); 
-            	} else {
-                	// If running from Linux, then assume running from an executable
-                	// jar, so use the absolute path
-                	System.out.println("Loading libsharedlib");
-			String path = getPathToJarfileDir(classToUse); 
-
-                  	if (path != null) {
-                    	  String loadFile = path + "/lib/" + "libsharedlib-0.4.3-SNAPSHOT.so";
-                    	  System.out.println("Loading " + loadFile);
-                    	  System.load(loadFile);
-                  	}
-		  	else {
-                    	  NarSystem.loadLibrary(); 
-		  	} 
-		}
-	    }
-        } catch (URISyntaxException ex) {
-            String message = "ERROR: could not load library sharedlibjni:" + ex.getMessage();
-            Logger.getLogger(ClassifierLibraryJNI.class.getName()).log(Level.SEVERE, null, ex);
+        try { 
+	   System.out.println("Loading library libsharedlib"); 
+	   NarSystem.loadLibrary(); 
         } catch (UnsatisfiedLinkError u) {
             String message = "ERROR: could not load library sharedlibjni:" + u.getMessage();
             Logger.getLogger(ClassifierLibraryJNI.class.getName()).log(Level.SEVERE, null, message);
             throw new Exception(message);
         }
-
     }
 
     /**

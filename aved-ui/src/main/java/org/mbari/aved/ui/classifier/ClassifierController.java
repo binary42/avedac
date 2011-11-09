@@ -120,8 +120,10 @@ public class ClassifierController extends AbstractController implements ModelLis
         view.setBatchRunPanel(batchProcess.getView().getForm());
         view.pack();
 
-        try {
-            jniQueue = new ClassifierLibraryJNITaskWorker();
+        try { 
+	    ClassifierLibraryJNI            jniLibrary    = new ClassifierLibraryJNI() {};
+            jniQueue = new ClassifierLibraryJNITaskWorker(jniLibrary);
+            jniQueue.initLibrary();
             jniQueue.execute();
         } catch (Exception ex) {
             Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
@@ -359,14 +361,16 @@ public class ClassifierController extends AbstractController implements ModelLis
         private boolean                               exit          = false;
         private boolean                               isInitialized = false;
         private final Queue<ClassifierLibraryJNITask> queue         = new LinkedList<ClassifierLibraryJNITask>();
-        private final File                            logFile       = getDefaultMatlabLog();
-        private final ClassifierLibraryJNI            jniLibrary    = new ClassifierLibraryJNI(this, false) {};
+        private final File                            logFile       = getDefaultMatlabLog(); 
+	private ClassifierLibraryJNI            jniLibrary    	    = null;
 
-        ClassifierLibraryJNITaskWorker() throws Exception {}
+        ClassifierLibraryJNITaskWorker(ClassifierLibraryJNI library) {
+		this.jniLibrary = library;
+	}
 
         @Override
         protected Object doInBackground() throws Exception {
-            getLibrary();
+            initLibrary();
 
             while (exit == false) {
                 if (queue.isEmpty() == false) {
@@ -486,8 +490,8 @@ public class ClassifierController extends AbstractController implements ModelLis
          *
          * @return a {@link org.mbari.aved.classifier.ClassifierLibraryJNI} singleton
          */
-        private synchronized ClassifierLibraryJNI getLibrary() throws Exception {
-            if (isInitialized == false) {
+        private synchronized ClassifierLibraryJNI initLibrary() throws Exception {
+            if (isInitialized == false && jniLibrary != null) {
                 try {
                     String lcOSName = System.getProperty("os.name").toLowerCase();
 
@@ -514,9 +518,9 @@ public class ClassifierController extends AbstractController implements ModelLis
 
         /**
          * Closes the library. If this is called, the library will be reopened
-         * during the first getLibrary() call
+         * during the first initLibrary() call
          *
-         * @see     getLibrary()
+         * @see     initLibrary()
          */
         private synchronized void closeLibrary() {
             try {

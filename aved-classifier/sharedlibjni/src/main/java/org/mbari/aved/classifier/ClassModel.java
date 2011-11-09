@@ -206,7 +206,7 @@ public class ClassModel implements Comparable<ClassModel> {
                     }
                 });
 
-                System.out.println("FileList size: " + Integer.toString(fileList.size()) + " Adding files of length: " + Integer.toString(files.length));
+                //System.out.println("FileList size: " + Integer.toString(fileList.size()) + " Adding files of length: " + Integer.toString(files.length));
                 if ((files != null) && (files.length > 0)) {
                     fileList.addAll(Arrays.asList(files));
                     fileList.trimToSize();

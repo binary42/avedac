@@ -209,14 +209,16 @@ public class RunClassifierController extends AbstractController implements Model
             JComboBox  box           = ((JComboBox) e.getSource());
             ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
             String     lastSelection = UserPreferences.getModel().getTrainingLibrarySelection();
-             
+            
             // Populate the libraries in the new color space
-            getView().populateTrainingLibraryList(newColorSpace);
+	    if (getView() != null) { 
+              getView().populateTrainingLibraryList(newColorSpace);
 
-            // Set the library
-            if (getView().selectLibrary(lastSelection) == false) {
+              // Set the library
+              if (getView().selectLibrary(lastSelection) == false) {
                 getView().clearClassModelList();
-            }
+              }
+	    }
         } else if (actionCommand.equals("Stop")) {
             if (task != null) {
                 getView().setRunButton(true);

@@ -299,7 +299,6 @@ public class ThumbnailPanel extends JPanel {
                     EventObjectContainer data = eventlistmodel.getElementAt(sorter.modelIndex(scrollIndex));
 
                     if (pictures.get(i) != null) {
-                        System.out.println("Resetting picture objectId: " + data.getObjectId());
                         pictures.get(i).reset(data);
                         pictures.get(i).setScrollerIndex(scrollIndex);
                     }

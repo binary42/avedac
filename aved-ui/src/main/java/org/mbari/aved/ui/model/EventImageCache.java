@@ -782,7 +782,6 @@ public class EventImageCache {
                         if ((totalLoaded - ttllast > refreshcnt) || (totalLoaded == ttl)) {
                             publish(new ImageLoadStats(totalLoaded, ttl));
                             ttllast = totalLoaded;
-                            System.out.println("publishing  totalLoaded: " + totalLoaded);
                         }
 
                         if (totalLoaded == ttl) {

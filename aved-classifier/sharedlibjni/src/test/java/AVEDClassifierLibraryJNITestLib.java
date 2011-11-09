@@ -47,7 +47,7 @@ public class AVEDClassifierLibraryJNITestLib extends TestCase {
         System.out.println("dbRoot: " + dbRoot);
 	System.out.println("Matlab logfile: " + logfile);
 
-        ClassifierLibraryJNI app = new ClassifierLibraryJNI(this, true);
+        ClassifierLibraryJNI app = new ClassifierLibraryJNI();
 
         try {
             System.out.println("initialize library");
