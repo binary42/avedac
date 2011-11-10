@@ -64,8 +64,8 @@
               <at name="size">13</at>
              </object>
             </at>
-            <at name="name"/>
             <at name="width">190</at>
+            <at name="name"></at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -247,7 +247,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">2</at>
             <at name="height">28</at>
-            <at name="width">492</at>
+            <at name="width">527</at>
             <at name="name">classname</at>
             <at name="toolTipText">The predicted class name this event was assigned to be. This can either be a VARS concept, or a user-defined class name. This corresponds to the AVEDac classifier prediction. </at>
             <at name="border">
@@ -359,8 +359,8 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="lineWrap">true</at>
             <at name="scrollableTracksViewportWidth">true</at>
-            <at name="height">216</at>
-            <at name="width">488</at>
+            <at name="height">336</at>
+            <at name="width">523</at>
             <at name="name">classdescription</at>
             <at name="columns">20</at>
             <at name="toolTipText">Optional description of the class </at>
@@ -454,9 +454,9 @@
               </at>
              </object>
             </at>
-            <at name="width">492</at>
+            <at name="width">527</at>
             <at name="name">imagedirectory</at>
-            <at name="background" object="color">236,233,216</at>
+            <at name="autoscrolls">true</at>
             <at name="actionCommand">imageDirComboBoxChanged</at>
             <at name="toolTipText">Select the image directory that contains representations of the class</at>
             <at name="border">
@@ -574,7 +574,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">2</at>
             <at name="height">28</at>
-            <at name="width">492</at>
+            <at name="width">527</at>
             <at name="name">classsnamevars</at>
             <at name="toolTipText">(MBARI internal only), if the VARS knowledge base is available , select the class from the tree on the right. The VARS class doesn&apos;t necessarily need to match the predicted class. (External use), this can be any name, but is generally the lowest taxonomic classification of the animal that can be identified</at>
             <at name="border">
@@ -695,9 +695,8 @@
               <at name="name">items</at>
              </object>
             </at>
-            <at name="width">492</at>
+            <at name="width">527</at>
             <at name="name">colorspace</at>
-            <at name="background" object="color">236,233,216</at>
             <at name="actionCommand">colorSpaceComboBoxChanged</at>
             <at name="toolTipText">The color space the classification is to be executed in. This can make a difference in the accuracy of the classifier. Use RGB  or YUV for color images, and GRAY for grayscale images.</at>
             <at name="border">
@@ -812,7 +811,7 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="height">16</at>
-            <at name="width">492</at>
+            <at name="width">527</at>
             <at name="name">classimage</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
@@ -1045,8 +1044,8 @@
           <at name="classname">javax.swing.JPanel</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
-            <at name="height">505</at>
-            <at name="width">420</at>
+            <at name="height">625</at>
+            <at name="width">455</at>
             <at name="name">knowledgebase</at>
             <at name="background" object="color">255,255,255</at>
             <at name="autoscrolls">true</at>

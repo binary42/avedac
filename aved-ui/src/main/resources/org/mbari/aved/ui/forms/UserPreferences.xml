@@ -47,7 +47,7 @@
          </at>
          <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
         </super>
-        <at name="id">embedded.525926259</at>
+        <at name="id">embedded.1817148236</at>
         <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:DEFAULT:NONE</at>
         <at name="colspecs">FILL:473PX:GROW(1.0),FILL:DEFAULT:NONE</at>
         <at name="components">
@@ -78,7 +78,7 @@
                 <object classname="com.jeta.forms.store.support.PropertyMap">
                  <at name="text">User Preferences</at>
                  <at name="height">27</at>
-                 <at name="width">1197</at>
+                 <at name="width">1183</at>
                  <at name="name">Test Comp</at>
                  <at name="fill">
                   <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
@@ -185,7 +185,7 @@
                 <object classname="com.jeta.forms.store.support.PropertyMap">
                  <at name="height">168</at>
                  <at name="componentCount">2</at>
-                 <at name="width">1114</at>
+                 <at name="width">1100</at>
                  <at name="name">tabbedpane</at>
                  <at name="border">
                   <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
@@ -240,7 +240,7 @@
                            </at>
                            <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
                           </super>
-                          <at name="id">embedded.1113773527</at>
+                          <at name="id">embedded.363978002</at>
                           <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:DEFAULT:NONE,CENTER:DEFAULT:GROW(1.0)</at>
                           <at name="colspecs">FILL:DEFAULT:NONE,FILL:5PX:NONE,FILL:DEFAULT:GROW(1.0),FILL:5PX:NONE,FILL:DEFAULT:NONE</at>
                           <at name="components">
@@ -399,7 +399,7 @@
                                   <object classname="com.jeta.forms.store.support.PropertyMap">
                                    <at name="enabled">false</at>
                                    <at name="height">29</at>
-                                   <at name="width">747</at>
+                                   <at name="width">733</at>
                                    <at name="name">videoplayer</at>
                                    <at name="border">
                                     <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
@@ -614,7 +614,7 @@
                            </at>
                            <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
                           </super>
-                          <at name="id">embedded.1390684177</at>
+                          <at name="id">embedded.1846761337</at>
                           <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:DEFAULT:NONE,CENTER:DEFAULT:GROW(1.0)</at>
                           <at name="colspecs">LEFT:179PX:NONE,FILL:5PX:NONE,FILL:DEFAULT:GROW(1.0),FILL:5PX:NONE,FILL:DEFAULT:NONE</at>
                           <at name="components">
@@ -645,7 +645,7 @@
                                   <object classname="com.jeta.forms.store.support.PropertyMap">
                                    <at name="text">Ask before deleting events</at>
                                    <at name="height">23</at>
-                                   <at name="width">970</at>
+                                   <at name="width">956</at>
                                    <at name="name">askbeforedelete</at>
                                    <at name="actionCommand">AskBeforeDelete</at>
                                    <at name="toolTipText">Check this to be prompted before deleting any event with a warning message</at>
@@ -739,9 +739,8 @@
                                      </at>
                                     </object>
                                    </at>
-                                   <at name="width">786</at>
+                                   <at name="width">772</at>
                                    <at name="name">scratchdir</at>
-                                   <at name="background" object="color">236,233,216</at>
                                    <at name="actionCommand">ScratchDirComboBoxChanged</at>
                                    <at name="toolTipText">Choose the scratch directory were video will be transcoded and temporary files placed</at>
                                    <at name="itemCount">1</at>
@@ -799,8 +798,8 @@
                                    <at name="horizontalAlignment">4</at>
                                    <at name="text">Scratch directory:</at>
                                    <at name="height">16</at>
+                                   <at name="name"/>
                                    <at name="width">110</at>
-                                   <at name="name"></at>
                                    <at name="fill">
                                     <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                                      <at name="name">fill</at>

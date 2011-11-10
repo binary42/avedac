@@ -189,7 +189,6 @@
             </at>
             <at name="width">377</at>
             <at name="name">libraryname</at>
-            <at name="background" object="color">236,233,216</at>
             <at name="actionCommand">availLibraryNameComboBoxChanged</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
@@ -244,8 +243,8 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="text">Classes in this library:</at>
             <at name="height">16</at>
+            <at name="name"/>
             <at name="width">140</at>
-            <at name="name"></at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -304,7 +303,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="enabled">false</at>
             <at name="scrollableTracksViewportWidth">true</at>
-            <at name="height">311</at>
+            <at name="height">388</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>

@@ -134,7 +134,7 @@ public class Application {
                 Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
-
+   
             // Otherwise, set the look and feel to a metal look
             Options.setDefaultIconSize(new Dimension(18, 18));
             UIManager.put(Options.USE_SYSTEM_FONTS_APP_KEY, lookAndFeelSettings.isUseSystemFonts());
@@ -172,11 +172,10 @@ public class Application {
                 UIManager.setLookAndFeel(lookAndFeel);
             } catch (UnsupportedLookAndFeelException e) {
                 System.err.println("Can't use the specified look and feel (" + lookAndFeel + ") on this platform.");
-                System.err.println("Using the default look and feel.");
+                Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, e);
             } catch (Exception e) {
                 System.err.println("Couldn't get specified look and feel (" + lookAndFeel + "), for some reason.");
-                System.err.println("Using the default look and feel.");
-                e.printStackTrace();
+                Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, e);
             }
         }
     }
@@ -239,10 +238,8 @@ public class Application {
                                 dialog.answer();
                                 System.exit(-1);
                             }
-                        } catch (Exception e) {
-
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
+                        } catch (Exception e) { 
+                            Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, e);
                         }
                     }
                 });
