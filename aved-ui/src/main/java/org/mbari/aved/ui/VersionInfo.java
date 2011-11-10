@@ -1,5 +1,5 @@
 /* Created by JReleaseInfo AntTask from Open Source Competence Group */
-/* Creation date Wed Nov 09 15:55:23 PST 2011 */
+/* Creation date Wed Nov 09 17:13:44 PST 2011 */
 package org.mbari.aved.ui;
 
 import java.util.Date;
@@ -12,21 +12,21 @@ import java.util.Date;
 public class VersionInfo {
 
 
-   /** buildDate (set during build process to 1320882923865L). */
-   private static Date buildDate = new Date(1320882923865L);
+   /** buildDate (set during build process to 1320887624846L). */
+   private static Date buildDate = new Date(1320887624846L);
 
    /**
-    * Get buildDate (set during build process to Wed Nov 09 15:55:23 PST 2011).
+    * Get buildDate (set during build process to Wed Nov 09 17:13:44 PST 2011).
     * @return Date buildDate
     */
    public static final Date getBuildDate() { return buildDate; }
 
 
    /**
-    * Get buildNumber (set during build process to 15).
+    * Get buildNumber (set during build process to 16).
     * @return int buildNumber
     */
-   public static final int getBuildNumber() { return 15; }
+   public static final int getBuildNumber() { return 16; }
 
 
    /** version (set during build process to "0.4.3-SNAPSHOT"). */
