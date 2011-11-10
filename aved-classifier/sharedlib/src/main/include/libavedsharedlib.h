@@ -1,12 +1,14 @@
 /*
- * MATLAB Compiler: 4.16 (R2011b)
- * Date: Wed Nov  9 12:33:45 2011
+ * MATLAB Compiler: 4.14 (R2010b)
+ * Date: Wed Nov  9 15:19:14 2011
  * Arguments: "-B" "macro_default" "-v" "-W" "lib:libavedsharedlib" "-T"
  * "link:lib" "-I"
- * "/home/aved/avedac/aved-classifier/sharedlib/src/main/native/matlab" "-I"
- * "/home/aved/avedac/aved-classifier/sharedlib/src/main/native/matlab/netlab"
- * "-g" "-G" "run_tests_ui" "collect_ui" "collect_tests" "collect_class"
- * "assign_class" "test_class" "train_classes_ui" 
+ * "/Users/dcline/NetBeansProjects/avedac/aved-classifier/sharedlib/src/main/nat
+ * ive/matlab" "-I"
+ * "/Users/dcline/NetBeansProjects/avedac/aved-classifier/sharedlib/src/main/nat
+ * ive/matlab/netlab" "-g" "-G" "run_tests_ui" "collect" "collect_ui"
+ * "collect_tests" "collect_class" "assign_class" "test_class"
+ * "train_classes_ui" 
  */
 
 #ifndef __libavedsharedlib_h
@@ -80,6 +82,9 @@ extern LIB_libavedsharedlib_C_API
 bool MW_CALL_CONV mlxRun_tests_ui(int nlhs, mxArray *plhs[], int nrhs, mxArray *prhs[]);
 
 extern LIB_libavedsharedlib_C_API 
+bool MW_CALL_CONV mlxCollect(int nlhs, mxArray *plhs[], int nrhs, mxArray *prhs[]);
+
+extern LIB_libavedsharedlib_C_API 
 bool MW_CALL_CONV mlxCollect_ui(int nlhs, mxArray *plhs[], int nrhs, mxArray *prhs[]);
 
 extern LIB_libavedsharedlib_C_API 
@@ -104,6 +109,8 @@ long MW_CALL_CONV libavedsharedlibGetMcrID();
 
 
 extern LIB_libavedsharedlib_C_API bool MW_CALL_CONV mlfRun_tests_ui(int nargout, mxArray** eventids, mxArray** majoritywinnerindex, mxArray** probabilitywinnerindex, mxArray** maxwinnerindex, mxArray** probability, mxArray* kill, mxArray* dbroot, mxArray* color_space, mxArray* testclassname, mxArray* trainingalias, mxArray* threshold);
+
+extern LIB_libavedsharedlib_C_API bool MW_CALL_CONV mlfCollect(int nargout, mxArray** filenames, mxArray** resolfiles, mxArray** datafiles, mxArray* kill, mxArray* dirct, mxArray* pattern, mxArray* dbroot, mxArray* color_space);
 
 extern LIB_libavedsharedlib_C_API bool MW_CALL_CONV mlfCollect_ui(int nargout, mxArray** filenames, mxArray* kill, mxArray* rawdirct, mxArray* sqdirct, mxArray* classname, mxArray* dbroot, mxArray* color_space, mxArray* varsclassname, mxArray* description);
 

@@ -87,7 +87,7 @@
                         <executions>
                             <execution>
                                 <id>increment version</id>
-                                <!--<phase>generate-sources</phase>-->
+                                <phase>generate-sources</phase>
                                 <configuration>
                                     <includePluginDependencies>true</includePluginDependencies>
                                     <tasks>
