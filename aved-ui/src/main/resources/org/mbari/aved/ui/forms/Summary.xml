@@ -727,7 +727,7 @@
            <at name="color">
             <object classname="com.jeta.forms.store.properties.ColorProperty">
              <at name="name">dyncolor</at>
-             <at name="colorkey">TextField.background</at>
+             <at name="colorkey">window</at>
             </object>
            </at>
           </object>
