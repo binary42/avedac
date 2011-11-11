@@ -47,7 +47,7 @@
          </at>
          <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
         </super>
-        <at name="id">embedded.1914787656</at>
+        <at name="id">embedded.1893531328</at>
         <at name="rowspecs">CENTER:25DLU:NONE,CENTER:MIN(5DLU;DEFAULT):NONE,CENTER:25DLU:NONE,CENTER:5DLU:NONE,CENTER:DEFAULT:NONE,CENTER:4DLU:NONE,TOP:DEFAULT:NONE,CENTER:DEFAULT:NONE,CENTER:DEFAULT:NONE,CENTER:DEFAULT:NONE,CENTER:26DLU:GROW(1.0),CENTER:5PX:NONE,CENTER:DEFAULT:NONE,CENTER:MIN(5DLU;DEFAULT):NONE,BOTTOM:DEFAULT:GROW(1.0)</at>
         <at name="colspecs">FILL:200PX:NONE,FILL:4DLU:NONE,FILL:DEFAULT:NONE,FILL:4PX:NONE,FILL:DEFAULT:NONE,FILL:100PX:GROW(1.0),FILL:4DLU:NONE,FILL:100PX:NONE,FILL:4DLU:NONE,LEFT:DEFAULT:NONE,LEFT:100DLU:GROW(1.0),FILL:4DLU:NONE,FILL:DEFAULT:NONE,FILL:6PX:NONE</at>
         <at name="components">
@@ -1119,7 +1119,7 @@
               </at>
               <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
              </super>
-             <at name="id">embedded.328777909</at>
+             <at name="id">embedded.738025230</at>
              <at name="rowspecs">CENTER:DEFAULT:NONE</at>
              <at name="colspecs">FILL:DEFAULT:NONE</at>
              <at name="components">
@@ -1134,6 +1134,16 @@
                  <at name="fill">
                   <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                    <at name="name">fill</at>
+                   <at name="delegate">
+                    <object classname="com.jeta.forms.store.properties.effects.SolidProperty">
+                     <at name="color">
+                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                       <at name="name">dyncolor</at>
+                       <at name="colorkey">window</at>
+                      </object>
+                     </at>
+                    </object>
+                   </at>
                   </object>
                  </at>
                  <at name="scollBars">
@@ -1216,6 +1226,16 @@
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
+              <at name="delegate">
+               <object classname="com.jeta.forms.store.properties.effects.SolidProperty">
+                <at name="color">
+                 <object classname="com.jeta.forms.store.properties.ColorProperty">
+                  <at name="name">dyncolor</at>
+                  <at name="colorkey">window</at>
+                 </object>
+                </at>
+               </object>
+              </at>
              </object>
             </at>
             <at name="scollBars">
@@ -1345,8 +1365,7 @@
            <at name="color">
             <object classname="com.jeta.forms.store.properties.ColorProperty">
              <at name="name">dyncolor</at>
-             <at name="colorkey">constant</at>
-             <at name="constantcolor" object="color">255,255,255</at>
+             <at name="colorkey">window</at>
             </object>
            </at>
           </object>

@@ -21,8 +21,7 @@
 package org.mbari.aved.ui.utils;
 
 //~--- non-JDK imports --------------------------------------------------------
-
-import org.mbari.aved.ui.utils.ImageUtils;
+ 
 
 //~--- JDK imports ------------------------------------------------------------
 
@@ -39,9 +38,11 @@ public class ProcessedResultsFileFilter extends FileFilter {
         }
 
         String extension = ImageUtils.getExtension(f);
-
+        String filename = f.getName();
+        
         if (extension != null) {
-            if (extension.equals("XML") || extension.equals("xml")) {
+            if ( (extension.equals("XML") || extension.equals("xml")) &&
+                    (filename.contains("events") || filename.contains("EVENTS"))) {
                 return true;
             } else {
                 return false;

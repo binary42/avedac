@@ -81,6 +81,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
+import org.mbari.aved.ui.utils.ProcessedResultsFileFilter;
 
 public final class ApplicationController extends AbstractController implements ModelListener, WindowListener {
 
@@ -545,7 +546,7 @@ public final class ApplicationController extends AbstractController implements M
          * file filter to only find XML files and disable the default
          */
         JFileChooser chooser = new JFileChooser();
-        FileFilter   filter  = (FileFilter) new XmlFileFilter();
+        FileFilter   filter  = (FileFilter) new ProcessedResultsFileFilter();
 
         chooser.addChoosableFileFilter(filter);
         chooser.setAcceptAllFileFilterUsed(false);

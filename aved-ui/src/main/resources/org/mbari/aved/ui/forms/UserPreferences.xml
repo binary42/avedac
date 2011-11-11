@@ -187,6 +187,7 @@
                  <at name="componentCount">2</at>
                  <at name="width">1435</at>
                  <at name="name">tabbedpane</at>
+                 <at name="background" object="color">255,255,255</at>
                  <at name="border">
                   <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
                    <super classname="com.jeta.forms.store.properties.BorderProperty">
@@ -486,6 +487,16 @@
                               <at name="fill">
                                <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                                 <at name="name">fill</at>
+                                <at name="delegate">
+                                 <object classname="com.jeta.forms.store.properties.effects.SolidProperty">
+                                  <at name="color">
+                                   <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                    <at name="name">dyncolor</at>
+                                    <at name="colorkey">window</at>
+                                   </object>
+                                  </at>
+                                 </object>
+                                </at>
                                </object>
                               </at>
                               <at name="scollBars">
@@ -878,6 +889,16 @@
                               <at name="fill">
                                <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                                 <at name="name">fill</at>
+                                <at name="delegate">
+                                 <object classname="com.jeta.forms.store.properties.effects.SolidProperty">
+                                  <at name="color">
+                                   <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                    <at name="name">dyncolor</at>
+                                    <at name="colorkey">window</at>
+                                   </object>
+                                  </at>
+                                 </object>
+                                </at>
                                </object>
                               </at>
                               <at name="scollBars">
@@ -976,7 +997,7 @@
           <at name="classname">com.jeta.forms.gui.form.GridView</at>
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
-            <at name="name"/>
+            <at name="name"></at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>

@@ -139,6 +139,16 @@
                               <at name="fill">
                                <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                                 <at name="name">fill</at>
+                                <at name="delegate">
+                                 <object classname="com.jeta.forms.store.properties.effects.SolidProperty">
+                                  <at name="color">
+                                   <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                    <at name="name">dyncolor</at>
+                                    <at name="colorkey">TabbedPane.background</at>
+                                   </object>
+                                  </at>
+                                 </object>
+                                </at>
                                </object>
                               </at>
                               <at name="scollBars">
@@ -291,6 +301,16 @@
                               <at name="fill">
                                <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                                 <at name="name">fill</at>
+                                <at name="delegate">
+                                 <object classname="com.jeta.forms.store.properties.effects.SolidProperty">
+                                  <at name="color">
+                                   <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                    <at name="name">dyncolor</at>
+                                    <at name="colorkey">TabbedPane.background</at>
+                                   </object>
+                                  </at>
+                                 </object>
+                                </at>
                                </object>
                               </at>
                               <at name="scollBars">
@@ -444,6 +464,16 @@
                               <at name="fill">
                                <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                                 <at name="name">fill</at>
+                                <at name="delegate">
+                                 <object classname="com.jeta.forms.store.properties.effects.SolidProperty">
+                                  <at name="color">
+                                   <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                    <at name="name">dyncolor</at>
+                                    <at name="colorkey">TabbedPane.background</at>
+                                   </object>
+                                  </at>
+                                 </object>
+                                </at>
                                </object>
                               </at>
                               <at name="scollBars">
@@ -596,6 +626,16 @@
                               <at name="fill">
                                <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                                 <at name="name">fill</at>
+                                <at name="delegate">
+                                 <object classname="com.jeta.forms.store.properties.effects.SolidProperty">
+                                  <at name="color">
+                                   <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                    <at name="name">dyncolor</at>
+                                    <at name="colorkey">TabbedPane.background</at>
+                                   </object>
+                                  </at>
+                                 </object>
+                                </at>
                                </object>
                               </at>
                               <at name="scollBars">
@@ -631,7 +671,43 @@
                                  <at name="name">border</at>
                                 </super>
                                 <at name="borders">
-                                 <object classname="java.util.LinkedList"/>
+                                 <object classname="java.util.LinkedList">
+                                  <item >
+                                   <at name="value">
+                                    <object classname="com.jeta.forms.store.properties.BevelBorderProperty">
+                                     <super classname="com.jeta.forms.store.properties.BorderProperty">
+                                      <at name="name">border</at>
+                                      <at name="title"></at>
+                                     </super>
+                                     <at name="type">0</at>
+                                     <at name="highlightouter">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                     <at name="highlightinner">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                     <at name="shadowouter">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                     <at name="shadowinner">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                    </object>
+                                   </at>
+                                  </item>
+                                 </object>
                                 </at>
                                </object>
                               </at>
@@ -713,6 +789,16 @@
                               <at name="fill">
                                <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                                 <at name="name">fill</at>
+                                <at name="delegate">
+                                 <object classname="com.jeta.forms.store.properties.effects.SolidProperty">
+                                  <at name="color">
+                                   <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                    <at name="name">dyncolor</at>
+                                    <at name="colorkey">TabbedPane.background</at>
+                                   </object>
+                                  </at>
+                                 </object>
+                                </at>
                                </object>
                               </at>
                               <at name="scollBars">

@@ -36,8 +36,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.SwingUtilities;
+import javax.swing.JLabel; 
 
 public class ApplicationInfoView extends JFrame {
 
@@ -58,7 +57,7 @@ public class ApplicationInfoView extends JFrame {
 
         JLabel appinfo = (JLabel) form.getLabel("appinfo");
         String s       = "<html>" + ApplicationInfo.getName() + "<p><p>" + "Version: " + ApplicationInfo.getVersion()
-                         + "<p><p>" + "(C) Copyright 2010 MBARI <p>"
+                         + "<p><p>" + "(C) Copyright 2011 MBARI <p>"
                          + "MBARI Proprietary Information. All rights reserved" + "<p><p>"
                          + "For information on the AVED project see " + "<a href> http://www.mbari.org/aved</a></html>";
 

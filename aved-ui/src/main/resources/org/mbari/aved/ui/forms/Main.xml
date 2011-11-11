@@ -47,7 +47,7 @@
          </at>
          <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
         </super>
-        <at name="id">embedded.1909173090</at>
+        <at name="id">embedded.77660353</at>
         <at name="rowspecs">TOP:60PX:NONE,FILL:DEFAULT:NONE,FILL:DEFAULT:GROW(1.0)</at>
         <at name="colspecs">FILL:DEFAULT:GROW(1.0)</at>
         <at name="components">
@@ -81,6 +81,7 @@
                  <at name="componentCount">2</at>
                  <at name="width">1435</at>
                  <at name="name">tabbedPane</at>
+                 <at name="background" object="color">255,255,255</at>
                  <at name="toolTipText">Event Table or Thumbnail View</at>
                  <at name="border">
                   <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
@@ -125,7 +126,7 @@
                            </at>
                            <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
                           </super>
-                          <at name="id">embedded.906611945</at>
+                          <at name="id">embedded.408589925</at>
                           <at name="rowspecs">FILL:60PX:GROW(1.0)</at>
                           <at name="colspecs">FILL:DEFAULT:GROW(1.0)</at>
                           <at name="components">
@@ -136,7 +137,7 @@
                             <at name="classname">com.jeta.forms.gui.form.GridView</at>
                             <at name="properties">
                              <object classname="com.jeta.forms.store.support.PropertyMap">
-                              <at name="name"></at>
+                              <at name="name"/>
                               <at name="fill">
                                <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                                 <at name="name">fill</at>
@@ -241,7 +242,7 @@
                            </at>
                            <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
                           </super>
-                          <at name="id">embedded.2038979642</at>
+                          <at name="id">embedded.2130480267</at>
                           <at name="rowspecs">FILL:DEFAULT:GROW(1.0)</at>
                           <at name="colspecs">FILL:979PX:NONE</at>
                           <at name="components">
@@ -358,7 +359,7 @@
               </at>
               <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
              </super>
-             <at name="id">embedded.1701939629</at>
+             <at name="id">embedded.1238443975</at>
              <at name="rowspecs">CENTER:DEFAULT:GROW(1.0)</at>
              <at name="colspecs">FILL:800PX:GROW(1.0)</at>
              <at name="components">
