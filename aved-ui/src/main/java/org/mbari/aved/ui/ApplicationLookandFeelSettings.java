@@ -32,6 +32,7 @@ package org.mbari.aved.ui;
 //~--- JDK imports ------------------------------------------------------------
 
 import java.awt.Color;
+import javax.swing.UIManager;
 
 
 /**
@@ -49,6 +50,9 @@ public final class ApplicationLookandFeelSettings {
     }
 
     public static ApplicationLookandFeelSettings createDefault() {
+        
+        UIManager.put("window", Color.white);
+        UIManager.put("Panel.background", Color.white);
         ApplicationLookandFeelSettings settings = new ApplicationLookandFeelSettings(); 
         settings.setHighlightColor(new Color(108, 207, 255));
         settings.setSelectedColor(new Color(0, 128, 192));

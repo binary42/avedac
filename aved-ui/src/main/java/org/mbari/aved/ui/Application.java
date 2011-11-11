@@ -37,18 +37,13 @@ import org.mbari.aved.ui.classifier.Classifier;
 import org.mbari.aved.ui.message.NonModalMessageDialog;
 
 //~--- JDK imports ------------------------------------------------------------
-
-import java.awt.*;
-
-
+ 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 
-import javax.swing.*;
-import javax.swing.plaf.metal.DefaultMetalTheme;
-import javax.swing.plaf.metal.MetalLookAndFeel;
+import javax.swing.*; 
 
 public class Application {
     public static final ErrorLog                 errLog              = ErrorLog.getInstance();
