@@ -63,8 +63,8 @@
               <at name="size">13</at>
              </object>
             </at>
-            <at name="name"/>
             <at name="width">149</at>
+            <at name="name"></at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -303,7 +303,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="enabled">false</at>
             <at name="scrollableTracksViewportWidth">true</at>
-            <at name="height">388</at>
+            <at name="height">370</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>
@@ -851,20 +851,11 @@
      <at name="classname">com.jeta.forms.gui.form.GridView</at>
      <at name="properties">
       <object classname="com.jeta.forms.store.support.PropertyMap">
-       <at name="name"/>
+       <at name="opaque">false</at>
+       <at name="name"></at>
        <at name="fill">
         <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
          <at name="name">fill</at>
-         <at name="delegate">
-          <object classname="com.jeta.forms.store.properties.effects.SolidProperty">
-           <at name="color">
-            <object classname="com.jeta.forms.store.properties.ColorProperty">
-             <at name="name">dyncolor</at>
-             <at name="colorkey">Tree.textBackground</at>
-            </object>
-           </at>
-          </object>
-         </at>
         </object>
        </at>
        <at name="scollBars">

@@ -117,66 +117,17 @@ public class Application {
      */
     private static void initLookAndFeel() {
 
-        String lcOSName = System.getProperty("os.name").toLowerCase();
-
-        // If mac, Set Aqua (or future default Apple VM platform look-and-feel
-        if (lcOSName.startsWith("mac os x")) {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                UIManager.put("Button.defaultButtonFollowsFocus", Boolean.TRUE);
-            } catch (ClassNotFoundException ex) {
-                Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (InstantiationException ex) {
-                Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IllegalAccessException ex) {
-                Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (UnsupportedLookAndFeelException ex) {
-                Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        } else {
-   
-            // Otherwise, set the look and feel to a metal look
-            Options.setDefaultIconSize(new Dimension(18, 18));
-            UIManager.put(Options.USE_SYSTEM_FONTS_APP_KEY, lookAndFeelSettings.isUseSystemFonts());
-            Options.setGlobalFontSizeHints(lookAndFeelSettings.getFontSizeHints());
-            Options.setUseNarrowButtons(lookAndFeelSettings.isUseNarrowButtons());
-            Options.setTabIconsEnabled(lookAndFeelSettings.isTabIconsEnabled());
-            ClearLookManager.setMode(lookAndFeelSettings.getClearLookMode());
-            ClearLookManager.setPolicy(lookAndFeelSettings.getClearLookPolicyName());
-
-            LookAndFeel lookAndFeel = lookAndFeelSettings.getSelectedLookAndFeel();
-
-            if (lookAndFeel instanceof PlasticLookAndFeel) {
-                PlasticLookAndFeel.setMyCurrentTheme(lookAndFeelSettings.getSelectedTheme());
-                PlasticLookAndFeel.setTabStyle(lookAndFeelSettings.getPlasticTabStyle());
-                PlasticLookAndFeel.setHighContrastFocusColorsEnabled(
-                    lookAndFeelSettings.isPlasticHighContrastFocusEnabled());
-            } else if (lookAndFeel.getClass() == MetalLookAndFeel.class) {
-                MetalLookAndFeel.setCurrentTheme(new DefaultMetalTheme());
-            }
-
-            // Override tabbed pane colors
-            UIManager.put("TabbedPane.selected", Color.WHITE);
-            UIManager.put("TableHeader.background", Color.WHITE);
-            UIManager.put("TableHeader.cellBorder", Color.WHITE);
-
-            JRadioButton radio = new JRadioButton();
-
-            radio.getUI().uninstallUI(radio);
-
-            JCheckBox checkBox = new JCheckBox();
-
-            checkBox.getUI().uninstallUI(checkBox);
-
-            try {
-                UIManager.setLookAndFeel(lookAndFeel);
-            } catch (UnsupportedLookAndFeelException e) {
-                System.err.println("Can't use the specified look and feel (" + lookAndFeel + ") on this platform.");
-                Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, e);
-            } catch (Exception e) {
-                System.err.println("Couldn't get specified look and feel (" + lookAndFeel + "), for some reason.");
-                Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, e);
-            }
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            UIManager.put("Button.defaultButtonFollowsFocus", Boolean.TRUE);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (UnsupportedLookAndFeelException ex) {
+            Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

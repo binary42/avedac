@@ -58,14 +58,14 @@ import org.mbari.aved.ui.EventImagePopupMenu;
 
 public class TableController extends AbstractController implements ModelListener {
 
-    /** True when a popup window is displayed */
-    private Boolean hasPopup = false;
+    /** True when a popup Menu window is displayed */
+    private Boolean hasPopupMenu = false;
 
     /** Customized table for displaying AVED data */
     private final EventTable eventTable;
 
     /** The popup */
-    private final EventPopupMenu popup;
+    private final EventPopupMenu popupMenu;
 
     /** Defines the table model for displaying event data in a table */
     private final EventAbstractTableModel tablemodel;
@@ -106,7 +106,7 @@ public class TableController extends AbstractController implements ModelListener
         setView(view);
 
         // Create the popup for this table
-        popup = new EventPopupMenu(getModel());
+        popupMenu = new EventPopupMenu(getModel());
     }
 
     /** Helper function that returns the table */
@@ -141,13 +141,12 @@ public class TableController extends AbstractController implements ModelListener
         int index = sorter.modelIndex(row);
 
         EventObjectContainer c = model.getEventListModel().getElementAt(index);
-        if (e.getID() == MouseEvent.MOUSE_CLICKED) {
-
+        if (e.getID() == MouseEvent.MOUSE_CLICKED) { 
 
             if (sorter != null) {
 
-                // On double click or single click, but not while a popup is showing
-                if (!hasPopup) {
+                // On double click or single click, but not while a popup menu is showing
+                if (!hasPopupMenu) {
 
                     // On double click launch an Event Player
                     if (e.getClickCount() == 2) {
@@ -156,17 +155,14 @@ public class TableController extends AbstractController implements ModelListener
                         EventImagePopupMenu imagePopup = new EventImagePopupMenu(c);
                         imagePopup.show((Component) e.getSource(), pt.x, pt.y);
                     }
-                    hasPopup = false;
                 }
+                hasPopupMenu = false;
 
             }
-        } else if ((e.getID() == MouseEvent.MOUSE_PRESSED) || (e.getID() == MouseEvent.MOUSE_RELEASED)) {
-
-            // Only show popup if this is really a popup trigger
-            if (e.isPopupTrigger()) {
-                popup.show((Component) e.getSource(), pt.x, pt.y);
-                hasPopup = true;
-            }
+        } else if ( ((e.getID() == MouseEvent.MOUSE_PRESSED) || (e.getID() == MouseEvent.MOUSE_RELEASED)) &&
+            e.isPopupTrigger()) {
+                popupMenu.show((Component) e.getSource(), pt.x, pt.y);
+                hasPopupMenu = true; 
         }
     } 
 

@@ -47,8 +47,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-
-import javax.media.jai.PlanarImage;
+ 
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -69,8 +68,8 @@ import org.mbari.aved.ui.EventImagePopupMenu;
 public class ThumbnailController extends AbstractController
         implements ModelListener, KeyListener, ChangeListener, ListSelectionListener {
 
-    /** True when a popup window is displayed */
-    private Boolean                          hasPopup = false;
+    /** True when a popup menu window is displayed */
+    private Boolean                          hasPopupMenu = false;
     private MouseClickThumbnailActionHandler mouseClickListener;
 
     /**
@@ -144,8 +143,8 @@ public class ThumbnailController extends AbstractController
 
         if (e.getID() == MouseEvent.MOUSE_CLICKED) {
 
-            // On double click, but not while a popup is showing
-            if (!hasPopup) {
+            // On double click, but not while a popup menu is showing
+            if (!hasPopupMenu) {
                 ThumbnailPicture thumbnail = (ThumbnailPicture) e.getSource();
                 if (e.getClickCount() == 2) {
 
@@ -164,8 +163,7 @@ public class ThumbnailController extends AbstractController
                 }
 
             }
-
-            hasPopup = false;
+            hasPopupMenu = false;
         } else if (((e.getID() == MouseEvent.MOUSE_PRESSED) || (e.getID() == MouseEvent.MOUSE_RELEASED))
                 && e.isPopupTrigger()) {
 
@@ -174,7 +172,7 @@ public class ThumbnailController extends AbstractController
             EventPopupMenu popup = new EventPopupMenu(getModel());
 
             popup.show((Component) e.getSource(), pt.x, pt.y);
-            hasPopup = true;
+            hasPopupMenu = true;
         }
     }
 

@@ -24,7 +24,7 @@
     </at>
     <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
    </super>
-   <at name="id">/home/aved/aved/avedac/aved-ui/src/main/resources/org/mbari/aved/ui/forms/Summary.xml</at>
+   <at name="id">/Users/dcline/NetBeansProjects/avedac/aved-ui/src/main/resources/org/mbari/aved/ui/forms/Summary.xml</at>
    <at name="path">Summary.xml</at>
    <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:5DLU:NONE,CENTER:29PX:NONE,CENTER:29PX:NONE</at>
    <at name="colspecs">FILL:DEFAULT:NONE,FILL:PREF:NONE,FILL:4PX:NONE,FILL:225PX:GROW(1.0),FILL:4PX:NONE,FILL:PREF:NONE,FILL:4PX:NONE,FILL:125PX:NONE,FILL:4PX:NONE,FILL:DEFAULT:GROW(1.0),FILL:4PX:NONE,FILL:PREF:NONE</at>
@@ -56,10 +56,10 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="alignment">0</at>
             <at name="text">Summary</at>
-            <at name="height">15</at>
+            <at name="height">16</at>
             <at name="componentCount">3</at>
             <at name="name"/>
-            <at name="width">1116</at>
+            <at name="width">1414</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
               <super classname="com.jeta.forms.store.properties.BorderProperty">
@@ -113,9 +113,9 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Import directory</at>
-            <at name="height">15</at>
+            <at name="height">16</at>
             <at name="name"/>
-            <at name="width">101</at>
+            <at name="width">102</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -181,7 +181,7 @@
               <at name="size">12</at>
              </object>
             </at>
-            <at name="width">486</at>
+            <at name="width">630</at>
             <at name="name">importDir</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
@@ -248,7 +248,7 @@
               <at name="size">12</at>
              </object>
             </at>
-            <at name="width">276</at>
+            <at name="width">421</at>
             <at name="name">videoSourceURL</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
@@ -308,7 +308,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Image source :</at>
-            <at name="height">15</at>
+            <at name="height">16</at>
             <at name="name"/>
             <at name="width">121</at>
             <at name="fill">
@@ -369,9 +369,9 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">Events:</at>
-            <at name="height">15</at>
+            <at name="height">16</at>
             <at name="name"/>
-            <at name="width">101</at>
+            <at name="width">102</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>
@@ -437,7 +437,7 @@
               <at name="size">12</at>
              </object>
             </at>
-            <at name="width">486</at>
+            <at name="width">630</at>
             <at name="name">xmlFile</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
@@ -497,7 +497,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="text">Browse</at>
             <at name="height">25</at>
-            <at name="width">80</at>
+            <at name="width">88</at>
             <at name="name">browseMaster</at>
             <at name="actionCommand">BrowseMaster</at>
             <at name="border">
@@ -553,7 +553,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="horizontalAlignment">4</at>
             <at name="text">MPEG results:</at>
-            <at name="height">15</at>
+            <at name="height">16</at>
             <at name="name"/>
             <at name="width">121</at>
             <at name="fill">
@@ -621,7 +621,7 @@
               <at name="size">12</at>
              </object>
             </at>
-            <at name="width">276</at>
+            <at name="width">421</at>
             <at name="name">mpegFile</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
@@ -681,7 +681,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="text">Browse</at>
             <at name="height">25</at>
-            <at name="width">80</at>
+            <at name="width">88</at>
             <at name="name">browseMpeg</at>
             <at name="actionCommand">BrowseResults</at>
             <at name="border">

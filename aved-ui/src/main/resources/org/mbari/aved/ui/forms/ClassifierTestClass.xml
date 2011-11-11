@@ -252,7 +252,7 @@
               <at name="name">items</at>
              </object>
             </at>
-            <at name="width">552</at>
+            <at name="width">776</at>
             <at name="name">libraryname</at>
             <at name="actionCommand">libraryNameComboBoxChanged</at>
             <at name="toolTipText">Select a training library to test against the selected class. This library must contain the test class.</at>
@@ -675,7 +675,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="text">JLabel</at>
             <at name="height">16</at>
-            <at name="width">473</at>
+            <at name="width">697</at>
             <at name="name">librarycolorspace</at>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
@@ -796,7 +796,7 @@
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="enabled">false</at>
             <at name="scrollableTracksViewportWidth">true</at>
-            <at name="width">548</at>
+            <at name="width">772</at>
             <at name="selectionBackground" object="color">202,202,202</at>
             <at name="scollBars">
              <object classname="com.jeta.forms.store.properties.ScrollBarsProperty">
@@ -826,7 +826,7 @@
              </object>
             </at>
             <at name="scrollableTracksViewportHeight">true</at>
-            <at name="height">320</at>
+            <at name="height">398</at>
             <at name="selectionMode">0</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
@@ -1466,7 +1466,7 @@
             <at name="scrollableTracksViewportHeight">true</at>
             <at name="wrapStyleWord">true</at>
             <at name="rows">5</at>
-            <at name="height">208</at>
+            <at name="height">286</at>
             <at name="name">classdescription</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
@@ -1564,17 +1564,6 @@
        <at name="fill">
         <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
          <at name="name">fill</at>
-         <at name="delegate">
-          <object classname="com.jeta.forms.store.properties.effects.SolidProperty">
-           <at name="color">
-            <object classname="com.jeta.forms.store.properties.ColorProperty">
-             <at name="name">dyncolor</at>
-             <at name="colorkey">constant</at>
-             <at name="constantcolor" object="color">255,255,255</at>
-            </object>
-           </at>
-          </object>
-         </at>
         </object>
        </at>
        <at name="scollBars">

@@ -297,7 +297,7 @@
               <at name="name">items</at>
              </object>
             </at>
-            <at name="width">308</at>
+            <at name="width">434</at>
             <at name="name">colorspace</at>
             <at name="actionCommand">colorSpaceComboBoxChanged</at>
             <at name="toolTipText">Selects the color space this library will be created in</at>
@@ -482,7 +482,7 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="height">28</at>
-            <at name="width">436</at>
+            <at name="width">562</at>
             <at name="name">newLibraryName</at>
             <at name="toolTipText">Name of the library</at>
             <at name="border">
@@ -539,7 +539,7 @@
             <at name="lineWrap">true</at>
             <at name="scrollableTracksViewportWidth">true</at>
             <at name="height">80</at>
-            <at name="width">417</at>
+            <at name="width">543</at>
             <at name="name">classdescription</at>
             <at name="columns">20</at>
             <at name="toolTipText">Optional description of the library </at>
@@ -681,13 +681,13 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="scrollableTracksViewportWidth">true</at>
-            <at name="height">367</at>
+            <at name="height">349</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>
              </object>
             </at>
-            <at name="width">425</at>
+            <at name="width">551</at>
             <at name="name">include</at>
             <at name="toolTipText">Double-click any class to remove from the library, or push the &lt;&lt; button</at>
             <at name="scollBars">
@@ -883,13 +883,13 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="scrollableTracksViewportWidth">true</at>
-            <at name="height">367</at>
+            <at name="height">349</at>
             <at name="items">
              <object classname="com.jeta.forms.store.properties.ItemsProperty">
               <at name="name">items</at>
              </object>
             </at>
-            <at name="width">432</at>
+            <at name="width">558</at>
             <at name="name">available</at>
             <at name="toolTipText">Double-click any available class to add to the library, or push the &gt;&gt; button</at>
             <at name="scollBars">
@@ -974,7 +974,7 @@
             <at name="text">Select classes to include in the library</at>
             <at name="height">16</at>
             <at name="name"/>
-            <at name="width">984</at>
+            <at name="width">1236</at>
             <at name="border">
              <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
               <super classname="com.jeta.forms.store.properties.BorderProperty">
@@ -1020,16 +1020,6 @@
        <at name="fill">
         <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
          <at name="name">fill</at>
-         <at name="delegate">
-          <object classname="com.jeta.forms.store.properties.effects.SolidProperty">
-           <at name="color">
-            <object classname="com.jeta.forms.store.properties.ColorProperty">
-             <at name="name">dyncolor</at>
-             <at name="colorkey">TextField.background</at>
-            </object>
-           </at>
-          </object>
-         </at>
         </object>
        </at>
        <at name="scollBars">

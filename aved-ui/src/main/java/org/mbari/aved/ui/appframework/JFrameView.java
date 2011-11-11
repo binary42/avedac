@@ -31,14 +31,14 @@ package org.mbari.aved.ui.appframework;
 import com.jeta.forms.components.panel.FormPanel;
 
 //~--- JDK imports ------------------------------------------------------------
-
+ 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.*;
+import javax.swing.*; 
 
 /**
  * The JFrameView class is the root class of the view class hierarchy for top level
@@ -61,9 +61,7 @@ abstract public class JFrameView extends JFrame implements View, ModelListener {
         setController(controller);
         form    = new FormPanel(formpanel);
         handler = new ActionHandler();
-        this.setContentPane(form);
-
-        // getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
+        this.setContentPane(form); 
     }
 
     public FormPanel getForm() {

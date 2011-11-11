@@ -58,8 +58,7 @@ public class UserPreferencesView extends JFrameView {
      */
     public static final String ID_ASK_BEFORE_DELETE       = "askbeforedelete";    // javax.swing.JCheckBox
     public static final String ID_BROWSE_BUTTON_PLAYER    = "browseplayer";
-    public static final String ID_BROWSE_SCRATCH_DIR      = "browsescratchdir";
-    public static final String ID_CLOSE_BUTTON            = "close";
+    public static final String ID_BROWSE_SCRATCH_DIR      = "browsescratchdir"; 
     public static final String ID_PLAYER_DEFAULT_RADIO    = "playervlc";          // javax.swing.JRadioButton
     public static final String ID_PLAYER_OTHER_RADIO      = "playerother";        // javax.swing.JRadioButton
     public static final String ID_SCRATCH_DIRECTORY_COMBO = "scratchdir";         // javax.swing.JComboBox
@@ -82,15 +81,12 @@ public class UserPreferencesView extends JFrameView {
         browsePlayerButton      = (JButton) getForm().getButton(ID_BROWSE_BUTTON_PLAYER);
         browseScratchDirButton  = (JButton) getForm().getButton(ID_BROWSE_SCRATCH_DIR);
         scratchDirComboBox      = (JComboBox) getForm().getComboBox(ID_SCRATCH_DIRECTORY_COMBO);
-
-        JButton closeButton = (JButton) getForm().getButton(ID_CLOSE_BUTTON);
-
+ 
         // Add handler to buttons and combo boxes
         ActionHandler actionHandler = getActionHandler();
 
         browsePlayerButton.addActionListener(actionHandler);
-        browseScratchDirButton.addActionListener(actionHandler);
-        closeButton.addActionListener(actionHandler);
+        browseScratchDirButton.addActionListener(actionHandler); 
         playerDefaultRadio.addActionListener(actionHandler);
         playerOtherRadio.addActionListener(actionHandler);
         videoPlayerTextField.addActionListener(actionHandler);

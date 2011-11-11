@@ -47,7 +47,7 @@
          </at>
          <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
         </super>
-        <at name="id">embedded.454338311</at>
+        <at name="id">embedded.1002050904</at>
         <at name="rowspecs">CENTER:DEFAULT:NONE,FILL:PREF:GROW(1.0)</at>
         <at name="colspecs">FILL:MIN:GROW(1.0)</at>
         <at name="components">
@@ -76,10 +76,9 @@
                <at name="classname">javax.swing.JTabbedPane</at>
                <at name="properties">
                 <object classname="com.jeta.forms.store.support.PropertyMap">
-                 <at name="height">756</at>
-                 <at name="opaque">true</at>
+                 <at name="height">759</at>
                  <at name="componentCount">5</at>
-                 <at name="width">1098</at>
+                 <at name="width">1435</at>
                  <at name="name">tabbedPane</at>
                  <at name="background" object="color">255,255,255</at>
                  <at name="border">
@@ -88,17 +87,7 @@
                     <at name="name">border</at>
                    </super>
                    <at name="borders">
-                    <object classname="java.util.LinkedList">
-                     <item >
-                      <at name="value">
-                       <object classname="com.jeta.forms.store.properties.DefaultBorderProperty">
-                        <super classname="com.jeta.forms.store.properties.BorderProperty">
-                         <at name="name">border</at>
-                        </super>
-                       </object>
-                      </at>
-                     </item>
-                    </object>
+                    <object classname="java.util.LinkedList"/>
                    </at>
                   </object>
                  </at>
@@ -135,7 +124,7 @@
                            </at>
                            <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
                           </super>
-                          <at name="id">embedded.1317241155</at>
+                          <at name="id">embedded.1239282814</at>
                           <at name="rowspecs">FILL:DEFAULT:GROW(1.0)</at>
                           <at name="colspecs">FILL:899PX:GROW(1.0)</at>
                           <at name="components">
@@ -146,7 +135,7 @@
                             <at name="classname">com.jeta.forms.gui.form.GridView</at>
                             <at name="properties">
                              <object classname="com.jeta.forms.store.support.PropertyMap">
-                              <at name="name"/>
+                              <at name="name"></at>
                               <at name="fill">
                                <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                                 <at name="name">fill</at>
@@ -185,7 +174,43 @@
                                  <at name="name">border</at>
                                 </super>
                                 <at name="borders">
-                                 <object classname="java.util.LinkedList"/>
+                                 <object classname="java.util.LinkedList">
+                                  <item >
+                                   <at name="value">
+                                    <object classname="com.jeta.forms.store.properties.BevelBorderProperty">
+                                     <super classname="com.jeta.forms.store.properties.BorderProperty">
+                                      <at name="name">border</at>
+                                      <at name="title"></at>
+                                     </super>
+                                     <at name="type">0</at>
+                                     <at name="highlightouter">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                     <at name="highlightinner">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                     <at name="shadowouter">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                     <at name="shadowinner">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                    </object>
+                                   </at>
+                                  </item>
+                                 </object>
                                 </at>
                                </object>
                               </at>
@@ -251,7 +276,7 @@
                            </at>
                            <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
                           </super>
-                          <at name="id">embedded.2104211006</at>
+                          <at name="id">embedded.509810246</at>
                           <at name="rowspecs">FILL:DEFAULT:GROW(1.0)</at>
                           <at name="colspecs">FILL:900PX:GROW(1.0)</at>
                           <at name="components">
@@ -266,16 +291,6 @@
                               <at name="fill">
                                <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                                 <at name="name">fill</at>
-                                <at name="delegate">
-                                 <object classname="com.jeta.forms.store.properties.effects.SolidProperty">
-                                  <at name="color">
-                                   <object classname="com.jeta.forms.store.properties.ColorProperty">
-                                    <at name="name">dyncolor</at>
-                                    <at name="colorkey">Tree.textBackground</at>
-                                   </object>
-                                  </at>
-                                 </object>
-                                </at>
                                </object>
                               </at>
                               <at name="scollBars">
@@ -311,7 +326,44 @@
                                  <at name="name">border</at>
                                 </super>
                                 <at name="borders">
-                                 <object classname="java.util.LinkedList"/>
+                                 <object classname="java.util.LinkedList">
+                                  <item >
+                                   <at name="value">
+                                    <object classname="com.jeta.forms.store.properties.BevelBorderProperty">
+                                     <super classname="com.jeta.forms.store.properties.BorderProperty">
+                                      <at name="name">border</at>
+                                      <at name="title"></at>
+                                     </super>
+                                     <at name="type">0</at>
+                                     <at name="highlightouter">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                     <at name="highlightinner">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                     <at name="shadowouter">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">constant</at>
+                                       <at name="constantcolor" object="color">255,255,255</at>
+                                      </object>
+                                     </at>
+                                     <at name="shadowinner">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                    </object>
+                                   </at>
+                                  </item>
+                                 </object>
                                 </at>
                                </object>
                               </at>
@@ -377,7 +429,7 @@
                            </at>
                            <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
                           </super>
-                          <at name="id">embedded.1107557627</at>
+                          <at name="id">embedded.401921213</at>
                           <at name="rowspecs">FILL:DEFAULT:GROW(1.0)</at>
                           <at name="colspecs">FILL:DEFAULT:GROW(1.0)</at>
                           <at name="components">
@@ -388,7 +440,7 @@
                             <at name="classname">com.jeta.forms.gui.form.GridView</at>
                             <at name="properties">
                              <object classname="com.jeta.forms.store.support.PropertyMap">
-                              <at name="name"/>
+                              <at name="name"></at>
                               <at name="fill">
                                <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                                 <at name="name">fill</at>
@@ -427,7 +479,43 @@
                                  <at name="name">border</at>
                                 </super>
                                 <at name="borders">
-                                 <object classname="java.util.LinkedList"/>
+                                 <object classname="java.util.LinkedList">
+                                  <item >
+                                   <at name="value">
+                                    <object classname="com.jeta.forms.store.properties.BevelBorderProperty">
+                                     <super classname="com.jeta.forms.store.properties.BorderProperty">
+                                      <at name="name">border</at>
+                                      <at name="title"></at>
+                                     </super>
+                                     <at name="type">0</at>
+                                     <at name="highlightouter">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                     <at name="highlightinner">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                     <at name="shadowouter">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                     <at name="shadowinner">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                    </object>
+                                   </at>
+                                  </item>
+                                 </object>
                                 </at>
                                </object>
                               </at>
@@ -493,7 +581,7 @@
                            </at>
                            <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
                           </super>
-                          <at name="id">embedded.1066599163</at>
+                          <at name="id">embedded.785631968</at>
                           <at name="rowspecs">FILL:DEFAULT:GROW(1.0)</at>
                           <at name="colspecs">FILL:DEFAULT:GROW(1.0)</at>
                           <at name="components">
@@ -508,16 +596,6 @@
                               <at name="fill">
                                <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                                 <at name="name">fill</at>
-                                <at name="delegate">
-                                 <object classname="com.jeta.forms.store.properties.effects.SolidProperty">
-                                  <at name="color">
-                                   <object classname="com.jeta.forms.store.properties.ColorProperty">
-                                    <at name="name">dyncolor</at>
-                                    <at name="colorkey">Tree.textBackground</at>
-                                   </object>
-                                  </at>
-                                 </object>
-                                </at>
                                </object>
                               </at>
                               <at name="scollBars">
@@ -620,7 +698,7 @@
                            </at>
                            <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
                           </super>
-                          <at name="id">embedded.Kaf89c85V130ee483724LE7ff1</at>
+                          <at name="id">embedded.660046352</at>
                           <at name="rowspecs">CENTER:DEFAULT:GROW(1.0)</at>
                           <at name="colspecs">FILL:DEFAULT:GROW(1.0)</at>
                           <at name="components">
@@ -642,6 +720,26 @@
                                 <at name="name">scollBars</at>
                                 <at name="verticalpolicy">21</at>
                                 <at name="horizontalpolicy">31</at>
+                                <at name="border">
+                                 <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
+                                  <super classname="com.jeta.forms.store.properties.BorderProperty">
+                                   <at name="name">border</at>
+                                  </super>
+                                  <at name="borders">
+                                   <object classname="java.util.LinkedList">
+                                    <item >
+                                     <at name="value">
+                                      <object classname="com.jeta.forms.store.properties.DefaultBorderProperty">
+                                       <super classname="com.jeta.forms.store.properties.BorderProperty">
+                                        <at name="name">border</at>
+                                       </super>
+                                      </object>
+                                     </at>
+                                    </item>
+                                   </object>
+                                  </at>
+                                 </object>
+                                </at>
                                </object>
                               </at>
                               <at name="border">
@@ -650,7 +748,43 @@
                                  <at name="name">border</at>
                                 </super>
                                 <at name="borders">
-                                 <object classname="java.util.LinkedList"/>
+                                 <object classname="java.util.LinkedList">
+                                  <item >
+                                   <at name="value">
+                                    <object classname="com.jeta.forms.store.properties.BevelBorderProperty">
+                                     <super classname="com.jeta.forms.store.properties.BorderProperty">
+                                      <at name="name">border</at>
+                                      <at name="title"></at>
+                                     </super>
+                                     <at name="type">0</at>
+                                     <at name="highlightouter">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                     <at name="highlightinner">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                     <at name="shadowouter">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                     <at name="shadowinner">
+                                      <object classname="com.jeta.forms.store.properties.ColorProperty">
+                                       <at name="name">dyncolor</at>
+                                       <at name="colorkey">default</at>
+                                      </object>
+                                     </at>
+                                    </object>
+                                   </at>
+                                  </item>
+                                 </object>
                                 </at>
                                </object>
                               </at>
@@ -735,7 +869,7 @@
                  </at>
                  <at name="text">Classifier</at>
                  <at name="height">43</at>
-                 <at name="width">1098</at>
+                 <at name="width">1435</at>
                  <at name="name">Test Comp</at>
                  <at name="fill">
                   <object classname="com.jeta.forms.store.properties.effects.PaintProperty">

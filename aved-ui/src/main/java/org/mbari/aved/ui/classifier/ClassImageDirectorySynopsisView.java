@@ -35,8 +35,7 @@ import com.jgoodies.forms.layout.FormLayout;
 
 import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.Dockable;
-
-import org.mbari.aved.ui.classifier.ImageLabel;
+ 
 
 //~--- JDK imports ------------------------------------------------------------
 
