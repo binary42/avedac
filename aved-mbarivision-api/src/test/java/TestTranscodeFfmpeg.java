@@ -23,9 +23,9 @@ import junit.framework.TestCase;
 import org.mbari.aved.mbarivision.api.AvedRuntimeException;
 import org.mbari.aved.mbarivision.api.TranscodeProcess;
 
-public class TestTranscode extends TestCase {
+public class TestTranscodeFfmpeg extends TestCase {
 
-    public TestTranscode(String name) {
+    public TestTranscodeFfmpeg(String name) {
         super(name);
     }
 
@@ -41,15 +41,14 @@ public class TestTranscode extends TestCase {
 
     public final void testTranscode() throws Exception { 
 
-        final URL clipname = getClass().getResource("/transcodetest.avi");
+        final URL clipname = getClass().getResource("/ffmpegtest.avi");
 
         final File movie = new File(clipname.getFile());
 
         try {
             TranscodeProcess transcoder = new TranscodeProcess(movie);
             transcoder.setPrintStream(System.out);
-            transcoder.setOutTemporaryStorage("/tmp");
-	    transcoder.setTranscodeOpts("-c 0-10 ");
+            transcoder.setOutTemporaryStorage("/tmp"); 
             transcoder.run();
             try {
 

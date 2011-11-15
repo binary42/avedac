@@ -190,7 +190,7 @@ public class TranscodeProcess extends Thread {
             // environment variable by default and gets installed in /opt/local/bin
             // add in /usr/bin in and /usr/local in case it is missing
             if (name.equals("PATH")) {
-                envParams[i++] = name + "=" + value + ":" + "/opt/local/bin:/usr/bin:/usr/local/bin:";
+                envParams[i++] = name + "=" + value + ":" + "/opt/local/bin:/usr/bin:/usr/local/bin";
             } else {
 
                 envParams[i++] = name + "=" + value;
@@ -325,9 +325,18 @@ public class TranscodeProcess extends Thread {
             if (cmd == null) {
                 try {
                     isRunning = true;
+                    
+                    String ext = Utils.getExtension(this.getInVideoFile());
+                    ext.toLowerCase();
 
-                    //TODO pass extra args here as 3rd argument
-                    runTranscode(this.getInVideoFile(), this.getOutAVEDVideo().getOutputDirectory(), transcodeOpts);
+                    //If this is not a tar archive, then assume it's video  
+                    if (ext.equals("tar") || ext.equals("gz") || ext.equals("tgz")) { 
+                        //TODO pass extra args here as 3rd argument
+                        runUncompress(inVideoFile, outAvedVideo.getOutputDirectory());
+                    } else {                        
+                        runTranscode(inVideoFile, outAvedVideo.getOutputDirectory(), transcodeOpts);
+                    }
+                    
 
                 } catch (IOException e) {
                     isRunning = false;
@@ -436,21 +445,22 @@ public class TranscodeProcess extends Thread {
      * Returns the location of the command with the fully qualified
      * path
      * @param cmd to search for
+     * @param rc the expected return code if command found
      * @return String location of cmd or empty string if none found
      */
-    String getCmdLoc(String cmd) throws Exception {
+    String getCmdLoc(String cmd, int rc) throws Exception {
 
         // Get the path environment and convert to string array
         String getpath = System.getenv("PATH");
 
         // Append /opt/local/bin and /usr/bin as this doesn't always get included
         // in the system path on Mac OS X  
-        String finalpath = getpath + ":/opt/local/bin:/usr/bin";
+        String finalpath = getpath + ":/opt/local/bin:/usr/bin:/usr/local/bin:";
         String p = finalpath.substring(4);
 
         // Convert colon delimited string to an array
         String[] paths = stringToArray(p);
-        long timeout = (long) 10000;
+        long timeout = (long) 3000;
 
         String path = null;
         int count = 0;
@@ -462,7 +472,7 @@ public class TranscodeProcess extends Thread {
             } else {
                 try {
                     System.out.println("looking for " + cmd + " in " + path);
-                    String fullcmd = path + "/" + cmd;
+                    String fullcmd = path + "/" + cmd;                   
                     Process proc = Runtime.getRuntime().exec(fullcmd, this.envParams);
 
                     // Set a timer to interrupt the process if it does not return within the timeout period
@@ -471,16 +481,18 @@ public class TranscodeProcess extends Thread {
                     try {
                         exitval = proc.waitFor();
 
-                        if (exitval != 0) {
+                        if (exitval == rc) { 
                             return path + "/" + cmd;
                         }
                     } catch (InterruptedException e) {
                         // Stop the process from running
                         proc.destroy();
-                        if (exitval != 0) {
+                        if (exitval == rc) {
                             return path + "/" + cmd;
                         } else {
-                            throw new Exception(fullcmd + " did not return after " + timeout + " milliseconds");
+                            throw new Exception(fullcmd + " did not return after " + timeout + " milliseconds" 
+                                    + " return code: " + Integer.toString(exitval) + "expected return code: "
+                                    + Integer.toString(rc));
                         }
                     } finally {
                         // Stop the timer
@@ -520,9 +532,82 @@ public class TranscodeProcess extends Thread {
 
         return result;
     }
-
+    
     /**
-     * Runs the external transcode binary convering the file into individual ppms
+     * Runs the external command to convert tar files into individual ppms
+     * @param file to convert 
+     * @param transcodeopts extra transcode compatible arguments to pass to the transcoder
+     * @return true if converted without exception or a negative return code 
+     * @throws java.lang.Exception 
+     */
+    public boolean runUncompress(File file, File outputdir) throws Exception { 
+        String ext = Utils.getExtension(file);        
+        String filename = file.toString(); 
+        String cmd = null;
+        
+        // Set a timer to update information about the transcoded output after timeout period
+        Timer timer = new Timer();
+
+        long timeout = (long) 500; 
+        timer.schedule(new UpdateOutputScheduler(this), timeout);
+        
+        try {
+ 
+            ext.toLowerCase();
+
+            if (ext.endsWith("gz") || ext.endsWith("tgz")) {
+
+                // In a shell, format the command to unzip and untar all in one step
+                String uncompresscmd = "gunzip -c " + filename + " | " + "tar -x -v -C " + outputdir.toString() + " -f - ";
+                String[] cmdarray = {
+                    "/bin/sh",
+                    "-c",
+                    uncompresscmd,
+                };              
+                outputdir.mkdir();     
+                process = Runtime.getRuntime().exec(cmdarray, envParams);
+            } else if (ext.endsWith("tar")) {
+                cmd = "tar " + " -C " + outputdir.toString() + " -x -v -f " + filename;
+                process = Runtime.getRuntime().exec(cmd, envParams);
+            } else {                 
+                throw new AvedRuntimeException("Error: + " + filename + " is not a tar archive  ");
+            }
+            
+            // any error messages ?       
+            ExtendedVector line = new ExtendedVector();
+            StreamGobbler errGobbler = new StreamGobbler(process.getErrorStream(), printStream);
+            // any output?
+            StreamGobbler outGobbler = new StreamGobbler(process.getInputStream(), printStream, "OUTPUT");
+            outGobbler.setLineVector(line);
+
+            outGobbler.start();
+            errGobbler.start();
+
+            int exitVal = process.waitFor();
+            if (exitVal != 0) {
+                timer.cancel();
+                throw new AvedRuntimeException("Error running command " + cmd);
+            } 
+                
+            int numRetries = 3;
+            for (int i=0; i< numRetries; i++) {            
+            if (!isInitialized)
+                System.out.println("Sleeping");
+                Thread.sleep(timeout + 500);
+            } 
+            
+        } catch (NumberFormatException ex) {
+            throw new AvedRuntimeException(ex.toString());
+        } catch (Exception ex) {
+            throw new AvedRuntimeException(ex.toString());
+        } finally {
+            timer.cancel();
+        }
+
+        return true;
+    }
+    /**
+     * Runs the external transcode binary converting the file into individual ppms
      * @param file to transcode 
      * @param transcodeopts extra transcode compatible arguments to pass to the transcoder
      * @return true if transcoded runTranscode without exception or a negative return code 
@@ -548,21 +633,17 @@ public class TranscodeProcess extends Thread {
         timer.schedule(new UpdateOutputScheduler(this), timeout);
         
         try {
+ 
+            // Get transcode path 
+            transcodecmd = getCmdLoc("transcode", 1);
 
-            /**If this is not a tar archive, then assume it's video and we need 
-             * to find the transcode executable
-             */
-            if (!ext.equals("tar") && !ext.equals("gz") && !ext.equals("tgz")) {
-                // Get transcode path 
-                transcodecmd = getCmdLoc("transcode");
-
-                // only show progress every 100 frames
-                if (lcOSName.startsWith("mac")) {
-                   transcodecmd = transcodecmd + " --progress_rate 100 ";
-                } else { 
-                   transcodecmd = transcodecmd + " -q 1 ";
-                } 
+            // only show progress every 100 frames
+            if (lcOSName.startsWith("mac")) {
+                transcodecmd = transcodecmd + " --progress_rate 100 ";
+            } else {
+                transcodecmd = transcodecmd + " -q 1 ";
             }
+
             /** Check if this file has a ISO8601 timecode timestamp and extract
             timestamp from the name. This is a crude test so far that only
             checks for a set of numbers appended with a T*/
@@ -585,8 +666,8 @@ public class TranscodeProcess extends Thread {
             if (ext.equals("avi")) {
                 /*tcprobecmd = getCmdLoc("tcprobe");
                 if (tcprobecmd.length() != 0) {
-                    String tcprobe = new String(tcprobecmd + " -i " + filename);
-                    System.out.println("Executing " + tcprobe);
+                String tcprobe = new String(tcprobecmd + " -i " + filename);
+                System.out.println("Executing " + tcprobe);
                     // execute the command  
                     Process proc = Runtime.getRuntime().exec(tcprobe, envParams);
 
@@ -623,7 +704,7 @@ public class TranscodeProcess extends Thread {
                 // If have the avidump command, use it to find the codec to better
                 // control transcoding
                 try {
-                    avidumpcmd = getCmdLoc("avidump");
+                    avidumpcmd = getCmdLoc("avidump", 1);
                     String avicmd = avidumpcmd + " " + filename;
                     System.out.println("Executing " + avicmd);
                     // execute the command 
@@ -669,21 +750,7 @@ public class TranscodeProcess extends Thread {
                 outputdir.mkdir();     
                 process = Runtime.getRuntime().exec(cmd, envParams);
             } //Run transcode or scripts needed to untar and convert to ppms
-            else if (ext.endsWith("gz") || ext.endsWith("tgz")) {
-
-                // In a shell, format the command to unzip and untar all in one step
-                String uncompresscmd = "gunzip -c " + filename + " | " + "tar -x -v -C " + outputdir.toString() + " -f - ";
-                String[] cmdarray = {
-                    "/bin/sh",
-                    "-c",
-                    uncompresscmd,
-                };              
-                outputdir.mkdir();     
-                process = Runtime.getRuntime().exec(cmdarray, envParams);
-            } else if (ext.endsWith("tar")) {
-                cmd = "tar " + " -C " + outputdir.toString() + " -x -v -f " + filename;
-                process = Runtime.getRuntime().exec(cmd, envParams);
-            } else {
+             else {
                 cmd = transcodecmd + "-i " + filename + " -o " + outputfileseed + " -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
                 outputdir.mkdir();            
                 process = Runtime.getRuntime().exec(cmd, envParams);
@@ -701,9 +768,10 @@ public class TranscodeProcess extends Thread {
             int exitVal = process.waitFor();
             if (exitVal != 0) {
                 timer.cancel();
-                throw new AvedRuntimeException("Error running command " + cmd);
-            } 
-                
+                // if transcode fails, try ffmpeg 
+                return runFfmpegTranscode(file, outputdir, transcodeopts);
+            }
+
             int numRetries = 3;
             for (int i=0; i< numRetries; i++) {            
             if (!isInitialized)
@@ -711,6 +779,73 @@ public class TranscodeProcess extends Thread {
                 Thread.sleep(timeout + 500);
             } 
             
+        } catch (NumberFormatException ex) {
+            throw new AvedRuntimeException(ex.toString());
+        } catch (Exception ex) {
+            throw new AvedRuntimeException(ex.toString());
+        } finally {
+            timer.cancel();
+        }
+
+        return true;
+    }
+    
+    /**
+     * Runs the external ffmpeg transcode binary convering the file into individual ppms
+     * @param file to transcode 
+     * @param transcodeopts extra transcode compatible arguments to pass to the transcoder
+     * @return true if transcoded runTranscode without exception or a negative return code 
+     * @throws java.lang.Exception 
+     */
+    private boolean runFfmpegTranscode(File file, File outputdir, String transcodeopts) throws Exception {
+
+        String extraargs = "";
+        String filename = file.toString();
+        String filestem = Utils.getNameWithoutExtension(file); 
+        String outputfileseed = outputdir.toString() + "/f%06d." + outAvedVideo.getFileExt(); 
+        String transcodecmd = null; 
+        String cmd = null;
+        String ext = Utils.getExtension(file);        
+        
+        // Set a timer to update information about the transcoded output after timeout period
+        Timer timer = new Timer();
+
+        long timeout = (long) 500; 
+        timer.schedule(new UpdateOutputScheduler(this), timeout); 
+        
+        try {
+
+            // Get transcode path 
+            transcodecmd = getCmdLoc("ffmpeg", 0);
+
+            cmd = transcodecmd + " -i " + filename  + " -f image2 -vcodec " + outAvedVideo.getFileExt() + " " + outputfileseed + " " + extraargs + " " + transcodeopts;
+            outputdir.mkdir();
+            process = Runtime.getRuntime().exec(cmd, envParams);
+            
+            // any error messages ?       
+            ExtendedVector line = new ExtendedVector();
+            StreamGobbler errGobbler = new StreamGobbler(process.getErrorStream(), printStream);
+            // any output?
+            StreamGobbler outGobbler = new StreamGobbler(process.getInputStream(), printStream, "OUTPUT");
+            outGobbler.setLineVector(line);
+
+            outGobbler.start();
+            errGobbler.start();
+
+            int exitVal = process.waitFor();
+            if (exitVal != 0) {
+                timer.cancel();
+                throw new AvedRuntimeException("Error running command " + cmd);
+            }
+
+            int numRetries = 3;
+            for (int i = 0; i < numRetries; i++) {
+                if (!isInitialized) {
+                    System.out.println("Sleeping");
+                }
+                Thread.sleep(timeout + 500);
+            }
+
         } catch (NumberFormatException ex) {
             throw new AvedRuntimeException(ex.toString());
         } catch (Exception ex) {

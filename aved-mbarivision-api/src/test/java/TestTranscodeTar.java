@@ -23,9 +23,9 @@ import junit.framework.TestCase;
 import org.mbari.aved.mbarivision.api.AvedRuntimeException;
 import org.mbari.aved.mbarivision.api.TranscodeProcess;
 
-public class TestTranscode extends TestCase {
+public class TestTranscodeTar extends TestCase {
 
-    public TestTranscode(String name) {
+    public TestTranscodeTar(String name) {
         super(name);
     }
 
@@ -39,17 +39,16 @@ public class TestTranscode extends TestCase {
         super.tearDown();
     }
 
-    public final void testTranscode() throws Exception { 
+    public final void testTranscode() throws Exception {
+        // execute the command
+        final URL tarname = getClass().getResource("/uncompresstest.tar.gz");
 
-        final URL clipname = getClass().getResource("/transcodetest.avi");
-
-        final File movie = new File(clipname.getFile());
+        final File tar = new File(tarname.getFile());
 
         try {
-            TranscodeProcess transcoder = new TranscodeProcess(movie);
+            TranscodeProcess transcoder = new TranscodeProcess(tar);
             transcoder.setPrintStream(System.out);
             transcoder.setOutTemporaryStorage("/tmp");
-	    transcoder.setTranscodeOpts("-c 0-10 ");
             transcoder.run();
             try {
 
@@ -63,6 +62,6 @@ public class TestTranscode extends TestCase {
             e.printStackTrace();
         } catch (AvedRuntimeException e) {
             e.printStackTrace();
-        }
+        } 
     }
 }
