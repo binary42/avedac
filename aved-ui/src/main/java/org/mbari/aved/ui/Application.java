@@ -28,10 +28,6 @@ package org.mbari.aved.ui;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import com.jgoodies.clearlook.ClearLookManager;
-import com.jgoodies.plaf.Options;
-import com.jgoodies.plaf.plastic.PlasticLookAndFeel;
-
 import org.mbari.aved.ui.appframework.ErrorLog;
 import org.mbari.aved.ui.classifier.Classifier;
 import org.mbari.aved.ui.message.NonModalMessageDialog;

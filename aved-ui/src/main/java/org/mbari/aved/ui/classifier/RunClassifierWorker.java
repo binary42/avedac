@@ -259,10 +259,11 @@ public class RunClassifierWorker extends ClassifierLibraryJNITask {
                 sum[i]++;
                 statistics[i][j]++;
 
-                // Put the statistics and column names in a TableModel
-                tableModel = new TableModel(columnNames, statistics, sum);
             }
 
+            // Put the statistics and column names in a TableModel
+            tableModel = new TableModel(columnNames, statistics, sum);
+                    
             setFini();
         } catch (RuntimeException ex) {
             Logger.getLogger(RunClassifierController.class.getName()).log(Level.SEVERE, null, ex);

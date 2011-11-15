@@ -32,20 +32,13 @@ or
 check the boxes for Read/Execute for Owner,Group, Others and Write for Owner/Group.
 Lastly, click Apply Recommendations to apply these changes.
 
-7) Add the MCRInstaller.dmg package to run following installation. In the Distributions icon, Click actions, then Edit button in PostInstall. Select
-Open File in the Actions. In the Type drop-down box, select Absolute Path and enter /Applications/AVEDac/tools/MCRInstaller.dmg  
+7) Add the MCRInstaller.zip package to open following installation. In the Distributions icon, Click actions, then Edit button in PostInstall. Select
+Open File in the Actions. In the Type drop-down box, select Absolute Path and enter /Applications/AVEDac/tools/MCRInstaller.zip  
 
 8) Add the MCRInstaller.dmg package to run following installation. In the Distributions icon, Click actions, then Edit button in PostInstall. Select
-Open File in the Actions. In the Type drop-down box, select Absolute Path and enter /Applications/AVEDac/tools/MCRInstaller.dmg  
+Open File in the Actions. In the Type drop-down box, select Absolute Path and enter /Applications/AVEDac/tools/MCRInstaller/MCRInstaller.app  
 
-8) Click the Build and Run icon and try installing and running the package. It will install to  /Applications/AVEDac
-
-
-
-
-
-
-8) Click the Build and Run icon and try installing and running the package. It will install to  /Applications/AVEDac
+9) Click the Build and Run icon and try installing and running the package. It will install to  /Applications/AVEDac
 
 
 

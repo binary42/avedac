@@ -50,6 +50,7 @@ import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -312,14 +313,25 @@ class TestClassController extends AbstractController implements ModelListener {
                                                + "\tprobability in class:" + probability[i]);
                         }
                     }
-
+                    
+                    
                     // Add one column for the Unknown class
                     int      columns    = trainingModel.getNumClasses() + 1;
                     int      rows       = columns;
                     String[] columnName = new String[columns];
-                    int[][]  statistic  = new int[rows][columns];
-                    int      sum[]      = new int[trainingModel.getNumClasses() + 1];
+                    int[][] statistic = new int[rows][columns];
+                    int sum[] = new int[trainingModel.getNumClasses() + 1];
 
+            
+                    // Create hash map for look-up of the class index by name  
+                    HashMap<String, Integer> map = new HashMap<String, Integer>(columns, 0.75f);
+
+                    map.put(TrainingModel.UNKNOWN_CLASS_LABEL, new Integer(0));
+
+                    for (int j = 1; j < columns; j++) {
+                        map.put(trainingModel.getClassModel(j - 1).getName(), new Integer(j));
+                    }
+ 
                     // Format the column name and sums for display in a JTable
                     for (int j = 0; j < columns; j++) {
                         if (j > 0) {
@@ -327,32 +339,16 @@ class TestClassController extends AbstractController implements ModelListener {
                         } else {
                             columnName[0] = TrainingModel.UNKNOWN_CLASS_LABEL;
                         }
-                    }
-
-                    // Sum up all the winners and put into the appropriate bucket
+                    } 
+ 
+                    int j = map.get(classModel.getName());
+                            
                     for (int k = 0; k < numEvents; k++) {
-                        if (classIndex[k] > 0) {
-                            sum[classIndex[k] - 1]++;
-                        }
-                    }
+                        int i = classIndex[k] - 1; 
 
-                    // Format the statistic array for display in a JTable
-                    for (int j = 0; j < columns; j++) {
-                        for (int i = 0; i < rows; i++) {
-                            if ((i == j) && (i < columns)) {
-                                int ttl = 0;
+                        sum[i]++;
+                        statistic[i][j]++;
 
-                                for (int k = 0; k < numEvents; k++) {
-                                    if (classIndex[k] == (i + 1)) {
-                                        ttl++;
-                                    }
-                                }
-
-                                statistic[i][j] = ttl;
-                            } else {
-                                statistic[i][j] = 0;
-                            }
-                        }
                     }
 
                     // Put the statistic and column names in a TableModel

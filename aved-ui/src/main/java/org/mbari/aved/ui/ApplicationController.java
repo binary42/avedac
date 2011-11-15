@@ -546,7 +546,7 @@ public final class ApplicationController extends AbstractController implements M
          * file filter to only find XML files and disable the default
          */
         JFileChooser chooser = new JFileChooser();
-        FileFilter   filter  = (FileFilter) new ProcessedResultsFileFilter();
+        FileFilter   filter  = (FileFilter) new XmlFileFilter();
 
         chooser.addChoosableFileFilter(filter);
         chooser.setAcceptAllFileFilterUsed(false);
