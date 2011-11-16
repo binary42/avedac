@@ -158,6 +158,10 @@ public class DockingContainer extends JPanel {
 
         public ButtonPanel(ClassImageDirectoryViewManager vManager) {
             viewManager = vManager;
+            
+            File dir = UserPreferences.getModel().getLastClassImageImportDirectory();
+   
+            chooser.setCurrentDirectory(dir.getParentFile());
             chooser.setAcceptAllFileFilterUsed(false);
             chooser.addChoosableFileFilter(new FileFilter() {
                 public boolean accept(File f) {
@@ -186,6 +190,8 @@ public class DockingContainer extends JPanel {
                         UserPreferences.getModel().setDockingImageDirectory(dir);
                         addSynopsisView(dir);
                     }
+                    
+                    viewManager.notifyChanged();
                 }
             });
             this.add(button);
@@ -200,7 +206,7 @@ public class DockingContainer extends JPanel {
             ClassImageDirectoryModel model = new ClassImageDirectoryModel();
 
             model.setDirectory(dir);
-            model.setName(dir.getName());
+            model.setName(dir.getName()); 
 
             int qk = 0;
 

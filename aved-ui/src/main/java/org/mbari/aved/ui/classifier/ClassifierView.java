@@ -177,7 +177,7 @@ public class ClassifierView extends JFrameView {
      * Gets the tabbed pane in the form
      * @return the tabbed pane
      */
-    private JTabbedPane getTabbedPane() {
+    public JTabbedPane getTabbedPane() {
         FormPanel   panel = getForm();
         JTabbedPane c     = panel.getTabbedPane("tabbedPane");
 

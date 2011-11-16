@@ -41,7 +41,7 @@ import javax.swing.JFrame;
 
 public class ProcessDisplay extends OutputStream {
     private MessageController controller = null;
-
+    
     public ProcessDisplay(String headerdescription) {
 
         // Create message controller and view

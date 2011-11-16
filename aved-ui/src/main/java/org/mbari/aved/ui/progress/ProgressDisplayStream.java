@@ -47,11 +47,11 @@ import java.util.logging.Logger;
 public class ProgressDisplayStream extends SwingWorker {
     public Boolean          isDone = false;
     private BufferedReader  br;
-    private ProgressDisplay display;
+    private ProgressDisplay display; 
 
     public ProgressDisplayStream(ProgressDisplay display, BufferedReader br) {
         this.br      = br;
-        this.display = display;
+        this.display = display; 
     }
 
     @Override
@@ -61,8 +61,9 @@ public class ProgressDisplayStream extends SwingWorker {
 
             while (!isDone) {
                 if (br.ready()) {
-                    while ((s = br.readLine()) != null) {
-                        display.display(s);
+                    while ((s = br.readLine()) != null && s.length() > 0) {
+                        String copy = s.substring(0, s.length());
+                        display.display(copy);
                     }
                 }
             }

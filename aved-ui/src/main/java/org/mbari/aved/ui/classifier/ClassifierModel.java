@@ -417,6 +417,14 @@ public class ClassifierModel extends AbstractModel {
     void notifyTrainingModelChanged(String name) {
         this.notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.TRAINING_MODEL_SELECTION_CHANGE, name));
     }
+    
+      /**
+     * notify model listeners the class models have been updated
+     * @param name 
+     */
+    void notifyClassModelChanged() {
+        this.notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASS_MODELS_UPDATED, "all"));
+    } 
 
     /**
      *
@@ -430,7 +438,7 @@ public class ClassifierModel extends AbstractModel {
         public static final int JNI_TASK_COMPLETED              = 4;
         public static final int TRAINING_DIR_UPDATED            = 1;
         public static final int TRAINING_MODELS_UPDATED         = 3;
-        public static final int TRAINING_MODEL_SELECTION_CHANGE = 6;
+        public static final int TRAINING_MODEL_SELECTION_CHANGE = 6; 
 
         /**
          * Constructor for this custom ModelEvent. Basically just like ModelEvent.

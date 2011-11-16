@@ -51,14 +51,27 @@ import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 
 public class ClassImageDirectoryViewManager {
+    
+    private final ClassifierModel               model;
     private int                                 currentQuickKey = 0;
     private final SortedSet<Integer>            nextKey         = new TreeSet<Integer>();
     private final List<ClassImageDirectoryView> dropViews       = new ArrayList<ClassImageDirectoryView>();
 
-    public ClassImageDirectoryViewManager() {
+    public ClassImageDirectoryViewManager(ClassifierModel model) {
 
+        this.model = model;
         // for quickKey operations
         setupNextKeyList();
+    }
+    
+    /**
+     * Workaround for not having a good directory change listener to 
+     * udpate the appropriate views. TODO: add a directory change 
+     * listener to the directories associated with each view and 
+     * integrate the  ClassImageDirectoryView with the ClassModel
+     */
+    void notifyChanged() {
+        model.notifyClassModelChanged();
     }
 
     ClassImageDirectoryView getView(int index) {

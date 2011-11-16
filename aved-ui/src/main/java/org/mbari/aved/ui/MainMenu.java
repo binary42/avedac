@@ -263,7 +263,7 @@ public class MainMenu implements ModelListener {
             });
 
             try {
-                ClassImageDirectoryViewManager viewmgr = new ClassImageDirectoryViewManager();
+                ClassImageDirectoryViewManager viewmgr = new ClassImageDirectoryViewManager(Application.getClassifier().getModel());
 
                 imageOrganizer.setContentPane(new DockingContainer(viewmgr));
                 imageOrganizer.pack();

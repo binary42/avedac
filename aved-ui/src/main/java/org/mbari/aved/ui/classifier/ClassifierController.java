@@ -363,6 +363,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         private final Queue<ClassifierLibraryJNITask> queue         = new LinkedList<ClassifierLibraryJNITask>();
         private final File                            logFile       = getDefaultMatlabLog(); 
 	private ClassifierLibraryJNI            jniLibrary    	    = null;
+        private BufferedReader br;
 
         ClassifierLibraryJNITaskWorker(ClassifierLibraryJNI library) {
 		this.jniLibrary = library;
@@ -371,6 +372,25 @@ public class ClassifierController extends AbstractController implements ModelLis
         @Override
         protected Object doInBackground() throws Exception {
             initLibrary();
+
+            if (logFile.exists() && logFile.canRead()) {
+                FileInputStream fis = null; 
+
+                try {
+                    fis = new FileInputStream(logFile);
+
+                    InputStreamReader isr = new InputStreamReader(fis);
+
+                    br = new BufferedReader(isr);
+ 
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null,
+                            "ERROR: cannot write to log file " + logFile.getAbsolutePath() + " "
+                            + ex.getMessage());
+                } catch (IOException ex) {
+                    Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
 
             while (exit == false) {
                 if (queue.isEmpty() == false) {
@@ -454,30 +474,14 @@ public class ClassifierController extends AbstractController implements ModelLis
          * @return the BufferedReader
          */
         public synchronized BufferedReader getBufferedReader() {
-            BufferedReader br = null;
+            try {
+                // skip to the end of the file
+                do {
+                } while (br.readLine() != null);
 
-            if (logFile.exists() && logFile.canRead()) {
-                FileInputStream fis = null;
-
-                try {
-                    fis = new FileInputStream(logFile);
-
-                    InputStreamReader isr = new InputStreamReader(fis);
-
-                    br = new BufferedReader(isr);
-
-                    // skip to the end of the file
-                    do {
-                    } while (br.readLine() != null);
-                } catch (FileNotFoundException ex) {
-                    Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null,
-                            "ERROR: cannot write to log file " + logFile.getAbsolutePath() + " "
-                            + ex.getMessage());
-                } catch (IOException ex) {
-                    Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-                }
+            } catch (IOException ex) {
+                Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
             }
-
             return br;
         }
 

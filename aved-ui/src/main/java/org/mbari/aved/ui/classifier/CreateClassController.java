@@ -28,6 +28,7 @@ package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import java.awt.event.FocusEvent;
 import org.jdesktop.swingworker.SwingWorker;
 
 import org.mbari.aved.classifier.ClassModel;
@@ -54,6 +55,7 @@ import vars.shared.ui.tree.ConceptTreePanel;
 //~--- JDK imports ------------------------------------------------------------
 
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -93,7 +95,7 @@ class CreateClassController extends AbstractController implements ModelListener,
         getView().setEnabledDeleteButton(false);
         
         // Default to RGB
-        getView().setColorSpace(ColorSpace.RGB);
+        getView().setColorSpace(ColorSpace.RGB); 
     }
 
     @Override
@@ -128,13 +130,6 @@ class CreateClassController extends AbstractController implements ModelListener,
                 }
 
                 if (directory != null) {
-                    if (directory.getName().equals("training") || directory.getName().equals("features")
-                            || directory.getName().equals("")) {
-                        getView().setEnabledDeleteButton(false);
-
-                        return;
-                    }
-
                     getView().setEnabledDeleteButton(true);
                      
                     ClassModel m = getModel().getClassModel(directory.getName());
@@ -358,10 +353,11 @@ class CreateClassController extends AbstractController implements ModelListener,
 
         if (parentDir != null) {
 
-            // This filter only returns directories
+            // This filter only returns directories not named training or features
             FileFilter fileFilter = new FileFilter() {
                 public boolean accept(File file) {
-                    return file.isDirectory();
+                    return file.isDirectory() && (!file.getName().equals("training") 
+                            && !file.getName().equals("features"));
                 }
             };
             File[] subdirs = parentDir.listFiles(fileFilter);

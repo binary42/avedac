@@ -38,7 +38,7 @@ import javax.swing.text.Document;
 
 public class TextDisplayView extends JFrameView {
     public static final String ID_CLEAR_BUTTON = "clear";    // javax.swing.JButton
-    public static final String ID_CLOSE_BUTTON = "close";    // javax.swing.JButton
+    public static final String ID_CLOSE_BUTTON = "close";    // javax.swing.JButton 
 
     /*
      *  Component names in the TextDisplay form
@@ -46,6 +46,7 @@ public class TextDisplayView extends JFrameView {
      * should be modified here too
      */
     public static final String ID_EDITOR_PANE = "editorpane";    // javax.swing.JEditorPane
+    
     private JEditorPane        editorPane;
 
     public TextDisplayView(TextDisplayModel model, TextDisplayController controller) {
@@ -53,8 +54,8 @@ public class TextDisplayView extends JFrameView {
         // Initialize the Abeille form
         super("org/mbari/aved/ui/forms/TextDisplay.xml", model, controller);
         editorPane = (JEditorPane) getForm().getComponentByName(ID_EDITOR_PANE);
-        editorPane.setEditable(false);
-
+        editorPane.setEditable(false);  
+        
         // Add action handlers for buttons
         ActionHandler handler = getActionHandler();
 
@@ -71,6 +72,7 @@ public class TextDisplayView extends JFrameView {
                 Document doc = editorPane.getDocument();
 
                 doc.insertString(doc.getLength(), s.getText(), null);
+                editorPane.setCaretPosition(doc.getLength());
             }
 
             // Otherwise, if reset, then clear

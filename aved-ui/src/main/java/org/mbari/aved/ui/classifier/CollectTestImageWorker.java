@@ -53,7 +53,7 @@ import java.util.logging.Logger;
 public class CollectTestImageWorker extends SwingWorker {
     private final EventListModel  listModel;
     private final ProgressDisplay progressDisplay;
-    private final SummaryModel    summaryModel;
+    private final SummaryModel    summaryModel; 
 
     public CollectTestImageWorker(EventListModel list, SummaryModel summary) {
         this.listModel       = list;

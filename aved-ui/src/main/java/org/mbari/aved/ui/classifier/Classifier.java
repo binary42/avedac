@@ -133,8 +133,12 @@ public final class Classifier {
         controller.getView().setBatchRunPanelVisible();
     }
 
+    public ClassifierModel getModel() {
+        return controller.getModel();
+    }
+
     /**
-     * Test main. This build a classifier for testing ouside
+     * Test main. This build a classifier for testing outside
      * of the main application.
      * @param args
      */
