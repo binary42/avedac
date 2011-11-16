@@ -82,7 +82,8 @@ end
  
 fprintf(1,'Computing invariants for %s files...',classname);
 
-
+ttl=sz-1;
+    
 %*added comment now loop on this struct array of images
 while ( ii < sz )
    
@@ -98,7 +99,7 @@ while ( ii < sz )
         filename = s{1,ii+1};
     end
      
-    fprintf(1,'\nCollecting %s',filename);
+    fprintf(1,'\nCollecting %d of %d %s', ii, ttl, filename);
      
     %*modified  - read in the images
     im = imread( filename );
