@@ -53,7 +53,7 @@ public class TestTranscode extends TestCase {
             transcoder.run();
             try {
 
-                Thread.sleep(1000);
+                Thread.sleep(5000);
             } catch (InterruptedException ex) {
                 Logger.getLogger(TestTranscode.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -61,8 +61,10 @@ public class TestTranscode extends TestCase {
 
         } catch (IOException e) {
             e.printStackTrace();
+            throw new Exception(e);
         } catch (AvedRuntimeException e) {
             e.printStackTrace();
+            throw new Exception(e);
         }
     }
 }
