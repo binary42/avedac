@@ -47,6 +47,7 @@ public class TestTranscodeFfmpeg extends TestCase {
 
         try {
             TranscodeProcess transcoder = new TranscodeProcess(movie);
+            transcoder.enableFfmpeg();
             transcoder.setPrintStream(System.out);
             transcoder.setOutTemporaryStorage("/tmp"); 
             transcoder.run();

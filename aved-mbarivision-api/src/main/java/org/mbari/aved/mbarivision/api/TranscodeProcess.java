@@ -62,6 +62,7 @@ public class TranscodeProcess extends Thread {
     /** Environmental parameters to use in Runtime calls*/
     private String envParams[] = null;
     private String[] validImageExtensions = {"ppm", "jpg", "gif", "png", "pnm"};
+    private boolean isEnableFfmpeg = false;
 
  
     /** Helper class to interrupt processes that take too long to runUncompressVideo*/
@@ -284,6 +285,9 @@ public class TranscodeProcess extends Thread {
         return this.isRunning;
     }
  
+    public void enableFfmpeg() {
+        this.isEnableFfmpeg = true;
+    }
 
     /**
      * Sets optional transcode arguments to pass to the transcoder
@@ -339,9 +343,7 @@ public class TranscodeProcess extends Thread {
             try {
                 process.destroy();
                 isRunning = false;
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            } catch (Exception e) { 
             }
         }
     }
@@ -679,7 +681,7 @@ public class TranscodeProcess extends Thread {
             catch (Exception ex) {
             }
  
-            if (codec.equals("mp4v") || codec.equals("unknown")) {
+            if (isEnableFfmpeg) {
                 runFfmpegTranscode(file, outputdir, transcodeopts);
             } else {
                 runTranscode(file, outputdir, codec, transcodeopts);
@@ -712,7 +714,7 @@ public class TranscodeProcess extends Thread {
         // Set a timer to update information about the transcoded output after timeout period
         Timer timer = new Timer();
 
-        long timeout = (long) 500; 
+        long timeout = (long) 5000; 
         timer.schedule(new UpdateOutputScheduler(this), timeout); 
         
         try {
@@ -745,7 +747,7 @@ public class TranscodeProcess extends Thread {
             for (int i=0; i< numRetries; i++) {            
             if (!isInitialized)
                 System.out.println("Waiting " + Long.toString(timeout) + " milliseconds to confirm ffmpeg is working");
-                Thread.sleep(timeout + 500);
+                Thread.sleep(timeout + 50);
             } 
 
         } catch (NumberFormatException ex) {
