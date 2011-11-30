@@ -110,7 +110,9 @@ public class TrainingModel {
         while (i.hasNext()) {
             ClassModel model = i.next();
 
-            if (newModel.getName().equals(model.getName()) && newModel.getColorSpace().equals(model.getColorSpace())) {
+            if (newModel.getName().equals(model.getName()) &&
+                    newModel.getPredictedName().equals(model.getPredictedName()) && 
+                    newModel.getColorSpace().equals(model.getColorSpace())) {
                 classModels.remove(model);
             }
         }
@@ -237,10 +239,10 @@ public class TrainingModel {
      * @return the description
      */
     public String description() {
-        String s = "\n======TRAINING CLASS=====\n" + "Class name: " + name + "\n" + "Description: " + description
+        String s = "\n======TRAINING LIBRARY=====\n" +  "Training library: " + name +  "\n" + "Description: " + description
                    + "\n" + "Color space: " + color + "\n" + "dbroot: " + dbrootDirectory.getName() + "\n";
 
-        s = s + "\n======CLASS MODELS INCLUDED IN THIS TRAINING CLASS=====\n";
+        s = s + "\n======CLASS MODELS INCLUDED IN THIS TRAINING LIBRARY=====\n";
 
         for (int i = 0; i < classModels.size(); i++) {
             s = s + "," + classModels.get(i).toString();

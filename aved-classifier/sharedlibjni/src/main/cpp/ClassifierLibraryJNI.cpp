@@ -660,16 +660,16 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_colle
         jstring jimageSquareDirectory,
         jstring jclassName,
         jstring jmatlabdb,
-        jstring jvarsClassName,
+        jstring jpredictedClassName,
         jstring jdescription,
         jobject jcolorSpace) {
 
-    const char *classname, *varsclassname, *description, *matlabdbdir,
+    const char *classname, *predictedclassname, *description, *matlabdbdir,
             *imagesqdir, *imagerawdir, *killfile;
 
     classname = env->GetStringUTFChars(jclassName, 0);
     matlabdbdir = env->GetStringUTFChars(jmatlabdb, 0);
-    varsclassname = env->GetStringUTFChars(jvarsClassName, 0);
+    predictedclassname = env->GetStringUTFChars(jpredictedClassName, 0);
     description = env->GetStringUTFChars(jdescription, 0);
     imagerawdir = env->GetStringUTFChars(jimageRawDirectory, 0);
     imagesqdir = env->GetStringUTFChars(jimageSquareDirectory, 0);
@@ -682,8 +682,8 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_colle
     if (description == NULL) {
         ThrowByName(env, "java/lang/IllegalArgumentException", "NULL description");
     }
-    if (varsclassname == NULL) {
-        ThrowByName(env, "java/lang/IllegalArgumentException", "NULL varsclassname name");
+    if (predictedclassname == NULL) {
+        ThrowByName(env, "java/lang/IllegalArgumentException", "NULL predictedclassname name");
     }
     if (matlabdbdir == NULL) {
         ThrowByName(env, "java/lang/IllegalArgumentException", "NULL matlabdb name");
@@ -705,7 +705,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_colle
 
     mxArray *mxClassName = mxCreateString(classname); 
     mxArray *mxDbRoot = mxCreateString(matlabdbdir);
-    mxArray *mxVarsClassName = mxCreateString(varsclassname);
+    mxArray *mxPredictedClassName = mxCreateString(predictedclassname);
     mxArray *mxDescription = mxCreateString(description);
     mxArray *mxKillFile = mxCreateString(killfile);
     mxArray *mxRawDir = mxCreateString(imagerawdir);
@@ -716,7 +716,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_colle
     try {
         if (mlfCollect_ui(1, &mxClassMetadata, mxKillFile,
                 mxRawDir, mxSquareDir, mxClassName, mxDbRoot,
-                mxColorSpace, mxVarsClassName,
+                mxColorSpace, mxPredictedClassName,
                 mxDescription) == false)
             ThrowByName(env, "java/lang/RuntimeException", "Collect class failed");
     } catch (const mwException &e) {
@@ -730,7 +730,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_colle
     removeFile(env, killfile);
     mxDestroyArray(mxClassName);
     mxDestroyArray(mxDbRoot);
-    mxDestroyArray(mxVarsClassName);
+    mxDestroyArray(mxPredictedClassName);
     mxDestroyArray(mxDescription);
     mxDestroyArray(mxKillFile);
     mxDestroyArray(mxRawDir);
@@ -739,7 +739,7 @@ JNIEXPORT void JNICALL Java_org_mbari_aved_classifier_ClassifierLibraryJNI_colle
     mxDestroyArray(mxClassMetadata);
     env->ReleaseStringUTFChars(jclassName, classname);
     env->ReleaseStringUTFChars(jmatlabdb, matlabdbdir);
-    env->ReleaseStringUTFChars(jvarsClassName, varsclassname);
+    env->ReleaseStringUTFChars(jpredictedClassName, predictedclassname);
     env->ReleaseStringUTFChars(jdescription, description);
     env->ReleaseStringUTFChars(jimageRawDirectory, imagerawdir);
     env->ReleaseStringUTFChars(jimageSquareDirectory, imagesqdir);
@@ -1159,13 +1159,13 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
         jmethodID jsetSquareImageDirectory = env->GetMethodID(jClassModel, "setSquareImageDirectory", "(Ljava/io/File;)V");
         jmethodID jsetColorSpace = env->GetMethodID(jClassModel, "setColorSpace", "(Lorg/mbari/aved/classifier/ColorSpace;)V");
         jmethodID jsetName = env->GetMethodID(jClassModel, "setName", "(Ljava/lang/String;)V");
-        jmethodID jsetVarsClassName = env->GetMethodID(jClassModel, "setVarsClassName", "(Ljava/lang/String;)V");
+        jmethodID jsetPredictedName = env->GetMethodID(jClassModel, "setPredictedName", "(Ljava/lang/String;)V");
         jmethodID jsetDescription = env->GetMethodID(jClassModel, "setDescription", "(Ljava/lang/String;)V");
         jmethodID jsetDatabaseRoot = env->GetMethodID(jClassModel, "setDatabaseRoot", "(Ljava/io/File;)V");
 
         // In case any of these methods change in the future, check for valid methods
         ASSERT(jsetRawImageDirectory && jsetSquareImageDirectory
-                && jsetColorSpace && jsetName && jsetVarsClassName
+                && jsetColorSpace && jsetName && jsetPredictedName
                 && jsetDescription && jsetDatabaseRoot && jupdateFileList);
 
         // Find the color space class
@@ -1198,7 +1198,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
                 // Get the matlab fields from the matlab structure
                 mxArray *mxClassName = mxGetField(mxStructurePtr, 0, "classname");
                 mxArray *mxDbRoot = mxGetField(mxStructurePtr, 0, "dbroot");
-                mxArray *mxVarsClassName = mxGetField(mxStructurePtr, 0, "varsclassname");
+                mxArray *mxPredictedClassName = mxGetField(mxStructurePtr, 0, "predictedclassname");
                 mxArray *mxDescription = mxGetField(mxStructurePtr, 0, "description");
                 mxArray *mxColorSpace = mxGetField(mxStructurePtr, 0, "color_space");
                 mxArray *mxRawDir = mxGetField(mxStructurePtr, 0, "raw_directory");
@@ -1250,8 +1250,8 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
                 if (mxClassName != 0)
                     env->CallObjectMethod(jobj, jsetName, env->NewStringUTF(getString(mxClassName)));
 
-                if (mxVarsClassName != 0)
-                    env->CallObjectMethod(jobj, jsetVarsClassName, env->NewStringUTF(getString(mxVarsClassName)));
+                if (mxPredictedClassName != 0)
+                    env->CallObjectMethod(jobj, jsetPredictedName, env->NewStringUTF(getString(mxPredictedClassName)));
 
                 if (mxDescription != 0)
                     env->CallObjectMethod(jobj, jsetDescription, env->NewStringUTF(getString(mxDescription)));
@@ -1274,7 +1274,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
                 mxDestroyArray(mxRawDir);
                 mxDestroyArray(mxSquareDir);
                 mxDestroyArray(mxDescription);
-                mxDestroyArray(mxVarsClassName);
+                mxDestroyArray(mxPredictedClassName);
             }// end}//  if (pos != string::npos)
         }// end for (i = 0; i < fcount; i++)
     }

@@ -58,7 +58,7 @@ public class ClassModel implements Comparable<ClassModel> {
     };
     private String            className             = "-";
     private String            description           = "-";
-    private String            varsClassName         = "-";
+    private String            predictedClassName         = "-";
     private File              squaredImageDirectory = new File("");
     private File              rawImageDirectory     = new File("");
     private ArrayList<String> fileList              = new ArrayList<String>();
@@ -85,7 +85,11 @@ public class ClassModel implements Comparable<ClassModel> {
         m.color                 = this.color;
         m.className             = this.getName();
         m.description           = this.getDescription();
-        m.varsClassName         = this.getVarsClassName();
+        if (!this.getPredictedName().isEmpty() &&  !this.getPredictedName().equals("-"))
+            m.predictedClassName    = this.getPredictedName();
+        else
+            m.predictedClassName    = this.getName();
+        
         m.squaredImageDirectory = this.getSquareImageDirectory();
         m.rawImageDirectory     = this.getRawImageDirectory(); 
         m.fileList        = (ArrayList<String>) this.fileList.clone();
@@ -308,18 +312,17 @@ public class ClassModel implements Comparable<ClassModel> {
     }
 
     /**
-     * Get the VARS class name. This is a name from the VARS knowledge base.
+     * Get the predicted class name.
      */
-    public String getVarsClassName() {
-        return varsClassName;
+    public String getPredictedName() {
+        return predictedClassName;
     }
 
     /**
-     * Set the associated vars name. This is a name from the VARS
-     * knowledge base.
+     * Set the predicted name.
      */
-    public void setVarsClassName(String varsClassName) {
-        this.varsClassName = varsClassName;
+    public void setPredictedName(String className) {
+        this.predictedClassName = className;
     }
 
     /**
@@ -354,7 +357,7 @@ public class ClassModel implements Comparable<ClassModel> {
      * @return the description
      */
     public String description() {
-        String s = "Class name: " + className + "\n" + "VARS class name: " + varsClassName + "\n" + "Description: "
+        String s = "Class name: " + className + "\n" + "Predicted class name: " + predictedClassName + "\n" + "Description: "
                    + description + "\n" + "Color space: " + color + "\n" + "Database root directory: "
                    + dbrootDirectory + "\n" + "Raw image directory: " + rawImageDirectory + "\n"
                    + "Squared image directory: " + squaredImageDirectory + "\n";
