@@ -56,15 +56,15 @@ public class ErrorLog {
 
             // Tee standard output to system, to file, and to message console display
             PrintStream out = new PrintStream(new FileOutputStream(logroot + "/" + ApplicationInfo.getName() + ".out"));
-            PrintStream tee = new TeeStream(System.out, out, message);
+            PrintStream teeOut = new TeeStream(System.out, out, message);
 
-            System.setOut(tee);
+            System.setOut(teeOut);
 
             // // Tee standard error to system, to file, and to message console display
             PrintStream err = new PrintStream(new FileOutputStream(logroot + "/" + ApplicationInfo.getName() + ".err"));
 
-            tee = new TeeStream(System.err, err, message);
-            System.setErr(tee);
+            PrintStream teeErr = new TeeStream(System.err, err, message);
+            System.setErr(teeErr);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
 

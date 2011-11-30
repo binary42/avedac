@@ -57,6 +57,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
+import org.mbari.aved.ui.utils.ImageUtils;
 
 public class DockingContainer extends JPanel {
     private DockingDesktop                 desk = new DockingDesktop();
@@ -100,12 +101,20 @@ public class DockingContainer extends JPanel {
         DockingPreferences.setFlatDesktopStyle();
         DockingPreferences.setShadowDesktopStyle();
 
-        if (!checkForJpgReader()) {
+        if (!ImageUtils.checkForJpgReader()) {
             JOptionPane
                 .showMessageDialog(
                     this, "You are missing the Java Advanced Imaging Library needed to "
-                    + "view .ppm images.\nPlease go to " + "https://jai.dev.java.net/binary-builds.html\nand download "
-                    + "and install the appropriate package for your platform\n(version 1.1.3 or better)", "Missing Require Libraries", JOptionPane
+                    + "view .jpeg oimages.\nPlease go to " + "http://download.java.net/media/jai/builds/release/1_1_3/\nand download "
+                    + "and install the appropriate package for your platform\n", "Missing Require Libraries", JOptionPane
+                        .ERROR_MESSAGE);
+        }
+        if (!ImageUtils.checkForPpmReader()) {
+            JOptionPane
+                .showMessageDialog(
+                    this, "You are missing the Java Advanced Imaging Library needed to "
+                    + "view .ppm images.\nPlease go to " + "http://download.java.net/media/jai/builds/release/1_1_3/\nand download "
+                    + "and install the appropriate package for your platform\n", "Missing Require Libraries", JOptionPane
                         .ERROR_MESSAGE);
         }
 
@@ -136,20 +145,7 @@ public class DockingContainer extends JPanel {
     boolean quickCopy(ImageLabel aThis, int currentQuickKey) {
         return viewManager.quickCopy(aThis, currentQuickKey);
     }
-
-    private boolean checkForJpgReader() {
-        ImageIO.scanForPlugins();
-
-        String[] formats = ImageIO.getReaderFormatNames();
-
-        for (int i = 0; i < formats.length; i++) {
-            if (formats[i].equalsIgnoreCase("jpg")) {
-                return true;
-            }
-        }
-
-        return false;
-    }
+ 
 
     private class ButtonPanel extends JPanel implements Dockable {
         private final JFileChooser             chooser = new JFileChooser();

@@ -70,6 +70,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
+import org.mbari.aved.ui.process.ProcessDisplay;
 
 /**
  *
@@ -78,6 +79,9 @@ public class ApplicationView extends JFrameView {
     private static final long  serialVersionUID = 1L;
     public final static Cursor defaultCursor    = Cursor.getDefaultCursor();
 
+    /** Process display for transcoding */
+    private ProcessDisplay display;
+    
     /** Busy and wait cursor */
     public final static Cursor busyCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
     private SummaryView        summaryView;

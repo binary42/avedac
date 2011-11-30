@@ -53,6 +53,7 @@ public class UserPreferencesController extends AbstractController {
 
         // Implement key enter check on text field
         Action checkplayertext = new AbstractAction() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 String           s    = (String) ((JTextField) e.getSource()).getText();
                 VideoPlayoutMode mode = getModel().getPlayoutMode();
@@ -104,6 +105,7 @@ public class UserPreferencesController extends AbstractController {
         return null;
     }
 
+    @Override
     public void actionPerformed(ActionEvent e) {
         String op = e.getActionCommand();
 
@@ -116,6 +118,10 @@ public class UserPreferencesController extends AbstractController {
                 m.command = f.toString();
                 getModel().setPlayoutMode(m);
             }
+        } else if (op.equals("ConvertTranscode")) {
+            getModel().setEnableFfmpeg(false);
+        } else if (op.equals("ConvertFfmpeg")) {
+            getModel().setEnableFfmpeg(true);
         } else if (op.equals("PlayoutOther")) {
             getModel().setPlayoutMode(VideoPlayoutMode.OTHER);
         } else if (op.equals("PlayoutDefault")) {

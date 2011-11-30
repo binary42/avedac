@@ -1,5 +1,5 @@
 /*
- * @(#)RunClassifierWorker.java
+ * @(#)RunWorker.java
  *
  * Copyright 2011 MBARI
  *
@@ -39,42 +39,46 @@ import org.mbari.aved.ui.model.EventObjectContainer;
 
 //~--- JDK imports ------------------------------------------------------------
 
-import java.io.File;
+import java.io.File; 
 
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.mbari.aved.ui.model.EventImageCache;
+import org.mbari.aved.ui.model.EventImageCache;  
+import org.mbari.aved.ui.progress.AbstractOutputStream;
 
 /**
  *
  * @author dcline
  */
-public class RunClassifierWorker extends ClassifierLibraryJNITask {
+public class RunWorker extends ClassifierLibraryJNITask {
     private float               minProbThreshold = .09f;
     EventListModel              eventListModel;
     private final VotingMethod  method;
     private TableModel          tableModel;
     private final File          testDir;
-    private final TrainingModel trainingModel;
+    private final TrainingModel trainingModel; 
+    private final AbstractOutputStream display;
 
-    public RunClassifierWorker(TrainingModel model, float minProbThreshold, File testDir,
-                               EventListModel eventListModel, VotingMethod method)
+    public RunWorker(TrainingModel model, float minProbThreshold, File testDir,
+                               EventListModel eventListModel, VotingMethod method, AbstractOutputStream display)
             throws Exception {
         super(model.getName());
         this.trainingModel    = model.copy();
         this.minProbThreshold = minProbThreshold;
         this.eventListModel   = eventListModel;
         this.testDir          = testDir;
-        this.method           = method;
+        this.method           = method; 
+        this.display          = display;
     }
+ 
 
     TableModel getTableModel() {
         return tableModel;
     }
 
     @Override
-    protected void run(ClassifierLibraryJNI library) throws Exception {
+    protected void run(ClassifierLibraryJNI library)  {
         try {
             int size         = eventListModel.getSize();
             int numEvtImages = 0;
@@ -89,6 +93,7 @@ public class RunClassifierWorker extends ClassifierLibraryJNITask {
                 testDir.mkdirs();
             }
 
+            display.write("Getting list of files in directory " + testDir.toString());
             String[] children = testDir.list();
 
             // if event images are not created already create them
@@ -96,6 +101,7 @@ public class RunClassifierWorker extends ClassifierLibraryJNITask {
             // for some special cases.
             // TODO: match event files names; remove everything else, or some
             // variant of that to speed-up
+            display.write("Creating squared images of events...");
             if (numEvtImages != children.length) {
                 deleteDir(testDir);
                 testDir.mkdirs();
@@ -109,20 +115,19 @@ public class RunClassifierWorker extends ClassifierLibraryJNITask {
                         }
 
                         // If found a valid frame number
-                        if (frameNo >= 0) {
-                            int                 bestFrameNo = frameNo;
+                        if (frameNo >= 0) { 
                             EventImageCacheData data        = new EventImageCacheData(event);
 
                             // If the event has a class, then rename
                             // the event with an appended name - replacing
                             // all the white spaces with dashes
                             if (event.getClassName().length() > 0) {
-                                data.initialize(testDir, event.getClassName(), bestFrameNo);
+                                data.initialize(testDir, event.getClassName(), frameNo);
                             } else {
-                                data.initialize(testDir, "", bestFrameNo);
+                                data.initialize(testDir, "", frameNo);
                             }
 
-                            EventObject object = event.getEventObject(bestFrameNo);
+                            EventObject object = event.getEventObject(frameNo);
 
                             if (object != null) {
                                 EventImageCache.createSquaredImageOfEvent(data, object);
@@ -174,7 +179,7 @@ public class RunClassifierWorker extends ClassifierLibraryJNITask {
             mapbyid.put(new Integer(0), TrainingModel.UNKNOWN_CLASS_LABEL);
 
             for (int j = 1; j < columns; j++) {
-                mapbyid.put(new Integer(j), trainingModel.getClassModel(j - 1).getName());
+                mapbyid.put(new Integer(j), trainingModel.getClassModel(j - 1).getPredictedName());
             }
 
             for (int i = 0; i < size; i++) {
@@ -194,7 +199,7 @@ public class RunClassifierWorker extends ClassifierLibraryJNITask {
 
                 switch (method) {
                 case MAJORITY :
-                    np = mapbyid.get(new Integer(majoritywinnerindex[i]));
+                    np = mapbyid.get(new Integer(majoritywinnerindex[i] - 1));
                     pp = new Float(probability[i]);
                     event.setPredictedClass(np, pp);
 
@@ -266,12 +271,15 @@ public class RunClassifierWorker extends ClassifierLibraryJNITask {
                     
             setFini();
         } catch (RuntimeException ex) {
-            Logger.getLogger(RunClassifierController.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (Exception ex) {
-
             // Only log if this was an exception caused by a non-user cancel
             if (!this.isCancelled()) {
-                Logger.getLogger(RunClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(RunController.class.getName()).log(Level.SEVERE, null, ex);
+                setFini();
+            }
+        } catch (Exception ex) { 
+            // Only log if this was an exception caused by a non-user cancel
+            if (!this.isCancelled()) {
+                Logger.getLogger(RunController.class.getName()).log(Level.SEVERE, null, ex);
                 setFini();
             }
         }

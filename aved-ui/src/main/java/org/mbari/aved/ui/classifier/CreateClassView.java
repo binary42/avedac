@@ -89,7 +89,7 @@ import javax.swing.plaf.basic.BasicComboBoxRenderer;
 public class CreateClassView extends JFrameView {
     private static final String ID_CLASS_DESCRIPTION_TEXTAREA = "classdescription";    // ""
     private static final String ID_CLASS_NAME_TEXTFIELD       = "classname";           // javax.swing.JTextArea
-    private static final String ID_CLASS_NAME_VARS_TEXTFIELD  = "classsnamevars";      // ""
+    private static final String ID_CLASS_NAME_PRED_TEXTFIELD  = "predictedclassname"; // ""
     private static final String ID_COLORSPACE_COMBOBOX        = "colorspace";          // ""
     private static final String ID_DELETE_BUTTON              = "delete";              // javax.swing.JButton
     private static final String ID_IMAGE_COMPONENT            = "classimage";
@@ -106,13 +106,13 @@ public class CreateClassView extends JFrameView {
     private static final String  ID_STOP_BUTTON              = "stop";              // ""
     private final JTextArea      classDescriptionTextArea;
     private ImageComponent       classImageComponent;
-    private final JTextField     classNameVarsTextField;
+    private final JTextField     classNamePredictedClassName;
     private ConceptTreePanel     conceptTreePanel;
     private final AbstractButton deleteBtn;
     private final JComboBox      dirComboBox, colorSpaceComboBox;
     private final JPanel         knowledgeBasePanel;
     private final JLabel         numImagesLabel;
-    private final JTextField     predictedClassNameTextField;
+    private final JTextField     classNameTextField;
 
     CreateClassView(ClassifierModel model, CreateClassController controller) {
         super("org/mbari/aved/ui/forms/ClassifierCreateClass.xml", model, controller);
@@ -121,8 +121,8 @@ public class CreateClassView extends JFrameView {
         numImagesLabel              = getForm().getLabel(ID_NUM_CLASS_IMAGES_LABEL);
         dirComboBox                 = getForm().getComboBox(ID_IMAGE_DIRECTORY_COMBOBOX);
         colorSpaceComboBox          = getForm().getComboBox(ID_COLORSPACE_COMBOBOX);
-        predictedClassNameTextField = getForm().getTextField(ID_CLASS_NAME_TEXTFIELD);
-        classNameVarsTextField      = getForm().getTextField(ID_CLASS_NAME_VARS_TEXTFIELD);
+        classNameTextField          = getForm().getTextField(ID_CLASS_NAME_TEXTFIELD);
+        classNamePredictedClassName = getForm().getTextField(ID_CLASS_NAME_PRED_TEXTFIELD);
         classDescriptionTextArea    = (JTextArea) getForm().getTextComponent(ID_CLASS_DESCRIPTION_TEXTAREA);
         knowledgeBasePanel          = getForm().getPanel(ID_KNOWLEDGE_BASE_PANEL);
         classImageComponent         = (ImageComponent) getForm().getComponentByName(ID_IMAGE_COMPONENT);
@@ -200,7 +200,7 @@ public class CreateClassView extends JFrameView {
      * @return the class name either user-defined or from VARS knowledge base
      */
     String getClassName() {
-        return predictedClassNameTextField.getText();
+        return classNameTextField.getText();
     }
 
     /**
@@ -251,11 +251,11 @@ public class CreateClassView extends JFrameView {
     }
 
     /**
-     * Get the VARS concept name
+     * Get the predicted class name
      * @return
      */
-    String getClassNameVars() {
-        return classNameVarsTextField.getText();
+    String getClassNamePredicted() {
+        return classNamePredictedClassName.getText();
     }
 
     /**
@@ -283,6 +283,7 @@ public class CreateClassView extends JFrameView {
         return (ClassifierModel) super.getModel();
     }
 
+    @Override
     public void modelChanged(ModelEvent event) {}
 
     /**
@@ -301,8 +302,8 @@ public class CreateClassView extends JFrameView {
      * @param model the model to load
      */
     void loadModel(ClassModel model) {
-        predictedClassNameTextField.setText(model.getName());
-        classNameVarsTextField.setText(model.getVarsClassName());
+        classNameTextField.setText(model.getName());
+        classNamePredictedClassName.setText(model.getPredictedName());
         classDescriptionTextArea.setText(model.getDescription());
 
         try {
@@ -385,11 +386,11 @@ public class CreateClassView extends JFrameView {
     }
 
     /**
-     * Sets the VARS concept name in the class name label
-     * @param name the VARS concept name.
+     * Sets the predicted name in the correct JLabel
+     * @param name the predicted name.
      */
-    void setVarsName(String name) {
-        classNameVarsTextField.setText(name);
+    void setPredictedName(String name) {
+        classNamePredictedClassName.setText(name);
     }
 
     /**

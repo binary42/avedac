@@ -1,5 +1,5 @@
 /*
- * @(#)RunClassifierView.java
+ * @(#)RunView.java
  *
  * Copyright 2011 MBARI
  *
@@ -50,7 +50,7 @@ import javax.swing.JTextField;
 import javax.swing.ListModel;
 import org.mbari.aved.ui.appframework.AbstractController;
 
-public class RunClassifierView extends JFrameView {
+public class RunView extends JFrameView {
     /*
      *  Component names in the ClassifierRun form
      * If any of the component name are changed in the Abeille form designer, they
@@ -69,7 +69,7 @@ public class RunClassifierView extends JFrameView {
     private final JComboBox  colorSpaceComboBox, votingMethodComboBox, libraryNameComboBox;
     private final JTextField probThresholdTextField;
 
-    public RunClassifierView(ClassifierModel model, AbstractController controller) {
+    public RunView(ClassifierModel model, AbstractController controller) {
         super("org/mbari/aved/ui/forms/ClassifierRun.xml", model, controller);
         votingMethodComboBox   = getForm().getComboBox(ID_VOTING_METHOD_COMBOBOX);
         classesInLibraryList   = getForm().getList(ID_CLASSES_IN_LIBRARY_JLIST);
@@ -110,10 +110,7 @@ public class RunClassifierView extends JFrameView {
         votingMethodComboBox.setModel(new ComboBoxAdapter(selectionVotingInList));
 
         // default to majority
-        votingMethodComboBox.setSelectedIndex(0); 
-        
-        // default to RGB color space
-        colorSpaceComboBox.setSelectedIndex(1);
+        votingMethodComboBox.setSelectedIndex(0);  
         
         this.getRootPane().setDefaultButton((JButton) getForm().getButton(ID_RUN_BUTTON));
         
@@ -167,8 +164,10 @@ public class RunClassifierView extends JFrameView {
 
     /**
      * Loads the training models into this view in the correct color space
+     * @param colorSpace color space to populate list with 
+     * @param librarySelection name of the library to select from populated list
      */
-    public void populateTrainingLibraryList(ColorSpace colorSpace) {
+    public void populateTrainingLibraryList(ColorSpace colorSpace, String librarySelection) {
         loadModel(null);
 
         ClassifierModel model   = (ClassifierModel) getModel();
@@ -190,10 +189,7 @@ public class RunClassifierView extends JFrameView {
  
         libraryNameComboBox.setModel(new ComboBoxAdapter(selectionInList));
 
-        // Select the first one
-        if (!selectionInList.isEmpty()) {
-            libraryNameComboBox.setSelectedIndex(0); 
-        }
+        selectLibrary(librarySelection);
     }
 
     /**
@@ -232,7 +228,7 @@ public class RunClassifierView extends JFrameView {
 
         classesInLibraryList.setModel(listModel);
     }
-
+ 
     /**
      *
      */
@@ -242,15 +238,11 @@ public class RunClassifierView extends JFrameView {
         classesInLibraryList.setModel(listModel);
     }
 
-    TrainingModel getTrainingModel() {
-        return (TrainingModel) libraryNameComboBox.getSelectedItem(); 
-    }
     /**
      * Selects the library by name.
-     * @param name the name of the library
-     * @return false if the library is not found, otherwise true
+     * @param name the name of the library 
      */
-    boolean selectLibrary(String name) {
+    void selectLibrary(String name) {
         int index = -1;
         int size  = libraryNameComboBox.getModel().getSize();
 
@@ -260,7 +252,7 @@ public class RunClassifierView extends JFrameView {
 
         // Look for the library by name in this color space
         for (int i = 0; i < size; i++) {
-            TrainingModel m = (TrainingModel) libraryNameComboBox.getItemAt(index);
+            TrainingModel m = (TrainingModel) libraryNameComboBox.getItemAt(i);
 
             // If the last user selection is found by name in this color space
             // keep the index to set it later
@@ -271,11 +263,26 @@ public class RunClassifierView extends JFrameView {
 
         if ((index >= 0) && (index < libraryNameComboBox.getItemCount())) {
             libraryNameComboBox.setSelectedIndex(index);
-
-            return true;
-        } else {
-            return false;
+         } else {
+            if (libraryNameComboBox.getItemCount() > 0)
+                libraryNameComboBox.setSelectedIndex(0); 
         }
+    }
+
+    int getTrainingModelIndex() {
+        return libraryNameComboBox.getSelectedIndex();
+    }
+
+    void setSelectedIndex(int i) {
+        libraryNameComboBox.setSelectedIndex(i);
+    }
+
+    ColorSpace getColorSpace() {
+        return (ColorSpace) colorSpaceComboBox.getSelectedItem();
+    }
+
+    void setColorSpace(ColorSpace colorSpace) {
+        colorSpaceComboBox.setSelectedItem(colorSpace);
     }
 
 

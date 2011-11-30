@@ -33,10 +33,13 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 import javax.swing.JFrame;
-
-//A simple class to override the behavior of the close button on the MessageDisplayNoHeaderController
-//Otherwise, the embedded form cannot close the parent form. There is probably a better way to do 
-//this, but this works ok.
+  
+/**
+ * A simple class to override the behavior of the close button on the 
+ * MessageDisplayNoHeaderController
+ * Otherwise, the embedded form cannot close the parent form.
+ * @author dcline
+ */
 public class MessageController implements KeyListener {
     private OverrideController controller;
     private MessageView        view;

@@ -49,6 +49,7 @@ import org.mbari.aved.ui.userpreferences.UserPreferences;
 
 import java.awt.event.ActionEvent;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -70,12 +71,12 @@ import javax.media.jai.PlanarImage;
  * @author dcline
  */
 public class ClassifierController extends AbstractController implements ModelListener {
-    private final ClassifierBatchProcess   batchProcess;
+    private final BatchProcess   batchProcess;
     private final CreateClass              createClass;
     private final CreateTrainingLibrary    createTrainingLib;
     private final EventListModel           eventListModel;
     private ClassifierLibraryJNITaskWorker jniQueue;
-    private final RunClassifier            runClassifier;
+    private final Run            runClassifier;
     private final TestClass                testClass;
 
     /**
@@ -108,9 +109,9 @@ public class ClassifierController extends AbstractController implements ModelLis
         createTrainingLib = new CreateTrainingLibrary(model);
         createClass       = new CreateClass(model, list);
         testClass         = new TestClass(model);
-        runClassifier     = new RunClassifier(model);
+        runClassifier     = new Run(model);
         runClassifier.init(eventListModel, summaryModel);
-        batchProcess = new ClassifierBatchProcess(model);
+        batchProcess = new BatchProcess( model);
 
         // Replace the views
         view.setTrainingPanel(createTrainingLib.getView().getForm());
@@ -225,7 +226,7 @@ public class ClassifierController extends AbstractController implements ModelLis
 
                                 newModel.setRawImageDirectory(dir);
                                 newModel.setName(className);
-                                newModel.setVarsClassName(eoc.getClassName());
+                                newModel.setPredictedName(eoc.getClassName());
                                 newModel.setDescription(eoc.getClassName());
 
                                 AddClassImageWorker thread = new AddClassImageWorker(newModel, eoc);
@@ -287,7 +288,7 @@ public class ClassifierController extends AbstractController implements ModelLis
     }
 
     /**
-     * Worker to manager adding cropped-event images to
+     * Worker to manage adding cropped-event images to
      * class training library.  This occurs in a SwingWorker
      * in the backbground because this can take a while for
      * very long events.
@@ -330,7 +331,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                             data.initialize(bestFrameNo);
 
                             EventObject object   = event.getEventObject(bestFrameNo);
-                            PlanarImage original = EventImageCache.loadImage(event.getFrameSource(bestFrameNo));
+                            BufferedImage original = EventImageCache.loadImage(event.getFrameSource(bestFrameNo));
 
                             if (((object != null) && (original != null))
                                     && EventImageCache.createCroppedImageOfEvent(original, data, object)) {
@@ -399,10 +400,11 @@ public class ClassifierController extends AbstractController implements ModelLis
                     try {
                         task.run(jniLibrary);
                     } catch (Exception ex) {
+                        task.setCancelled();
                         Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
-                    queue.remove();
+                    queue.remove(); 
                     getModel().setJniTaskComplete(task.getId());
                 } else {
                     try {

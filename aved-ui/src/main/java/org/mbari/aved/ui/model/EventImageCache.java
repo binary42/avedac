@@ -31,6 +31,7 @@ package org.mbari.aved.ui.model;
 import aved.model.BoundingBox;
 import aved.model.EventObject;
 
+import java.io.IOException;
 import org.jdesktop.swingworker.SwingWorker;
 
 import org.mbari.aved.ui.exceptions.FrameOutRangeException;
@@ -53,12 +54,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.media.jai.BorderExtender;
-import javax.media.jai.Interpolation;
-import javax.media.jai.JAI;
-import javax.media.jai.ParameterBlockJAI;
+ 
+import javax.imageio.ImageIO;
+import javax.media.jai.JAI; 
 import javax.media.jai.PlanarImage;
+import org.mbari.aved.mbarivision.api.utils.Utils;
 
 /**
  * Singleton class that executes a SwingWorker to grab
@@ -243,7 +243,7 @@ public class EventImageCache {
      */
     private boolean createBestCroppedImageOfEvent(EventImageCacheData data)
             throws MissingFrameException, FrameOutRangeException {
-        PlanarImage original = loadImage(data.getRawImageSource());
+        BufferedImage original = loadImage(data.getRawImageSource());
 
         if (original != null) {
             return createCroppedImageOfEvent(original, data, data.getEvent());
@@ -257,21 +257,22 @@ public class EventImageCache {
      * to a jpg on disk. An exception is thrown if the image file
      * cannot be found
      * @param data image cache data to store the image data in
-     * @param bestEvtObj Object to crop
+     * @param evtObj Object to crop
      * @return
      * @throws org.mbari.aved.ui.exceptions.MissingFrameException
      */
-    public static boolean createSquaredImageOfEvent(EventImageCacheData data, EventObject bestEvtObj)
+    public static boolean createSquaredImageOfEvent(EventImageCacheData data, EventObject evtObj)
             throws MissingFrameException, FrameOutRangeException {
-        File        source   = data.getRawImageSource();
-        PlanarImage original = loadImage(source);
+        File          source   = data.getRawImageSource();
+        BufferedImage original = loadImage(source);
 
-        if (createCroppedImageOfEvent(original, data, bestEvtObj)) {
+         if (createCroppedImageOfEvent(original, data, evtObj)) {
             try {
                 String imgInFilePath  = data.getImageSource().toString();
                 String imgOutFilePath = imgInFilePath;
-
-                ImageUtils.squareJpegThumbnail(imgInFilePath, imgOutFilePath);
+                String ext          = Utils.getExtension(new File(imgInFilePath));
+                
+                ImageUtils.squareImageThumbnail(imgInFilePath, imgOutFilePath, ext);
 
                 return true;
             } catch (Exception ex) {
@@ -287,9 +288,8 @@ public class EventImageCache {
      * @param source file source
      * @return image or null if doesn't exist of cannot be read
      */
-    public static PlanarImage loadImage(File source) {
+    public static BufferedImage loadImage(File source) {
 
-        //
         if ((source != null) && source.exists() && source.getAbsoluteFile().canRead()) {
             try {
 
@@ -307,9 +307,11 @@ public class EventImageCache {
                 }
 
                 // Load the image that corresponds to the best frame
-                PlanarImage original = JAI.create("fileload", source.toString());
+                BufferedImage original = ImageIO.read(source); 
 
                 return original;
+            } catch (IOException ex) {
+                Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
             } catch (InterruptedException ex) {
                 Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IllegalArgumentException e) {}
@@ -322,14 +324,14 @@ public class EventImageCache {
      * Creates the best cropped image of an event. Saves the event
      * to a jpg on disk. An exception is thrown if the image file
      * cannot be found
-     * @param original planar image to crop event image from
+     * @param original BufferedImage image to crop event image from
      * @param data image cache data to store the image data in
-     * @param bestEvtObj Object to crop
+     * @param evtObj Object to crop
      * @return
      * @throws org.mbari.aved.ui.exceptions.MissingFrameException
      */
-    public static boolean createCroppedImageOfEvent(PlanarImage original, EventImageCacheData data,
-            EventObject bestEvtObj)
+    public static boolean createCroppedImageOfEvent(BufferedImage original, EventImageCacheData data,
+            EventObject evtObj)
             throws MissingFrameException, FrameOutRangeException {
 
         // Load the image that corresponds to the best frame
@@ -339,15 +341,10 @@ public class EventImageCache {
             // If the file already exists, then return
             if (outputFile.exists()) {
                 return true;
-            }
-
-            // Create a ParameterBlock with information for the cropping.
-            ParameterBlock pb = new ParameterBlock();
-
-            pb.addSource(original);
+            } 
 
             // Calculate the cropping coordinates from the bounding box
-            BoundingBox b       = bestEvtObj.getBoundingBox();
+            BoundingBox b       = evtObj.getBoundingBox();
             int         xorigin = b.getLowerLeftX();
             int         yorigin = b.getUpperRightY();
             int         width   = b.getUpperRightX() - b.getLowerLeftX();
@@ -369,36 +366,23 @@ public class EventImageCache {
 
             if (height == 0) {
                 height = 1;
-            }
-
-            pb.add((float) xorigin);    // x origin
-            pb.add((float) yorigin);    // y origin
-            pb.add((float) width);      // width
-            pb.add((float) height);     // height
-
-            // Create the output image by cropping the input image.JAI
-            PlanarImage output = JAI.create("crop", pb, null);
-
-            // Store the cropped image in jpg format in the best quality
-            JPEGEncodeParam param = new JPEGEncodeParam();
-
-            param.setQuality(1.0f);
+            } 
+            // Create the output image by cropping the input image
+            BufferedImage output = original.getSubimage(xorigin, yorigin, width, height);
 
             if ((outputFile != null)
-                    && (JAI.create("filestore", output.getAsBufferedImage(), outputFile.toString(), "jpeg", param)
-                        != null)) {
-                output.dispose();
-
+                    && ImageIO.write(output, "ppm", outputFile) != false) {  
                 return true;
             }
-        } catch (IllegalArgumentException ex) {
+        } catch (Exception ex) {
+            System.out.println(data.getEvent().toString());
             Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return false;
     }
 
-    private int grabEventsByFrame(PlanarImage original, int bestFrame, int index)
+    private int grabEventsByFrame(BufferedImage original, int bestFrame, int index)
             throws MissingFrameException, FrameOutRangeException {
         int numEventsInFrame = 0;
 
@@ -465,15 +449,13 @@ public class EventImageCache {
                     EventObjectContainer ec        = data.getEventObjectContainer();
                     int                  bestFrame = ec.getBestEventFrame();
 
-                    data.initialize(bestFrame);
-
-                    if (createBestCroppedImageOfEvent(data) == true) {
+                    if (data.initialize(bestFrame) && createBestCroppedImageOfEvent(data) == true) {
                         if (ec.isBlackChecked() == false) {
 
                             // Load the image that corresponds to the best frame
-                            PlanarImage original = JAI.create("fileload", data.getImageSource().toString());
-                            int         mean     = meanValue(original.getAsBufferedImage());
-                            int         length   = ec.getEndFrame() - ec.getStartFrame();
+                            BufferedImage original = ImageIO.read(data.getImageSource());
+                            int           mean     = meanValue(original);
+                            int           length   = ec.getEndFrame() - ec.getStartFrame();
 
                             /*
                              * System.out.println("Mean: " + mean +
@@ -504,6 +486,12 @@ public class EventImageCache {
 
                                     return true;
                                 }
+                                else if (nextBestFrame == -1) {
+                                    // if no next best frame found, must use this one   
+                                    ec.setBestImageFrame(bestFrame);
+                                    ec.setIsBlackChecked();
+                                    ec.setEventImageCacheData(data);
+                                }
                             } else {
                                 ec.setIsBlackChecked();
                                 ec.setEventImageCacheData(data);
@@ -517,6 +505,8 @@ public class EventImageCache {
                         }
                     }
                 }
+            } catch (IOException ex) {
+                Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
             } catch (MissingFrameException e) {
                 System.out.println(e.getMessage());
             } catch (IndexOutOfBoundsException e) {
@@ -553,9 +543,9 @@ public class EventImageCache {
      */
     public int loadNextFrame() {
         if ((cacheNextIndex < indexsToCache.length) && iKeepRunning) {
-            int         index     = -1;
-            int         bestFrame = -1;
-            PlanarImage original  = null;
+            int           index     = -1;
+            int           bestFrame = -1;
+            BufferedImage original  = null;
 
             index = indexsToCache[cacheNextIndex];
 

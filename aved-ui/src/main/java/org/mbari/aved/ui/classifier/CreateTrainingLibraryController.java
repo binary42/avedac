@@ -53,6 +53,7 @@ import java.awt.event.MouseListener;
 import java.io.BufferedReader;
 import java.io.File;
 
+import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -89,8 +90,8 @@ public class CreateTrainingLibraryController extends AbstractController implemen
             trainingModel = new TrainingModel() {};
             trainingModel.setDatabaseRoot(dbroot);
 
-            // Default to RGB color space
-            getView().selectColorSpace(ColorSpace.RGB);
+            // Default to user preferred color space
+            getView().selectColorSpace(UserPreferences.getModel().getColorSpace());
 
         } catch (Exception ex) {
             Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex);
@@ -185,7 +186,8 @@ public class CreateTrainingLibraryController extends AbstractController implemen
             JComboBox  box           = ((JComboBox) e.getSource());
             ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
             ColorSpace oldColorSpace = trainingModel.getColorSpace();
-
+  
+            UserPreferences.getModel().setColorSpace(newColorSpace);  
             trainingModel.setColorSpace(newColorSpace);
 
             // If a different color space, clear the selected list
@@ -250,6 +252,10 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                                                               "Creating training model " + newModel.getName());
 
                         progressDisplay.getView().setVisible(true);
+                        
+                        // Redirect err/out to progress display
+                        System.setOut(new PrintStream(progressDisplay, true));
+                        System.setErr(new PrintStream(progressDisplay, true));
 
                         ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, br);
 

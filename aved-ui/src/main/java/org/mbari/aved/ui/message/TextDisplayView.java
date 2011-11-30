@@ -37,8 +37,6 @@ import javax.swing.JEditorPane;
 import javax.swing.text.Document;
 
 public class TextDisplayView extends JFrameView {
-    public static final String ID_CLEAR_BUTTON = "clear";    // javax.swing.JButton
-    public static final String ID_CLOSE_BUTTON = "close";    // javax.swing.JButton 
 
     /*
      *  Component names in the TextDisplay form
@@ -46,6 +44,8 @@ public class TextDisplayView extends JFrameView {
      * should be modified here too
      */
     public static final String ID_EDITOR_PANE = "editorpane";    // javax.swing.JEditorPane
+    public static final String ID_CLEAR_BUTTON = "clear";    // javax.swing.JButton
+    public static final String ID_CLOSE_BUTTON = "close";    // javax.swing.JButton 
     
     private JEditorPane        editorPane;
 
@@ -68,7 +68,8 @@ public class TextDisplayView extends JFrameView {
         TextDisplayModel s = (TextDisplayModel) event.getSource();
 
         try {
-            if (s.getText().length() > 0) {    // If a non-empty message, go ahead and display
+            // If a non-empty message, go ahead and display
+            if (s.getText().length() > 0 && !s.getText().equals("\n")) {    
                 Document doc = editorPane.getDocument();
 
                 doc.insertString(doc.getLength(), s.getText(), null);

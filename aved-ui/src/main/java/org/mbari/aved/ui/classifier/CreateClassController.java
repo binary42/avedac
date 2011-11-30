@@ -28,7 +28,6 @@ package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import java.awt.event.FocusEvent;
 import org.jdesktop.swingworker.SwingWorker;
 
 import org.mbari.aved.classifier.ClassModel;
@@ -55,7 +54,6 @@ import vars.shared.ui.tree.ConceptTreePanel;
 //~--- JDK imports ------------------------------------------------------------
 
 import java.awt.event.ActionEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
@@ -64,6 +62,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -94,8 +93,8 @@ class CreateClassController extends AbstractController implements ModelListener,
         // Disable delete
         getView().setEnabledDeleteButton(false);
         
-        // Default to RGB
-        getView().setColorSpace(ColorSpace.RGB); 
+        // Default to user preferred color space
+        getView().setColorSpace(UserPreferences.getModel().getColorSpace()); 
     }
 
     @Override
@@ -144,12 +143,13 @@ class CreateClassController extends AbstractController implements ModelListener,
                         classModel.setRawImageDirectory(directory);
                         classModel.setDescription(directory.getName());
                         classModel.setName(directory.getName());
-                        classModel.setVarsClassName(directory.getName());
+                        classModel.setPredictedName(directory.getName());
                         classModel.setColorSpace(getView().getColorSpace());
                         classModel.updateFileList();
                     }
                    
-                    getView().loadModel(classModel);
+                    getView().loadModel(classModel);                    
+                    UserPreferences.getModel().setClassImportDirectory(classModel.getRawImageDirectory());
                 } else {
                     getView().setEnabledDeleteButton(false);
                 }
@@ -163,7 +163,7 @@ class CreateClassController extends AbstractController implements ModelListener,
         } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
             JComboBox  box        = ((JComboBox) e.getSource());
             ColorSpace colorSpace = (ColorSpace) box.getSelectedItem();
-
+            UserPreferences.getModel().setColorSpace(colorSpace);
             classModel.setColorSpace(colorSpace);
             getView().loadModel(classModel);
         } else if (actionCommand.equals("Delete")) {
@@ -203,9 +203,9 @@ class CreateClassController extends AbstractController implements ModelListener,
             }
         } else if (actionCommand.equals("Run")) {
             try {
-                String className      = classModel.getName();
+                String className      = getView().getClassName();
+                String predictedClassName  = getView().getClassNamePredicted();
                 File   imageDirectory = classModel.getRawImageDirectory();
-                String varsClassName  = classModel.getVarsClassName();
 
                 if (className.length() == 0) {
                     String                message = "Class name is empty. Please enter a new class name.";
@@ -218,8 +218,8 @@ class CreateClassController extends AbstractController implements ModelListener,
                     }
                 }
 
-                if (varsClassName.length() == 0) {
-                    String                message = "VARS class name is empty. Please select a new name.";
+                if (predictedClassName.length() == 0) {
+                    String                message = "Predicted class name is empty. Please select a new name.";
                     NonModalMessageDialog dialog  = new NonModalMessageDialog((JFrame) this.getView(), message);
 
                     dialog.setVisible(true);
@@ -250,8 +250,11 @@ class CreateClassController extends AbstractController implements ModelListener,
                     if (dialog.answer()) {
                         return;
                     }
-                }
+                } 
 
+                classModel.setName(className);
+                classModel.setPredictedName(predictedClassName);
+                
                 final ClassModel newModel = classModel.copy();
                 File             d        = UserPreferences.getModel().getClassDatabaseDirectory();
 
@@ -287,6 +290,10 @@ class CreateClassController extends AbstractController implements ModelListener,
                                                                   "Creating class " + newModel.getName());
 
                             progressDisplay.getView().setVisible(true);
+                            
+                            // Redirect err/out to progress display
+                            System.setOut(new PrintStream(progressDisplay, true));
+                            System.setErr(new PrintStream(progressDisplay, true)); 
 
                             ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay,
                                                                               br);
@@ -395,13 +402,13 @@ class CreateClassController extends AbstractController implements ModelListener,
      * Model listener. Reacts to changes in the
      * {@link org.mbari.aved.ui.classifier.model}
      */
+    @Override
     public void modelChanged(ModelEvent event) {
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
 
             // When the class directory changes or class models are updated
-            // update the available classes
-            case ClassifierModel.ClassifierModelEvent.TRAINING_DIR_UPDATED :   
+            // update the available classes 
             case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED : 
                 updateClasses();
                 break;  
@@ -441,7 +448,7 @@ class CreateClassController extends AbstractController implements ModelListener,
             ConceptTreeNode node    = (ConceptTreeNode) selectionPath.getLastPathComponent();
             Concept         concept = (Concept) node.getUserObject();
 
-            getView().setVarsName(concept.getPrimaryConceptName().getName());
+            getView().setPredictedName(concept.getPrimaryConceptName().getName());
         }
     }
 
@@ -507,10 +514,11 @@ class CreateClassController extends AbstractController implements ModelListener,
                 }
 
                 String f            = rootPath + "/" + filePaths.get(i);
-                String imageFileOut = path + "/" + ParseUtils.removeFileExtension(filePaths.get(i)) + ".jpg";
+                String ext          = Utils.getExtension(new File(f));
+                String imageFileOut = path + "/" + ParseUtils.removeFileExtension(filePaths.get(i)) + "." + ext;
 
                 try {
-                    ImageUtils.squareJpegThumbnail(f, imageFileOut);
+                    ImageUtils.squareImageThumbnail(f, imageFileOut, ext);
                 } catch (Exception ex) {
                     NonModalMessageDialog dialog;
 
@@ -531,7 +539,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                 library.collect_class(this.getCancel(), newClassModel.getRawImageDirectory().toString(),
                                       newClassModel.getSquareImageDirectory().toString(), newClassModel.getName(),
                                       newClassModel.getDatabaseRootdirectory().toString(),
-                                      newClassModel.getVarsClassName(), newClassModel.getDescription(),
+                                      newClassModel.getPredictedName(), newClassModel.getDescription(),
                                       newClassModel.getColorSpace());
                 newClassModel.updateFileList();
                 getModel().addClassModel(newClassModel);

@@ -109,7 +109,7 @@ public final class ExcelExporter {
         if (chooser.showDialog(view, "Export") == JFileChooser.APPROVE_OPTION) {
             File f = chooser.getSelectedFile();
 
-            UserPreferences.getModel().setExcelExportDirectory(new File(f.getAbsolutePath()));
+            UserPreferences.getModel().setExcelExportDirectory(new File(f.getParent()));
 
             return f;
         } else {

@@ -55,6 +55,7 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import javax.swing.*;
+import org.mbari.aved.ui.userpreferences.UserPreferences;
 
 public class TestClassView extends JFrameView {
     private static final String ID_CLASS_COLORSPACE_COMBOBOX  = "classcolorspacecombo";    // "
@@ -67,7 +68,7 @@ public class TestClassView extends JFrameView {
      */
     private static final String ID_CLASS_NAME_COMBOBOX      = "classnamecombo";       // javax.swing.JComboBox
     private static final String ID_CLASS_NAME_LABEL         = "classname";            // javax.swing.JLabel
-    private static final String ID_CLASS_NAME_VARS_LABEL    = "classnamevars";
+    private static final String ID_CLASS_NAME_PRED_LABEL    = "predictedclassname";
     private static final String ID_IMAGE_COMPONENT          = "classimage";
     private static final String ID_IMAGE_DIRECTORY_LABEL    = "imagedirectory";
     private static final String ID_LIBRARY_CLASS_JLIST      = "classesinlibrary";     // javax.swing.JList
@@ -78,9 +79,9 @@ public class TestClassView extends JFrameView {
     private static final String ID_STOP_BUTTON              = "stop";                 // ""
     private final JTextArea     classDescriptionTextArea;
     private ImageComponent      classImageComponent;
-    private final JComboBox     classNameComboBox, libraryNameComboBox, classColorComboBox;
+    private final JComboBox     classNameComboBox, libraryNameComboBox, colorSpaceComboBox;
     private final JList         classesInLibraryList;
-    private final JLabel        numImagesLabel, classNameVarsLabel, classNameLabel, libraryColorSpaceLabel,
+    private final JLabel        numImagesLabel, classNamePredLabel, classNameLabel, libraryColorSpaceLabel,
                                 imageDirLabel;
 
     TestClassView(ClassifierModel model, TestClassController controller) {
@@ -89,14 +90,14 @@ public class TestClassView extends JFrameView {
         // load frequently accessed components
         classNameComboBox        = getForm().getComboBox(ID_CLASS_NAME_COMBOBOX);
         libraryNameComboBox      = getForm().getComboBox(ID_LIBRARY_NAME_COMBOBOX);
-        classColorComboBox       = getForm().getComboBox(ID_CLASS_COLORSPACE_COMBOBOX);
+        colorSpaceComboBox       = getForm().getComboBox(ID_CLASS_COLORSPACE_COMBOBOX);
         classesInLibraryList     = getForm().getList(ID_LIBRARY_CLASS_JLIST);
         classDescriptionTextArea = (JTextArea) getForm().getTextComponent(ID_CLASS_DESCRIPTION_TEXTAREA);
         classNameLabel           = getForm().getLabel(ID_CLASS_NAME_LABEL);
         libraryColorSpaceLabel   = getForm().getLabel(ID_LIBRARY_COLORSPACE_LABEL);
         imageDirLabel            = getForm().getLabel(ID_IMAGE_DIRECTORY_LABEL);
         numImagesLabel           = getForm().getLabel(ID_NUM_IMAGES_LABEL);
-        classNameVarsLabel       = getForm().getLabel(ID_CLASS_NAME_VARS_LABEL);
+        classNamePredLabel       = getForm().getLabel(ID_CLASS_NAME_PRED_LABEL);
         classImageComponent      = (ImageComponent) getForm().getComponentByName(ID_IMAGE_COMPONENT);
 
         ActionHandler actionHandler = getActionHandler();
@@ -105,7 +106,7 @@ public class TestClassView extends JFrameView {
         getForm().getButton(ID_STOP_BUTTON).addActionListener(actionHandler);
         classNameComboBox.addActionListener(actionHandler);
         libraryNameComboBox.addActionListener(actionHandler);
-        classColorComboBox.addActionListener(actionHandler);
+        colorSpaceComboBox.addActionListener(actionHandler);
 
         // Populate the color space combo box
         ArrayListModel list = new ArrayListModel();
@@ -118,11 +119,8 @@ public class TestClassView extends JFrameView {
         ValueModel      selectedItemHolder = new ValueHolder();
         SelectionInList selectionInList    = new SelectionInList(listModel, selectedItemHolder);
 
-        classColorComboBox.setModel(new ComboBoxAdapter(selectionInList));
-
-        // default to RGB color space
-        classColorComboBox.setSelectedIndex(1);
- 
+        colorSpaceComboBox.setModel(new ComboBoxAdapter(selectionInList)); 
+        
         // Set default size and.getName()
         setTitle(ApplicationInfo.getName() + "-" + "Test Class");
         this.pack();
@@ -130,7 +128,7 @@ public class TestClassView extends JFrameView {
         // Insert a default icon
         URL url = Application.class.getResource("/org/mbari/aved/ui/images/missingframeexception.jpg");
 
-        initializeImageComponent(new File(url.getFile()), ColorSpace.RGB);
+        initializeImageComponent(new File(url.getFile()), UserPreferences.getModel().getColorSpace());
     }
 
     /**
@@ -138,7 +136,7 @@ public class TestClassView extends JFrameView {
      * @return the selected color space
      */
     ColorSpace getClassColorSpace() {
-        return (ColorSpace) classColorComboBox.getSelectedItem();
+        return (ColorSpace) colorSpaceComboBox.getSelectedItem();
     }
 
     /**
@@ -211,7 +209,7 @@ public class TestClassView extends JFrameView {
         if (model != null) {
             classNameLabel.setText(model.getName());
             classDescriptionTextArea.setText(model.getDescription());
-            classNameVarsLabel.setText(model.getVarsClassName());
+            classNamePredLabel.setText(model.getPredictedName());
 
             File   f         = model.getRawImageDirectory();
             String parentDir = f.getParent();
@@ -242,14 +240,14 @@ public class TestClassView extends JFrameView {
         } else {
             classNameLabel.setText("");
             classDescriptionTextArea.setText("");
-            classNameVarsLabel.setText("");
+            classNamePredLabel.setText("");
             imageDirLabel.setText("");
             numImagesLabel.setText("");
 
             // Insert a default icon
             URL url = Application.class.getResource("/org/mbari/aved/ui/images/missingframeexception.jpg");
 
-            initializeImageComponent(new File(url.getFile()), ColorSpace.RGB);
+            initializeImageComponent(new File(url.getFile()), UserPreferences.getModel().getColorSpace());
         }
     }
 
@@ -283,8 +281,11 @@ public class TestClassView extends JFrameView {
 
     /**
      * Populates the classes available for testing ComboBox
+     * 
+     * @param colorSpace populate libraries only in this color space
+     * @param classSelection name of the class to select from populated list
      */
-    public void populateClassList(ColorSpace colorSpace) {
+    public void populateClassList(ColorSpace colorSpace, String classSelection) {
         loadClassModel(null);
 
         int            size = getModel().getNumClassModels();
@@ -304,23 +305,30 @@ public class TestClassView extends JFrameView {
 
         classNameComboBox.setModel(new ComboBoxAdapter(selectionInList));
 
-        if (!selectionInList.isEmpty()) {
-            classNameComboBox.setSelectedIndex(0);
-        }
-
         ClassModelListRenderer renderer = new ClassModelListRenderer(listModel);
 
         classNameComboBox.setRenderer(renderer);
         classNameComboBox.setMaximumRowCount(3);
+        
+        selectClass(classSelection);
+    }
+
+    /**
+     * Set the color space
+     * @return the @{link org.mbari.aved.classifier.ColorSpace}
+     */
+    void setColorSpace(ColorSpace color) {
+        colorSpaceComboBox.setSelectedItem(color);
     }
 
     /**
      * Populates the available training libraries in the given
      * @{link org.mbari.aved.classifier.ColorSpace}.
      *
-     * @param colorSpace
+     * @param colorSpace populate libraries only in this color space
+     * @param librarySelection name of the library to select from populated list
      */
-    public void populateTrainingLibraryList(ColorSpace colorSpace) {
+    public void populateTrainingLibraryList(ColorSpace colorSpace, String librarySelection) {
         loadTrainingModel(null);
 
         ClassifierModel model = (ClassifierModel) getModel();
@@ -343,11 +351,8 @@ public class TestClassView extends JFrameView {
         SelectionInList selectionInList    = new SelectionInList(listModel, selectedItemHolder);
 
         libraryNameComboBox.setModel(new ComboBoxAdapter(selectionInList));
-
-        // Select the first one
-        if (!selectionInList.isEmpty()) {
-            libraryNameComboBox.setSelectedIndex(0);
-        }
+ 
+        selectLibrary(librarySelection);
     }
 
     /**
@@ -365,4 +370,70 @@ public class TestClassView extends JFrameView {
     void setStopButton(Boolean b) {
         getForm().getButton(ID_STOP_BUTTON).setEnabled(b);
     }
+
+     /**
+     * Selects the library by name.
+     * @param name the name of the library
+     */
+    private void selectLibrary(String name ) {
+        int index = -1;
+        int size  = libraryNameComboBox.getModel().getSize();
+
+        if (size > 0) {
+            index = 0;
+        }
+
+        // Look for the library by name in this color space
+        for (int i = 0; i < size; i++) {
+            TrainingModel m = (TrainingModel) libraryNameComboBox.getItemAt(i);
+
+            // If the last user selection is found by name in this color space
+            // keep the index to set it later
+            if (m.getName().equals(name)) {
+                index = i;
+            }
+        }
+
+        if ((index >= 0) && (index < libraryNameComboBox.getItemCount())) {
+            libraryNameComboBox.setSelectedIndex(index); 
+        } else {
+            // if can't find selection, default to first one
+            if (libraryNameComboBox.getItemCount() > 0)
+                libraryNameComboBox.setSelectedIndex(0);
+        }
+    }
+
+     /**
+     * Selects the class by name.
+     * @param name the name of the c;ass
+     * @return false if the class is not found, otherwise true
+     */
+    private boolean selectClass(String name) {
+         int index = -1;
+        int size  = classNameComboBox.getModel().getSize();
+
+        if (size > 0) {
+            index = 0;
+        }
+
+        // Look for the library by name in this color space
+        for (int i = 0; i < size; i++) {
+            ClassModel m = (ClassModel) classNameComboBox.getItemAt(i);
+
+            // If the last user selection is found by name in this color space
+            // keep the index to set it later
+            if (m.getName().equals(name)) {
+                index = i;
+            }
+        }
+
+        if ((index >= 0) && (index < classNameComboBox.getItemCount())) {
+            classNameComboBox.setSelectedIndex(index);
+
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }

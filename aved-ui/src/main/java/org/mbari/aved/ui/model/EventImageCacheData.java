@@ -30,6 +30,8 @@ package org.mbari.aved.ui.model;
 
 import aved.model.EventObject;
 
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import org.mbari.aved.mbarivision.api.utils.Utils;
 import org.mbari.aved.ui.exceptions.FrameOutRangeException;
 
@@ -43,6 +45,7 @@ import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 /**
@@ -98,15 +101,15 @@ public class EventImageCacheData {
                 // Create name for the cropped jpeg thumbnail
                 // image using the event identifier
                 String filename = source.getParent() + "/" + Utils.getNameWithoutExtension(source) + "evt"
-                                             + eventObjectContainer.getObjectId() + ".jpg";
+                                             + eventObjectContainer.getObjectId() + ".ppm";
 
                 eventImageFile = new File(filename);
 
-                // System.out.println("###DEBUG initializing object " +
-                // filename + " " + Long.toString(getObjectId()) + "/" + this.toString());
+                //System.out.println("###DEBUG initializing object " +
+                //filename + " " + Long.toString(getObjectId()) + "/" + this.toString());
                 return true;
             }
-        }
+        } 
 
         return false;
     }
@@ -126,7 +129,7 @@ public class EventImageCacheData {
             eventObjectContainer.setBestImageFrame(bestFrameNo);
 
             if ((rootDirectory != null) && (source != null) && (append != null) && source.exists()) {
-                String filename = String.format("%s/evt%06d%s%s.jpg", rootDirectory,
+                String filename = String.format("%s/evt%06d%s%s..ppm", rootDirectory,
                                                 eventObjectContainer.getObjectId(),
                                                 Utils.getNameWithoutExtension(source), append);
 
@@ -174,8 +177,9 @@ public class EventImageCacheData {
         if (imageIcon == null) {
             if (isValidImageFile()) {
                 try {
-                    imageIcon = new ImageIcon(eventImageFile.getAbsoluteFile().toURL());
-                } catch (MalformedURLException ex) {
+                    BufferedImage image = ImageIO.read(eventImageFile);
+                    imageIcon = new ImageIcon(image);
+                } catch (IOException ex) {
                     Logger.getLogger(EventImageCacheData.class.getName()).log(Level.SEVERE, null, ex);
                 }
 

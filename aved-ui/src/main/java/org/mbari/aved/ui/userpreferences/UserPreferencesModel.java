@@ -45,6 +45,7 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.*;
+import org.mbari.aved.classifier.ColorSpace;
 
 /**
  * Singleton class that contains user preferences for the application
@@ -54,7 +55,9 @@ import java.util.prefs.*;
 public final class UserPreferencesModel extends AbstractModel {
     private static final String ASK_BEFORE_DELETE                   = "ASK_BEFORE_DELETE";
     public static int           ASK_BEFORE_DELETE_CHANGED           = 1;
+
     private static final String CLASS_ADD_ALL_TRAINING              = "CLASS_ADD_ALL_TRAINING";
+    private static final String CLASS_COLOR_SPACE                   = "CLASS_COLOR_SPACE";
     private static final String CLASS_DATABASE_DIR_ROOT             = "CLASS_DATABASE_DIR_ROOT";
     private static final String CLASS_NAME_LIST                     = "CLASS_NAME_LIST";
     private static final String CLASS_TRAINING_DIR_ROOT             = "CLASS_TRAINING_DIR_ROOT";
@@ -72,6 +75,7 @@ public final class UserPreferencesModel extends AbstractModel {
     private static final String LAST_TAG_NAME                       = "LAST_TAG_NAME";
     private static final String LAST_TRAINING_SELECTION             = "LAST_TRAINING_SELECTION";
     private static final String LAST_VIDEO_IMPORT_DIR               = "LAST_VIDEO_IMPORT_DIR";
+    private static final String ENABLE_FFMPEG                       = "ENABLE_FFMPEG";
 
     /** The maximum number of class names store */
     public static int MAX_NUM_CLASS_NAMES = 30;
@@ -111,7 +115,7 @@ public final class UserPreferencesModel extends AbstractModel {
 
     /** The video playout mode */
     private VideoPlayoutMode videoPlayoutMode;
-
+  
     public UserPreferencesModel() {
 
         // Initialize variable to store preferences in under the package node
@@ -129,7 +133,7 @@ public final class UserPreferencesModel extends AbstractModel {
         list       = getNodeValues(CLASS_NAME_LIST);
         numClasses = list.size();
     }
-
+ 
     public enum VideoPlayoutMode {
 
         // These are ordered in the manner that makes sense to display them
@@ -358,6 +362,13 @@ public final class UserPreferencesModel extends AbstractModel {
         return getNodeValues(ID_LIST);
     }
 
+    /** 
+     * @param b true if using ffmpeg for transcoding instead of transcode (default)
+     */
+    public boolean getEnableFfmpeg() {
+        return Boolean.valueOf(get(ENABLE_FFMPEG, Boolean.toString(false)));
+    }
+    
     /**
      *  Clears the list of user-defined ids
      */
@@ -395,6 +406,17 @@ public final class UserPreferencesModel extends AbstractModel {
         } catch (BackingStoreException ex) {
             Logger.getLogger(UserPreferencesModel.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    /**
+     * Gets the user preference for what color space the classifier
+     * is defaulted to run in
+     * 
+     * @return ColorSpace
+     */
+    public ColorSpace getColorSpace() {        
+        String value = get(CLASS_COLOR_SPACE,  ColorSpace.RGB.toString());
+        return ColorSpace.valueOf(value);        
     }
 
     /**
@@ -564,12 +586,22 @@ public final class UserPreferencesModel extends AbstractModel {
      *
      * @param state set to true to add all images to the training library
      */
-    public void setAddLabeledTrainingImages(boolean state) {
+    public void setAddTrainingImages(boolean state) {
         if (!state) {
             put(CLASS_ADD_ALL_TRAINING, "false");
         } else {
             put(CLASS_ADD_ALL_TRAINING, "true");
         }
+    }
+
+    /**
+     * Sets the user default color space to run the
+     * classifier with.
+     *
+     * @param colorspace 
+     */
+    public void setColorSpace(ColorSpace c) {
+        put(CLASS_COLOR_SPACE, c.toString());
     }
 
     /**
@@ -637,6 +669,10 @@ public final class UserPreferencesModel extends AbstractModel {
         }
     }
 
+    public void setEnableFfmpeg(boolean b) {
+        put(ENABLE_FFMPEG, Boolean.toString(b));
+    }
+    
     public void setEventImageDirectory(File f) {
         put(EVENT_IMAGE_DIR, f.getAbsolutePath());
     }
@@ -843,7 +879,9 @@ public final class UserPreferencesModel extends AbstractModel {
      * and if not available returns HOME or environment variable
      */
     public File getExportedExcelDirectory() {
-        return new File(preferences.get(EXCEL_EXPORT_DIR, getDefaultDirectoryString()));
+        File f = new File(preferences.get(EXCEL_EXPORT_DIR, getDefaultDirectoryString()));
+        if (f.isDirectory()) return f;
+        return new File(f.getParent());
     }
 
     /** Sets the last training library selection by name */
@@ -936,7 +974,7 @@ public final class UserPreferencesModel extends AbstractModel {
      *  Sets the name of the last used class name
      * @param className the class name
      */
-    private void setClassName(String className) {
+    public void setClassName(String className) {
         put(LAST_CLASS_NAME, className);
     }
 

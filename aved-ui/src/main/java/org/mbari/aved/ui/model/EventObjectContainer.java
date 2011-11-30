@@ -629,8 +629,8 @@ public class EventObjectContainer implements Comparable, Serializable {
 
     /**
      * Finds the next larger instance to the one
-     * found at the given frame
-     *
+     * found at the given frame.  
+     * 
      * @return returns the next larger frame, or -1 if none found
      * or he given frame is out of range
      */

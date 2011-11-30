@@ -85,7 +85,7 @@ public class TableController extends AbstractController implements ModelListener
         setView(view);
 
         // Create the popup menu for this table
-        popup = new PopupMenu(table, new File(title + ".xls"));
+        popup = new PopupMenu(new File(title + ".xls"));
         table.addMouseListener(new MouseClickTableActionHandler());
     }
 
@@ -152,12 +152,10 @@ public class TableController extends AbstractController implements ModelListener
      * A small popup menu for handing exporting the table data
      * to a user-defined directory
      */
-    class PopupMenu extends JPopupMenu {
-        private JTable table;
+    class PopupMenu extends JPopupMenu { 
 
-        public PopupMenu(final JTable table, final File xlsDefaultFile) {
-            super(ApplicationInfo.getName());
-            this.table = table;
+        public PopupMenu(final File xlsDefaultFile) {
+            super(ApplicationInfo.getName()); 
 
             ActionListener al = new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
@@ -198,7 +196,7 @@ public class TableController extends AbstractController implements ModelListener
             if (chooser.showDialog(getView(), "Export") == JFileChooser.APPROVE_OPTION) {
                 File f = chooser.getSelectedFile();
 
-                UserPreferences.getModel().setExcelExportDirectory(new File(f.getAbsolutePath()));
+                UserPreferences.getModel().setExcelExportDirectory(new File(f.getParent()));
 
                 return f;
             } else {
@@ -206,35 +204,35 @@ public class TableController extends AbstractController implements ModelListener
                 // TODO: print dialog message box with something meaningful here
                 return null;
             }
+        } 
+    }
+       
+    /**
+     * This is a very simplified export function that exports data from a
+     * table to a file in a format that Excel can import
+     * @param table the table to export
+     * @param file the file to export to
+     * @throws java.io.IOException is thrown if there is an error writing to
+     * the file
+     */
+    public static void exportTable(JTable table, File file) throws IOException {
+        TableModel model = table.getModel();
+        FileWriter out = new FileWriter(file);
+
+        for (int i = 0; i < model.getColumnCount(); i++) {
+            out.write(model.getColumnName(i) + "\t");
         }
 
-        /**
-         * This is a very simplified export function that exports data from a
-         * table to a file in a format that Excel can import
-         * @param table the table to export
-         * @param file the file to export to
-         * @throws java.io.IOException is thrown if there is an error writing to
-         * the file
-         */
-        public void exportTable(JTable table, File file) throws IOException {
-            TableModel model = table.getModel();
-            FileWriter out   = new FileWriter(file);
+        out.write("\n");
 
-            for (int i = 0; i < model.getColumnCount(); i++) {
-                out.write(model.getColumnName(i) + "\t");
+        for (int i = 0; i < model.getRowCount(); i++) {
+            for (int j = 0; j < model.getColumnCount(); j++) {
+                out.write(model.getValueAt(i, j).toString() + "\t");
             }
 
             out.write("\n");
-
-            for (int i = 0; i < model.getRowCount(); i++) {
-                for (int j = 0; j < model.getColumnCount(); j++) {
-                    out.write(model.getValueAt(i, j).toString() + "\t");
-                }
-
-                out.write("\n");
-            }
-
-            out.close();
         }
+
+        out.close();
     }
 }

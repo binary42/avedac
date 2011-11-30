@@ -117,7 +117,7 @@ public class ProgressView extends JFrame {
 
             dims.width = 750;
             this.setSize(dims);
-            this.setResizable(false);
+            this.setResizable(true);
         }
 
         // TODO: throw exception here if no nestedpanel to replace

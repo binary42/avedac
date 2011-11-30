@@ -47,7 +47,6 @@ import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-import javax.swing.ListCellRenderer;
 
 public class UserPreferencesView extends JFrameView {
 
@@ -61,12 +60,15 @@ public class UserPreferencesView extends JFrameView {
     public static final String ID_BROWSE_SCRATCH_DIR      = "browsescratchdir"; 
     public static final String ID_PLAYER_DEFAULT_RADIO    = "playervlc";          // javax.swing.JRadioButton
     public static final String ID_PLAYER_OTHER_RADIO      = "playerother";        // javax.swing.JRadioButton
+    public static final String ID_FFMPEG__RADIO           = "convertffmpeg";      // javax.swing.JRadioButton
+    public static final String ID_TRANSCODE_RADIO         = "converttranscode";   // javax.swing.JRadioButton
     public static final String ID_SCRATCH_DIRECTORY_COMBO = "scratchdir";         // javax.swing.JComboBox
     public static final String ID_VIDEO_PLAYER_TEXTFIELD  = "videoplayer";        // javax.swing.JTextField
     private final JCheckBox    askBeforeDeleteCheckBox;
     private final JButton      browsePlayerButton;
     private final JButton      browseScratchDirButton;
     private final JRadioButton playerDefaultRadio, playerOtherRadio;
+    private final JRadioButton ffmpegRadio, transcodeRadio;
     private final JComboBox    scratchDirComboBox;
     private final JTextField   videoPlayerTextField;
 
@@ -81,7 +83,9 @@ public class UserPreferencesView extends JFrameView {
         browsePlayerButton      = (JButton) getForm().getButton(ID_BROWSE_BUTTON_PLAYER);
         browseScratchDirButton  = (JButton) getForm().getButton(ID_BROWSE_SCRATCH_DIR);
         scratchDirComboBox      = (JComboBox) getForm().getComboBox(ID_SCRATCH_DIRECTORY_COMBO);
- 
+        ffmpegRadio             =  getForm().getRadioButton(ID_FFMPEG__RADIO);
+        transcodeRadio          =  getForm().getRadioButton(ID_TRANSCODE_RADIO);
+         
         // Add handler to buttons and combo boxes
         ActionHandler actionHandler = getActionHandler();
 
@@ -92,6 +96,9 @@ public class UserPreferencesView extends JFrameView {
         videoPlayerTextField.addActionListener(actionHandler);
         askBeforeDeleteCheckBox.addActionListener(actionHandler);
         scratchDirComboBox.addActionListener(actionHandler);
+        ffmpegRadio.addActionListener(actionHandler);
+        transcodeRadio.addActionListener(actionHandler);
+        
         loadModel(model);
 
         // Set default size and name
@@ -123,17 +130,16 @@ public class UserPreferencesView extends JFrameView {
         }
 
         askBeforeDeleteCheckBox.setSelected(model.getAskBeforeDelete());
-        scratchDirComboBox.setRenderer(new CustomerListCellRenderer());
+        scratchDirComboBox.setRenderer(new CustomListCellRenderer());
         scratchDirComboBox.setEditable(false);
 
         File[] dirs = { model.getScratchDirectory() };
 
         initializeScratchDirectories(dirs);
-        scratchDirComboBox.setSelectedIndex(0);
-
-        ListCellRenderer r = scratchDirComboBox.getRenderer();
-
-        System.out.println(r.toString());
+        scratchDirComboBox.setSelectedIndex(0); 
+        
+        ffmpegRadio.setSelected(model.getEnableFfmpeg());
+        transcodeRadio.setSelected(!model.getEnableFfmpeg());
     }
 
     /**
@@ -147,6 +153,7 @@ public class UserPreferencesView extends JFrameView {
         scratchDirComboBox.setModel(new DefaultComboBoxModel(directories));
     }
 
+    @Override
     public void modelChanged(ModelEvent e) {
         UserPreferencesModel model = (UserPreferencesModel) getModel();
 
@@ -208,7 +215,7 @@ public class UserPreferencesView extends JFrameView {
         }
     }
 
-    public class CustomerListCellRenderer extends DefaultListCellRenderer {
+    public class CustomListCellRenderer extends DefaultListCellRenderer {
         @Override
         public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
                 boolean cellHasFocus) {

@@ -38,15 +38,16 @@ import java.awt.Toolkit;
 import java.io.*;
 
 import javax.swing.JFrame;
+import org.mbari.aved.ui.progress.AbstractOutputStream;
 
-public class ProcessDisplay extends OutputStream {
+public class ProcessDisplay extends AbstractOutputStream {
     private MessageController controller = null;
     
-    public ProcessDisplay(String headerdescription) {
-
+    public ProcessDisplay(String headerdescription) { 
+        
         // Create message controller and view
-        controller = new MessageController(headerdescription);
-
+        controller = new MessageController(headerdescription); 
+        
         // Bring the display to the front right
         Toolkit   kit        = controller.getView().getToolkit();
         Dimension screenSize = kit.getScreenSize();
@@ -56,18 +57,18 @@ public class ProcessDisplay extends OutputStream {
         int y = (int) (screenSize.height - getView().getHeight());
 
         getView().setLocation(x, y);
-        getView().setVisible(false);
+        getView().setVisible(true);
     }
 
     /** Helper function that returns view for this display */
     public JFrame getView() {
         return controller.getView();
     }
+    
 
     @Override
-    public void write(int b) throws IOException {
-
-        // TODO Auto-generated method stub
+    public void write(int b) throws IOException {     
+        controller.display(String.valueOf((char) b));  
     }
 
     public void write(byte b[]) throws IOException {
@@ -78,5 +79,8 @@ public class ProcessDisplay extends OutputStream {
         }
 
         controller.display(s);
+    } 
+    public void write(String l) {
+        controller.display(l);
     }
 }

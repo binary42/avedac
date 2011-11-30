@@ -49,6 +49,7 @@ import java.awt.event.ActionEvent;
 
 import java.io.BufferedReader;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -56,6 +57,7 @@ import java.util.logging.Logger;
 
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import org.mbari.aved.ui.userpreferences.UserPreferences;
 
 class TestClassController extends AbstractController implements ModelListener {
     private RunTestClassTask task;
@@ -84,22 +86,27 @@ class TestClassController extends AbstractController implements ModelListener {
      * @param actionCommand A semantic event which indicates that a
      * component-defined action occurred.
      */
+    @Override
     public void actionPerformed(ActionEvent e) {
         String actionCommand = e.getActionCommand();
 
         if (getView() != null) {
             if (actionCommand.equals("classNameComboBoxChanged")) {
                 JComboBox  box   = ((JComboBox) e.getSource());
-                ClassModel model = (ClassModel) box.getSelectedItem();
-
-                getView().loadClassModel(model);
+                ClassModel model = (ClassModel) box.getSelectedItem();                
+                
+                getView().loadClassModel(model); 
+                
             } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
                 JComboBox  box           = ((JComboBox) e.getSource());
-                ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
-
-                if (newColorSpace != null) {
-                    getView().populateTrainingLibraryList(newColorSpace);
-                    getView().populateClassList(newColorSpace);
+                ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();                
+                String     lastSelection = UserPreferences.getModel().getTrainingLibrarySelection();
+                
+                UserPreferences.getModel().setColorSpace(newColorSpace);   
+            
+                // Populate the libraries in the new color space
+                if (getView() != null) {
+                    getView().populateTrainingLibraryList(newColorSpace, lastSelection); 
                 }
             } else if (actionCommand.equals("libraryNameComboBoxChanged")) {
                 JComboBox     box   = ((JComboBox) e.getSource());
@@ -166,6 +173,10 @@ class TestClassController extends AbstractController implements ModelListener {
                                                                   + trainingModel.getName());
 
                             progressDisplay.getView().setVisible(true);
+                            
+                            // Redirect err/out to progress display
+                            System.setOut(new PrintStream(progressDisplay, true));
+                            System.setErr(new PrintStream(progressDisplay, true));
 
                             ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay,
                                                                               br);
@@ -226,26 +237,24 @@ class TestClassController extends AbstractController implements ModelListener {
      * {@link org.mbari.aved.ui.classifier.model}
      * and  {@link org.mbari.aved.ui.classifier.ClassifierModel}
      */
+    @Override
     public void modelChanged(ModelEvent event) {
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             ColorSpace colorSpace = (ColorSpace) getView().getClassColorSpace();
 
             switch (event.getID()) {
 
-            // When the database root directory changes, update the available
-            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
-                getView().populateTrainingLibraryList(colorSpace);
-                getView().populateClassList(colorSpace);
-
+            // When the database root directory changes, update the available libraries
+            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED : 
+                getView().setColorSpace(UserPreferences.getModel().getColorSpace());
                 break;
 
             case ClassifierModel.ClassifierModelEvent.TRAINING_MODELS_UPDATED :
-                getView().populateTrainingLibraryList(colorSpace);
-
+                getView().populateTrainingLibraryList(colorSpace, UserPreferences.getModel().getTrainingLibrarySelection());               
                 break;
 
             case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
-                getView().populateClassList(colorSpace);
+                getView().populateClassList(colorSpace, UserPreferences.getModel().getClassName());
 
                 break;
             }
@@ -357,9 +366,7 @@ class TestClassController extends AbstractController implements ModelListener {
                     controller.getView().setTitle(classModel.getName());
                     controller.getView().setDescription("Confusion Matrix for " + classModel.getName()
                             + ", Probability Threshold: " + minProbThreshold);
-
-                    // Add to training model when successfully run
-                    getModel().addTrainingModel(trainingModel);
+ 
                     this.setFini();
                 }
             } catch (Exception ex) {

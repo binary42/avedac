@@ -35,6 +35,7 @@ import org.jdesktop.swingworker.SwingWorker;
 import java.io.BufferedReader;
 import java.io.IOException; 
 
+import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,9 +48,9 @@ import java.util.logging.Logger;
 public class ProgressDisplayStream extends SwingWorker {
     public Boolean          isDone = false;
     private BufferedReader  br;
-    private ProgressDisplay display; 
+    private OutputStream display; 
 
-    public ProgressDisplayStream(ProgressDisplay display, BufferedReader br) {
+    public ProgressDisplayStream(OutputStream display, BufferedReader br) {
         this.br      = br;
         this.display = display; 
     }
@@ -63,7 +64,7 @@ public class ProgressDisplayStream extends SwingWorker {
                 if (br.ready()) {
                     while ((s = br.readLine()) != null && s.length() > 0) {
                         String copy = s.substring(0, s.length());
-                        display.display(copy);
+                        display.write(copy.getBytes());
                     }
                 }
             }
@@ -72,5 +73,9 @@ public class ProgressDisplayStream extends SwingWorker {
         }
 
         return this;
+    }
+
+    public void setBufferedReader(BufferedReader br) {
+        this.br = br;
     }
 }

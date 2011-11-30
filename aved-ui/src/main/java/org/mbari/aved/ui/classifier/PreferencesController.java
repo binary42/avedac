@@ -97,7 +97,7 @@ public class PreferencesController extends AbstractController {
         } else if (op.equals("AddTrainingImages")) {
             boolean state = ((JCheckBox) e.getSource()).isSelected();
 
-            UserPreferences.getModel().setAddLabeledTrainingImages(state);
+            UserPreferences.getModel().setAddTrainingImages(state);
         } else if (op.equals("TrainingDirComboBoxChanged")) {
             JComboBox box    = ((JComboBox) e.getSource());
             File      newDir = (File) box.getSelectedItem();

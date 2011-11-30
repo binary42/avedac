@@ -43,6 +43,7 @@ import org.mbari.aved.ui.progress.ProgressDisplay;
 
 import java.io.File;
 
+import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,6 +66,10 @@ public class CollectTestImageWorker extends SwingWorker {
     protected Object doInBackground() throws Exception {
         progressDisplay.display("Collecting test images ...");
 
+        // Redirect err/out to progress display
+        System.setOut(new PrintStream(progressDisplay, true));
+        System.setErr(new PrintStream(progressDisplay, true));
+        
         File testDir = summaryModel.getTestImageDirectory();
 
         if (!testDir.exists()) {

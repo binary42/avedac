@@ -36,7 +36,7 @@ import org.mbari.aved.ui.model.EventObjectContainer;
 import java.util.ArrayList;
 
 /**
- * Assigned the user-defined/VARS concept class to an event or group of events
+ * Assigned the user-defined class to an event or group of events
  *
  * @author dcline
  */

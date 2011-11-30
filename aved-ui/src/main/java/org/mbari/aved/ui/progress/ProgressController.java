@@ -51,7 +51,7 @@ public class ProgressController implements PropertyChangeListener {
 
         // Replace the main panel with the MessageDisplayNoHeader form
         view.replaceMainPanel(controller.getView().getForm());
-
+ 
         // Add change listener to this controller. Normally should do this in
         // the view, to follow the view-controller separation rules used in
         // this general  design, but this is such a lightweight application,

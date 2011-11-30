@@ -1,5 +1,5 @@
 /*
- * @(#)RunClassifierController.java
+ * @(#)RunController.java
  * 
  * Copyright 2011 MBARI
  *
@@ -28,7 +28,7 @@ package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
 
-import org.jdesktop.swingworker.SwingWorker;
+import java.io.IOException;
 
 import org.mbari.aved.classifier.ColorSpace;
 import org.mbari.aved.classifier.TrainingModel;
@@ -36,10 +36,10 @@ import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.appframework.ModelEvent;
 import org.mbari.aved.ui.appframework.ModelListener;
 import org.mbari.aved.ui.classifier.table.TableController;
+import org.mbari.aved.ui.classifier.table.TableModel;
 import org.mbari.aved.ui.message.NonModalMessageDialog;
 import org.mbari.aved.ui.model.EventListModel;
 import org.mbari.aved.ui.model.SummaryModel;
-import org.mbari.aved.ui.progress.ProgressDisplay;
 import org.mbari.aved.ui.progress.ProgressDisplayStream;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
 import org.mbari.aved.ui.utils.ParseUtils;
@@ -55,15 +55,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JComboBox;
+import org.mbari.aved.ui.process.ProcessDisplay;
 
-public class RunClassifierController extends AbstractController implements ModelListener {
+public class RunController extends AbstractController implements ModelListener {
     private EventListModel      eventListModel;
     private SummaryModel        summaryModel;
-    private RunClassifierWorker task;
+    private RunWorker task;
 
-    RunClassifierController(ClassifierModel model) {
+    RunController(ClassifierModel model) {
         setModel(model);
-        setView(new RunClassifierView(model, this));
+        setView(new RunView(model, this));
 
         // Register as listener to the models
         getModel().addModelListener(this);
@@ -86,8 +87,8 @@ public class RunClassifierController extends AbstractController implements Model
     }
 
     @Override
-    public RunClassifierView getView() {
-        return ((RunClassifierView) super.getView());
+    public RunView getView() {
+        return ((RunView) super.getView());
     }
 
     public void run() {
@@ -99,83 +100,91 @@ public class RunClassifierController extends AbstractController implements Model
                 dialog = new NonModalMessageDialog(getView(), msg);
                 dialog.setVisible(true);
                 getView().setStopButton(false);
+                getView().setRunButton(true);
 
                 return;
             } else {
-                try {
-
+                try { 
+                    final float         minProbThreshold = getView().getProbabilityThreshold();
+                    final TrainingModel trainingModel    = getModel().getTrainingModel(getView().getTrainingModelIndex());
+                    
+                    // Create a progress display thread for monitoring this 
+                    final ProcessDisplay display = new ProcessDisplay(
+                            "Running classifier with training model "
+                            + trainingModel.getName());
+                     
+                    display.getView().setVisible(true);
+                    
                     // Temporarily turn off this user preference to not add all the
                     // predicted images to the library during assignment
                     final boolean isAddTrainingImages = UserPreferences.getModel().getAddTrainingImages();
 
                     if (isAddTrainingImages) {
-                        UserPreferences.getModel().setAddLabeledTrainingImages(false);
+                        UserPreferences.getModel().setAddTrainingImages(false);
                     }
-
-                    // If at least one class then create
-                    final SwingWorker   worker           = Classifier.getController().getWorker();
-                    final float         minProbThreshold = getView().getProbabilityThreshold();
-                    final TrainingModel trainingModel    = getView().getTrainingModel().copy();
 
                     // Get the voting method used for determining the winner
                     final VotingMethod method  = getView().getVotingMethod();
                     File               testDir = summaryModel.getTestImageDirectory();
 
-                    task = new RunClassifierWorker(trainingModel, minProbThreshold, testDir, eventListModel, method);
+                    // Create worker to put in the Matlab queue later
+                    task = new RunWorker(trainingModel, minProbThreshold, testDir, eventListModel, method, display);
+                    
 
-                    // / Create a progress display thread for monitoring this task
+                    BufferedReader br = Classifier.getController().getBufferedReader();
+                    ProgressDisplayStream matlabDisplayStream = new ProgressDisplayStream(display,
+                            br);
+
+                    matlabDisplayStream.execute();
+
+
                     Thread thread = new Thread() {
+
                         @Override
                         public void run() {
-                            BufferedReader  br              = Classifier.getController().getBufferedReader();
-                            ProgressDisplay progressDisplay = new ProgressDisplay(worker,
-                                                                  "Running classifier with training model "
-                                                                  + trainingModel.getName());
 
-                            progressDisplay.getView().setVisible(true);
-
-                            ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay,
-                                                                              br);
-
-                            progressDisplayStream.execute();
                             Classifier.getController().addQueue(task);
                             getView().setRunButton(false);
                             getView().setStopButton(true);
 
-                            while (!task.isCancelled() &&!task.isFini()) {
+                            while (!task.isCancelled() && !task.isFini()) {
                                 try {
                                     Thread.sleep(3000);
-                                } catch (InterruptedException ex) {}
+                                } catch (InterruptedException ex) {
+                                }
                             }
 
                             getView().setRunButton(true);
                             getView().setStopButton(false);
-                            progressDisplay.getView().dispose();
+
+                            display.getView().dispose();
 
                             // Reset the user preference
-                            UserPreferences.getModel().setAddLabeledTrainingImages(isAddTrainingImages);
+                            UserPreferences.getModel().setAddTrainingImages(isAddTrainingImages);
 
                             // Add the results only after successfully run
                             if (task.isFini() && (getModel() != null)) {
-                                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
-                                                                   trainingModel.getName()
-                                                                   + " classification finished");
+                                try {
+                                    NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
+                                                                       trainingModel.getName()
+                                                                       + " classification finished");
 
-                                dialog.setVisible(true);
+                                    dialog.setVisible(true);
 
-                                // Make the title the same as the XML file name
-                                String          xmlFile    = summaryModel.getXmlFile().getName();
-                                String          title      = ParseUtils.removeFileExtension(xmlFile);
-                                TableController controller = new TableController(getModel(), task.getTableModel(),
-                                                                 "testclass" + title);
-                                VotingMethod method = getView().getVotingMethod();
-
-                                controller.getView().setTitle(title);
-                                controller.getView().setDescription("Confusion Matrix for " + title
-                                        + ", Probability Threshold: " + minProbThreshold + " , Voting Method: "
-                                        + method.name());
-                                controller.getView().pack();
-                                controller.getView().setVisible(true);
+                                    // Make the title the same as the XML file name
+                                    String          xmlFilename= summaryModel.getXmlFile().getName();
+                                    String          title      = ParseUtils.removeFileExtension(xmlFilename);
+                                    String          exportFilename = title + ".xls";
+                                    VotingMethod    method     = getView().getVotingMethod();  
+                                       
+                                    createTableControllerView(exportFilename, getModel(), task.getTableModel(), title, "Confusion Matrix for " + title
+                                                + ", Probability Threshold: " + minProbThreshold + " , Voting Method: "
+                                                + method.name(), true);
+                                } catch (IOException ex) {
+                                    Logger.getLogger(RunController.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                
+                               
                             } else {
                                 if (task.isCancelled()) {
                                     NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
@@ -193,10 +202,38 @@ public class RunClassifierController extends AbstractController implements Model
 
                     thread.start();
                 } catch (Exception ex) {
-                    Logger.getLogger(RunClassifierController.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(RunController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
+    }
+
+    /**
+     * Helper method to create confusion matrix from table results and export to a file if not displayed
+     * 
+     * @param exportFilename
+     * @param model
+     * @param tableModel
+     * @param title
+     * @param description
+     * @param b
+     * @throws IOException 
+     */
+    public static void createTableControllerView(String exportFilename, ClassifierModel model, 
+            TableModel tableModel, String title, String description, boolean b) throws IOException {
+        TableController controller = new TableController(model, tableModel,
+                "testclass" + title);
+
+        controller.getView().setTitle(title);
+        controller.getView().setDescription(description);
+        controller.getView().pack();
+        controller.getView().setVisible(b);
+         
+        File f = new File(UserPreferences.getModel().getExportedExcelDirectory() + "/" + exportFilename); 
+        
+        if (!b) { 
+            TableController.exportTable(controller.getTable(), f );
+        } 
     }
 
     @Override
@@ -212,12 +249,7 @@ public class RunClassifierController extends AbstractController implements Model
             
             // Populate the libraries in the new color space
 	    if (getView() != null) { 
-              getView().populateTrainingLibraryList(newColorSpace);
-
-              // Set the library
-              if (getView().selectLibrary(lastSelection) == false) {
-                getView().clearClassModelList();
-              }
+              getView().populateTrainingLibraryList(newColorSpace, lastSelection); 
 	    }
         } else if (actionCommand.equals("Stop")) {
             if (task != null) {
@@ -226,32 +258,33 @@ public class RunClassifierController extends AbstractController implements Model
                 Classifier.getController().kill(task);
             }
         } else if (actionCommand.equals("availLibraryNameComboBoxChanged")) {
-            JComboBox     box           = ((JComboBox) e.getSource());
+            JComboBox box = ((JComboBox) e.getSource());
             TrainingModel trainingModel = (TrainingModel) box.getSelectedItem();
 
-            if (trainingModel != null) {
-                getView().loadModel(trainingModel);
+            getView().loadModel(trainingModel);
 
-                String selection = trainingModel.getName();
+            String selection = trainingModel.getName();
 
-                UserPreferences.getModel().setTrainingLibrarySelection(selection);
-            }
+            UserPreferences.getModel().setTrainingLibrarySelection(selection);
         }
     }
-
+    
+    @Override
     public void modelChanged(ModelEvent event) {
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
+            String     lastSelection = UserPreferences.getModel().getTrainingLibrarySelection();
             switch (event.getID()) {
 
             // When the database root directory change or the models are updated
             // reset the color space
-            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
+            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED  :
+                ColorSpace c = UserPreferences.getModel().getColorSpace();
+                getView().populateTrainingLibraryList(c, lastSelection);
+                getView().setColorSpace(c);
+                break;
             case ClassifierModel.ClassifierModelEvent.TRAINING_MODELS_UPDATED :
-                if (getView().getTrainingModel() != null) {
-                    getView().populateTrainingLibraryList(getView().getTrainingModel().getColorSpace());
-                } else {
-                    getView().populateTrainingLibraryList(ColorSpace.RGB);
-                }
+                ColorSpace cs = getView().getColorSpace();
+                getView().populateTrainingLibraryList(cs, lastSelection);             
 
                 break;
             }

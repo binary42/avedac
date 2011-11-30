@@ -424,7 +424,7 @@ public class ClassifierModel extends AbstractModel {
      */
     void notifyClassModelChanged() {
         this.notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASS_MODELS_UPDATED, "all"));
-    } 
+    }
 
     /**
      *
@@ -433,11 +433,11 @@ public class ClassifierModel extends AbstractModel {
     public class ClassifierModelEvent extends ModelEvent {
  
         public static final int CLASSIFIER_DBROOT_MODEL_CHANGED = 0;
-        public static final int CLASS_MODELS_UPDATED            = 2;
-        public static final int CLASS_MODELS_FILE_ADDED         = 5;
-        public static final int JNI_TASK_COMPLETED              = 4;
-        public static final int TRAINING_DIR_UPDATED            = 1;
-        public static final int TRAINING_MODELS_UPDATED         = 3;
+        public static final int CLASS_MODELS_UPDATED            = 1;
+        public static final int CLASS_MODELS_FILE_ADDED         = 2;
+        public static final int JNI_TASK_COMPLETED              = 3;
+        public static final int TRAINING_DIR_UPDATED            = 4;
+        public static final int TRAINING_MODELS_UPDATED         = 5;
         public static final int TRAINING_MODEL_SELECTION_CHANGE = 6; 
 
         /**

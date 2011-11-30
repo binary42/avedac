@@ -1,5 +1,5 @@
 /*
- * @(#)RunClassifier.java
+ * @(#)Run.java
  * 
  * Copyright 2011 MBARI
  *
@@ -31,19 +31,23 @@ package org.mbari.aved.ui.classifier;
 import org.mbari.aved.ui.model.EventListModel;
 import org.mbari.aved.ui.model.SummaryModel;
 
-public class RunClassifier {
-    private final RunClassifierController controller;
+public class Run {
+    private final RunController controller;
 
-    public RunClassifier(ClassifierModel model) {
-        controller = new RunClassifierController(model);
+    public Run(ClassifierModel model) {
+        controller = new RunController(model);
     } 
 
-    public RunClassifierView getView() {
+    public RunView getView() {
         return controller.getView();
     }
 
     public void init(EventListModel eventListModel, SummaryModel summaryModel) {
         controller.setEventListModel(eventListModel);
         controller.setSummaryModel(summaryModel);
+    }
+
+    RunController getController() {
+        return controller;
     }
 }

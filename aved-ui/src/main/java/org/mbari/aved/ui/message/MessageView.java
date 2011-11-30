@@ -46,8 +46,7 @@ import javax.swing.JLabel;
 
 public class MessageView extends JFrame {
 
-    /*
-     *  Component names in the MessagePanel form
+    /* Component names in the MessagePanel form
      * If any of the component name are changed in the Abeille form designer, they
      * should be modified here too
      */

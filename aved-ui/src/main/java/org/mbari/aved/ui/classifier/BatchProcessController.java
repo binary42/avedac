@@ -1,5 +1,5 @@
 /*
- * @(#)ClassifierBatchProcessController.java
+ * @(#)BatchProcessController.java
  *
  * Copyright 2011 MBARI
  *
@@ -50,6 +50,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,16 +64,17 @@ import org.mbari.aved.ui.model.TableSorter;
  *
  * @author dcline
  */
-public class ClassifierBatchProcessController extends AbstractController
+public class BatchProcessController extends AbstractController
         implements ModelListener, PropertyChangeListener {
     private EventXmlDirectoryModel                 xmlDirModel       = new EventXmlDirectoryModel(); 
     private File                                   outputDir;
     private RunClassifierBatch                     runClassifierBatch;
     private BatchProcessAbstractTableModel         abstractTableModel = new BatchProcessAbstractTableModel();
+    private final TableSorter                      sorter;
 
-    ClassifierBatchProcessController(ClassifierModel model) {
+    BatchProcessController(ClassifierModel model) {
         setModel(model);
-        setView(new ClassifierBatchProcessView(model, this));
+        setView(new BatchProcessView(model, this)); 
 
         // Register as listener to the models
         getModel().addModelListener(this);
@@ -91,13 +93,13 @@ public class ClassifierBatchProcessController extends AbstractController
         outputDir = exportDir;         
     
         // Create the sorter and intialize it in the model
-        TableSorter sorter = new TableSorter(abstractTableModel);
+        sorter = new TableSorter(abstractTableModel); 
 
         // getModel().initializeSorter(sorter);
         // Initialize the table headers, so the sorter knows what to sort on
         sorter.setTableHeader(getView().getSelectedTable().getTableHeader());
 
-        // Set the model in the event table
+        // Set the model
         getView().getSelectedTable().setModel(sorter); 
                              
     }
@@ -108,8 +110,8 @@ public class ClassifierBatchProcessController extends AbstractController
     }
 
     @Override
-    public ClassifierBatchProcessView getView() {
-        return (ClassifierBatchProcessView) super.getView();
+    public BatchProcessView getView() {
+        return (BatchProcessView) super.getView();
     }
 
     /**
@@ -125,13 +127,13 @@ public class ClassifierBatchProcessController extends AbstractController
             try {
                 browseForEventsDir();
             } catch (Exception ex) {
-                Logger.getLogger(ClassifierBatchProcessController.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(BatchProcessController.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else if (actionCommand.equals("BrowseExportDir")) {
             try {
                 browseForExportDir();
             } catch (Exception ex) {
-                Logger.getLogger(ClassifierBatchProcessController.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(BatchProcessController.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else if (actionCommand.equals("<<")) {
             removeItemFromSelected();
@@ -141,6 +143,8 @@ public class ClassifierBatchProcessController extends AbstractController
             int size = getView().getAvailableList().getModel().getSize();
 
             getView().getAvailableList().setSelectionInterval(0, size - 1);
+        } else if (actionCommand.equals("ResetAllSelected")) {
+            clearSelectedTable();
         } else if (actionCommand.equals("ClearAllAvailable")) {
             getView().getAvailableList().clearSelection();
         } else if (actionCommand.equals("RemoveAllSelected")) {
@@ -163,7 +167,7 @@ public class ClassifierBatchProcessController extends AbstractController
         JTable table = getView().getSelectedTable();
 
         if (table.getRowCount() > 0) {
-            BatchProcessDataModel batch = (BatchProcessDataModel) table.getValueAt(0, -1);
+            BatchProcessModel batch = (BatchProcessModel) table.getValueAt(0, -1);
             File                  dir   = UserPreferences.getModel().getExportedExcelDirectory();
             File                  xml   = batch.getFile();
             File                  exportFile;
@@ -181,7 +185,7 @@ public class ClassifierBatchProcessController extends AbstractController
             try {
                 ExcelExporter.exportTable(table, exportFile);
             } catch (IOException ex) {
-                Logger.getLogger(ClassifierBatchProcessController.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(BatchProcessController.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -198,7 +202,7 @@ public class ClassifierBatchProcessController extends AbstractController
         chooser.setDialogTitle("Choose Event Directory");
         chooser.setCurrentDirectory(setCurrentDirectory);
 
-        if (chooser.showOpenDialog((ClassifierBatchProcessView) getView()) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showOpenDialog((BatchProcessView) getView()) == JFileChooser.APPROVE_OPTION) {
             f = chooser.getSelectedFile();
             UserPreferences.getModel().setImportXmlDirectory(f);
             getView().setBusyCursor();
@@ -222,7 +226,7 @@ public class ClassifierBatchProcessController extends AbstractController
         chooser.setDialogTitle("Choose Output Directory");
         chooser.setCurrentDirectory(setCurrentDirectory);
 
-        if (chooser.showOpenDialog((ClassifierBatchProcessView) getView()) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showOpenDialog((BatchProcessView) getView()) == JFileChooser.APPROVE_OPTION) {
             f = chooser.getSelectedFile();
             UserPreferences.getModel().setExportXmlDirectory(f);
             getView().setBusyCursor();
@@ -235,6 +239,7 @@ public class ClassifierBatchProcessController extends AbstractController
         }
     }
 
+    @Override
     public void modelChanged(ModelEvent event) {
         /**
          * When the classifier training library changes, update the columns names in the table 
@@ -242,10 +247,9 @@ public class ClassifierBatchProcessController extends AbstractController
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
                 case ClassifierModel.ClassifierModelEvent.TRAINING_MODEL_SELECTION_CHANGE:
-
-                    if (runClassifierBatch.getTrainingModel() != null) {
-                        abstractTableModel.changeClassColumns(runClassifierBatch.getTrainingModel());
-                    }
+                    TrainingModel model = runClassifierBatch.getController().getTrainingModel();
+                    abstractTableModel.changeClassColumns(model);
+                    getView().repaint();
             }
         }
     }
@@ -255,6 +259,7 @@ public class ClassifierBatchProcessController extends AbstractController
      *
      * @param evt
      */
+    @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getPropertyName().equals("fileList")) {
                  
@@ -273,6 +278,13 @@ public class ClassifierBatchProcessController extends AbstractController
     }
 
     /**
+     * Keeps the contents of the table but clears the results
+     */
+    private void clearSelectedTable() { 
+        abstractTableModel.clearResults(); 
+    }
+
+    /**
      * Copies an item from available to the selected list
      */
     private void copyItemToSelected() {
@@ -284,7 +296,7 @@ public class ClassifierBatchProcessController extends AbstractController
             // add to the model
             for (int i = 0; i < item.length; i++) {
                 File f = (File) item[i];
-                abstractTableModel.add(new BatchProcessDataModel(f));
+                abstractTableModel.add(new BatchProcessModel(f));
             } 
             
             abstractTableModel.fireTableDataChanged(); 
@@ -299,15 +311,16 @@ public class ClassifierBatchProcessController extends AbstractController
         if (getView().getSelectedTable().getSelectedRowCount() > 0) { 
   
             // getClassTotal user selected items and indices
-            int item[] = getView().getSelectedTable().getSelectedRows();
-
-            // remove from the model
+            int item[] = getView().getSelectedTable().getSelectedRows(); 
+                    
+            ArrayList<Integer>             indexes = new ArrayList<Integer>(); 
+                    
             for (int i = 0; i < item.length; i++) {
-                BatchProcessDataModel m = (BatchProcessDataModel) abstractTableModel.getValueAt(i, -1);
-                abstractTableModel.remove(m);
+                indexes.add(item[i]);
             }
-            
-            abstractTableModel.fireTableDataChanged();    
+
+            // remove from the model   
+            abstractTableModel.remove(indexes);    
         }
     }
 
@@ -349,28 +362,34 @@ public class ClassifierBatchProcessController extends AbstractController
     BatchProcessAbstractTableModel getAbstractModel() {
         return this.abstractTableModel;
     }
+ 
 
     /**
      * Subclass to handles mouse clicks in
      * {@link org.mbari.aved.ui.classifier.CreateTrainingLibraryView}
      */
     class MouseClickJListActionHandler implements MouseListener {
+        @Override
         public void mouseClicked(MouseEvent e) {
             actionClickList(e);
         }
 
+        @Override
         public void mouseEntered(MouseEvent e) {
             actionClickList(e);
         }
 
+        @Override
         public void mouseExited(MouseEvent e) {
             actionClickList(e);
         }
 
+        @Override
         public void mousePressed(MouseEvent e) {
             actionClickList(e);
         }
 
+        @Override
         public void mouseReleased(MouseEvent e) {
             actionClickList(e);
         }
@@ -378,22 +397,18 @@ public class ClassifierBatchProcessController extends AbstractController
 
 
     private class RunClassifierBatch {
-        private final RunClassifierControllerBatch controller;
+        private final RunBatchController controller;
 
-        public RunClassifierBatch(ClassifierModel model, ClassifierBatchProcessController c) {
-            controller = new RunClassifierControllerBatch(model, c);
+        public RunClassifierBatch(ClassifierModel model, BatchProcessController c) {
+            controller = new RunBatchController(model, c);
         }
 
-        public RunClassifierView getView() {
+        public RunView getView() {
             return controller.getView();
         }
 
-        public RunClassifierControllerBatch getController() {
+        public RunBatchController getController() {
             return controller;
-        }
-
-        private TrainingModel getTrainingModel() {
-            return controller.getTrainingModel();
-        }
+        } 
     }
 }

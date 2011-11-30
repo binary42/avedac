@@ -85,8 +85,8 @@ public class ImageUtils {
      * @throws java.lang.Exception if the image is not found, or is not
      * a jpeg images
      */
-    public static void squareJpegThumbnail(String imgInFilePath, String imgOutFilePath) throws Exception {
-        Image        image        = Toolkit.getDefaultToolkit().getImage(imgInFilePath);
+    public static void squareImageThumbnail(String imgInFilePath, String imgOutFilePath, String imgExt) throws Exception {
+        Image        image        = ImageIO.read(new File(imgInFilePath));
         MediaTracker mediaTracker = new MediaTracker(new Container());
 
         mediaTracker.addImage(image, 0);
@@ -110,14 +110,9 @@ public class ImageUtils {
         graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         graphics2D.drawImage(image, 0, 0, maxLength, maxLength, null);
 
-        Iterator        iter   = ImageIO.getImageWritersByFormatName("jpeg");
+        Iterator        iter   = ImageIO.getImageWritersByFormatName(imgExt);
         ImageWriter     writer = (ImageWriter) iter.next();
-        ImageWriteParam iwp    = writer.getDefaultWriteParam();
-
-        iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-        iwp.setCompressionQuality(1);    // an integer between 0 and 1
-
-        // 1 specifies minimum compression and maximum quality
+        ImageWriteParam iwp    = writer.getDefaultWriteParam(); 
 
         File                  file   = new File(imgOutFilePath);
         FileImageOutputStream output = new FileImageOutputStream(file);
@@ -128,6 +123,34 @@ public class ImageUtils {
 
         writer.write(null, iiimage, iwp);
         writer.dispose();
+    }
+    
+    public static boolean checkForPpmReader() {
+        ImageIO.scanForPlugins();
+
+        String[] formats = ImageIO.getReaderFormatNames();
+
+        for (int i = 0; i < formats.length; i++) {
+            if (formats[i].equalsIgnoreCase("ppm")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    public static boolean checkForJpgReader() {
+        ImageIO.scanForPlugins();
+
+        String[] formats = ImageIO.getReaderFormatNames();
+
+        for (int i = 0; i < formats.length; i++) {
+            if (formats[i].equalsIgnoreCase("jpg")) {
+                return true;
+            }
+        }
+
+        return false;
     }
     
     /**
@@ -171,4 +194,5 @@ public class ImageUtils {
 
         return new Dimension(msg_width, fm.getHeight());
     }
+ 
 }

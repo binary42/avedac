@@ -47,9 +47,12 @@ public class TextDisplayController extends AbstractController {
     }
 
     public void display(String line) {
-        String lineformatted = line + "\n";
-
-        ((TextDisplayModel) getModel()).setText(lineformatted);
+        if (line.contains("\n")) {
+            ((TextDisplayModel) getModel()).setText(line);
+        } else {
+            String lineformatted = line + "\n";
+            ((TextDisplayModel) getModel()).setText(lineformatted);
+        }
     }
 
     public void actionPerformed(ActionEvent e) {

@@ -1,5 +1,5 @@
 /*
- * @(#)ClassifierBatchProcessView.java
+ * @(#)BatchProcessView.java
  * 
  * Copyright 2011 MBARI
  *
@@ -32,10 +32,8 @@ import com.jeta.forms.components.panel.FormPanel;
 import com.jeta.forms.gui.form.FormAccessor;
 
 import com.jgoodies.binding.list.ArrayListModel;
-
-import org.mbari.aved.classifier.TrainingModel;
-import org.mbari.aved.ui.appframework.JFrameView;
-import org.mbari.aved.ui.appframework.Model;
+ 
+import org.mbari.aved.ui.appframework.JFrameView; 
 import org.mbari.aved.ui.appframework.ModelEvent; 
 
 //~--- JDK imports ------------------------------------------------------------
@@ -43,19 +41,18 @@ import org.mbari.aved.ui.appframework.ModelEvent;
 import java.awt.Cursor;
 
 import java.io.File;
-
-import java.util.ArrayList;
+ 
 
 import javax.swing.JList;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import org.mbari.aved.ui.classifier.ClassifierBatchProcessController.MouseClickJListActionHandler;
+import org.mbari.aved.ui.classifier.BatchProcessController.MouseClickJListActionHandler;
 
 /**
  *
  * @author dcline
  */
-public class ClassifierBatchProcessView extends JFrameView {
+public class BatchProcessView extends JFrameView {
 
     /*
      *     Component names in the CreateClassifierTraining form
@@ -71,6 +68,7 @@ public class ClassifierBatchProcessView extends JFrameView {
     private static final String ID_EXPORT_EXCEL_BUTTON         = "exportXls";             // javax.swing.JButton
     private static final String ID_IMPORT_DIRECTORY_JLIST      = "importDirectory";    // javax.swing.JFormattedTextField
     private static final String ID_REMOVE_ALL_SELECTED_BUTTON  = "removeAllSelected";     // javax.swing.JButton
+    private static final String ID_RESET_ALL_SELECTED_BUTTON   = "resetAllSelected";     // javax.swing.JButton
     private static final String ID_REMOVE_BUTTON               = "remove";                // javax.swing.JButton
     private static final String ID_SELECT_ALL_AVAILABLE_BUTTON = "selectAllAvailable";    // javax.swing.JButton
     private static final String ID_SELECT_TABLE                = "selectedTable";         // javax.swing.JTable
@@ -82,7 +80,7 @@ public class ClassifierBatchProcessView extends JFrameView {
     private final JTextField   importDirectoryTextField, exportDirectoryTextField;
     private final JTable       selectedTable; 
 
-    public ClassifierBatchProcessView(ClassifierModel model, ClassifierBatchProcessController controller) {
+    public BatchProcessView(ClassifierModel model, BatchProcessController controller) {
 
         // Constructor
         super("org/mbari/aved/ui/forms/ClassifierBatchProcess.xml", model, controller);
@@ -95,6 +93,7 @@ public class ClassifierBatchProcessView extends JFrameView {
         ActionHandler actionHandler = getActionHandler();
 
         getForm().getButton(ID_SELECT_ALL_AVAILABLE_BUTTON).addActionListener(actionHandler);
+        getForm().getButton(ID_RESET_ALL_SELECTED_BUTTON).addActionListener(actionHandler); 
         getForm().getButton(ID_CLEAR_ALL_AVAILABLE_BUTTON).addActionListener(actionHandler);
         getForm().getButton(ID_REMOVE_ALL_SELECTED_BUTTON).addActionListener(actionHandler);
         getForm().getButton(ID_ADD_BUTTON).addActionListener(actionHandler);
@@ -141,7 +140,7 @@ public class ClassifierBatchProcessView extends JFrameView {
     }
 
     /**
-     * Adds a @{link org.mbari.aved.ui.classifier.ClassifierBatchProcessController.MouseClickJListActionHandler}
+     * Adds a @{link org.mbari.aved.ui.classifier.BatchProcessController.MouseClickJListActionHandler}
      * to the contained lists
      *
      * @param mouseClickJListActionHandler
@@ -158,6 +157,6 @@ public class ClassifierBatchProcessView extends JFrameView {
 
     JTable getSelectedTable() {
         return selectedTable;
-    } 
-     
+    }
+ 
 }

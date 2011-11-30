@@ -28,6 +28,8 @@ package org.mbari.aved.ui.progress;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import java.io.IOException; 
+import java.io.PrintStream;
 import org.jdesktop.swingworker.SwingWorker;
 
 //~--- JDK imports ------------------------------------------------------------
@@ -36,7 +38,7 @@ import java.util.Random;
 
 import javax.swing.JFrame;
 
-public class ProgressDisplay {
+public class ProgressDisplay extends AbstractOutputStream {
     ProgressController controller;
 
     public ProgressDisplay(SwingWorker worker, String headerdescription) {
@@ -44,7 +46,26 @@ public class ProgressDisplay {
         // Create controller
         controller = new ProgressController(headerdescription, worker);
     }
-
+ 
+    public void write(String str) throws Exception {
+        controller.display(str);
+    }
+    
+    @Override  
+    public void write(int b) throws IOException {  
+      controller.display(String.valueOf((char) b));  
+    }  
+  
+    @Override  
+    public void write(byte[] b, int off, int len) throws IOException {  
+      controller.display(new String(b, off, len));  
+    }  
+  
+    @Override  
+    public void write(byte[] b) throws IOException {  
+      write(b, 0, b.length);  
+    }  
+    
     public JFrame getView() {
         return controller.getView();
     }
@@ -82,6 +103,7 @@ public class ProgressDisplay {
                     // Make random progress.
                     progress += random.nextInt(10);
                     setProgress(Math.min(progress, 100));
+                    System.out.println("Progress: " + Integer.toString(progress));
                 }
 
                 return null;
@@ -91,7 +113,7 @@ public class ProgressDisplay {
              * Executed in event dispatch thread
              */
             public void done() {
-                System.out.println("Done!\n");
+                System.out.println("Done!");
                 System.exit(0);
             }
         }
@@ -101,6 +123,8 @@ public class ProgressDisplay {
 
         try {
             m = new ProgressDisplay(task, "Progress Display Test");
+            System.setOut(new PrintStream(m, true));
+            System.setErr(new PrintStream(m, true)); 
         } catch (Exception e) {
 
             // TODO Auto-generated catch block
@@ -110,7 +134,7 @@ public class ProgressDisplay {
         }
 
         // Send a few messages to see if display is working
-        m.display("Running simulated task now...");
+        System.out.println("Running simulated task now...");
 
         // Execute the simulated task
         task.execute();

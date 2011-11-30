@@ -68,15 +68,12 @@ public class MessagePrintStream extends PrintStream {
 
     @Override
     public void write(byte b[]) throws IOException {
-        String str = new String(b);
-
-        controller.display(str);
+        write(b, 0, b.length);    
     }
 
     @Override
-    public void write(byte b[], int off, int len) {
-        String str = new String(b, off, len);
-
-        controller.display(str);
-    }
+    public void write(byte b[], int off, int len) {  
+        controller.display(new String(b, off, len));
+    } 
+   
 }

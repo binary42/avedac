@@ -28,6 +28,8 @@ package org.mbari.aved.ui;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import java.io.File;
+import java.net.URL;
 import org.mbari.aved.ui.appframework.ErrorLog;
 import org.mbari.aved.ui.classifier.Classifier;
 import org.mbari.aved.ui.message.NonModalMessageDialog;
@@ -36,10 +38,10 @@ import org.mbari.aved.ui.message.NonModalMessageDialog;
  
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.imageio.ImageIO;
-
+  
+import javax.imageio.spi.IIORegistry;
 import javax.swing.*; 
+import org.mbari.aved.ui.utils.ImageUtils;
 
 public class Application {
     public static final ErrorLog                 errLog              = ErrorLog.getInstance();
@@ -121,24 +123,7 @@ public class Application {
             Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
-    /**
-     * Checks for jpg reader
-     * @return false if not valid jpg reader is found
-     */
-    private static boolean checkForJpgReader() {
-        ImageIO.scanForPlugins();
-
-        String[] formats = ImageIO.getReaderFormatNames();
-
-        for (int i = 0; i < formats.length; i++) {
-            if (formats[i].equalsIgnoreCase("jpg")) {
-                return true;
-            }
-        }
-
-        return false;
-    }
+ 
 
     /**
      * Create the GUI and show it.  For thread safety,
@@ -148,7 +133,11 @@ public class Application {
     private static void createAndShowGUI() {
 
         // Set the look and feel.
-        initLookAndFeel();
+        initLookAndFeel();         
+
+        IIORegistry registry = IIORegistry.getDefaultInstance();  
+        registry.registerServiceProvider(new uk.co.mmscomputing.imageio.ppm.PPMImageReaderSpi()); 
+        registry.registerServiceProvider(new uk.co.mmscomputing.imageio.ppm.PPMImageWriterSpi()); 
 
         final JFrame view = Application.getView();
 
@@ -158,22 +147,32 @@ public class Application {
                     public void run() {
                         try {
 
-                            // URL name = getClass().getResource("/examples/2344_00_32_40_25.events.small.xml");
+                             URL name = getClass().getResource("/Users/dcline/Desktop/UCDAVIS/test/20100802215958-20100802231421_cropped_6fps.events.xml");
                             // URL name = getClass().getResource("/examples/20060808T000000_4912_32_103.events.xml");
                             // URL name = new URL("file:/Volumes/nanomiaRAID-1/JAMSTEC/20080604T063139Z_tests/20080604T063139Z-test1/20080604T063139Z-test1.events.xml");
-                            // Application.getController().importProcessedResults(new File(name.getFile()));
+                            Application.getController().importProcessedResults(new File("/Users/dcline/Desktop/UCDAVIS/test/20100802215958-20100802231421_cropped_6fps.events.xml"));
 
                             /*
                              *  Jpeg readers should exist for most platforms through the javax.imageio package.
                              * This is put here just in case this is run on Linux with a pre-packaged
                              * java distribution
                              */
-                            if (!checkForJpgReader()) {
+                            if (!ImageUtils.checkForJpgReader()) {
                                 String message = "You are missing the Java Advanced Imaging\n"
                                                             + "Library needed to view .jpg images. Please download \n"
+                                                            + "and install the package for your platform here:\n"
+                                                            + "http://download.java.net/media/jai/builds/release/1_1_3/\n";
+                                NonModalMessageDialog dialog = new NonModalMessageDialog(view, message);
+
+                                dialog.setVisible(true);
+                                dialog.answer();
+                                System.exit(-1);
+                            }
+                            if (!ImageUtils.checkForPpmReader()) {
+                                String message = "You are missing the Java Advanced Imaging\n"
+                                                            + "Library needed to view .ppm images. Please download \n"
                                                             + "the package for your platform here:\n"
-                                                            + "https://jai.dev.java.net/binary-builds.html\n"
-                                                            + "and install version 1.1.3 or better";
+                                                            + "http://download.java.net/media/jai/builds/release/1_1_3/\n";
                                 NonModalMessageDialog dialog = new NonModalMessageDialog(view, message);
 
                                 dialog.setVisible(true);

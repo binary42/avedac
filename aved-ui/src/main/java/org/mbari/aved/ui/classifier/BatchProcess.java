@@ -22,15 +22,15 @@ package org.mbari.aved.ui.classifier;
  *
  * @author dcline
  */
-public class ClassifierBatchProcess {
+public class BatchProcess {
 
-    private final ClassifierBatchProcessController controller;
+    private final BatchProcessController controller;
 
-    ClassifierBatchProcess(ClassifierModel model) {
-        controller = new ClassifierBatchProcessController(model); 
+    BatchProcess(ClassifierModel model) {
+        controller = new BatchProcessController(model); 
     }
 
-    public ClassifierBatchProcessView getView() {
+    public BatchProcessView getView() {
         return controller.getView();
     }
 

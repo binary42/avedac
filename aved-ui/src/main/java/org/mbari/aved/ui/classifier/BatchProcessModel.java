@@ -1,5 +1,5 @@
 /*
- * @(#)BatchProcessDataModel.java
+ * @(#)BatchProcessModel.java
  *
  * Copyright 2011 MBARI
  *
@@ -42,19 +42,19 @@ import java.util.logging.Logger;
  *
  * @author dcline
  */
-public class BatchProcessDataModel {
+public class BatchProcessModel {
     private ApplicationModel model;
     private String     status;
     private HashMap<Integer, Object> classTotal = new HashMap<Integer, Object>();
 
-    public BatchProcessDataModel(File events) { 
+    public BatchProcessModel(File events) { 
         this.status = "";
 
         try {
             model = new ApplicationModel();
             model.getSummaryModel().setXmlFile(events); 
         } catch (Exception ex) {
-            Logger.getLogger(BatchProcessDataModel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(BatchProcessModel.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }

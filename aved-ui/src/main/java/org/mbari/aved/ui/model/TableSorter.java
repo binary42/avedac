@@ -519,6 +519,7 @@ public class TableSorter extends AbstractTableModel {
 
 
     private class TableModelHandler implements TableModelListener {
+        @Override
         public void tableChanged(TableModelEvent e) {
 
             // If we're not sorting by anything, just pass the event along.

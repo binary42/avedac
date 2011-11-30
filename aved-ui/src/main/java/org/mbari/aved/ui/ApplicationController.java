@@ -81,6 +81,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
+import org.mbari.aved.ui.process.ProcessDisplay;
 import org.mbari.aved.ui.utils.ProcessedResultsFileFilter;
 
 public final class ApplicationController extends AbstractController implements ModelListener, WindowListener {
@@ -111,6 +112,7 @@ public final class ApplicationController extends AbstractController implements M
     /** Worker to handle transcoding video files */
     private VideoTranscodeWorker transcodeWorker;
 
+                    
     public ApplicationController() throws Exception {            
         setModel(new ApplicationModel());
         setView(new ApplicationView((ApplicationModel) getModel(), this));
@@ -157,12 +159,12 @@ public final class ApplicationController extends AbstractController implements M
         // Initialize the summary view mouse listener
         ((ApplicationView) getView()).getSummaryView().addMouseListener(new MouseClickFileActionHandler());
 
-        /*try {
+        try {
 
             // TODO: add the AbstractLogger, and ErrorHandler to this launcher,
             // otherwise will simply print stack traces
             launcher = new BrowserLauncher();
-            launcher.setNewWindowPolicy(true);
+            launcher.setNewWindowPolicy(false);
         } catch (RuntimeException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
 
@@ -175,7 +177,6 @@ public final class ApplicationController extends AbstractController implements M
         } catch (UnsupportedOperatingSystemException e1) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, e1);
         }
-        */ 
  
         getView().setVisible(true); 
     }
@@ -529,7 +530,7 @@ public final class ApplicationController extends AbstractController implements M
     /** Starts a separate worker to import the processed results */
     private void runImportXML(File xmlfile) throws Exception {
         if (xmlfile != null) {
-            ImportXMLWorker thread = new ImportXMLWorker(xmlfile, this.getModel(), this, true);
+            ImportXMLWorker thread = new ImportXMLWorker(xmlfile, this.getModel(), this);
 
             thread.execute();
         }
@@ -548,6 +549,7 @@ public final class ApplicationController extends AbstractController implements M
         JFileChooser chooser = new JFileChooser();
         FileFilter   filter  = (FileFilter) new XmlFileFilter();
 
+        chooser.setSize(640, 480);
         chooser.addChoosableFileFilter(filter);
         chooser.setAcceptAllFileFilterUsed(false);
         chooser.setCurrentDirectory(UserPreferences.getModel().getXmlImportDirectory());
@@ -576,6 +578,7 @@ public final class ApplicationController extends AbstractController implements M
          */
         JFileChooser chooser = new JFileChooser();
 
+        chooser.setSize(640, 480);
         chooser.addChoosableFileFilter(new XmlFileFilter());
         chooser.setAcceptAllFileFilterUsed(false);
         chooser.setCurrentDirectory(UserPreferences.getModel().getXmlExportDirectory());
@@ -792,7 +795,7 @@ public final class ApplicationController extends AbstractController implements M
                                             // to this application (e.g.
                                             // Quicktime, or web browser, etc.)
                                             // Set the busy cursor just a few
-                                            // secondss to indicate something is
+                                            // seconds to indicate something is
                                             // occuring, otherwise there is no
                                             // indication an external process is
                                             // launching
@@ -877,37 +880,34 @@ public final class ApplicationController extends AbstractController implements M
 
                 case SummaryModelEvent.TRANSCODE_SOURCE_CHANGED :
                     model = getModel().getSummaryModel();
-
+                    
                     File file = model.getTranscodeSource();
-
-                    transcodeWorker = new VideoTranscodeWorker(this, getModel(), file, true);
-
-                    Thread transcodeThread = new Thread(new Runnable() {
-                        public void run() {
-                            SummaryModel model = getModel().getSummaryModel();
-                            File         file  = model.getTranscodeSource();
-
-                            try {
-                                if ((file != null) && file.exists()) {
-                                    transcodeWorker.execute();
-                                }
-                            } catch (Exception ex) {
-                                NonModalMessageDialog dialog;
-
+                    
+                    if ((file != null) && file.exists()) {
+                        transcodeWorker = new VideoTranscodeWorker(this, getModel(), file, true);
+                                        
+                        Thread transcodeThread = new Thread(new Runnable() {
+                        @Override
+                            public void run() { 
                                 try {
-                                    dialog = new NonModalMessageDialog((ApplicationView) getView(), ex.getMessage());
-                                    dialog.setVisible(true);
-                                } catch (Exception ex1) {
-                                    Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null,
-                                                     ex1);
+                                    transcodeWorker.execute(); 
+                                } catch (Exception ex) {
+                                    NonModalMessageDialog dialog;
+
+                                    try {
+                                        dialog = new NonModalMessageDialog((ApplicationView) getView(), ex.getMessage());
+                                        dialog.setVisible(true);
+                                    } catch (Exception ex1) {
+                                        Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null,
+                                                ex1);
+                                    }
+
+                                    Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                                 }
-
-                                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                             }
-                        }
-                    });
-
-                    transcodeThread.start();
+                        });
+                        transcodeThread.start();
+                    }
 
                     break;
 
@@ -955,7 +955,7 @@ public final class ApplicationController extends AbstractController implements M
                      * if actually needed.
                      */
                     if ((e.getFlag() >= model.getSize()) && (transcodeWorker != null)) {
-                        transcodeWorker.gracefulCancel();
+                        transcodeWorker.gracefulCancel(); 
                     }
 
                     break;
@@ -1006,8 +1006,10 @@ public final class ApplicationController extends AbstractController implements M
         }
     }
 
+    @Override
     public void windowOpened(WindowEvent e) {}
 
+    @Override
     public void windowClosing(WindowEvent e) {
         if (Application.getModel().getEventListModel().getSize() > 0) {
             String           question = "About to shut down the application. " + "Are you sure you saved your data ?\n";
@@ -1033,14 +1035,19 @@ public final class ApplicationController extends AbstractController implements M
         }
     }
 
+    @Override
     public void windowClosed(WindowEvent e) {}
 
+    @Override
     public void windowIconified(WindowEvent e) {}
 
+    @Override
     public void windowDeiconified(WindowEvent e) {}
 
+    @Override
     public void windowActivated(WindowEvent e) {}
 
+    @Override
     public void windowDeactivated(WindowEvent e) {}
 
     /**
@@ -1051,6 +1058,7 @@ public final class ApplicationController extends AbstractController implements M
      */
     private void runListReloadLogic() {
         Thread searchMpeg = new Thread(new Runnable() {
+            @Override
             public void run() {
                 EventListModel model = getModel().getEventListModel();
                 SummaryModel summary = getModel().getSummaryModel();
@@ -1140,6 +1148,7 @@ public final class ApplicationController extends AbstractController implements M
      */
     public static void runImportLogic(final SummaryModel model) {
         Thread downloadUrlThread = new Thread(new Runnable() {
+            @Override
             public void run() {
 
                 /**
@@ -1261,16 +1270,21 @@ public final class ApplicationController extends AbstractController implements M
      * @author dcline
      */
     class MouseClickFileActionHandler implements MouseListener {
+        @Override
         public void mouseClicked(MouseEvent e) {
             actionClickVideoFile(e);
         }
 
+        @Override
         public void mouseEntered(MouseEvent e) {}
 
+        @Override
         public void mouseExited(MouseEvent e) {}
 
+        @Override
         public void mousePressed(MouseEvent e) {}
 
+        @Override
         public void mouseReleased(MouseEvent e) {}
     }
 
@@ -1281,6 +1295,7 @@ public final class ApplicationController extends AbstractController implements M
      * @author dcline
      */
     class MouseClickTabActionHandler implements MouseListener {
+        @Override
         public void mouseClicked(MouseEvent e) {
             JTabbedPane pane = (JTabbedPane) e.getSource();
 
@@ -1293,12 +1308,16 @@ public final class ApplicationController extends AbstractController implements M
             }
         }
 
+        @Override
         public void mouseEntered(MouseEvent e) {}
 
+        @Override
         public void mouseExited(MouseEvent e) {}
 
+        @Override
         public void mousePressed(MouseEvent e) {}
 
+        @Override
         public void mouseReleased(MouseEvent e) {}
     }
 }

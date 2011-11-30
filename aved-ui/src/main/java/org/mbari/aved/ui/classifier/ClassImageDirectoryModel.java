@@ -46,7 +46,7 @@ import java.util.List;
 
 public class ClassImageDirectoryModel extends Model {
     private List     fileList        = new ArrayList();
-    private String[] imageExtensions = { "ppm", "jpg", "jpeg" };
+    private String[] imageExtensions = { "ppm", "png", "jpg", "jpeg" };
     private File     directory;
     private String   name;
     private String   status;

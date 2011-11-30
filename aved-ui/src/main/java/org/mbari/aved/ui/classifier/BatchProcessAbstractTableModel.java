@@ -34,61 +34,73 @@ import org.mbari.aved.classifier.TrainingModel;
 
 import java.util.ArrayList;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List; 
-import java.util.Set;
 import javax.swing.table.AbstractTableModel;
 
 /**
- * AbstractTableModel encapsulating ArrayList of BatchProcessDataModel 
+ * AbstractTableModel encapsulating ArrayList of BatchProcessModel 
  * objects and customizes TableModel columns to reflect classes
  * in given TrainingModel
  * 
  * @author dcline
  */
 public class BatchProcessAbstractTableModel extends AbstractTableModel {
-    private LinkedList<BatchProcessDataModel>      list        = new LinkedList<BatchProcessDataModel>();
+    private LinkedList<BatchProcessModel>      list        = new LinkedList<BatchProcessModel>();
     private ArrayList<String>                      columnNames = new ArrayList<String>();
-    private HashMap<String, BatchProcessDataModel> hmapFilenames = new HashMap<String, BatchProcessDataModel>();
+    private HashMap<String, BatchProcessModel> hmapFilenames = new HashMap<String, BatchProcessModel>();
         
     public BatchProcessAbstractTableModel() { 
+        columnNames.add("File");    
+        columnNames.add("Status");
+        fireTableStructureChanged();
     }
 
     public void changeClassColumns(TrainingModel trainingModel) {
         columnNames.clear();
-        columnNames.add("File");
-        columnNames.add("Status");
 
-        if (trainingModel.getNumClasses() > 0) {
+        columnNames.add("File");
+        columnNames.add("Status"); 
+
+        if (trainingModel != null && trainingModel.getNumClasses() > 0) {
             int i = trainingModel.getNumClasses() + 1;
 
             columnNames.add("Unknown");
 
             for (i = 0; i < trainingModel.getNumClasses(); i++) {
-                String name = trainingModel.getClassModel(i).getName();
-
+                String name = trainingModel.getClassModel(i).getPredictedName();
                 columnNames.add(name);
             }
         }
 
         fireTableStructureChanged();
-    }     
- 
+    }
+
+    @Override
     public int getRowCount() {
         return list.size();
     }
 
+    @Override
     public int getColumnCount() {
         return columnNames.size();
     }
 
+    @Override
     public String getColumnName(int c) {
         return columnNames.get(c);
     }
 
+    /**
+     * Returns the value for the cell at <code>columnIndex</code> and
+     * <code>rowIndex</code>.
+     *
+     * @param       rowIndex        the row whose value is to be queried
+     * @param       columnIndex     the column whose value is to be queried
+     * @return      the value Object at the specified cell
+     *
+     */
     public Object getValueAt(int rowIndex, int columnIndex) {
         if (columnIndex == -1) {
             return list.get(rowIndex);
@@ -103,24 +115,47 @@ public class BatchProcessAbstractTableModel extends AbstractTableModel {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void remove(BatchProcessDataModel m) {
-        hmapFilenames.remove(m.getFile().getAbsolutePath());
+    public void remove(ArrayList<Integer> indexes) {
+     
+        ArrayList<BatchProcessModel> toRemove = new ArrayList<BatchProcessModel>();
+        for (int i = 0; i < indexes.size(); i++) {
+            BatchProcessModel m = list.get(indexes.get(i));
+            toRemove.add(m);
+            hmapFilenames.remove(m.getFile().getAbsolutePath());
+        }   
         
-        if (list.contains(m))
-            list.remove(m);
-    }
-    
-    void add(BatchProcessDataModel m) {
+        list.removeAll(toRemove);
+        fireTableDataChanged();
+    } 
+
+    void add(BatchProcessModel m) {
         // Don't add duplicates. Use a hash map to speed up the lookup
         if (!hmapFilenames.containsKey(m.getFile().getAbsolutePath())) {
-            hmapFilenames.put(m.getFile().getAbsolutePath(), m);  
+            hmapFilenames.put(m.getFile().getAbsolutePath(), m);
             list.add(m);
-        }  
+        } 
     }
-    
+
     public void clear() {
-        list.clear(); 
+        list.clear();
         fireTableDataChanged();
     }
 
+    public Object getEntry(int rowIndex) {
+        return list.get(rowIndex);
+    }
+
+    void clearResults() {
+
+        Iterator<BatchProcessModel> itr = list.iterator();
+        while (itr.hasNext()) {
+            BatchProcessModel m = itr.next();
+            m.setStatus("");
+            for (int i = 2; i < this.getColumnCount(); i++) {
+                m.setClassTotal(i - 2, "");
+            }
+        }
+    }
+
+ 
 }
