@@ -1,6 +1,6 @@
 /*
- * MATLAB Compiler: 4.14 (R2010b)
- * Date: Wed Nov  9 15:19:14 2011
+ * MATLAB Compiler: 4.16 (R2011b)
+ * Date: Thu Nov 17 14:10:44 2011
  * Arguments: "-B" "macro_default" "-v" "-W" "lib:libavedsharedlib" "-T"
  * "link:lib" "-I"
  * "/Users/dcline/NetBeansProjects/avedac/aved-classifier/sharedlib/src/main/nat
@@ -112,7 +112,7 @@ extern LIB_libavedsharedlib_C_API bool MW_CALL_CONV mlfRun_tests_ui(int nargout,
 
 extern LIB_libavedsharedlib_C_API bool MW_CALL_CONV mlfCollect(int nargout, mxArray** filenames, mxArray** resolfiles, mxArray** datafiles, mxArray* kill, mxArray* dirct, mxArray* pattern, mxArray* dbroot, mxArray* color_space);
 
-extern LIB_libavedsharedlib_C_API bool MW_CALL_CONV mlfCollect_ui(int nargout, mxArray** filenames, mxArray* kill, mxArray* rawdirct, mxArray* sqdirct, mxArray* classname, mxArray* dbroot, mxArray* color_space, mxArray* varsclassname, mxArray* description);
+extern LIB_libavedsharedlib_C_API bool MW_CALL_CONV mlfCollect_ui(int nargout, mxArray** filenames, mxArray* kill, mxArray* rawdirct, mxArray* sqdirct, mxArray* classname, mxArray* dbroot, mxArray* color_space, mxArray* predictedclassname, mxArray* description);
 
 extern LIB_libavedsharedlib_C_API bool MW_CALL_CONV mlfCollect_tests(int nargout, mxArray** testmfiles, mxArray* kill, mxArray* testdir, mxArray* dbroot, mxArray* color_space);
 

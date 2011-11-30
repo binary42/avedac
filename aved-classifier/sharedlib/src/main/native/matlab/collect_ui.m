@@ -15,7 +15,7 @@
 % @param pattern directory pattern to search
 % @param dbroot database root directory 
 % @param color_space GRAY = 1, RGB = 2, YCBCR = 3; 
-% @param varsclassname varsclassname this represents 
+% @param predictedclassname predictedclassname this represents 
 % @param description description of this class
 %Modified by doliver@mbari.org on December 5, 2004
 %Modified by dcline@mbari.org on April 19, 2005 - created from
@@ -26,12 +26,12 @@
 %Modified by dcline@mbari.org created from collect.m modified to
 %pass a select number of files, or directories for use with the
 %user-interface.  
-%Modified by dcline@mbari.org Jan 15, 2010 added varsclassname name and
+%Modified by dcline@mbari.org Jan 15, 2010 added predictedclassname name and
 %description
 %Modified by dcline@mbari.org  Mar 25, 2010 appended color space to
 %metadata name 
         
-function [filenames] = collect_ui(kill, rawdirct, sqdirct, classname, dbroot, color_space, varsclassname, description)
+function [filenames] = collect_ui(kill, rawdirct, sqdirct, classname, dbroot, color_space, predictedclassname, description)
 
 GRAY = 1;
 RGB = 2;
@@ -192,7 +192,7 @@ if(sz > 0)
     class_metadata.square_directory = sqdirct;
     class_metadata.classname = classname;
     class_metadata.dbroot = dbroot;
-    class_metadata.varsclassname = varsclassname;
+    class_metadata.predictedclassname = predictedclassname;
     class_metadata.description = description; 
     class_metadata.color_space = color_space;
     

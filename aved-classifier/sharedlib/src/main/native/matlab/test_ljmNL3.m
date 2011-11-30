@@ -44,8 +44,7 @@ FLD = ris.FLD;
 % file names
 recfiles(1,:) = [{'Unknown'} classes];
 
-% MAIN LOOP: OUT -> class, IN -> index 
-fprintf(1,'TEST \n')
+% MAIN LOOP: OUT -> class, IN -> index  
 
 probtable.data = zeros(nclts, ncltr);
 storeprob = zeros(nclts,1); 
