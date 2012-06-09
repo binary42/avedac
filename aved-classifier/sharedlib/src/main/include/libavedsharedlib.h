@@ -1,6 +1,6 @@
 /*
- * MATLAB Compiler: 4.16 (R2011b)
- * Date: Thu Nov 17 14:10:44 2011
+ * MATLAB Compiler: 4.17 (R2012a)
+ * Date: Fri Jun  8 17:20:35 2012
  * Arguments: "-B" "macro_default" "-v" "-W" "lib:libavedsharedlib" "-T"
  * "link:lib" "-I"
  * "/Users/dcline/NetBeansProjects/avedac/aved-classifier/sharedlib/src/main/nat
@@ -102,9 +102,6 @@ bool MW_CALL_CONV mlxTest_class(int nlhs, mxArray *plhs[], int nrhs, mxArray *pr
 extern LIB_libavedsharedlib_C_API 
 bool MW_CALL_CONV mlxTrain_classes_ui(int nlhs, mxArray *plhs[], int nrhs, mxArray 
                                       *prhs[]);
-
-extern LIB_libavedsharedlib_C_API 
-long MW_CALL_CONV libavedsharedlibGetMcrID();
 
 
 

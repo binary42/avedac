@@ -122,27 +122,33 @@ To build the GUI and classifier:
 	     export MATLAB_ROOT=/Applications/MATLAB_R2009a.app
 	     export MCR_ROOT=/Applications/MATLAB/MATLAB_Compiler_Runtime/v710
 
-	4.2. Run the setup script. This will install the necessary environment
+	(only required for MacOSX)
+	4.2  Modify the Info.plist file replacing the the MATLAB_Compiler_Runtime version
+	     with that defined in the MCR_ROOT of 4.1
+
+	     $vi aved-classifier/src/main/app-resources/mac/mac64/Info.plist.template 
+
+	4.3. Run the setup script. This will install the necessary environment
 	     variables to your ~/.bash_profile
 
 	     $ cd aved-classifier
 	     $ ./setup  
  
 
-	4.3. (optional) Modify the pom.xml to change the install path 
+	4.4. (optional) Modify the pom.xml to change the install path 
 
 	     Edit the pom.xml in the same directory this README.txt is in
 	     Modify the following properties to suit your installation:
 
 	      <installPath>${HOME}/aved</installPath> 
  
-	4.3. Installation command  
+	4.5. Installation command  
 
 	     Run build from a command-line, e.g.
 
 	     	$ ./build
 
-   	4.4. Build only the graphical interface
+   	4.6. Build only the graphical interface
 
 	     To create a MacOSX package of the graphical interface:
 

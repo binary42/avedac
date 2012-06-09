@@ -35,6 +35,7 @@ Lastly, click Apply Recommendations to apply these changes.
 7) Add the MCRInstaller.zip package to open following installation. In the Distributions icon, Click actions, then Edit button in PostInstall. Select
 Open File in the Actions. In the Type drop-down box, select Absolute Path and enter /Applications/AVEDac/tools/MCRInstaller.zip  
 
+TODO: replace steps 7 and 8 with a script - this no longer works in Matlab R2012a
 8) Add the MCRInstaller.dmg package to run following installation. In the Distributions icon, Click actions, then Edit button in PostInstall. Select
 Open File in the Actions. In the Type drop-down box, select Absolute Path and enter /Applications/AVEDac/tools/MCRInstaller/MCRInstaller.app  
 

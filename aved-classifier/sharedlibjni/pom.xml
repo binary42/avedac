@@ -210,9 +210,9 @@
                                     <systemIncludePath>${project.parent.basedir}/sharedlib/target/nar/include</systemIncludePath>
                                     <systemIncludePath>${project.basedir}/target/nar/javah-include</systemIncludePath>
                                     <systemIncludePath>${installPath}/lib</systemIncludePath>  
-                                    <systemIncludePath>${mcrRoot}/runtime/maci64</systemIncludePath> 
-                                    <systemIncludePath>${mcrRoot}/sys/os/maci64</systemIncludePath>
-                                    <systemIncludePath>${mcrRoot}/extern/include</systemIncludePath>
+                                    <systemIncludePath>${matlabRoot}/runtime/maci64</systemIncludePath> 
+                                    <systemIncludePath>${matlabRoot}/sys/os/maci64</systemIncludePath>
+                                    <systemIncludePath>${matlabRoot}/extern/include</systemIncludePath>
                                     <systemIncludePath>/Developer/SDKs/MacOSX10.5.sdk/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Headers</systemIncludePath>
                                 </systemIncludePaths>
                             </cpp>
@@ -220,7 +220,7 @@
                                 <name>g++</name>
                                 <libs>
                                     <lib>
-                                        <directory>${mcrRoot}/runtime/maci64</directory>
+                                        <directory>${matlabRoot}/runtime/maci64</directory>
                                         <name>mwmclmcrrt</name>
                                         <type>shared</type>
                                     </lib>

@@ -32,7 +32,7 @@
             <directory>${matlabRoot}/toolbox/compiler/deploy/maci64</directory>
             <outputDirectory>tools</outputDirectory>
             <includes>
-                <include>MCRInstaller.dmg</include>
+                <include>MCRInstaller.zip</include>
             </includes>
         </fileSet>
         <fileSet>
