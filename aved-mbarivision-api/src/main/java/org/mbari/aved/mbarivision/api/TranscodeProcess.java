@@ -120,10 +120,10 @@ public class TranscodeProcess extends Thread {
                         Matcher matcher = pattern.matcher(f.toString());
 
                         if (matcher.find()) {
-                            /*String out = String.format("I found the text \"%s\" starting at " +
+                            String out = String.format("I found the text \"%s\" starting at " +
                             "index %d and ending at index %d.%n",
                             matcher.group(), matcher.start(), matcher.end());
-                            System.out.println(out);*/
+                            System.out.println(out);
 
                             outAvedVideo.setFileStem(matcher.group());
                         } else {
@@ -136,10 +136,10 @@ public class TranscodeProcess extends Thread {
                         Matcher matcher2 = pattern2.matcher(f.toString());
 
                         if (matcher2.find()) {
-                            /*String out2 = String.format("I found the text \"%s\" starting at " +
+                            String out2 = String.format("I found the text \"%s\" starting at " +
                             "index %d and ending at index %d.%n",
                             matcher2.group(), matcher2.start(), matcher2.end());
-                            System.out.println(out2);*/
+                            System.out.println(out2);
                             int l = matcher2.group().length();
                             outAvedVideo.setNbDigits(l);
                         } else {
@@ -593,8 +593,8 @@ public class TranscodeProcess extends Thread {
             timestamp from the name. This is a crude test so far that only
             checks for a set of numbers appended with a T*/
             String timecodestr;
-            int x = filestem.lastIndexOf("T");
-            if (x > 0) {
+            int x = filestem.lastIndexOf("T"); 
+            if (x > 0 && x == filestem.length() - 1) {
                 if (filestem.contains("Z")) {
                     int j = filestem.lastIndexOf("Z");
                     timecodestr = filestem.substring(x + 1, j);
