@@ -116,7 +116,7 @@ function [info, msg] = pnmimpnminfo(filename)
    end
 
    % Read image size.
-   [header_data, count] = pnmpnmgeti(fid, 2);
+   [header_data, count, msg, comment] = pnmpnmgeti(fid, 2);
    if count < 2
       fclose(fid);                      % close file
       msg = 'File ended while reading image header.';
@@ -125,6 +125,7 @@ function [info, msg] = pnmimpnminfo(filename)
    else
       info.Width  = header_data(1);     % image width
       info.Height = header_data(2);     % image height
+      info.Comment = comment;
    end
 
    % Read the maximum color-component value.  PBM images do not explicitly
@@ -134,7 +135,7 @@ function [info, msg] = pnmimpnminfo(filename)
    if strcmp(info.Format, 'PBM')
       info.MaxValue = 1;
    else
-      [header_data, count] = pnmpnmgeti(fid, 1);
+      [header_data, count, msg, comment] = pnmpnmgeti(fid, 1);
       if count < 1
          fclose(fid);                   % close file
          msg = 'File ended while reading image header.';
@@ -142,6 +143,7 @@ function [info, msg] = pnmimpnminfo(filename)
          return;
       end
       info.MaxValue = header_data(1);
+      info.Comment = comment;
    end
    info.BitDepth = log2(info.MaxValue + 1);
 
