@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
-
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Timer;
@@ -96,6 +95,7 @@ public class TranscodeProcess extends Thread {
                 if (directory.isDirectory()) {
                     String[] files = directory.list(new FilenameFilter() {
 
+                    @Override
                         public boolean accept(File dir, String name) {
                             String extension = name.substring(name.lastIndexOf('.') + 1);
                             for (int i = 0; i < validImageExtensions.length; i++) {
@@ -120,10 +120,10 @@ public class TranscodeProcess extends Thread {
                         Matcher matcher = pattern.matcher(f.toString());
 
                         if (matcher.find()) {
-                            String out = String.format("I found the text \"%s\" starting at " +
+                            /**String out = String.format("I found the text \"%s\" starting at " +
                             "index %d and ending at index %d.%n",
                             matcher.group(), matcher.start(), matcher.end());
-                            System.out.println(out);
+                            System.out.println(out);*/
 
                             outAvedVideo.setFileStem(matcher.group());
                         } else {
@@ -136,10 +136,10 @@ public class TranscodeProcess extends Thread {
                         Matcher matcher2 = pattern2.matcher(f.toString());
 
                         if (matcher2.find()) {
-                            String out2 = String.format("I found the text \"%s\" starting at " +
+                            /*String out2 = String.format("I found the text \"%s\" starting at " +
                             "index %d and ending at index %d.%n",
                             matcher2.group(), matcher2.start(), matcher2.end());
-                            System.out.println(out2);
+                            System.out.println(out2);*/
                             int l = matcher2.group().length();
                             outAvedVideo.setNbDigits(l);
                         } else {
@@ -150,8 +150,6 @@ public class TranscodeProcess extends Thread {
                         isInitialized = true;
                     }
                 } 
- 
-            return;
         }
     } 
 
@@ -190,7 +188,7 @@ public class TranscodeProcess extends Thread {
             // environment variable by default and gets installed in /opt/local/bin
             // add in /usr/bin in and /usr/local in case it is missing
             if (name.equals("PATH")) {
-                envParams[i++] = name + "=" + value + ":" + "/opt/local/bin:/usr/bin:/usr/local/bin";
+                envParams[i++] = name + "=" + value + ":" + ":/usr/local/bin:/opt/local/bin:/usr/bin:/usr/local/bin";
             } else {
 
                 envParams[i++] = name + "=" + value;
@@ -360,7 +358,7 @@ public class TranscodeProcess extends Thread {
      * Helper method to get input video file
      * @return input video file location
      */
-    public File getInVideoFile() {
+    private File getInVideoFile() {
         return inVideoFile;
     }
 
@@ -406,7 +404,7 @@ public class TranscodeProcess extends Thread {
 
         // Convert colon delimited string to an array
         String[] paths = stringToArray(p);
-        long timeout = (long) 3000;
+        long timeout = (long) 10000;
 
         String path = null;
         int count = 0;
@@ -650,7 +648,7 @@ public class TranscodeProcess extends Thread {
             // control transcoding                         
             try {
                 String tcprobe = getCmdLoc("tcprobe", 1);                
-                String tcprobecmd = tcprobe + " -X -i" + filename;
+                String tcprobecmd = tcprobe + " -X -i " + filename;
                 
                 System.out.println("Executing " + tcprobecmd);
                 // execute the command 
@@ -666,10 +664,16 @@ public class TranscodeProcess extends Thread {
                 errGobbler.start();
                 proc.waitFor();
 
+                String  videoTrack = "video track";    
+                boolean foundTrack = false;
                 // find the codec
                 String search = "format:";
-                for (int i = 0; i < line.size(); i++) {
-                    if (line.get(i).toString().contains(search)) {
+                for (int i = 0; i < line.size(); i++) {   
+                    // skip to the video track. Note - this will not handle multiple video tracks
+                    if (line.get(i).toString().contains(videoTrack))
+                        foundTrack = true;
+                    
+                    if (foundTrack && line.get(i).toString().contains(search)) {
                         String tmp = line.get(i).toString();
                         int j = tmp.lastIndexOf(search);
                         if (j > 0) {
@@ -680,11 +684,14 @@ public class TranscodeProcess extends Thread {
             }
             catch (Exception ex) {
             }
- 
+  
             if (isEnableFfmpeg) {
                 runFfmpegTranscode(file, outputdir, transcodeopts);
             } else {
-                runTranscode(file, outputdir, codec, transcodeopts);
+                if (!"Unknown".equals(codec))
+                    runTranscode(file, outputdir, codec, transcodeopts);
+                else
+                    runFfmpegTranscode(file, outputdir, transcodeopts);
             }
         } catch (NumberFormatException ex) {
             throw new AvedRuntimeException(ex.toString());
@@ -706,10 +713,9 @@ public class TranscodeProcess extends Thread {
 
         String extraargs = "";
         String filename = file.toString(); 
-        String outputfileseed = outputdir.toString() + "/f%06d." + outAvedVideo.getFileExt(); 
-        String transcodecmd = null; 
-        String cmd = null;
-        String ext = Utils.getExtension(file);        
+        String outputfilestem = outputdir.toString() + "/f%06d." + outAvedVideo.getFileExt(); 
+        String transcodecmd; 
+        String cmd;   
         
         // Set a timer to update information about the transcoded output after timeout period
         Timer timer = new Timer();
@@ -720,9 +726,9 @@ public class TranscodeProcess extends Thread {
         try {
 
             // Get transcode path 
-            transcodecmd = getCmdLoc("ffmpeg", 0);
+            transcodecmd = getCmdLoc("ffmpeg", 1);
 
-            cmd = transcodecmd + " -i " + filename  + " -f image2 -vcodec " + outAvedVideo.getFileExt() + " " + outputfileseed + " " + extraargs + " " + transcodeopts;
+            cmd = transcodecmd + " -i " + filename  + " -f image2 -vcodec " + outAvedVideo.getFileExt() + " " + outputfilestem ;
             outputdir.mkdir();
             System.out.println("Executing " + cmd);
             process = Runtime.getRuntime().exec(cmd, envParams);
@@ -743,11 +749,11 @@ public class TranscodeProcess extends Thread {
                 throw new AvedRuntimeException("Error running command " + cmd);
             } 
             
-            int numRetries = 3;
+            int numRetries = 5;
             for (int i=0; i< numRetries; i++) {            
             if (!isInitialized)
                 System.out.println("Waiting " + Long.toString(timeout) + " milliseconds to confirm ffmpeg is working");
-                Thread.sleep(timeout + 50);
+                Thread.sleep(timeout + 1000);
             } 
 
         } catch (NumberFormatException ex) {
@@ -771,10 +777,10 @@ public class TranscodeProcess extends Thread {
      */
     private void runTranscode(File file, File outputdir, String codec, String transcodeopts) throws Exception {
 
-        String extraargs = "";
+        String extraargs = "  ";
         String filename = file.toString(); 
-        String outputfileseed = outAvedVideo.getFileExt();  
-        String cmd = null;
+        String outputfilestem = outputdir.toString() + "/f"; 
+        String cmd;
         String ext = Utils.getExtension(file);        
         
         // Set a timer to update information about the transcoded output after timeout period
@@ -790,18 +796,20 @@ public class TranscodeProcess extends Thread {
             
             if (ext.equals("avi") || ext.equals("mov")) {
                 if (codec.equals("DX50") || codec.equals("divx5")) {
-                    cmd = transcodecmd + " -i " + filename + " -o " + outputfileseed + " -x ffmpeg,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
+                    cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + " -x ffmpeg,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
                 } else if (codec.equals("mpg2")) {
-                    cmd = transcodecmd + " -i " + filename + " -o " + outputfileseed + " -x mpeg2,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
+                    cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + " -x mpeg2,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
+                } else if (ext.equals("mov")) {
+                    cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + " -x mov,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
                 } else {
-                    cmd = transcodecmd + " -i " + filename + " -o " + outputfileseed + " -x " + codec + ",null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
+                    cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + "  -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
                 } 
 
             } else if (ext.equals("mpeg") || ext.equals("mpg")) {
-                cmd = transcodecmd + " -i " + filename + " -o " + outputfileseed + " -x mpeg2,null -y " + outAvedVideo.getFileExt() + ",null  " +  " " + extraargs + " " + transcodeopts;
+                cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + " -x mpeg2,null -y " + outAvedVideo.getFileExt() + ",null  " +  " " + extraargs + " " + transcodeopts;
             }  
             else {
-                cmd = transcodecmd + "-i " + filename + " -o " + outputfileseed + " -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
+                cmd = transcodecmd + "-i " + filename + " -o " + outputfilestem + " -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
             }
 
             outputdir.mkdir();
@@ -825,11 +833,11 @@ public class TranscodeProcess extends Thread {
                 throw new AvedRuntimeException("Error running command " + cmd);
             } 
             
-            int numRetries = 3;
+            int numRetries = 5;
             for (int i=0; i< numRetries; i++) {            
             if (!isInitialized)
                 System.out.println("Waiting " + Long.toString(timeout) + " milliseconds to confirm transcode is working");
-                Thread.sleep(timeout + 500);
+                Thread.sleep(timeout + 1000);
             } 
 
         } catch (NumberFormatException ex) {
