@@ -531,6 +531,13 @@ public class TranscodeProcess extends Thread {
                 timer.cancel();
                 throw new AvedRuntimeException("Error running command " + cmd);
             }
+            
+            int numRetries = 5;
+            for (int i=0; i< numRetries; i++) {            
+            if (!isInitialized)
+                System.out.println("Waiting " + Long.toString(timeout) + " milliseconds to confirm transcode is working");
+                Thread.sleep(timeout + 1000);
+            } 
 
         } catch (NumberFormatException ex) {
             throw new AvedRuntimeException(ex.toString());
