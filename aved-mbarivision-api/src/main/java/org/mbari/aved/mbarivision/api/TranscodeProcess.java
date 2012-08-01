@@ -187,8 +187,9 @@ public class TranscodeProcess extends Thread {
             // installation on a mac doesn't change the system-wide PATH
             // environment variable by default and gets installed in /opt/local/bin
             // add in /usr/bin in and /usr/local in case it is missing
-            if (name.equals("PATH")) {
-                envParams[i++] = name + "=" + value + ":" + ":/usr/local/bin:/opt/local/bin:/usr/bin:/usr/local/bin";
+            if (name.equals("PATH")) { 
+                
+                envParams[i++] = name + "=" + value + ":/usr/local/bin:/opt/local/bin:/opt/local/sbin:/opt/usr/bin:/bin:/usr/local/bin";
             } else {
 
                 envParams[i++] = name + "=" + value;
@@ -530,14 +531,7 @@ public class TranscodeProcess extends Thread {
             if (exitVal != 0) {
                 timer.cancel();
                 throw new AvedRuntimeException("Error running command " + cmd);
-            }
-            
-            int numRetries = 5;
-            for (int i=0; i< numRetries; i++) {            
-            if (!isInitialized)
-                System.out.println("Waiting " + Long.toString(timeout) + " milliseconds to confirm transcode is working");
-                Thread.sleep(timeout + 1000);
-            } 
+            }             
 
         } catch (NumberFormatException ex) {
             throw new AvedRuntimeException(ex.toString());
@@ -756,13 +750,6 @@ public class TranscodeProcess extends Thread {
                 throw new AvedRuntimeException("Error running command " + cmd);
             } 
             
-            int numRetries = 5;
-            for (int i=0; i< numRetries; i++) {            
-            if (!isInitialized)
-                System.out.println("Waiting " + Long.toString(timeout) + " milliseconds to confirm ffmpeg is working");
-                Thread.sleep(timeout + 1000);
-            } 
-
         } catch (NumberFormatException ex) {
             throw new AvedRuntimeException(ex.toString());
         } catch (Exception ex) {
@@ -838,14 +825,7 @@ public class TranscodeProcess extends Thread {
             if (exitVal != 0) {
                 timer.cancel();
                 throw new AvedRuntimeException("Error running command " + cmd);
-            } 
-            
-            int numRetries = 5;
-            for (int i=0; i< numRetries; i++) {            
-            if (!isInitialized)
-                System.out.println("Waiting " + Long.toString(timeout) + " milliseconds to confirm transcode is working");
-                Thread.sleep(timeout + 1000);
-            } 
+            }  
 
         } catch (NumberFormatException ex) {
             throw new AvedRuntimeException(ex.toString());
