@@ -2,7 +2,7 @@
 <EventDataSet EndFrame="400" StartFrame="0">
     <SourceMetadata CreationDate="2008-10-03T23:51:59.000-07:00"
         FrameHeight="720" FrameRate="25.0" FrameWidth="486"
-        Owner="dcline" SourceIdentifier="2344_00_32_40_25.mov"/>
+        Owner="dcline" SourceIdentifier="file://Applications/AVEDac/examples/test12344_00_32_40_25.mov"/>
     <EventDetectionParameters
         VersionNumber="mbarivision v0.1.1 (C) 2003-2004 MBARI built Jan  4 2005 at 13:04:27;"
         maxCost="5509.06" maxDist="17.0" minFrameNum="5" minSize="34.0"/>
