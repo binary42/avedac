@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import junit.framework.*;
-import org.mbari.aved.classifier.ClassifierLibraryJNI;
-import java.net.URL;
+import junit.framework.TestCase;
 import org.jdesktop.swingworker.SwingWorker;
+import org.mbari.aved.classifier.ClassifierLibraryJNI;
 import org.mbari.aved.classifier.ColorSpace;
 
 public class AVEDClassifierLibraryTestKill extends TestCase {

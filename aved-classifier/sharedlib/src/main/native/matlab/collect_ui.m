@@ -49,16 +49,33 @@ if(isdir(featurerootdir) == 0)
     mkdir(featurerootdir);
 end
 
-ii=0;
-mm=0;   
+ii=0; 
+id = '-';
+scale = 3; 
+filenames = '';
+savemotion = true;
+numPts = 24; %number of contour points per segment
+segments = 8;
+C = [];
+ppat = '';
+yP = {};
+xP = {};  
+areas = {};
+vals = {}; 
 store = [];
 resol = [];
-filenames =[];
-scale = 3;
-sz = 0; 
- 
+  
 %*modified store the file names for all jpeg or ppm images
 fprintf(1,'Getting file names from directory ...\n');
+     
+% Initialize empty V
+for j = 1: segments*2 - 1
+    C = [C zeros(2,numPts)];
+end
+ 
+if ~isempty(regexp(upper(classname), '/UNK|OTHER|JUNK|UNKNOWN/','match'))
+    savemotion = false;
+end
 
 if(isdir(sqdirct))
     s1 = dir([sqdirct '/*.ppm']);
@@ -71,9 +88,7 @@ if(isdir(sqdirct))
     s = [s1 s2 s3];
     
     if(size(s,1) == 0)
-        error('Error %s class empty\n', classname);
-    else
-        sz = length(s);
+        error('Error %s class empty\n', classname); 
     end
 else
     fprintf(1,'\nError %s is not a valid directory',sqdirct);
@@ -82,86 +97,184 @@ end
  
 fprintf(1,'Computing invariants for %s files...',classname);
 
-ttl=sz-1;
-    
+ttl = length(s); 
+
+%*added  - get filename from struct array
+filename = [sqdirct '/' s(1).name];
+
+%find ending index of event identifier _evt
+m = regexp(filename, '\.*?evt[0-9]+\.*?','match');
+
+%get event id string - this assumes only one match
+id = m{:};
+newid = id; 
+
 %*added comment now loop on this struct array of images
-while ( ii < sz )
+while ( ii < ttl )
    
-    % if kill signaled return
-    if (isKill(kill))
-         error('Killing collect_ui');
-    end
+          
+        % if kill signaled return
+        if (isKill(kill))
+            error('Killing collect');
+        end
         
-    %*added  - get filename from struct array
-    if(~iscell(sqdirct) & isdir(sqdirct))
+        %*added  - get filename from struct array
         filename = [sqdirct '/' s(ii+1).name];
-    else
-        filename = s{1,ii+1};
-    end
-     
-    fprintf(1,'\nCollecting %d of %d %s', ii, ttl, filename);
-     
-    %*modified  - read in the images
-    im = imread( filename );
-    
-    %*added - read file info
-    iminfo = imfinfo(filename); 
-    
-    %if image is not square throw it out
-    if( iminfo.Height ~= iminfo.Width )
-        fprintf(1,'\n%s image not square, ignoring image', filename);
-        ii = ii + 1;
-        continue;
-    end
-    
-    % Return image size
-    imsize = size(im,1);
-    
-    % store resolution info 
-    resol(mm+1,:) = imsize;
-      
-    %modified store name and size of current file
-    if(~iscell(sqdirct) && isdir(sqdirct))
-        filenames{mm+1,1} = [s(ii+1).name];
-    else
-        filenames{mm+1,1} = s{1,ii+1};
-    end
-       
-    if color_space > 1
-            if strcmp(iminfo.ColorType,'grayscale')  
-                source = im;
-                im(:,:,1) = source; 
-                im(:,:,2) = source; 
-                im(:,:,3) = source; 
+        
+        % update status in console
+        fprintf(1,'\nCollecting %d of %d %s', ii + 1, ttl, filename );
+        
+        %*modified  - read in the image
+        im = imread( filename );
+        
+        %*added - get the event identifier
+        %find ending index of event identifier evt
+        m = regexp(filename, '\.*?evt[0-9]+\.*?','match');
+        
+        %get event id string - this assumes only one match
+        newid = m{:};
+        
+        if ~strncmp(id,newid, length(id)) 
+            C = [];
+            % Initialize empty V
+            for j = 1: segments*2 - 1
+                C = [C zeros(2,numPts)];
+            end
+        end
+        
+        %found new id
+        if ~strncmp(id,newid, length(id))
+            
+            if savemotion
+                
+                % update status in console            
+                fprintf(1,'\n Calculating motion for filename: %s', filename );
+            
+                % to plot the 3D quiver plot
+                x=cell2mat(xP');
+                y=cell2mat(yP');
+                
+                %calculate mean velocity and concatenate to matrix
+                A = sqrt(abs(sum([gradient(x).^2 gradient(y).^2],2)))';
+                vabs = A';
+                
+                %minimum points needed for mfcc
+                if length(vabs) > 8
+                    aabs = gradient(vabs);
+                    a = [cell2mat(vals') ones(length(vals),1)*mean(vabs) ones(length(vals),1)*mean(aabs)];
+                else
+                    aabs = gradient(vabs);
+                    a = [cell2mat(vals')  ones(length(vals),1)*mean(vabs) ones(length(vals),1)*mean(aabs)];
+                end
+                
+            else
+                a = [cell2mat(vals') zeros(length(vals),2)];
             end
             
-            if (color_space == YCBCR)             
+            store = vertcat(store, a);
+            
+            areas = {};
+            vals = {};
+            yP = {};
+            xP = {};
+            id = newid;
+        end
+        
+        %*added - read file info
+        iminfo = imfinfo(filename);
+        
+        %if image is not square throw it out
+        if( iminfo.Height ~= iminfo.Width )
+            fprintf(1,'\n%s image %d of %d not square - image will be excluded', filename, ii, ttl);
+            ii = ii + 1;
+            continue;
+        end
+        
+        % store resolution info
+        info = pnmimpnminfo(filename);
+        maxArea = 0;
+        xPos = 0;
+        yPos = 0;
+        xTransposePos = 0; %current unused; placeholder only
+        yTransposePos = 0; %current unused; placeholder only
+        
+        if ~isempty(info) && ~isempty(info.Comment)
+            [maxArea xPos yPos xTransposePos yTransposePos] = strread(info.Comment);
+        end
+        
+        areas{end+1} = maxArea;
+        yP{end+1} = yPos;
+        xP{end+1} = xPos;
+        
+        resol(ii+1,:) = size(im,1);
+        
+        filenames{ii+1,1} = [s(ii+1).name];
+        
+        if color_space > 1
+            if strcmp(iminfo.ColorType,'grayscale')
+                source = im;
+                im(:,:,1) = source;
+                im(:,:,2) = source;
+                im(:,:,3) = source;
+            end
+            
+            if (color_space == YCBCR)
                 im = rgb2ycbcr(im);
-            end 
-                    
+            end
+            
             for kk=1:3
                 data = calcola_invarianti(im(:,:,kk), scale);
                 val{kk} = apply_non_lin3(data,scale);
             end
-                        
+            
             % store feature vector (stack of feature vectors for each channel)
-            store(mm+1,:) = double([val{1}, val{2}, val{3}]); 
-    else
-        % COMPUTE INVARIANTS 
-        im = rgb2gray(im);
-        data = calcola_invarianti(im, scale); % compute invariants at different scales
-        val = apply_non_lin3(data,scale); % Apply non linearity
-        store(mm+1,:) = double(val); % store feature vector
-    end    
-         
-    ii = ii + 1;
-    mm = mm + 1;
-     
+            vals{end+1} = double([val{1}, val{2}, val{3}]);
+        else
+            % COMPUTE INVARIANTS
+            im = rgb2gray(im);
+            data = calcola_invarianti(im, scale); % compute invariants at different scales
+            val = apply_non_lin3(data,scale); % Apply non linearity
+            vals{end+1} = double(val); % store feature vector
+        end 
+    
+    ii = ii + 1;   
+    
+    %if last index
+    if  ii == ttl
+        
+        if savemotion
+            
+            % update status in console
+            fprintf(1,'\n Saving motion for filename: %s', filename );
+            
+            x=cell2mat(xP');
+            y=cell2mat(yP');
+            
+            %calculate mean velocity and concatenate to matrix
+            A = sqrt(abs(sum([gradient(x).^2 gradient(y).^2],2)))';
+            vabs = A';
+            if length(vabs) > 8
+                %vabs = interp(vabs,3);
+                aabs = gradient(vabs);
+                a = [cell2mat(vals') ones(length(vals),1)*mean(vabs) ones(length(vals),1)*mean(aabs)];
+                
+            else
+                aabs = gradient(vabs);
+                a = [cell2mat(vals')  ones(length(vals),1)*mean(vabs) ones(length(vals),1)*mean(aabs)];
+            end
+            
+        else
+            a = [cell2mat(vals') zeros(length(vals),2)];
+        end
+        
+        store = vertcat(store, a);
+    end
 end
+     
 
 fprintf(1, '\n');                     
 
-if(sz > 0)
+if(ttl > 0)
     %append the color space to the name to make it unique
     if (color_space == RGB)
         rootname = [classname '_rgb'];

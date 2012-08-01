@@ -76,4 +76,24 @@
                 <test>${className}</test>
             </properties>
         </action>
+        <action>
+            <actionName>CUSTOM-test-freehep</actionName>
+            <displayName>test-freehep</displayName>
+            <goals>
+                <goal>test-freehep</goal>
+            </goals>
+            <activatedProfiles>
+                <activatedProfile>Mac64</activatedProfile>
+            </activatedProfiles>
+        </action>
+        <action>
+            <actionName>CUSTOM-testfreehep</actionName>
+            <displayName>testfreehep</displayName>
+            <goals>
+                <goal>test</goal>
+            </goals>
+            <activatedProfiles>
+                <activatedProfile>Mac64</activatedProfile>
+            </activatedProfiles>
+        </action>
     </actions>

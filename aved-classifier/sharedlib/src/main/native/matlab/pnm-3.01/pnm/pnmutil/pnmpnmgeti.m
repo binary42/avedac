@@ -1,4 +1,4 @@
-function [int, count, msg] = pnmpnmgeti(fid, n)
+function [int, count, msg, comment] = pnmpnmgeti(fid, n)
 %PNMPNMGETI Get integers from an ASCII encoded PBM/PGM/PPM file.
 %
 %   [INT, COUNT, MSG] = PNMPNMGETI(FID, N) tries to read N integers from the
@@ -31,6 +31,7 @@ function [int, count, msg] = pnmpnmgeti(fid, n)
    int   = [];          % image data vector
    count = 0;           % number of elements read. same as length(int)
    msg   = '';          % error message string
+   comment = '';        % optional comment string
 
    while 1
 
@@ -60,7 +61,7 @@ function [int, count, msg] = pnmpnmgeti(fid, n)
       if (char == '#')
 
          % Found a comment, so read the rest of the line and throw it away.
-         fgetl(fid);
+         comment = fgetl(fid);
 
       else
 

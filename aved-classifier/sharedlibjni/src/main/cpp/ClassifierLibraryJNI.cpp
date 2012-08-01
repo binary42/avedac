@@ -1124,7 +1124,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
     int i = 0, j = 0;
     string::size_type pos;
     jobjectArray jClassModelArray = 0;
-
+    
     // Check if a valid directory
     if (!exists(features)) {
         tmpstr = string("Directory ") + features + string(" does not exist");
@@ -1139,7 +1139,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
         return 0;
     }
 
-    fprintf(stderr, "Scanning %s for files matching %s\n", featuresDir, filematch);
+    fprintf(stderr, "-->Scanning %s for files matching %s\n", featuresDir, filematch);
     for (i = 0; i < fcount; i++) {
         if (strstr(filelist[i]->d_name, filematch))
             numfound++;
@@ -1236,6 +1236,12 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
                     // create the File object and initialize with the string
                     jobject jrawDir = env->NewObject(jnewFile, jmethod, jnewString);
                     env->CallObjectMethod(jobj, jsetRawImageDirectory, jrawDir);
+                    
+                    if (env->ExceptionOccurred()) {
+                        fprintf(stderr,"Exception in setting raw image directory\n");
+                        env->ExceptionDescribe();
+                        env->ExceptionClear();
+                    }
                 }
 
                 if (mxSquareDir != 0) {
@@ -1245,6 +1251,12 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
                     // create the File object and initialize with the string
                     jobject jsquareDir = env->NewObject(jnewFile, jmethod, jnewString);
                     env->CallObjectMethod(jobj, jsetSquareImageDirectory, jsquareDir);
+                    
+                    if (env->ExceptionOccurred()) {
+                        fprintf(stderr,"Exception in setting square image directory\n");
+                        env->ExceptionDescribe();
+                        env->ExceptionClear();
+                    }
                 }
 
                 if (mxClassName != 0)

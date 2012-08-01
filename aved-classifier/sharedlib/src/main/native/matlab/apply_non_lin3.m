@@ -13,7 +13,7 @@ function val = apply_non_lin3(data, scale)
 %       dataf transformed data 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+ 
 nr_inv = length(data(1).inv);   % nr. of invariants per scale
 
 for s = 0 : scale
@@ -27,13 +27,18 @@ for s = 0 : scale
             val(s*nr_inv + iii) = mean( I( find( I <= 0 ) ) );  % 1..36 neg. part, 37..72 positive part, 73..108 absolute value
             val((scale+1)*nr_inv + s*nr_inv + iii) = mean( I( find( I >= 0 ) ) );
             val(2*(scale+1)*nr_inv + s*nr_inv + iii) = mean(mean( abs(I) )) + mbg;
+           
+            %val(s*nr_inv + iii) = mean(mean( abs(I) )) + mbg;
         else
             val(s*nr_inv + iii) = 0;
             val((scale+1)*nr_inv + s*nr_inv + iii) = 0;
             val(2*(scale+1)*nr_inv + s*nr_inv + iii) = 0;
+            
+            %val(s*nr_inv + iii) = 0;
+                       
         end       
 
     end
         
-end
+end 
 

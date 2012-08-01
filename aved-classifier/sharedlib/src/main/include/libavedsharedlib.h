@@ -1,12 +1,18 @@
 /*
  * MATLAB Compiler: 4.17 (R2012a)
- * Date: Fri Jun  8 17:20:35 2012
+ * Date: Tue Jun 19 13:16:02 2012
  * Arguments: "-B" "macro_default" "-v" "-W" "lib:libavedsharedlib" "-T"
  * "link:lib" "-I"
  * "/Users/dcline/NetBeansProjects/avedac/aved-classifier/sharedlib/src/main/nat
  * ive/matlab" "-I"
  * "/Users/dcline/NetBeansProjects/avedac/aved-classifier/sharedlib/src/main/nat
- * ive/matlab/netlab" "-g" "-G" "run_tests_ui" "collect" "collect_ui"
+ * ive/matlab/netlab" "-I"
+ * "/Users/dcline/NetBeansProjects/avedac/aved-classifier/sharedlib/src/main/nat
+ * ive/matlab/netlab" "-I"
+ * "/Users/dcline/NetBeansProjects/avedac/aved-classifier/sharedlib/src/main/nat
+ * ive/matlab/pnm-3.01/pnm/pnmutil" "-I"
+ * "/Users/dcline/NetBeansProjects/avedac/aved-classifier/sharedlib/src/main/nat
+ * ive/matlab/pnm-3.01/pnm/pnm" "-g" "-G" "run_tests_ui" "collect" "collect_ui"
  * "collect_tests" "collect_class" "assign_class" "test_class"
  * "train_classes_ui" 
  */
