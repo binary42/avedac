@@ -124,9 +124,11 @@ To build the GUI and classifier:
 
 	(only required for MacOSX)
 	4.2  Modify the Info.plist file replacing the the MATLAB_Compiler_Runtime version
-	     with that defined in the MCR_ROOT of 4.1
+	     with that defined in the MCR_ROOT of 4.1. You may not know the version number
+	     for the Matlab Runtime Compiler until you actually install it.  
+	     The Info.plist is located in: 
 
-	     $vi aved-classifier/src/main/app-resources/mac/mac64/Info.plist.template 
+		 aved-classifier/src/main/app-resources/mac/mac64/Info.plist.template 
 
 	4.3. Run the setup script. This will install the necessary environment
 	     variables to your ~/.bash_profile
