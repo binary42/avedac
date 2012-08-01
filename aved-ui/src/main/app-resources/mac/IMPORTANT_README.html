@@ -52,12 +52,17 @@ you don't already have it.<br>
     <br>
   </li>
   <li><span style="font-weight: bold;">Transcode</span>
-software. Transcode is used to convert the video into individual
+software. Transcode and ffmpeg are used to convert the video into individual
 frames.&nbsp;<span style="font-weight: bold;">If you are not using
 video, but using still images, you can skip this step. &nbsp;</span>To
 install transcode, first install MacPorts, then the latest Xcode Tools
 for your
 version of Mac OS X.&nbsp;<span style="text-decoration: underline;"></span><br>
+  </li>
+  <li>
+  After installing MacPorts, open a terminal window and install ffmpeg and transcode with:
+  sudo port install ffmpeg +gpl +lame +x264 +xvid  
+  sudo port install transcode +mjpegtools +x264 +libquicktime +lav
   </li>
   <ul>
     <li>Download MacPorts for your
