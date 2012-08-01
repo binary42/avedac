@@ -500,7 +500,7 @@
                             <bundleName>AVEDac</bundleName>
                             <mainClass>org.mbari.aved.ui.Application</mainClass>
                             <iconFile>${basedir}/src/main/app-resources/mac/aved-ui-logo.icns</iconFile>
-                            <vmOptions>-Xms512M -Xmx1024M -d32 -Dcom.sun.media.jai.disableMediaLib=true</vmOptions>
+                            <vmOptions>-Xms512M -Xmx1024M -Dcom.sun.media.jai.disableMediaLib=true</vmOptions>
                             <dictionaryFile>${basedir}/src/main/app-resources/mac/mac32/Info.plist.template</dictionaryFile>
                             <javaApplicationStub>${basedir}/src/main/app-resources/mac/mac32/JavaApplicationStub</javaApplicationStub>
                             <!-- These resources are now bundled into the assembly plugin above
@@ -630,7 +630,7 @@
                             <mainClass>org.mbari.aved.ui.Application</mainClass>
                             <iconFile>${basedir}/src/main/app-resources/mac/aved-ui-logo.icns</iconFile>
                             <zipFile>${project.build.directory}/${project.build.finalName}-mac64-bundle.zip</zipFile>
-                            <vmOptions>-Xms512M -Xmx1024M -d64 -Dcom.sun.media.jai.disableMediaLib=true</vmOptions>
+                            <vmOptions>-Xms1024M -Xmx2048M -Dcom.sun.media.jai.disableMediaLib=true</vmOptions>
                             <dictionaryFile>${basedir}/src/main/app-resources/mac/mac64/Info.plist.template</dictionaryFile>
                             <javaApplicationStub>${basedir}/src/main/app-resources/mac/mac64/JavaApplicationStub</javaApplicationStub> 
                             <!-- These resources are now bundled into the assembly plugin above

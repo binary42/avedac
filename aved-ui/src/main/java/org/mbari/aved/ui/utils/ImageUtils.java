@@ -28,6 +28,7 @@ package org.mbari.aved.ui.utils;
 
 //~--- JDK imports ------------------------------------------------------------
 
+import com.sun.media.jai.codec.PNGEncodeParam;
 import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -41,12 +42,23 @@ import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 
+import java.awt.image.ColorModel;
+import java.awt.image.DirectColorModel;
+import java.awt.image.ImageProducer;
+import java.awt.image.IndexColorModel;
+import java.awt.image.RenderedImage;
+import java.awt.image.WritableRaster;
 import java.io.File;
 
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 
+import java.util.Map;
 import javax.imageio.*;
+import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.stream.*;
+import sun.awt.image.OffScreenImageSource;
 
 public class ImageUtils {
 
@@ -75,6 +87,14 @@ public class ImageUtils {
 
         return ext;
     }
+    
+    class AvedBufferedImage extends BufferedImage {
+    
+    public AvedBufferedImage(int i, int i1, int i2, IndexColorModel icm)  {
+            super(i,i1,i2,icm); 
+            
+    }
+    }
 
     /**
      * Converts an jpeg image into a squared version of the image.
@@ -86,14 +106,15 @@ public class ImageUtils {
      * a jpeg images
      */
     public static void squareImageThumbnail(String imgInFilePath, String imgOutFilePath, String imgExt) throws Exception {
-        Image        image        = ImageIO.read(new File(imgInFilePath));
-        MediaTracker mediaTracker = new MediaTracker(new Container());
-
-        mediaTracker.addImage(image, 0);
-        mediaTracker.waitForID(0);
-
-        int imageWidth  = image.getWidth(null);
-        int imageHeight = image.getHeight(null);
+        
+        Iterator        iterr   = ImageIO.getImageReadersByFormatName(imgExt);
+        ImageReader     reader = (ImageReader) iterr.next(); 
+        ImageOutputStream ios = ImageIO.createImageOutputStream(new File(imgInFilePath));  
+        reader.setInput(ios);   
+        BufferedImage inImage = reader.read(0);
+              
+        int imageWidth  = inImage.getWidth();
+        int imageHeight = inImage.getHeight();
         int maxLength   = 0;
 
         // square the image with the largest dimension
@@ -104,25 +125,26 @@ public class ImageUtils {
             maxLength = imageHeight;
         }
 
-        BufferedImage thumbImage = new BufferedImage(maxLength, maxLength, BufferedImage.TYPE_INT_RGB);
-        Graphics2D    graphics2D = thumbImage.createGraphics();
-
+        BufferedImage sqImage = new BufferedImage(maxLength, maxLength, BufferedImage.TYPE_INT_RGB);
+        Graphics2D    graphics2D = sqImage.createGraphics();
+ 
         graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        graphics2D.drawImage(image, 0, 0, maxLength, maxLength, null);
+        graphics2D.drawImage(inImage, 0, 0, maxLength, maxLength, null);
 
-        Iterator        iter   = ImageIO.getImageWritersByFormatName(imgExt);
-        ImageWriter     writer = (ImageWriter) iter.next();
-        ImageWriteParam iwp    = writer.getDefaultWriteParam(); 
-
-        File                  file   = new File(imgOutFilePath);
-        FileImageOutputStream output = new FileImageOutputStream(file);
+        Iterator        iterw   = ImageIO.getImageWritersByFormatName(imgExt);
+        ImageWriter     writer = (ImageWriter) iterw.next();
+        ImageWriteParam iwp    = writer.getDefaultWriteParam();  
+         
+        FileImageOutputStream output = new FileImageOutputStream(new File(imgOutFilePath));
 
         writer.setOutput(output);
-
-        IIOImage iiimage = new IIOImage(thumbImage, null, null);
+ 
+        IIOImage iiimage = new IIOImage(sqImage,null,null); 
+        iiimage.setMetadata(reader.getImageMetadata(0));
 
         writer.write(null, iiimage, iwp);
         writer.dispose();
+         
     }
     
     public static boolean checkForPpmReader() {

@@ -39,9 +39,11 @@ import javax.swing.table.AbstractTableModel;
 
 public class EventAbstractTableModel extends AbstractModel {
     public static final int      NUM_COLUMNS = 13;
+    public static final int      COL_THUMBNAIL = 6;
+    
     public static final String[] columnNames = {
-        "Object ID", "Predicted Class", "Probability in Class", "Class", "Tag", "Identity Reference", "Max Size",
-        "Start TimeCode", "End Timecode", "Start Frame", "End Frame", "Frame Duration", "Thumbnail"
+        "Object ID", "Predicted Class", "Probability in Class", "Class", "Tag", "Identity Reference", "Thumbnail", "Max Size",
+        "Start TimeCode", "End Timecode", "Start Frame", "End Frame", "Frame Duration", 
     };
     public static final String[] columnToolTips = {
         "The  numerical index assigned by mbarivision to this event. "
@@ -53,15 +55,15 @@ public class EventAbstractTableModel extends AbstractModel {
         "The class name this event was assigned to be. If using VARS " + "this is equivalent to a VARS concept",
         "A user defined tag. This can be anything you define, e.g. swimming, "
         + "ignore, junk. Useful to help sort and combine events",
-        "A user defined identity reference.  This can be anything you define,"
+        "A user defined identity reference.  This can be anything you define," 
+        + "The frame duration of this event", "A thumbnail picture of event,"
         + " e.g. benthocodon1, benthocodon2. Use e.g. to label whether same " + "animal or new animal",
         "The maximum size (square pixels) of any instance of this event " + "over its lifetime.",
         "The first time the event was detected. An optional field and is emtpy "
         + "if the video source was not ISO860 formatted.",
         "The last time the event was detected. An optional field that's emtpy if "
         + "the video source was not ISO860 formatted.",
-        "The first frame the event was detected", "The last frame the event was detected",
-        "The frame duration of this event", "A thumbnail picture of event"
+        "The first frame the event was detected", "The last frame the event was detected"
     };
     private static final long serialVersionUID = 1L;
 
@@ -197,26 +199,8 @@ public class EventAbstractTableModel extends AbstractModel {
 
                     case 5 :
                         return e.getIdentityReference();
-
-                    case 6 :
-                        return e.getMaxSize();
-
-                    case 7 :
-                        return e.getStartTimecode();
-
-                    case 8 :
-                        return e.getEndTimecode();
-
-                    case 9 :
-                        return e.getStartFrame();
-
-                    case 10 :
-                        return e.getEndFrame();
-
-                    case 11 :
-                        return e.getFrameDuration();
-
-                    case 12 :
+    
+                    case COL_THUMBNAIL :
                         ImageIcon imageIcon = e.getBestImage();
 
                         if (imageIcon != null) {
@@ -226,6 +210,25 @@ public class EventAbstractTableModel extends AbstractModel {
                         // If imageIcon is missing, insert a dummy imageIcon
                         return missingFrameImageIcon;
 
+                    case 7 :
+                        return e.getMaxSize();
+
+                    case 8 :
+                        return e.getStartTimecode();
+
+                    case 9 :
+                        return e.getEndTimecode();
+
+                    case 10 :
+                        return e.getStartFrame();
+
+                    case 11 :
+                        return e.getEndFrame();
+
+                    case 12 :
+                        return e.getTtlFrames();
+
+                  
                     default :
                         return String.valueOf(-1);
                     }

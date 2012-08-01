@@ -258,7 +258,6 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                         System.setErr(new PrintStream(progressDisplay, true));
 
                         ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay, br);
-
                         progressDisplayStream.execute();
 
                         while (!task.isCancelled() &&!task.isFini()) {
@@ -269,6 +268,8 @@ public class CreateTrainingLibraryController extends AbstractController implemen
 
                         getView().setRunButton(true);
                         getView().setStopButton(false);
+                        
+                        progressDisplayStream.done();
                         progressDisplay.getView().dispose();
 
                         if (task.isFini()) {
@@ -294,13 +295,9 @@ public class CreateTrainingLibraryController extends AbstractController implemen
 
                 thread.start();
             } catch (Exception ex) {
-                Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex);
-
-                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.getMessage());
-
-                dialog.setVisible(true);
-
-                return;
+                Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex); 
+                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.getMessage()); 
+                dialog.setVisible(true); 
             }
         } else if (actionCommand.equals("<<")) {
             removeItemFromSelected();
@@ -320,8 +317,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
             switch (event.getID()) {
 
             // When the database root directory change or the models are updated
-            // reset the color space
-            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
+            // reset the color space 
             case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
                 ColorSpace colorSpace = getView().getColorSpace();
                 getView().populateAvailableClassList(colorSpace);

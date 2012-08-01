@@ -209,7 +209,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                         if ((eoc != null) && (eoc.getClassName().length() > 0)) {
                             try {
                                 String className = eoc.getClassName();
-                            File   dir       = new File(f + "/" + className + "//");
+                                File   dir       = new File(f + "/" + className + "//");
 
                                 if (!dir.exists()) {
                                     if (f.canWrite()) {
@@ -290,7 +290,7 @@ public class ClassifierController extends AbstractController implements ModelLis
     /**
      * Worker to manage adding cropped-event images to
      * class training library.  This occurs in a SwingWorker
-     * in the backbground because this can take a while for
+     * in the background because this can take a while for
      * very long events.
      */
     public class AddClassImageWorker extends SwingWorker {
@@ -326,9 +326,10 @@ public class ClassifierController extends AbstractController implements ModelLis
                     if (frameNo >= 0) {
                         try {
                             int                 bestFrameNo = frameNo;
-                            EventImageCacheData data        = new EventImageCacheData(event);
-
-                            data.initialize(bestFrameNo);
+                            EventImageCacheData data        = new EventImageCacheData(event); 
+                            File                source      = new File(data.getEventObjectContainer().getFrameSource(bestFrameNo).getParent());
+                            
+                            data.initialize(source, "", bestFrameNo);
 
                             EventObject object   = event.getEventObject(bestFrameNo);
                             BufferedImage original = EventImageCache.loadImage(event.getFrameSource(bestFrameNo));
@@ -408,7 +409,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                     getModel().setJniTaskComplete(task.getId());
                 } else {
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(2000);
                     } catch (InterruptedException ex) {}
                     }
                 }

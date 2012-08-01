@@ -48,15 +48,14 @@ import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-
-import javax.imageio.ImageIO;
-
+ 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
+import org.mbari.aved.classifier.ClassModel;
 import org.mbari.aved.ui.utils.ImageUtils;
 
 public class DockingContainer extends JPanel {
@@ -126,10 +125,12 @@ public class DockingContainer extends JPanel {
 
         // Add a synopsis views for each
         if (dirList.size() > 0) {
-            for (Iterator<File> iter = dirList.iterator(); iter.hasNext(); ) {
-                File dir = iter.next();
+            for (Iterator<File> iter = dirList.iterator(); iter.hasNext();) {
+                File dir = iter.next(); 
 
-                buttonPanel.addSynopsisView(dir);
+                ClassifierModel model = Classifier.getController().getModel(); 
+                ClassModel classModel = model.getClassModel(dir.getName());
+                buttonPanel.addSynopsisView(dir, classModel);
             }
         }
     }
@@ -184,7 +185,11 @@ public class DockingContainer extends JPanel {
                         File dir = chooser.getSelectedFile();
 
                         UserPreferences.getModel().setDockingImageDirectory(dir);
-                        addSynopsisView(dir);
+                        
+                        ClassifierModel model =  Classifier.getController().getModel();
+                        
+                        ClassModel classModel = model.getClassModel(dir.getName());
+                        addSynopsisView(dir, classModel);
                     }
                     
                     viewManager.notifyChanged();
@@ -198,8 +203,8 @@ public class DockingContainer extends JPanel {
             dockKey.setResizeWeight(.1f);
         }
 
-        public void addSynopsisView(File dir) {
-            ClassImageDirectoryModel model = new ClassImageDirectoryModel();
+        public void addSynopsisView(File dir, ClassModel classModel) {
+            ClassImageDirectoryModel model = new ClassImageDirectoryModel(classModel);
 
             model.setDirectory(dir);
             model.setName(dir.getName()); 

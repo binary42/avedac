@@ -57,12 +57,12 @@ import javax.swing.*;
 
 public class PlayerController extends AbstractController implements ActionListener, KeyListener {
 
-    /** counter that maintains the current frame to display */
-    private int                  frameNo   = 0;
-    private int                  nImages   = 0;    // number of images to animate
-    private Direction            direction = Direction.Forward;
-    private State                state     = State.Stop;
-    private Mode                 mode      = Mode.Continuous;
+    /** counter that maintains the index into the current frame to display */
+    private int                  frameIndex   = 0;
+    private int                  nImages      = 0;    // number of images to animate
+    private Direction            direction    = Direction.Forward;
+    private State                state        = State.Stop;
+    private Mode                 mode         = Mode.Continuous;
     private EventObjectContainer event;
     private EventListModel       eventListModel;
 
@@ -98,7 +98,7 @@ public class PlayerController extends AbstractController implements ActionListen
         timer = new Timer(50, this);
         timer.setInitialDelay(0);
         nImages   = this.event.getEndFrame() - this.event.getStartFrame();
-        frameNo   = 0;
+        frameIndex   = 0;
         playIcon  = new ImageIcon(getClass().getResource("/org/mbari/aved/ui/images/play.jpg"));
         pauseIcon = new ImageIcon(getClass().getResource("/org/mbari/aved/ui/images/pause.jpg"));
         ((PlayerView) getView()).setPlayStopButtonIcon(playIcon);
@@ -112,57 +112,56 @@ public class PlayerController extends AbstractController implements ActionListen
      */
     private void displayImage(int offset) {
         EventObject eventObj = null;
-        PlayerView  view     = ((PlayerView) getView());
+        PlayerView view = ((PlayerView) getView());
 
         // Calculate the actual frame number
-        int num = (event.getStartFrame() + offset);
+        int frameNum = (event.getIndexedFrame(offset));
 
-        // Get the image sequence, and display the image
-        try {
-            File src = null;
-
-            eventObj = event.getEventObject(num);
-
-            // Get the frame source and catch exception
-            // in case it is missing
+        if (frameNum >= 0) {
+            // Get the image sequence, and display the image
             try {
-                src = event.getFrameSource(num);
-            } catch (Exception e) {
+                File src = null;
 
-                // TODO Auto-generated catch block
-                src = null;
-                e.printStackTrace();
+                eventObj = event.getEventObject(frameNum);
 
-                return;
-            }
+                // Get the frame source and catch exception
+                // in case it is missing
+                try {
+                    src = event.getFrameSource(frameNum);
+                } catch (Exception ex) {
 
-            // TODO: push this logic down into the PlayerView
-            // it knows how to best display the timecode
-            if (eventObj != null) {
-                view.displayEventImage(event, eventObj.getBoundingBox(), src);
-                view.displayTimecodeFrameString(eventObj.getFrameEventSet().getTimecode(),
-                                                eventObj.getFrameEventSet().getFrameNumber());
-            }
-        } catch (FrameOutRangeException e) {
+                    src = null;
+                    Logger.getLogger(PlayerController.class.getName()).log(Level.SEVERE, null, ex);
 
-            // If image is missing display message
-            // Create the yes/no dialog
-            String                message = "Error: " + e.getMessage();
-            NonModalMessageDialog dialog;
+                    return;
+                }
 
-            try {
-                dialog = new NonModalMessageDialog((PlayerView) getView(), message);
-                dialog.setVisible(true);
+                // TODO: push this logic down into the PlayerView
+                // it knows how to best display the timecode
+                if (eventObj != null) {
+                    view.displayEventImage(event, eventObj.getBoundingBox(), src);
+                    view.displayTimecodeFrameString(eventObj.getFrameEventSet().getTimecode(),
+                            eventObj.getFrameEventSet().getFrameNumber());
+                }
+            } catch (FrameOutRangeException e) {
+
+                // If image is missing display message
+                // Create the yes/no dialog
+                String message = "Error: " + e.getMessage();
+                NonModalMessageDialog dialog;
+
+                try {
+                    dialog = new NonModalMessageDialog((PlayerView) getView(), message);
+                    dialog.setVisible(true);
+                } catch (Exception ex) {
+                    Logger.getLogger(PlayerController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                // dialog.answer();
+                timer.stop();
             } catch (Exception ex) {
                 Logger.getLogger(PlayerController.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-            // dialog.answer();
-            timer.stop();
-        } catch (Exception e) {
-
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         }
     }
 
@@ -312,37 +311,37 @@ public class PlayerController extends AbstractController implements ActionListen
             } else if (actionCommand.equals("ReverseStep")) {
                 play(Mode.SingleStep, Direction.Reverse);
             } else if (actionCommand.equals("ForwardToEnd")) {
-                frameNo = nImages;          // Let the display show the last image
+                frameIndex = nImages;          // Let the display show the last image
                 play(Mode.SingleStep, Direction.Forward);
             } else if (actionCommand.equals("RewindToEnd")) {
-                frameNo = 0;
+                frameIndex = 0;
                 play(Mode.SingleStep, Direction.Reverse);
             } else {
                 play(Mode.Continuous, Direction.Forward);
             }
         }
 
-        if (frameNo == nImages) {
+        if (frameIndex == nImages) {
             stop();
         }
 
         state = State.Play;
-        displayImage(frameNo);
+        displayImage(frameIndex);
 
         if (mode == Mode.SingleStep) {
             stop();
         }
 
         if (direction == Direction.Forward) {
-            frameNo++;
+            frameIndex++;
         } else if (direction == Direction.Reverse) {
-            frameNo--;
+            frameIndex--;
         } else {
-            frameNo++;
+            frameIndex++;
         }
 
-        if ((frameNo > nImages) || (frameNo < 0)) {
-            frameNo = 0;
+        if ((frameIndex > nImages) || (frameIndex < 0)) {
+            frameIndex = 0;
             stop();
         }
 

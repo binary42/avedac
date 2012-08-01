@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
 /**
@@ -172,14 +173,13 @@ public class ClassModelListRenderer extends JLabel implements ListCellRenderer {
         // imgae to represent any given class than the first image
         try {
             if (file != null) {
-                java.net.URL url = file.toURL();
-
-                return new ImageIcon(url);
+                BufferedImage image = ImageIO.read(file);
+                if (image != null ) {
+                    return new ImageIcon(image);
+                }
             } else {
                 System.err.println("Couldn't find file: " + file.getName());
             }
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(ClassModelListRenderer.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
             Logger.getLogger(ClassModelListRenderer.class.getName()).log(Level.SEVERE, null, ex);
         }

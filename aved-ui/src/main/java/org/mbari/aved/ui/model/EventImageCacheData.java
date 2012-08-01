@@ -29,24 +29,16 @@ package org.mbari.aved.ui.model;
 //~--- non-JDK imports --------------------------------------------------------
 
 import aved.model.EventObject;
-
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import org.mbari.aved.mbarivision.api.utils.Utils;
-import org.mbari.aved.ui.exceptions.FrameOutRangeException;
-
-//~--- JDK imports ------------------------------------------------------------
-
 import java.io.File;
-
-import java.net.MalformedURLException;
+import java.io.IOException;
 import java.net.URL;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
+import org.mbari.aved.mbarivision.api.utils.Utils;
+import org.mbari.aved.ui.exceptions.FrameOutRangeException;
 
 /**
  * Container images of AVED Events.
@@ -58,7 +50,8 @@ public class EventImageCacheData {
     private EventObjectContainer eventObjectContainer;
     private ImageIcon            imageIcon;
     private ImageIcon            missingImageIcon;
-
+    private static String        evtStem = "zevt";
+    
     /**
      * Default constructor. Throws exception if a valid
      * missingframeexception cannot be initialized
@@ -83,37 +76,7 @@ public class EventImageCacheData {
             missingImageIcon = new ImageIcon(url);
         }
     }
-
-    /**
-     * Initialize the data EventObjectContainer reference
-     * @param bestFrameNo the best frame number to initialize the image from
-     * @throws Exception
-     * @return true if the frame source that corresponds to the <code>bestFrameNo</code>
-     */
-    public boolean initialize(int bestFrameNo) {
-        if (bestFrameNo >= 0) {
-            File source = eventObjectContainer.getFrameSource(bestFrameNo);
-
-            eventObjectContainer.setBestImageFrame(bestFrameNo);
-
-            if ((source != null) && source.exists()) {
-
-                // Create name for the cropped jpeg thumbnail
-                // image using the event identifier
-                String filename = source.getParent() + "/" + Utils.getNameWithoutExtension(source) + "evt"
-                                             + eventObjectContainer.getObjectId() + ".ppm";
-
-                eventImageFile = new File(filename);
-
-                //System.out.println("###DEBUG initializing object " +
-                //filename + " " + Long.toString(getObjectId()) + "/" + this.toString());
-                return true;
-            }
-        } 
-
-        return false;
-    }
-
+  
     /**
      * Initialize the data EventObjectContainer reference
      * @param rootDirectory the root directory to save the event image to
@@ -128,15 +91,17 @@ public class EventImageCacheData {
 
             eventObjectContainer.setBestImageFrame(bestFrameNo);
 
-            if ((rootDirectory != null) && (source != null) && (append != null) && source.exists()) {
-                String filename = String.format("%s/evt%06d%s%s..ppm", rootDirectory,
+            if ((rootDirectory != null) && (rootDirectory.exists())
+                    && (source != null) && (append != null) && source.exists()) {
+                String filename = String.format("%s/%s%06d%s%s.ppm", rootDirectory,
+                                                evtStem,
                                                 eventObjectContainer.getObjectId(),
                                                 Utils.getNameWithoutExtension(source), append);
 
                 eventImageFile = new File(filename);
 
-                // System.out.println("###DEBUG initializing object " +
-                // filename + " " + Long.toString(getObjectId()) + "/" + this.toString());
+                //System.out.println("###DEBUG initializing object " +
+                //filename + " " + Long.toString(getObjectId()) + "/" + this.toString());
                 return true;
             }
         }

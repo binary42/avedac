@@ -28,26 +28,20 @@ package org.mbari.aved.ui;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JFrame;
 import org.jdesktop.swingworker.SwingWorker;
-
 import org.mbari.aved.mbarivision.api.AvedRuntimeException;
 import org.mbari.aved.mbarivision.api.TranscodeProcess;
 import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.message.NonModalMessageDialog;
 import org.mbari.aved.ui.process.ProcessDisplay;
+import org.mbari.aved.ui.progress.AbstractOutputStream;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
 import org.mbari.aved.ui.utils.ParseUtils;
-
-//~--- JDK imports ------------------------------------------------------------
-
-import java.io.File;
-import java.io.IOException;
- 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.swing.JFrame;
-import org.mbari.aved.ui.progress.AbstractOutputStream;
 
 /**
  * Helper worker to handle starting image handling
@@ -79,6 +73,10 @@ public class VideoTranscodeWorker extends SwingWorker {
 
     /** *Video to transcode  using this worker */
     private File video;
+    
+    /** Max frames to set in the transcoder. This is only needed if transcoding
+     a particular range*/
+    private int maxEventFrame = -1;
  
     /**
      * Import the results in the XML file and put in hash map
@@ -193,6 +191,12 @@ public class VideoTranscodeWorker extends SwingWorker {
             // Create a new transcode process and redirect the output
             transcodeProcess = new TranscodeProcess(clip); 
             
+            
+            // Set the range if defined. This does not work with ffmpeg and is ignored
+            if (maxEventFrame > 0) {
+                transcodeProcess.setTranscodeOpts(" -c 0-" + Integer.toString(maxEventFrame) + 1);
+            }
+            
             if (UserPreferences.getModel().getEnableFfmpeg()) { 
                 transcodeProcess.enableFfmpeg(); 
             }
@@ -273,6 +277,7 @@ public class VideoTranscodeWorker extends SwingWorker {
         this.cancel(true);
 
         if (transcodeProcess != null) {
+            transcodeProcess.kill();
             do {
                 try {
                     Thread.sleep(3000);
@@ -311,7 +316,10 @@ public class VideoTranscodeWorker extends SwingWorker {
      */
     public void setMaxFrame(int maxEventFrame) {
         if (transcodeProcess != null) {
-            transcodeProcess.setTranscodeOpts(" -b 0 -e " + Integer.toString(maxEventFrame));
+            transcodeProcess.setTranscodeOpts(" -c 0-" + Integer.toString(maxEventFrame) + 1);
+        }
+        else {
+            this.maxEventFrame = maxEventFrame;
         }
     }
 

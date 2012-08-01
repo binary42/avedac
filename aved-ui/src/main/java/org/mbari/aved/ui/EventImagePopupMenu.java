@@ -43,6 +43,7 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 
 import java.net.URL;
@@ -53,6 +54,7 @@ import java.util.logging.Logger;
 import javax.media.jai.JAI;
 import javax.media.jai.PlanarImage;
 
+import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
@@ -86,14 +88,33 @@ public class EventImagePopupMenu {
 
     public EventImagePopupMenu(EventObjectContainer event) {
         this.event      = event;
-        this.imagePanel = new JPanel();
-
+        this.imagePanel = new JPanel(); 
+                
         // Get a static copy of default image to display upon transformation errors
         URL url = Application.class.getResource("/org/mbari/aved/ui/images/missingframeexception.jpg");
 
         if (url == null) {
             System.err.println("Cannot find missingframeexception.jpg");
             System.exit(1);
+        }
+        else {
+
+            // Create an ImageIcon from the image data
+            ImageIcon imageIcon = new ImageIcon(url);
+            int width = imageIcon.getIconWidth();
+            int height = imageIcon.getIconHeight();
+
+            // Create a new empty image buffer to "draw" the resized image into
+            BufferedImage bufferedResizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+            // Create a Graphics object to do the "drawing"
+            Graphics2D g2d = bufferedResizedImage.createGraphics();
+
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+
+            // Draw the resized image
+            g2d.drawImage(imageIcon.getImage(), 0, 0, width, height, null);
+            missingImage = PlanarImage.wrapRenderedImage(bufferedResizedImage);
         }
     }
 

@@ -52,6 +52,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.filechooser.FileFilter;
+import org.mbari.aved.classifier.ClassModel;
 
 public class FullViewContainer extends JPanel implements Dockable {
     private final JFileChooser          chooser = new JFileChooser();
@@ -61,9 +62,14 @@ public class FullViewContainer extends JPanel implements Dockable {
     public FullViewContainer(int key) {
         super(new BorderLayout());
 
-        ClassImageDirectoryModel model = new ClassImageDirectoryModel();
+        File dir = UserPreferences.getModel().getLastClassImageImportDirectory();
+        ClassifierModel classifierModel = Classifier.getController().getModel();
 
-        model.setDirectory(UserPreferences.getModel().getLastClassImageImportDirectory());
+        ClassModel classModel = classifierModel.getClassModel(dir.getName());
+
+        ClassImageDirectoryModel model = new ClassImageDirectoryModel(classModel);
+
+        model.setDirectory(dir);
         fullView = new ClassImageDirectoryFullView(model, key);
         build();
         chooser.setAcceptAllFileFilterUsed(false);
@@ -114,7 +120,10 @@ public class FullViewContainer extends JPanel implements Dockable {
 
                     dirName.setText(file.getAbsolutePath());
 
-                    final ClassImageDirectoryModel model = new ClassImageDirectoryModel();
+                    ClassifierModel classifierModel = Classifier.getController().getModel();
+
+                    ClassModel classModel = classifierModel.getClassModel(dir.getName());
+                    final ClassImageDirectoryModel model = new ClassImageDirectoryModel(classModel);
 
                     model.setDirectory(file);
                     UserPreferences.getModel().setClassImportDirectory(file);

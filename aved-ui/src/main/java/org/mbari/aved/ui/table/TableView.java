@@ -60,10 +60,10 @@ public class TableView extends JFrameView {
         // Constructor
         super("org/mbari/aved/ui/forms/Table.xml", model, controller);
 
-        int numcolumns = EventAbstractTableModel.NUM_COLUMNS - 1;
+        int numcolumns = EventAbstractTableModel.NUM_COLUMNS;
 
         // Define the variable row height renderer to adjust the height by the thumbnail
-        table.getColumnModel().getColumn(numcolumns).setCellRenderer(new VariableRowHeightRenderer());
+        table.getColumnModel().getColumn(EventAbstractTableModel.COL_THUMBNAIL).setCellRenderer(new VariableRowHeightRenderer());
 
         // Enable column auto resizing
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -72,21 +72,22 @@ public class TableView extends JFrameView {
 
         s.setHorizontalAlignment(SwingConstants.LEFT);
 
-        // Set columns to 150 pixels wide, except that last one
+        // Set columns to 150 pixels wide
         for (int i = 0; i < numcolumns; i++) {
             TableColumn col = table.getColumnModel().getColumn(i);
 
             col.setPreferredWidth(150);
         }
 
-        // Left-justify the all the columns except the last one that
+        // Left-justify the all the columns except the thumbnail column that
         // is handled by the custom renderer
         DefaultTableCellRenderer r = new DefaultTableCellRenderer(); 
 
         r.setHorizontalAlignment(SwingConstants.LEFT);
 
         for (int i = 0; i < numcolumns; i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(r);
+            if (i != EventAbstractTableModel.COL_THUMBNAIL)
+                table.getColumnModel().getColumn(i).setCellRenderer(r);
         }
 
         // Replace the table in the form with the AvedTable

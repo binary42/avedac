@@ -30,35 +30,25 @@ package org.mbari.aved.ui.model;
 
 import aved.model.BoundingBox;
 import aved.model.EventObject;
-
-import java.io.IOException;
-import org.jdesktop.swingworker.SwingWorker;
-
-import org.mbari.aved.ui.exceptions.FrameOutRangeException;
-import org.mbari.aved.ui.exceptions.MissingFrameException;
-import org.mbari.aved.ui.utils.ImageUtils;
-
-//~--- JDK imports ------------------------------------------------------------
-
-import com.sun.media.jai.codec.JPEGEncodeParam;
-
-import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
-import java.awt.image.renderable.ParameterBlock;
-
 import java.io.File;
-
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
- 
+import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
-import javax.media.jai.JAI; 
-import javax.media.jai.PlanarImage;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import org.jdesktop.swingworker.SwingWorker;
 import org.mbari.aved.mbarivision.api.utils.Utils;
+import org.mbari.aved.ui.exceptions.FrameOutRangeException;
+import org.mbari.aved.ui.exceptions.MissingFrameException;
+import org.mbari.aved.ui.utils.ImageMetadata;
+import org.mbari.aved.ui.utils.ImageUtils;
 
 /**
  * Singleton class that executes a SwingWorker to grab
@@ -68,12 +58,12 @@ import org.mbari.aved.mbarivision.api.utils.Utils;
  * SwingWorker class
  */
 public class EventImageCache {
-    int cacheNextIndex = 0;
 
     /**
      * Used to kill the SwingWorker
      */
     boolean                           iKeepRunning       = true;
+    int                               cacheNextIndex     = 0;
     private List<EventImageCacheData> imageCacheDataList = null;
     int[]                             indexsToCache      = null;
     int                               loadingCacheIndex  = 0;
@@ -131,7 +121,7 @@ public class EventImageCache {
         try {
             if (eventListModel.getSize() > 0) {
 
-                // System.out.println("Reloading image cache: " + eventListModel.getSize());
+                Logger.getLogger(EventImageCache.class.getName()).log(Level.INFO, null, "Reloading image cache: " + eventListModel.getSize());
                 this.eventListModel = eventListModel;
                 indexsToCache       = new int[eventListModel.getSize()];
 
@@ -155,7 +145,7 @@ public class EventImageCache {
                 thread.loadByFrame = loadByFrame;
                 thread.execute();
             } else {
-                System.out.println("Image cache empty - no images to load");
+                Logger.getLogger(EventImageCache.class.getName()).log(Level.INFO, null, "Image cache empty - no images to load");
             }
         } catch (Exception ex) {
             Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
@@ -177,7 +167,7 @@ public class EventImageCache {
      * @param zero-based index to add
      * @param element element to add
      */
-    public void add(int index, EventImageCacheData element) {
+    public void add(int index, EventImageCacheData element) throws MissingFrameException, Exception {
         synchronized (syncArrays) {
             imageCacheDataList.add(index, element);
 
@@ -185,7 +175,7 @@ public class EventImageCache {
                 grabImage(index);
             } catch (FrameOutRangeException ex) {
                 Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            } 
         }
     }
 
@@ -204,7 +194,7 @@ public class EventImageCache {
                     collection.add(c);
                 }
             } catch (IndexOutOfBoundsException exception) {
-                exception.printStackTrace();
+                Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, exception.getMessage());
             }
 
             imageCacheDataList.removeAll(collection);
@@ -212,8 +202,9 @@ public class EventImageCache {
 
         iKeepRunning = true;
         update();
-        System.out.println("BufferedImageCache removed new size:" + imageCacheDataList.size() + " collection size:"
-                           + l.size());
+        Logger.getLogger(EventImageCache.class.getName()).log(Level.INFO, null,
+                "BufferedImageCache removed new size:" + imageCacheDataList.size() 
+                + " collection size:" + l.size());
     }
 
     void update() {
@@ -235,14 +226,14 @@ public class EventImageCache {
 
     /**
      * Creates the best cropped image of an event. Saves the event
-     * to a jpg on disk. An exception is thrown if the image file
+     * to a ppm on disk. An exception is thrown if the image file
      * cannot be found
      * @param data
      * @return true if the cropped image is created
      * @throws org.mbari.aved.ui.exceptions.MissingFrameException
      */
     private boolean createBestCroppedImageOfEvent(EventImageCacheData data)
-            throws MissingFrameException, FrameOutRangeException {
+            throws MissingFrameException, FrameOutRangeException, Exception {
         BufferedImage original = loadImage(data.getRawImageSource());
 
         if (original != null) {
@@ -254,7 +245,7 @@ public class EventImageCache {
 
     /**
      * Creates the best cropped image of an event. Saves the event
-     * to a jpg on disk. An exception is thrown if the image file
+     * to a ppm on disk. An exception is thrown if the image file
      * cannot be found
      * @param data image cache data to store the image data in
      * @param evtObj Object to crop
@@ -262,7 +253,7 @@ public class EventImageCache {
      * @throws org.mbari.aved.ui.exceptions.MissingFrameException
      */
     public static boolean createSquaredImageOfEvent(EventImageCacheData data, EventObject evtObj)
-            throws MissingFrameException, FrameOutRangeException {
+            throws MissingFrameException, FrameOutRangeException, Exception {
         File          source   = data.getRawImageSource();
         BufferedImage original = loadImage(source);
 
@@ -322,7 +313,7 @@ public class EventImageCache {
 
     /**
      * Creates the best cropped image of an event. Saves the event
-     * to a jpg on disk. An exception is thrown if the image file
+     * to a ppm on disk. An exception is thrown if the image file
      * cannot be found
      * @param original BufferedImage image to crop event image from
      * @param data image cache data to store the image data in
@@ -332,16 +323,15 @@ public class EventImageCache {
      */
     public static boolean createCroppedImageOfEvent(BufferedImage original, EventImageCacheData data,
             EventObject evtObj)
-            throws MissingFrameException, FrameOutRangeException {
+            throws MissingFrameException, FrameOutRangeException, Exception {
 
         // Load the image that corresponds to the best frame
         try {
             File outputFile = data.getImageSource();
 
-            // If the file already exists, then return
-            if (outputFile.exists()) {
-                return true;
-            } 
+            if (outputFile == null) {
+                return false;
+            }
 
             // Calculate the cropping coordinates from the bounding box
             BoundingBox b       = evtObj.getBoundingBox();
@@ -359,6 +349,11 @@ public class EventImageCache {
                 height = original.getHeight() - yorigin;
             }
 
+            // If width or height is negative, something is wrong. Video
+            // source may be wrong frame size
+            if (width < 0 || height < 0)
+                throw new Exception("Cropped event image width or height negative");
+            
             // If width or height is zero, adjust to 1 to avoid cropping error
             if (width == 0) {
                 width = 1;
@@ -367,23 +362,39 @@ public class EventImageCache {
             if (height == 0) {
                 height = 1;
             } 
+             
             // Create the output image by cropping the input image
-            BufferedImage output = original.getSubimage(xorigin, yorigin, width, height);
-
-            if ((outputFile != null)
-                    && ImageIO.write(output, "ppm", outputFile) != false) {  
+            BufferedImage subImage = original.getSubimage(xorigin, yorigin, width, height); 
+              
+            // Encode size, actual and transposed centroid position into 
+            // white space delimited comment field of ppm file
+            String comment = Integer.toString(evtObj.getCurrSize()) 
+                    + " " + Integer.toString(evtObj.getCurrX())
+                    + " " + Integer.toString(evtObj.getCurrY())
+                    + " " + Integer.toString(evtObj.getCurrX() - xorigin)
+                    + " " + Integer.toString(evtObj.getCurrY() - yorigin);
+            ImageMetadata m = new ImageMetadata(comment);
+            IIOImage image = new IIOImage(subImage, null, null);
+            image.setMetadata(m);
+           
+            Iterator<ImageWriter> writers =  ImageIO.getImageWritersByFormatName("ppm");
+            ImageWriter writer = writers.next();
+            ImageOutputStream ios = ImageIO.createImageOutputStream(outputFile); 
+            writer.setOutput(ios);  
+             
+            if (outputFile != null) {
+                    writer.write(image);   
                 return true;
             }
         } catch (Exception ex) {
-            System.out.println(data.getEvent().toString());
-            Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
+            throw ex;
         }
 
         return false;
-    }
+    } 
 
     private int grabEventsByFrame(BufferedImage original, int bestFrame, int index)
-            throws MissingFrameException, FrameOutRangeException {
+            throws MissingFrameException, FrameOutRangeException, Exception {
         int numEventsInFrame = 0;
 
         synchronized (syncArrays) {
@@ -394,15 +405,16 @@ public class EventImageCache {
                     return numEventsInFrame;
                 }
 
-                EventImageCacheData data = null;
+                EventImageCacheData data;
 
                 // Get the EventImageCacheData at this index
                 data = imageCacheDataList.get(index);
                 ec   = data.getEventObjectContainer();
+                File source = new File(ec.getFrameSource(bestFrame).getParent());
 
                 // If the best frame match, initialize and crop
                 if (ec.getBestEventFrame() == bestFrame) {
-                    data.initialize(bestFrame);
+                    data.initialize(source, "" , bestFrame);
                     ec.setIsBlackChecked();
 
                     if (createCroppedImageOfEvent(original, data, data.getEvent())) {
@@ -432,13 +444,14 @@ public class EventImageCache {
      *  Call within block synced by: syncArrays
      *
      */
-    private boolean grabImage(int index) throws FrameOutRangeException {
+    private boolean grabImage(int index) throws FrameOutRangeException, MissingFrameException, Exception {
         if (index >= eventListModel.getSize()) {
             return false;
         }
 
         synchronized (syncArrays) {
             EventImageCacheData data = null;
+            int                 bestFrame = -1;
 
             try {
 
@@ -447,27 +460,29 @@ public class EventImageCache {
 
                 if (data != null) {
                     EventObjectContainer ec        = data.getEventObjectContainer();
-                    int                  bestFrame = ec.getBestEventFrame();
+                                          bestFrame = ec.getBestEventFrame();
+                    File                    source = new File(ec.getFrameSource(bestFrame).getParent());
 
-                    if (data.initialize(bestFrame) && createBestCroppedImageOfEvent(data) == true) {
+                        if (data.initialize(source, "", bestFrame) && createBestCroppedImageOfEvent(data) == true) {
                         if (ec.isBlackChecked() == false) {
-
+                            
+                            ec.setIsBlackChecked();
+                            
                             // Load the image that corresponds to the best frame
                             BufferedImage original = ImageIO.read(data.getImageSource());
                             int           mean     = meanValue(original);
                             int           length   = ec.getEndFrame() - ec.getStartFrame();
 
-                            /*
-                             * System.out.println("Mean: " + mean +
-                             * " for ObjectID: " + ec.getObjectId() +
-                             * " bestFrame: " + bestFrame);
-                             */
+                            
+                            System.out.println("Mean: " + mean +
+                              " for ObjectID: " + ec.getObjectId() +
+                              " bestFrame: " + bestFrame);
+                             
 
                             // If the mean is nearly black, then assume this is a bogus
                             // image and select the next best frame.
                             // This may not be true for all cases, but this is true
-                            // for the still-images processed in Station M when
-                            // the strobe mis-fires, resulting in a black image
+                            // for the still-images that are largely black images
                             if ((mean < 5) && (length > 0)) {
 
                                 // Get the next best frame
@@ -478,10 +493,10 @@ public class EventImageCache {
                                     // if found a next best frame, reinitialize
                                     // the EventImageCacheData
                                     ec.setBestImageFrame(nextBestFrame);
-                                    data.initialize(nextBestFrame);
+                                    data.initialize(source, "", nextBestFrame);
                                     System.out.println("Found alternative best frame" + " for ObjectID: "
                                                        + ec.getObjectId() + " bestFrame: " + nextBestFrame);
-                                    ec.setIsBlackChecked();
+                                    createBestCroppedImageOfEvent(data);  
                                     ec.setEventImageCacheData(data);
 
                                     return true;
@@ -489,18 +504,14 @@ public class EventImageCache {
                                 else if (nextBestFrame == -1) {
                                     // if no next best frame found, must use this one   
                                     ec.setBestImageFrame(bestFrame);
-                                    ec.setIsBlackChecked();
                                     ec.setEventImageCacheData(data);
                                 }
                             } else {
-                                ec.setIsBlackChecked();
                                 ec.setEventImageCacheData(data);
-
                                 return true;
                             }
                         } else {
                             ec.setEventImageCacheData(data);
-
                             return true;
                         }
                     }
@@ -508,11 +519,13 @@ public class EventImageCache {
             } catch (IOException ex) {
                 Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
             } catch (MissingFrameException e) {
-                System.out.println(e.getMessage());
-            } catch (IndexOutOfBoundsException e) {
-                System.out.println(e.getMessage());
-
-                return false;
+                 throw e; 
+            } catch (IndexOutOfBoundsException ex) {
+                Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
+                return false; 
+            } catch (Exception ex) {
+                Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex); 
+                throw ex; 
             }
         }
 
@@ -549,11 +562,11 @@ public class EventImageCache {
 
             index = indexsToCache[cacheNextIndex];
 
-            /*
-             *  System.out.println("EventImageCache total loaded: " + totalLoaded + " total needed:"
-             *                  + imageCacheDataList.size() + " Indexes to cache: " + indexsToCache.length
-             *                  + " cacheNextIndex:" + cacheNextIndex);
-             */
+            
+            System.out.println("EventImageCache total loaded: " + totalLoaded + " total needed:"
+                             + imageCacheDataList.size() + " Indexes to cache: " + indexsToCache.length
+                             + " cacheNextIndex:" + cacheNextIndex);
+             
             if (index > -1) {
                 synchronized (syncArrays) {
 
@@ -615,7 +628,7 @@ public class EventImageCache {
      * Grabs and loads the next needed index
      * Returns the number of total loaded
      */
-    private int loadNextIndex() {
+    private int loadNextIndex() throws MissingFrameException, Exception {
         if ((cacheNextIndex < indexsToCache.length) && iKeepRunning) {
             int index = -1;
 
@@ -642,7 +655,12 @@ public class EventImageCache {
                         }
                     } catch (FrameOutRangeException ex) {
                         Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (Exception ex) {
+                        Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, ex);
+                        iKeepRunning = false;
+                        return totalLoaded;
                     }
+                    
                 }
             }
 
@@ -677,14 +695,7 @@ public class EventImageCache {
         synchronized (syncArrays) {
             return imageCacheDataList.size();
         }
-    }
-
-    /**
-     * Public method to reset the cache
-     */
-    public void clear() {
-        reset();
-    }
+    } 
 
     /**
      * Public method to get the elements in the cache
@@ -778,7 +789,9 @@ public class EventImageCache {
                             return null;
                         }
                     } catch (Exception e) {
-                        continue;
+                        cache.iKeepRunning = false;
+                        Logger.getLogger(EventImageCache.class.getName()).log(Level.SEVERE, null, e);
+                        break;
                     }
                 }
             }

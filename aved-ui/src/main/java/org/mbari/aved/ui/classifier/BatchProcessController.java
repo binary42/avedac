@@ -320,7 +320,9 @@ public class BatchProcessController extends AbstractController
             }
 
             // remove from the model   
-            abstractTableModel.remove(indexes);    
+            abstractTableModel.remove(indexes);              
+            
+            abstractTableModel.fireTableDataChanged(); 
         }
     }
 

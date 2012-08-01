@@ -93,7 +93,7 @@ public class UserPreferencesView extends JFrameView {
         browseScratchDirButton.addActionListener(actionHandler); 
         playerDefaultRadio.addActionListener(actionHandler);
         playerOtherRadio.addActionListener(actionHandler);
-        videoPlayerTextField.addActionListener(actionHandler);
+        videoPlayerTextField.addActionListener(actionHandler); 
         askBeforeDeleteCheckBox.addActionListener(actionHandler);
         scratchDirComboBox.addActionListener(actionHandler);
         ffmpegRadio.addActionListener(actionHandler);

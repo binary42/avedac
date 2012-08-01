@@ -56,12 +56,10 @@ import org.mbari.aved.ui.utils.ParseUtils;
 
 import java.awt.event.ActionEvent;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
- 
-import java.io.PrintStream;
+import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,6 +67,8 @@ import java.util.logging.Logger;
 import javax.swing.JComboBox;
 import javax.swing.JTable;
 import javax.swing.table.TableModel;  
+import org.mbari.aved.ui.utils.URLUtils;
+import org.mbari.aved.ui.utils.VideoUtils;
 
 public class RunBatchController extends AbstractController implements ModelListener {
     private final BatchProcessController controller;
@@ -107,15 +107,17 @@ public class RunBatchController extends AbstractController implements ModelListe
         }
         return null;
     } 
-    
-    private void findTranscodeSource(SummaryModel model) throws Exception {
+
+    private File findTranscodeSource(SummaryModel model) throws Exception {
         URL url = model.getInputSourceURL();
+        File file = null;  
 
         if (url != null) {
 
             // If this is a http url reference and not a local file
+            // must download to a local directory for transcoding to 
+            // work
             if (url.getProtocol().startsWith("http:")) {
-                File file   = null;
                 File tmpDir = UserPreferences.getModel().getScratchDirectory();
 
                 // Initialize the transcoder output directory to be the temporary directory
@@ -131,45 +133,30 @@ public class RunBatchController extends AbstractController implements ModelListe
                     file = new File(ParseUtils.parseFileNameRemoveDirectory(url.getFile()));
                 }
 
-                try {
-
-                    // Download the contents of the url to a local file if it doesn't exist
-                    if (!file.exists()) {
-                        ApplicationController.download(url, file);
-                    }
-
-                    if ((file != null) && file.exists()) {
-                        model.setTranscodeSource(file);
-                    } else {
-                        throw new Exception("Cannot find transcode source");
-                    }
-                } catch (Exception ex) {
-                    throw new Exception("Cannot find transcode source");
+                // Download the contents of the url to a local file if it doesn't exist
+                if (!file.exists()) {
+                    VideoUtils.download(url, file);
                 }
+
+
+            } else if (url.getProtocol().startsWith("file:")) {
+                URLUtils.isValidURL(url);
+                file = new File(URLDecoder.decode(url.getFile(), "UTF-8"));
             } else {
+                throw new Exception("Invalid image source: " + url.toString());
+            }
 
-                // Convert to to a local file reference
-                File xml  = model.getXmlFile();
-                File file = new File(url.getPath());
-                File localFile;
-
-                if (xml.getParent() != null) {
-                    localFile = new File(xml.getParent() + "/" + file.getName());
-                } else {
-                    localFile = file;
-                }
-
-                // If there is no root path in the source identifier
-                // assume it is in the same path as the XML,
-                // and set its root to the same path as the XML
-                if (localFile.exists()) {
-                    model.setTranscodeSource(localFile);
-                } else {
-                    throw new Exception("Cannot find transcode source");
-                }
+            if ((file != null) && file.exists()) {
+                return file;
+            } else {
+                throw new Exception("Invalid image source: " + url.toString());
             }
         }
+        else {
+            throw new Exception("Image source not defined ");
+        }
     }
+
 
     /**
      *    Export the results in simple Excel format.
@@ -179,6 +166,7 @@ public class RunBatchController extends AbstractController implements ModelListe
             ExcelExporter.exportTable(table, f);
         }
     }
+     
     /**
      * Helper method to reset the batch classification cleanly
      * 
@@ -291,9 +279,7 @@ public class RunBatchController extends AbstractController implements ModelListe
                             // transcode
                             SummaryModel summary = model.getSummaryModel();
 
-                            findTranscodeSource(summary);
-
-                            File file = summary.getTranscodeSource();
+                            File file = findTranscodeSource(summary); 
 
                             transcodeWorker = new VideoTranscodeWorker(runController, model, file, progressDisplay);
                             transcodeWorker.setMaxFrame(importXmlWorker.getMaxEventFrame());
@@ -416,11 +402,13 @@ public class RunBatchController extends AbstractController implements ModelListe
                     }
                 }
             }
+            
 
             // Reset the user preference
             UserPreferences.getModel().setAddTrainingImages(isAddTrainingImages);
             
             // Close the progress display and reset button states
+            progressDisplayStream.done();
             progressDisplay.getView().dispose();
             getView().setRunButton(true);
             getView().setStopButton(false);

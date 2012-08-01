@@ -11,8 +11,8 @@
                 <exec.classpathScope>${classPathScope}</exec.classpathScope>
                 <jpda.listen>true</jpda.listen>
                 <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -Xms512M -Xmx1024M -d64 -Dcom.sun.media.jai.disableMediaLib=true -Djava.library.path=${project.build.directory}/nar/lib/x86_64-MacOSX-g++/jni -classpath %classpath ${packageClassName}</exec.args>
-                <Env.XAPPLRESDIR>/Applications/MATLAB_R2011b.app/X11/app-defaults</Env.XAPPLRESDIR>
-                <Env.DYLD_LIBRARY_PATH>/Applications/MATLAB_R2011b.app/runtime/maci64:/Applications/MATLAB_R2011b.app/bin/maci64:/Applications/MATLAB_R2011b.app/sys/os/maci64:/Users/dcline/NetBeansProjects/avedac/aved-ui/target/nar/lib/x86_64-MacOSX-g++/shared</Env.DYLD_LIBRARY_PATH>
+                <Env.XAPPLRESDIR>/Applications/MATLAB_R2012a.app/X11/app-defaults</Env.XAPPLRESDIR>
+                <Env.DYLD_LIBRARY_PATH>/Applications/MATLAB_R2012a.app/runtime/maci64:/Applications/MATLAB_R2012a.app/bin/maci64:/Applications/MATLAB_R2012a.app/sys/os/maci64:/Users/dcline/NetBeansProjects/avedac/aved-ui/target/nar/lib/x86_64-MacOSX-g++/shared</Env.DYLD_LIBRARY_PATH>
                 <exec.executable>java</exec.executable>
             </properties>
         </action>
@@ -30,8 +30,9 @@
             </goals>
             <properties>
                 <exec.classpathScope>runtime</exec.classpathScope>
-                <Env.DYLD_LIBRARY_PATH>/Applications/MATLAB_R2011b.app/runtime/maci64:/Applications/MATLAB_R2011b.app/bin/maci64:/Applications/MATLAB_R2011b.app/sys/os/maci64:/Users/dcline/NetBeansProjects/avedac/aved-ui/target/nar/lib/x86_64-MacOSX-g++/shared</Env.DYLD_LIBRARY_PATH>
+                <Env.DYLD_LIBRARY_PATH>/Applications/MATLAB_R2012a.app/runtime/maci64:/Applications/MATLAB_R2012a.app/bin/maci64:/Applications/MATLAB_R2012a.app/sys/os/maci64:/Users/dcline/NetBeansProjects/avedac/aved-ui/target/nar/lib/x86_64-MacOSX-g++/shared</Env.DYLD_LIBRARY_PATH>
                 <exec.args>-Xms512M -Xmx1024M -d64 -Dcom.sun.media.jai.disableMediaLib=true -Djava.library.path=${project.build.directory}/nar/lib/x86_64-MacOSX-g++/jni -classpath %classpath ${packageClassName}</exec.args>
+                <Env.XAPPLRESDIR>/Applications/MATLAB_R2012a.app/X11/app-defaults</Env.XAPPLRESDIR>
                 <exec.executable>java</exec.executable>
             </properties>
         </action>
@@ -45,6 +46,8 @@
                 <exec.args>${profiler.args} -Xms512M -Xmx1024M -d64 -Dcom.sun.media.jai.disableMediaLib=true -Djava.library.path=${project.build.directory}/nar/lib/x86_64-MacOSX-g++/jni -classpath %classpath ${packageClassName}</exec.args>
                 <profiler.action>profile</profiler.action>
                 <exec.executable>${profiler.java}</exec.executable>
+                <Env.DYLD_LIBRARY_PATH>/Applications/MATLAB_R2012a.app/runtime/maci64:/Applications/MATLAB_R2012a.app/bin/maci64:/Applications/MATLAB_R2012a.app/sys/os/maci64:/Users/dcline/NetBeansProjects/avedac/aved-ui/target/nar/lib/x86_64-MacOSX-g++/shared</Env.DYLD_LIBRARY_PATH>
+                <Env.XAPPLRESDIR>/Applications/MATLAB_R2012a.app/X11/app-defaults</Env.XAPPLRESDIR>
             </properties>
         </action>
         <action>
@@ -57,10 +60,10 @@
             <properties>
                 <exec.classpathScope>${classPathScope}</exec.classpathScope>
                 <jpda.listen>true</jpda.listen>
-                <exec.args>-Xms512M -Xmx1024M -d64 -Dcom.sun.media.jai.disableMediaLib=true -Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath ${packageClassName}</exec.args>
-                <Env.XAPPLRESDIR>/Applications/MATLAB_R2011b.app/X11/app-defaults</Env.XAPPLRESDIR>
+                <exec.args>-Xms512M -Xmx1024M  -Dcom.sun.media.jai.disableMediaLib=true -Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath ${packageClassName}</exec.args>
+                <Env.XAPPLRESDIR>/Applications/MATLAB_R2012a.app/X11/app-defaults</Env.XAPPLRESDIR>
                 <jpda.stopclass>${packageClassName}</jpda.stopclass>
-                <Env.DYLD_LIBRARY_PATH>/Applications/AVEDac/lib:/Applications/MATLAB_R2011b.app/runtime/maci64:/Applications/MATLAB_R2011b.app/bin/maci64:/Applications/MATLAB_R2011b.app/sys/os/maci64</Env.DYLD_LIBRARY_PATH>
+                <Env.DYLD_LIBRARY_PATH>/Applications/MATLAB_R2012a.app/runtime/maci64:/Applications/MATLAB_R2012a.app/bin/maci64:/Applications/MATLAB_R2012a.app/sys/os/maci64:/Users/dcline/NetBeansProjects/avedac/aved-ui/target/nar/lib/x86_64-MacOSX-g++/shared</Env.DYLD_LIBRARY_PATH>
                 <exec.executable>java</exec.executable>
             </properties>
         </action>
@@ -71,6 +74,9 @@
                 <goal>-PMac64</goal>
                 <goal>package</goal>  
             </goals>
+            <properties>
+                <Env.MATLAB_ROOT>/Applications/MATLAB/MATLAB_Compiler_Runtime/v717</Env.MATLAB_ROOT>
+            </properties>
         </action>
         <action>
             <actionName>rebuild</actionName>

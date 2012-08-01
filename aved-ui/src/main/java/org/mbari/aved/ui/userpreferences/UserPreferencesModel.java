@@ -173,7 +173,7 @@ public final class UserPreferencesModel extends AbstractModel {
 
             if (lcOSName.startsWith("mac os x")) {
 
-                // OTHER.command =
+                OTHER.command = "/Applications/VLC.app/Contents/MacOS/VLC --rc-fake-tty --video-on-top ";
             }
         }
     }

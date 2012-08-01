@@ -28,51 +28,61 @@ package org.mbari.aved.ui.utils;
 
 //~--- JDK imports ------------------------------------------------------------
 
+import java.io.File;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
 
 /**
  *
  * @author dcline
  */
 public class URLUtils {
-    public static boolean isFile(String urlString) {
+    public static boolean isFileUrl(String urlString) {
 
-        // If this is a true url reference and not a local file
-        if (urlString.startsWith("http:") || urlString.startsWith("file:")) {
-            return false;
-        }
-
-        return true;
-    }
-
-    public static boolean isURL(String urlString) {
-
-        // If this is a true url reference and not a local file
-        if (urlString.startsWith("http:") || urlString.startsWith("file:")) {
+        // If this is a url file reference
+        if (urlString.startsWith("file:")) {
             return true;
         }
 
         return false;
     }
 
-    public static boolean isValidURL(String urlString) {
+    public static boolean isHttpUrl(String urlString) {
+
+        // If this is a url http reference
+        if (urlString.startsWith("http:")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean isValidURL(URL url) {
         try {
-            URL           url        = new URL(urlString);
-            URLConnection connection = url.openConnection();
+            
+            if (isHttpUrl(url.toString())) { 
+                URLConnection connection = url.openConnection();
 
-            if (connection instanceof HttpURLConnection) {
-                HttpURLConnection httpConnection = (HttpURLConnection) connection;
+                if (connection instanceof HttpURLConnection) {
+                    HttpURLConnection httpConnection = (HttpURLConnection) connection;
 
-                httpConnection.connect();
+                    httpConnection.setConnectTimeout(1000);
+                    httpConnection.connect();
 
-                int response = httpConnection.getResponseCode();
+                    int response = httpConnection.getResponseCode();
 
-                // System.out.println(
-                // "Response: " + response);
-                return (response == HttpURLConnection.HTTP_OK);
-            }
+                    // System.out.println(
+                    // "Response: " + response);
+                    return (response == HttpURLConnection.HTTP_OK);
+                }
+            } else if (isFileUrl(url.toString())) { 
+                File f = new File( URLDecoder.decode( url.getFile(), "UTF-8" ) ); 
+                if (f.exists()) {
+                    return true;
+                }
+            }        
 
             return false;
         } catch (Exception e) {

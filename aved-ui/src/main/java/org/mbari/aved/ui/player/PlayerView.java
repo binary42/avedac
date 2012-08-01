@@ -304,13 +304,13 @@ public class PlayerView extends JFrameView {
                     this.validate();
                 }
 
-                // Scale JAI if the image is larger than 60% of the main display
+                // Scale JAI if the image is larger than 80% of the main display
                 // TODO: this is somewhat arbitrary and really should be scaled by
                 // the total size of the PlayerView, and not just the JAI component
                 // of the PlayerView.
                 Dimension d      = Application.getView().getSize();
                 float     scale  = 1.0f;
-                float     factor = 0.60f;
+                float     factor = 0.80f;
 
                 if ((image.getWidth() >= factor * d.width) || (image.getHeight() >= factor * d.height)) {
                     scale = ImageChangeUtil.calcTheta(image.getWidth(), image.getHeight(), factor * d.width,
@@ -357,7 +357,7 @@ public class PlayerView extends JFrameView {
         getForm().getLabel(ID_EVENT_ID_LABEL).setText(String.valueOf(event.getObjectId()));
         getForm().getLabel(ID_EVENT_MAX_SIZE_LABEL).setText(String.valueOf(event.getMaxSize()));
         getForm().getLabel(ID_EVENT_BEST_FRAME_LABEL).setText(String.valueOf(event.getBestEventFrame()));
-        getForm().getLabel(ID_EVENT_DURATION_LABEL).setText(String.valueOf(event.getFrameDuration()));
+        getForm().getLabel(ID_EVENT_DURATION_LABEL).setText(String.valueOf(event.getTtlFrames()));
         getForm().getLabel(ID_EVENT_STARTFRAME_LABEL).setText(String.valueOf(event.getStartFrame()));
         getForm().getLabel(ID_EVENT_ENDFRAME_LABEL).setText(String.valueOf(event.getEndFrame()));
         getForm().getLabel(ID_EVENT_STARTTIMECODELABEL).setText(event.getStartTimecode());

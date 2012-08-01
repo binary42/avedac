@@ -38,7 +38,7 @@ public class FrameOutRangeException extends Exception {
     private static final long serialVersionUID = -7688845951231445186L;
 
     public FrameOutRangeException(EventObjectContainer event, int framenum) {
-        super("Frame " + framenum + "is out of range for event" + event.getObjectId() + "valid range: "
+        super("Frame " + framenum + " is out of range for event " + event.getObjectId() + " valid range: "
               + event.getStartFrame() + "-" + event.getEndFrame(), new Throwable("Frame number is invalid"));
     }
 }

@@ -66,10 +66,10 @@ public class EventObjectContainer implements Comparable, Serializable {
 
     /**
      * Checks the loaded image for being all black/not.
-     * This is used to deterine whether a bogus image from
+     * This is used to determine whether a bogus image from
      * e.g. a misfired strobe is found
      */
-    private boolean             isBlackChecked = false;
+    private boolean             isBlackChecked = true;
     private EventImageCacheData eventImageCacheData;
     private ApplicationModel    mainModel;
 
@@ -126,8 +126,10 @@ public class EventObjectContainer implements Comparable, Serializable {
                 EventObjectContainer clone = new EventObjectContainer(obj);
 
                 // Set the clone id and source
+                clone.isBlackChecked      = this.isBlackChecked;
                 clone.objectId            = this.objectId;
                 clone.mainModel           = this.mainModel;
+                clone.bestEventFrame      = this.bestEventFrame;
                 clone.eventImageCacheData = this.eventImageCacheData;
 
                 // Iterate over the keys in the map
@@ -149,6 +151,10 @@ public class EventObjectContainer implements Comparable, Serializable {
         }
 
         return null;
+    }
+    
+    public void clearEventImageCache() {
+        this.eventImageCacheData = null;
     }
 
     /**
@@ -235,7 +241,8 @@ public class EventObjectContainer implements Comparable, Serializable {
 
         return false;
     }
-
+ 
+    
     /**
      * Sets the best image associated with this event.
      * This will override the default setting of the "best" image representation
@@ -251,11 +258,8 @@ public class EventObjectContainer implements Comparable, Serializable {
      * Returns the total number of frames for this event
      * @return total number of frames for this event
      */
-    public int getFrameDuration() {
-        int start = getStartFrame();
-        int end   = getEndFrame();
-
-        return (end - start + 1);
+    public int getTtlFrames() {
+        return sortedEventFrames.size();
     }
 
     /**
@@ -343,7 +347,7 @@ public class EventObjectContainer implements Comparable, Serializable {
      */
     public File getFrameSource(int frameNo) {
 
-        // Format where the frames should be located accoring to the mainModel
+        // Format where the frames should be located according to the mainModel
         if ((mainModel != null) && (mainModel.getEventListModel() != null) && (mainModel.getSummaryModel() != null)) {
             SummaryModel model = this.mainModel.getSummaryModel();
             AvedVideo    v     = model.getAvedVideo();
@@ -401,7 +405,7 @@ public class EventObjectContainer implements Comparable, Serializable {
             // it can take a very long time for transcoding of the entire event,
             // and subsequent searching for the max size, so we'll skip this for
             // events longer than 300 frames, which is 10 seconds at 30 fps
-            if ((getFrameDuration() < 300) && (maxEventFrame > bestEventFrame)) {
+            if ((getTtlFrames() < 300) && (maxEventFrame > bestEventFrame)) {
                 bestEventFrame = maxEventFrame;
             }
 
@@ -626,13 +630,29 @@ public class EventObjectContainer implements Comparable, Serializable {
             return -1;
         }
     }
+    
+    /**
+     * Returns the  frames number from starting frame, based on zero-based index
+     * i.e. index = 0 returns 215, index = 1 returns 216, etc. Useful when indexing
+     * non-sequential frames
+     * @param index
+     * @return 
+     */
+    public int getIndexedFrame(int index) {        
+        int               maxSize     = sortedEventFrames.size();
+        if (index >=0 && index < maxSize) {
+             return sortedEventFrames.get(index);
+        }
+        
+        return -1;        
+    }
 
     /**
      * Finds the next larger instance to the one
      * found at the given frame.  
      * 
      * @return returns the next larger frame, or -1 if none found
-     * or he given frame is out of range
+     * or the given frame is out of range
      */
     int findNextBestFrame() {
         Iterator<Integer> iter        = sortedEventFrames.iterator();

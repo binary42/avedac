@@ -154,7 +154,8 @@ public class BatchProcessAbstractTableModel extends AbstractTableModel {
             for (int i = 2; i < this.getColumnCount(); i++) {
                 m.setClassTotal(i - 2, "");
             }
-        }
+        }        
+        fireTableDataChanged();
     }
 
  

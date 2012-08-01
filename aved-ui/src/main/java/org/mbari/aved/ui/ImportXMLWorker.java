@@ -207,9 +207,9 @@ public class ImportXMLWorker extends SwingWorker {
 
                 // If this is a true url reference and not a local file
                 // just set it
-                if (URLUtils.isURL(id)) {
-                    model.getSummaryModel().setInputSourceURL(new URL(id));
-                } else if (URLUtils.isFile(id)) {
+                if (URLUtils.isHttpUrl(id)) {
+                    model.getSummaryModel().setInputSourceURL(new URL(id), true);
+                } else if (URLUtils.isFileUrl(id)) {
 
                     // otherwise check if a file and convert it to a file URL reference
                     // Convert to to a file reference
@@ -221,16 +221,16 @@ public class ImportXMLWorker extends SwingWorker {
                     if (video.getParent() == null) {
                         String v = "file:" + xmlFile.getParent() + "/" + video.getName();
 
-                        model.getSummaryModel().setInputSourceURL(new URL(v));
-                    } else {
-                        model.getSummaryModel().setInputSourceURL(new URL("file:" + video.toString()));
+                        model.getSummaryModel().setInputSourceURL(new URL(v), true);
+                    } else {                        
+                        model.getSummaryModel().setInputSourceURL(new URL(id), true);
                     }
                 }
             } else {
-                // if no video source identify, set it to a default AVI file
+                // if no video source identified, set it to a default AVI file
                 // this is completely arbitrary
                 String defaultSource = "file:" + xmlFile.getParent() + "/" + xmlFile.getName() + ".avi";
-                model.getSummaryModel().setInputSourceURL(new URL(defaultSource));
+                model.getSummaryModel().setInputSourceURL(new URL(defaultSource), true);
             }
 
             long key = 0;

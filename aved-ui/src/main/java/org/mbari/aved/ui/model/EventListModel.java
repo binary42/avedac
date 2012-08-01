@@ -83,7 +83,7 @@ public class EventListModel extends AbstractModel implements ListModel, BoundedR
     }
 
     /**
-     * Sends a Model event ot notify listeners of the total of new changes
+     * Sends a Model event to notify listeners of the total of new changes
      * to the list. This is a helper function to refresh the GUI during
      * loading of the list
      */
@@ -93,18 +93,46 @@ public class EventListModel extends AbstractModel implements ListModel, BoundedR
         notifyChanged(new EventListModelEvent(this, EventListModelEvent.NUM_LOADED_IMAGES_CHANGED, totalChanged));
     }
 
+    public void clearImageCache() { 
+        
+        // reset the image cache
+        if (imageCache != null) {
+            imageCache.reset();
+        }
+
+        imageCache = null; 
+        
+         // clear the image cache reference
+        synchronized (syncList) { 
+
+            ListIterator<EventObjectContainer> itr = list.listIterator();
+            while(itr.hasNext()) {
+                EventObjectContainer ec = itr.next();
+                ec.clearEventImageCache();
+            }
+        }
+        
+        notifyImagesChanged(list.size());
+    }
     /**
      * Clears out the list and notifies model event listeners
      *
      *  Call within block synced by: <code>syncList</code>
      */
-    public void reset() {
-        if (imageCache != null) {
-            imageCache.clear();
+    public void reset() { 
+    
+        clearImageCache();
+
+        // clear the image cache reference
+        synchronized (syncList) { 
+
+            ListIterator<EventObjectContainer> itr = list.listIterator();
+            while(itr.hasNext()) {
+                EventObjectContainer ec = itr.next();
+                ec.cleanup();
+            }
         }
-
-        imageCache = null;
-
+        
         synchronized (syncList) {
             list.clear();
         }
@@ -908,7 +936,12 @@ public class EventListModel extends AbstractModel implements ListModel, BoundedR
      * transcoded output frames change
      */
     public void loadImageCacheDataByEvent() throws Exception {
-        imageCache = new EventImageCache();
+        if (imageCache != null ) { 
+            imageCache.reset();
+        }
+        else 
+            imageCache = new EventImageCache();
+        
         imageCache.loadImageCache(this, false);
     }
     /**
@@ -922,7 +955,12 @@ public class EventListModel extends AbstractModel implements ListModel, BoundedR
      * best frame can be 
      */
     public void loadImageCacheDataByFrame() throws Exception{
-        imageCache = new EventImageCache();
+        if (imageCache != null ) { 
+            imageCache.reset();
+        }
+        else 
+            imageCache = new EventImageCache();
+        
         imageCache.loadImageCache(this, true);
     }
 

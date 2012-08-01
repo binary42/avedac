@@ -33,8 +33,8 @@ public class MissingFrameException extends Exception {
      */
     private static final long serialVersionUID = -8807932826648295488L;
 
-    public MissingFrameException(String frame) {
-        super("Frame " + frame + " is missing - invalid or missing",
+    public MissingFrameException(int frame) { 
+        super("Frame " + Integer.toString(frame) + " is missing - invalid or missing",
               new Throwable("Either file is invalid, or doesn't exist"));
     }
 }

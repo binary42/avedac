@@ -132,7 +132,7 @@ public class RunController extends AbstractController implements ModelListener {
                     
 
                     BufferedReader br = Classifier.getController().getBufferedReader();
-                    ProgressDisplayStream matlabDisplayStream = new ProgressDisplayStream(display,
+                    final ProgressDisplayStream matlabDisplayStream = new ProgressDisplayStream(display,
                             br);
 
                     matlabDisplayStream.execute();
@@ -197,6 +197,8 @@ public class RunController extends AbstractController implements ModelListener {
                                     getView().setStopButton(false);
                                 }
                             }
+                            
+                            matlabDisplayStream.done();
                         }
                     };
 

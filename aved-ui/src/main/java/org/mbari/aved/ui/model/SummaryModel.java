@@ -29,6 +29,7 @@ package org.mbari.aved.ui.model;
 //~--- non-JDK imports --------------------------------------------------------
 
 import aved.model.EventDataStream;
+import aved.model.SourceMetadata;
 
 import org.mbari.aved.mbarivision.api.AvedVideo; 
 import org.mbari.aved.ui.appframework.AbstractModel;
@@ -69,10 +70,7 @@ public class SummaryModel extends AbstractModel {
 
     /** Defines the directory the input video file was transcoded to */
     private File transcodeDir;
-
-    /** Defines the source video to transcode to view the results */
-    private File transcodeSourceFile;
-
+ 
     /** Defines the XML file containing results to edit */
     private File xmlFile;
 
@@ -89,11 +87,10 @@ public class SummaryModel extends AbstractModel {
         this.eventDataStream = null;
         this.avedVideoOut    = null;
         this.setXmlFile(new File(EMPTY_STRING));
-        this.setInputSourceURL(null);
+        this.setInputSourceURL(null, true);
         this.setMpegUrl(null);
         this.setTranscodeDir(new File(EMPTY_STRING));
-        this.setTestImageDir(new File(EMPTY_STRING));
-        this.setTranscodeSource(new File(EMPTY_STRING));
+        this.setTestImageDir(new File(EMPTY_STRING)); 
     }
 
     /**
@@ -122,17 +119,7 @@ public class SummaryModel extends AbstractModel {
      */
     public URL getInputSourceURL() {
         return inputSourceURL;
-    }
-
-    /**
-     * Returns the source file to be transcoded into frames and
-     * converted into thumbnails for viewing
-     *
-     * @return source file to be transcoded
-     */
-    public File getTranscodeSource() {
-        return transcodeSourceFile;
-    }
+    } 
 
     /**
      * Returns the XML file that contains results to edit
@@ -205,39 +192,31 @@ public class SummaryModel extends AbstractModel {
      * Sets the video file in the model if it is different
      * than the one already contained in the model
      * @param urls the url that contains the input source video file
+     * @param notify true to notify listeners the model has been updated
      */
-    public void setInputSourceURL(URL url) throws MalformedURLException {
+    public void setInputSourceURL(URL url, boolean notify) throws MalformedURLException {
         if (changedName(url, inputSourceURL)) {
             inputSourceURL = url;
 
             // Set the last imported parent URL in the preferences
             UserPreferencesModel prefs = UserPreferences.getModel();
 
-            if (url != null) {
+
+            if (url != null) {                
+                if (eventDataStream != null) {
+                    // Update the source metadata if there is one
+                    SourceMetadata source = eventDataStream.getSourceMetadata();
+                    source.setSourceIdentifier(url.toString());
+                }
                 prefs.setImportSourceUrl(url);
-                notifyChanged(new SummaryModelEvent(this, SummaryModelEvent.INPUT_SOURCE_URL_CHANGED, url.toString()));
-            } else {
-                notifyChanged(new SummaryModelEvent(this, SummaryModelEvent.INPUT_SOURCE_URL_CHANGED, "null"));
+                if (notify)
+                    notifyChanged(new SummaryModelEvent(this, SummaryModelEvent.INPUT_SOURCE_URL_CHANGED, url.toString()));
+            } else { 
+                if (notify)
+                    notifyChanged(new SummaryModelEvent(this, SummaryModelEvent.INPUT_SOURCE_URL_CHANGED, "null"));
             }
         }
-    }
-
-    /**
-     * Sets the source used for transcoding into individual frames
-     * @param file
-     */
-    public void setTranscodeSource(File file) {
-        if (changedName(file, transcodeSourceFile)) {
-            transcodeSourceFile = file;
-
-            if (file != null) {
-                notifyChanged(new SummaryModelEvent(this, SummaryModelEvent.TRANSCODE_SOURCE_CHANGED,
-                        transcodeSourceFile.toString()));
-            } else {
-                notifyChanged(new SummaryModelEvent(this, SummaryModelEvent.TRANSCODE_SOURCE_CHANGED, "null"));
-            }
-        }
-    }
+    } 
 
     public void setTranscodeDir(File file) {
         if (changedName(file, transcodeDir)) {
@@ -325,11 +304,7 @@ public class SummaryModel extends AbstractModel {
          */
         public static final int TRANSCODE_OUTPUT_DIR_CHANGED = 3;
 
-        /**
-         * Indicates the transcoded file has changed
-         */
-        public static final int TRANSCODE_SOURCE_CHANGED = 4;
-
+      
         /**
          * Indicates the XML file with AVED results has changed
          */

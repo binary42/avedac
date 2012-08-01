@@ -29,22 +29,17 @@ package org.mbari.aved.ui.classifier;
 //~--- non-JDK imports --------------------------------------------------------
 
 import aved.model.EventObject;
-
-import org.mbari.aved.classifier.ClassifierLibraryJNI;
-import org.mbari.aved.classifier.TrainingModel;
-import org.mbari.aved.ui.classifier.table.TableModel; 
-import org.mbari.aved.ui.model.EventImageCacheData;
-import org.mbari.aved.ui.model.EventListModel;
-import org.mbari.aved.ui.model.EventObjectContainer;
-
-//~--- JDK imports ------------------------------------------------------------
-
-import java.io.File; 
-
+import java.io.File;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.mbari.aved.ui.model.EventImageCache;  
+import org.mbari.aved.classifier.ClassifierLibraryJNI;
+import org.mbari.aved.classifier.TrainingModel;
+import org.mbari.aved.ui.classifier.table.TableModel;
+import org.mbari.aved.ui.model.EventImageCache;
+import org.mbari.aved.ui.model.EventImageCacheData;
+import org.mbari.aved.ui.model.EventListModel;
+import org.mbari.aved.ui.model.EventObjectContainer;
 import org.mbari.aved.ui.progress.AbstractOutputStream;
 
 /**
@@ -84,9 +79,8 @@ public class RunWorker extends ClassifierLibraryJNITask {
             int numEvtImages = 0;
 
             for (int i = 0; i < size; i++) {
-                EventObjectContainer event = eventListModel.getElementAt(i);
-
-                numEvtImages += event.getFrameDuration();
+                EventObjectContainer event = eventListModel.getElementAt(i); 
+                numEvtImages += event.getTtlFrames();
             }
 
             if (!testDir.exists()) {
@@ -108,30 +102,35 @@ public class RunWorker extends ClassifierLibraryJNITask {
 
                 for (int i = 0; i < size; i++) {
                     EventObjectContainer event = eventListModel.getElementAt(i);
-
-                    for (int frameNo = event.getStartFrame(); frameNo <= event.getEndFrame(); ++frameNo) {
+                    int ttlFrames = event.getTtlFrames();
+                    
+                    for (int j = 0; j < ttlFrames; j++) {
                         if (isCancelled()) {
                             return;
                         }
+                        
+                        int frameNo = event.getIndexedFrame(j);
+                        
+                        EventImageCacheData data = new EventImageCacheData(event);
 
-                        // If found a valid frame number
-                        if (frameNo >= 0) { 
-                            EventImageCacheData data        = new EventImageCacheData(event);
+                        // If the event has a class, then rename
+                        // the event with an appended name - replacing
+                        // all the white spaces with dashes
+                        if (event.getClassName().length() > 0) {
+                            data.initialize(testDir, event.getClassName(), frameNo);
+                        } else {
+                            data.initialize(testDir, "", frameNo);
+                        }
 
-                            // If the event has a class, then rename
-                            // the event with an appended name - replacing
-                            // all the white spaces with dashes
-                            if (event.getClassName().length() > 0) {
-                                data.initialize(testDir, event.getClassName(), frameNo);
-                            } else {
-                                data.initialize(testDir, "", frameNo);
+                        EventObject object = event.getEventObject(frameNo);
+
+                        if (object != null) {
+                            if(!EventImageCache.createSquaredImageOfEvent(data, object)) {
+                                display.write("Error creating squared images"); 
+                                setFini();
+                                return;
                             }
-
-                            EventObject object = event.getEventObject(frameNo);
-
-                            if (object != null) {
-                                EventImageCache.createSquaredImageOfEvent(data, object);
-                            }
+                                
                         }
                     }
                 }
@@ -140,6 +139,7 @@ public class RunWorker extends ClassifierLibraryJNITask {
             String dbRoot = trainingModel.getDatabaseRootdirectory().toString();
 
             // Run test image collection on the data
+            display.write("Collecting data on squared images...");
             library.collect_tests(this.getCancel(), testDir.getAbsolutePath(), dbRoot, trainingModel.getColorSpace());
 
             int      numEvents                 = eventListModel.getSize();
@@ -267,22 +267,22 @@ public class RunWorker extends ClassifierLibraryJNITask {
             }
 
             // Put the statistics and column names in a TableModel
-            tableModel = new TableModel(columnNames, statistics, sum);
-                    
-            setFini();
+            tableModel = new TableModel(columnNames, statistics, sum); 
+            
         } catch (RuntimeException ex) {
             // Only log if this was an exception caused by a non-user cancel
             if (!this.isCancelled()) {
-                Logger.getLogger(RunController.class.getName()).log(Level.SEVERE, null, ex);
-                setFini();
+                //TODO: propagate this message to the user
+                Logger.getLogger(RunController.class.getName()).log(Level.SEVERE, null, ex); 
             }
         } catch (Exception ex) { 
             // Only log if this was an exception caused by a non-user cancel
             if (!this.isCancelled()) {
-                Logger.getLogger(RunController.class.getName()).log(Level.SEVERE, null, ex);
-                setFini();
+                //TODO: propagate this message to the user
+                Logger.getLogger(RunController.class.getName()).log(Level.SEVERE, null, ex); 
             }
         }
+        setFini();
     }
 
     /**

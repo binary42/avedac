@@ -196,6 +196,8 @@ class TestClassController extends AbstractController implements ModelListener {
 
                             getView().setRunButton(true);
                             getView().setStopButton(false);
+                            
+                            progressDisplayStream.done();
                             progressDisplay.getView().dispose();
 
                             if (task.isFini()) {

@@ -25,18 +25,12 @@
 
 
 package org.mbari.aved.ui;
-
-//~--- non-JDK imports --------------------------------------------------------
-
-import com.jeta.forms.components.panel.FormPanel;
-
-//~--- JDK imports ------------------------------------------------------------
-
+ 
+import com.jeta.forms.components.panel.FormPanel; 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 import javax.swing.JFrame;
-import javax.swing.JLabel; 
+import javax.swing.JLabel;
 
 public class ApplicationInfoView extends JFrame {
 

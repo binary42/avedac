@@ -43,6 +43,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.mbari.aved.classifier.ClassModel;
 
 public class ClassImageDirectoryModel extends Model {
     private List     fileList        = new ArrayList();
@@ -50,8 +53,19 @@ public class ClassImageDirectoryModel extends Model {
     private File     directory;
     private String   name;
     private String   status;
-
+    private ClassModel classModel;
+    
+    public ClassImageDirectoryModel(ClassModel classModel) {
+        this.classModel = classModel;
+        addPropertyChangeListener("directory", new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent evt) {
+                updateFileList();
+            }
+        });
+    }
+     
     public ClassImageDirectoryModel() {
+        this.classModel = classModel;
         addPropertyChangeListener("directory", new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
                 updateFileList();
@@ -78,6 +92,15 @@ public class ClassImageDirectoryModel extends Model {
 
     public void updateFileList() {
         setStatus("Updating file list...");
+        if (classModel != null) {
+            classModel.getRawImageFileListing();
+            try {
+                Classifier.getController().getModel().addClassModel(classModel);
+            } catch (Exception ex) {
+                Logger.getLogger(ClassImageDirectoryModel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
         fileList.clear();
 
         if (directory.isDirectory() == false) {

@@ -439,10 +439,10 @@ public class ApplicationView extends JFrameView {
                     importDirectoryLabel.setText(xml.toString());
                 }
 
-                xmlFileLabel.setText(xml.getName());
-
-                if (mpeg != null) {
-                    if (URLUtils.isFile(mpeg.toString())) {
+                xmlFileLabel.setText(xml.getName()); 
+                       
+                if (mpeg != null ) {
+                    if (URLUtils.isValidURL(mpeg)) {
                         File f = new File(mpeg.toString());
 
                         mpegFileLabel.setText("<html><a href>" + f.getName() + "</a></html>");
@@ -459,7 +459,7 @@ public class ApplicationView extends JFrameView {
                 }
 
                 if (inputsource != null) {
-                    if (URLUtils.isFile(inputsource.toString())) {
+                    if (URLUtils.isValidURL(inputsource)) {
                         File f = new File(inputsource.toString());
 
                         inputSourceUrlLabel.setText("<html><a href>" + f.getName() + "</a></html>");

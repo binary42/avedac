@@ -25,26 +25,13 @@
 
 
 package org.mbari.aved.ui.userpreferences;
-
-//~--- non-JDK imports --------------------------------------------------------
-
-import org.mbari.aved.ui.appframework.AbstractController;
-import org.mbari.aved.ui.userpreferences.UserPreferencesModel.VideoPlayoutMode;
-
-//~--- JDK imports ------------------------------------------------------------
-
+  
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-
 import java.io.File;
-
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JTextField;
-import javax.swing.KeyStroke;
+import javax.swing.*;
+import org.mbari.aved.ui.appframework.AbstractController;
+import org.mbari.aved.ui.userpreferences.UserPreferencesModel.VideoPlayoutMode;
 
 public class UserPreferencesController extends AbstractController {
     public UserPreferencesController(UserPreferencesModel model) {
@@ -63,7 +50,7 @@ public class UserPreferencesController extends AbstractController {
             }
         };
 
-        // Add action handler for enter to slider text field
+        // Add action handler for enter to  text field
         getView().getVideoPlayerTextField().getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "check");
         getView().getVideoPlayerTextField().getActionMap().put("check", checkplayertext);
     }

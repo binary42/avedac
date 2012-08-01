@@ -839,8 +839,7 @@ public class MainMenu implements ModelListener {
             File         xml             = e.getXmlFile();
             URL          mpeg            = e.getMpegUrl();
             URL          inputsource     = e.getInputSourceURL();
-            File         transcodeDir    = e.getFrameSourceDir();
-            File         transcodesource = e.getTranscodeSource();
+            File         transcodeDir    = e.getFrameSourceDir(); 
 
             // If the xml is defined then show all related files/directories
             // relative to it
@@ -849,7 +848,7 @@ public class MainMenu implements ModelListener {
                 getForm().getLabel(ID_XML_FILE_LABEL).setText(xml.getName());
 
                 if (mpeg != null) {
-                    if (URLUtils.isFile(mpeg.toString())) {
+                    if (URLUtils.isFileUrl(mpeg.toString())) {
                         File f = new File(mpeg.toString());
 
                         getForm().getLabel(ID_MPEG_FILE_LABEL).setText("<html><a href>" + f.getName()
@@ -866,7 +865,7 @@ public class MainMenu implements ModelListener {
                 }
 
                 if (inputsource != null) {
-                    if (URLUtils.isFile(inputsource.toString())) {
+                    if (URLUtils.isFileUrl(inputsource.toString())) {
                         File f = new File(inputsource.toString());
 
                         getForm().getLabel(ID_INPUTSOURCE_URL_LABEL).setText("<html><a href>" + f.getName()
@@ -889,10 +888,7 @@ public class MainMenu implements ModelListener {
                     getForm().getLabel(ID_TRANSCODE_OUTPUT_DIR_LABEL).setText(
                         transcodeDir.getAbsolutePath().toString());
                 }
-
-                if (transcodesource != null) {
-                    getForm().getLabel(ID_TRANSCODE_SOURCE_LABEL).setText(transcodesource.getAbsolutePath().toString());
-                }
+ 
             } else {
 
                 // If the xml isn't defined, then show all full path names
@@ -920,12 +916,7 @@ public class MainMenu implements ModelListener {
                 } else {
                     getForm().getLabel(ID_TRANSCODE_OUTPUT_DIR_LABEL).setText("-");
                 }
-
-                if (transcodesource != null) {
-                    getForm().getLabel(ID_TRANSCODE_SOURCE_LABEL).setText(transcodesource.toString());
-                } else {
-                    getForm().getLabel(ID_TRANSCODE_SOURCE_LABEL).setText("-");
-                }
+ 
             }
         }
 

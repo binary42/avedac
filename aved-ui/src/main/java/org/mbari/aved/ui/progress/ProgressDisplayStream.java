@@ -46,7 +46,7 @@ import java.util.logging.Logger;
  * @author dcline
  */
 public class ProgressDisplayStream extends SwingWorker {
-    public Boolean          isDone = false;
+    private Boolean          isDone = false;
     private BufferedReader  br;
     private OutputStream display; 
 
@@ -77,5 +77,10 @@ public class ProgressDisplayStream extends SwingWorker {
 
     public void setBufferedReader(BufferedReader br) {
         this.br = br;
+    }
+    
+    @Override
+    public void done() {
+        isDone = true;
     }
 }

@@ -276,6 +276,9 @@ class CreateClassController extends AbstractController implements ModelListener,
 
                     return;
                 }
+                 
+                getView().setRunButton(false);
+                getView().setStopButton(true);
 
                 // Create the command for class creation and add it to the queue
                 final SwingWorker worker = Classifier.getController().getWorker();
@@ -301,8 +304,6 @@ class CreateClassController extends AbstractController implements ModelListener,
                             progressDisplayStream.execute();
                             task = new CreateClassTask(worker, newModel);
                             Classifier.getController().addQueue(task);
-                            getView().setRunButton(false);
-                            getView().setStopButton(true);
 
                             while (!task.isCancelled() &&!task.isFini()) {
                                 try {
@@ -312,6 +313,8 @@ class CreateClassController extends AbstractController implements ModelListener,
 
                             getView().setRunButton(true);
                             getView().setStopButton(false);
+                            
+                            progressDisplayStream.done();
                             progressDisplay.getView().dispose();
 
                             // Add the model only after successfully created
@@ -356,7 +359,7 @@ class CreateClassController extends AbstractController implements ModelListener,
      */
     private void updateClasses() {
         File dir       = UserPreferences.getModel().getLastClassImageImportDirectory();
-        File parentDir = getModel().getClassTrainingImageDirectory();
+        File parentDir = UserPreferences.getModel().getClassDatabaseDirectory();
 
         if (parentDir != null) {
 
@@ -410,6 +413,7 @@ class CreateClassController extends AbstractController implements ModelListener,
             // When the class directory changes or class models are updated
             // update the available classes 
             case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED : 
+            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED : 
                 updateClasses();
                 break;  
             }
@@ -516,7 +520,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                 String f            = rootPath + "/" + filePaths.get(i);
                 String ext          = Utils.getExtension(new File(f));
                 String imageFileOut = path + "/" + ParseUtils.removeFileExtension(filePaths.get(i)) + "." + ext;
-
+      
                 try {
                     ImageUtils.squareImageThumbnail(f, imageFileOut, ext);
                 } catch (Exception ex) {
