@@ -285,5 +285,10 @@ public class RunView extends JFrameView {
         colorSpaceComboBox.setSelectedItem(colorSpace);
     }
 
+    String getTrainingModelName() {
+        TrainingModel m = (TrainingModel) libraryNameComboBox.getSelectedItem(); 
+        return m.getName();
+    }
+
 
 }

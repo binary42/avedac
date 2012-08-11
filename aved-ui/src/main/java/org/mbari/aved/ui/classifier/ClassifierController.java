@@ -132,15 +132,11 @@ public class ClassifierController extends AbstractController implements ModelLis
             throw new Exception(ex.getMessage());
         }
 
-        // Initialize the database directory from the user-defined preferences
-        File dbDir = UserPreferences.getModel().getClassDatabaseDirectory();
+        // Initialize the directory from the user-defined preferences
+        File dir = UserPreferences.getModel().getClassImageDirectory();
 
-        model.setDatabaseRoot(dbDir);
-
-        // Initialize the training image directory
-        File trainingDir = UserPreferences.getModel().getClassImageDirectory();
-
-        model.setClassTrainingImageDirectory(trainingDir);
+        model.setClassImageDirectory(dir);  
+        model.setClassTrainingImageDirectory(dir);
     }
 
     @Override
@@ -172,7 +168,7 @@ public class ClassifierController extends AbstractController implements ModelLis
          */
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
-            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
+            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_IMAGE_DIR_MODEL_CHANGED :
                     try {
                         LoadModelWorker task = new LoadModelWorker(this.getModel());
 

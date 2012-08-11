@@ -90,147 +90,157 @@ class TestClassController extends AbstractController implements ModelListener {
     public void actionPerformed(ActionEvent e) {
         String actionCommand = e.getActionCommand();
 
-        if (getView() != null) {
-            if (actionCommand.equals("classNameComboBoxChanged")) {
-                JComboBox  box   = ((JComboBox) e.getSource());
-                ClassModel model = (ClassModel) box.getSelectedItem();                
-                
-                getView().loadClassModel(model); 
-                
-            } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
-                JComboBox  box           = ((JComboBox) e.getSource());
-                ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();                
-                String     lastSelection = UserPreferences.getModel().getTrainingLibrarySelection();
-                
-                UserPreferences.getModel().setColorSpace(newColorSpace);   
-            
-                // Populate the libraries in the new color space
-                if (getView() != null) {
-                    getView().populateTrainingLibraryList(newColorSpace, lastSelection); 
-                }
-            } else if (actionCommand.equals("libraryNameComboBoxChanged")) {
-                JComboBox     box   = ((JComboBox) e.getSource());
-                TrainingModel model = (TrainingModel) box.getSelectedItem();
+        try {
+            if (getView() != null) {
+                if (actionCommand.equals("classNameComboBoxChanged")) {
+                    JComboBox box = ((JComboBox) e.getSource());
+                    ClassModel model = (ClassModel) box.getSelectedItem();
 
-                getView().loadTrainingModel(model);
-            } else if (actionCommand.equals("Stop")) {
-                if (task != null) {
-                    getView().setRunButton(true);
-                    getView().setStopButton(false);
-                    Classifier.getController().kill(task);
-                }
-            } else if (actionCommand.equals("Run")) {
-                try {
-                    final ClassModel    classModel    = getView().getClassModel().copy();
-                    final TrainingModel trainingModel = getView().getTrainingModel().copy();
+                    getView().loadClassModel(model);
 
-                    if (classModel == null) {
-                        String                message = "Please select a class to test";
-                        NonModalMessageDialog dialog  = new NonModalMessageDialog((JFrame) this.getView(), message);
+                } else if (actionCommand.equals("colorSpaceComboBoxChanged")) {
+                    JComboBox box = ((JComboBox) e.getSource());
+                    ColorSpace newColorSpace = (ColorSpace) box.getSelectedItem();
+                    String lastSelection = UserPreferences.getModel().getTrainingLibrarySelection();  
 
-                        dialog.setVisible(true);
+                    UserPreferences.getModel().setColorSpace(newColorSpace);
 
-                        if (dialog.answer()) {
-                            return;
-                        }
+                    // Populate the libraries in the new color space
+                    if (getView() != null) {
+                        getView().populateTrainingLibraryList(newColorSpace, lastSelection);
+                        getView().populateClassList(newColorSpace, UserPreferences.getModel().getClassName());
                     }
+                } else if (actionCommand.equals("libraryNameComboBoxChanged")) {
+                    JComboBox box = ((JComboBox) e.getSource());
+                    TrainingModel model = (TrainingModel) box.getSelectedItem();
 
-                    if (trainingModel == null) {
-                        String                message = "Please select a test library";
-                        NonModalMessageDialog dialog  = new NonModalMessageDialog((JFrame) this.getView(), message);
-
-                        dialog.setVisible(true);
-
-                        if (dialog.answer()) {
-                            return;
-                        }
+                    getView().loadTrainingModel(model);
+                } else if (actionCommand.equals("Stop")) {
+                    if (task != null) {
+                        getView().setRunButton(true);
+                        getView().setStopButton(false);
+                        Classifier.getController().kill(task);
                     }
+                } else if (actionCommand.equals("Run")) {
+                    try {
+                        final ClassModel classModel = getView().getClassModel().copy();
+                        final TrainingModel trainingModel = getView().getTrainingModel().copy();
 
-                    // Count the number of unique events in this model to use
-                    // to allocate the arrays to pass to the Matlab function
-                    ArrayList<String> fileName = classModel.getRawImageFileListing();
+                        if (classModel == null) {
+                            String message = "Please select a class to test";
+                            NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), message);
 
-                    if (fileName.isEmpty()) {
-                        NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
-                                                           "Error - cannot find the images for this class");
+                            dialog.setVisible(true);
 
-                        dialog.setVisible(true);
-
-                        return;
-                    }
-
-                    final SwingWorker worker = Classifier.getController().getWorker();
-
-                    task = new RunTestClassTask(classModel, trainingModel);
-
-                    // / Create a progress display thread for monitoring this task
-                    Thread thread = new Thread() {
-                        @Override
-                        public void run() {
-                            BufferedReader  br              = Classifier.getController().getBufferedReader();
-                            ProgressDisplay progressDisplay = new ProgressDisplay(worker,
-                                                                  "Testing class " + classModel.getName() + " against "
-                                                                  + trainingModel.getName());
-
-                            progressDisplay.getView().setVisible(true);
-                            
-                            // Redirect err/out to progress display
-                            System.setOut(new PrintStream(progressDisplay, true));
-                            System.setErr(new PrintStream(progressDisplay, true));
-
-                            ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay,
-                                                                              br);
-
-                            progressDisplayStream.execute();
-                            Classifier.getController().addQueue(task);
-                            getView().setRunButton(false);
-                            getView().setStopButton(true);
-
-                            while (!task.isCancelled() &&!task.isFini()) {
-                                try {
-                                    Thread.sleep(500);
-                                } catch (InterruptedException ex) {
-                                    Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
-                                }
-                            }
-
-                            getView().setRunButton(true);
-                            getView().setStopButton(false);
-                            
-                            progressDisplayStream.done();
-                            progressDisplay.getView().dispose();
-
-                            if (task.isFini()) {
-                                try {
-                                    NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
-                                                                       trainingModel.getName() + " test finished");
-
-                                    dialog.setVisible(true);
-                                    task.controller.getView().pack();
-                                    task.controller.getView().setVisible(true);
-                                } catch (Exception ex) {
-                                    Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
-                                }
-                            } else {
-                                if (task.isCancelled()) {
-                                    NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
-                                                                       trainingModel.getName() + " test stopped");
-
-                                    dialog.setVisible(true);
-                                }
+                            if (dialog.answer()) {
+                                return;
                             }
                         }
-                    };
 
-                    thread.start();
-                } catch (Exception ex) {
-                    Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
+                        if (trainingModel == null) {
+                            String message = "Please select a test library";
+                            NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), message);
 
-                    NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.getMessage());
+                            dialog.setVisible(true);
 
-                    dialog.setVisible(true);
+                            if (dialog.answer()) {
+                                return;
+                            }
+                        }
+
+                        // Count the number of unique events in this model to use
+                        // to allocate the arrays to pass to the Matlab function
+                        ArrayList<String> fileName = classModel.getRawImageFileListing();
+
+                        if (fileName.isEmpty()) {
+                            NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
+                                    "Error - cannot find the images for this class");
+
+                            dialog.setVisible(true);
+
+                            return;
+                        }
+
+                        final SwingWorker worker = Classifier.getController().getWorker();
+
+                        task = new RunTestClassTask(classModel, trainingModel);
+
+                        // / Create a progress display thread for monitoring this task
+                        Thread thread = new Thread() {
+
+                            @Override
+                            public void run() {
+                                BufferedReader br = Classifier.getController().getBufferedReader();
+                                ProgressDisplay progressDisplay = new ProgressDisplay(worker,
+                                        "Testing class " + classModel.getName() + " against "
+                                        + trainingModel.getName());
+
+                                progressDisplay.getView().setVisible(true);
+
+                                // Redirect err/out to progress display
+                                System.setOut(new PrintStream(progressDisplay, true));
+                                System.setErr(new PrintStream(progressDisplay, true));
+
+                                ProgressDisplayStream progressDisplayStream = new ProgressDisplayStream(progressDisplay,
+                                        br);
+
+                                progressDisplayStream.execute();
+                                Classifier.getController().addQueue(task);
+                                getView().setRunButton(false);
+                                getView().setStopButton(true);
+
+                                while (!task.isCancelled() && !task.isFini()) {
+                                    try {
+                                        Thread.sleep(500);
+                                    } catch (InterruptedException ex) {
+                                        Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                }
+
+                                getView().setRunButton(true);
+                                getView().setStopButton(false);
+
+                                progressDisplayStream.done();
+                                progressDisplay.getView().dispose();
+
+                                if (task.isFini()) {
+                                    try {
+                                        NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
+                                                trainingModel.getName() + " test finished");
+
+                                        dialog.setVisible(true);
+                                        task.controller.getView().pack();
+                                        task.controller.getView().setVisible(true);
+                                    } catch (Exception ex) {
+                                        Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                } else {
+                                    if (task.isCancelled()) {
+                                        NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
+                                                trainingModel.getName() + " test stopped");
+
+                                        dialog.setVisible(true);
+                                    }
+                                }
+                            }
+                        };
+
+                        thread.start();
+                    } catch (Exception ex) {
+                        Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
+
+                        NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.getMessage());
+
+                        dialog.setVisible(true);
+                    }
                 }
             }
+        } catch (Exception ex) {
+            Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
+
+            NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.getMessage());
+
+            dialog.setVisible(true);
         }
     }
 
@@ -246,9 +256,11 @@ class TestClassController extends AbstractController implements ModelListener {
 
             switch (event.getID()) {
 
-            // When the database root directory changes, update the available libraries
-            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED : 
-                getView().setColorSpace(UserPreferences.getModel().getColorSpace());
+            // When the image root directory changes, update the available libraries
+            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_IMAGE_DIR_MODEL_CHANGED : 
+                getView().setColorSpace(UserPreferences.getModel().getColorSpace());         
+                getView().populateTrainingLibraryList(colorSpace, UserPreferences.getModel().getTrainingLibrarySelection());               
+                getView().populateClassList(colorSpace, UserPreferences.getModel().getClassName());
                 break;
 
             case ClassifierModel.ClassifierModelEvent.TRAINING_MODELS_UPDATED :

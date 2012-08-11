@@ -290,7 +290,7 @@ public class CreateClassView extends JFrameView {
      * Sets the data model that the image directory <code>JComboBox</code>
      * uses to obtain the list of items.
      *
-     * @param directories the list of directories to populte the box with
+     * @param directories the list of directories to populate the box with
      *
      */
     void initializeImageDirectories(File[] directories) {

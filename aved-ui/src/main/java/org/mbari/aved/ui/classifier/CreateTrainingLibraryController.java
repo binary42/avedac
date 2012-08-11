@@ -85,10 +85,10 @@ public class CreateTrainingLibraryController extends AbstractController implemen
         try {
 
             // Create a default library
-            File dbroot = UserPreferences.getModel().getClassDatabaseDirectory();
+            File dir = UserPreferences.getModel().getClassImageDirectory();
 
             trainingModel = new TrainingModel() {};
-            trainingModel.setDatabaseRoot(dbroot);
+            trainingModel.setDatabaseRoot(dir);
 
             // Default to user preferred color space
             getView().selectColorSpace(UserPreferences.getModel().getColorSpace());
@@ -318,6 +318,11 @@ public class CreateTrainingLibraryController extends AbstractController implemen
 
             // When the database root directory change or the models are updated
             // reset the color space 
+            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_IMAGE_DIR_MODEL_CHANGED :
+                getView().clearAllAvailable(); 
+                getView().clearAllSelected();
+                
+                break;
             case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
                 ColorSpace colorSpace = getView().getColorSpace();
                 getView().populateAvailableClassList(colorSpace);

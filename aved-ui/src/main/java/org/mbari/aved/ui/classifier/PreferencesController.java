@@ -92,7 +92,7 @@ public class PreferencesController extends AbstractController {
             if (newDir != null) {
                 getView().updateTrainingComboBox(new File(newDir.getAbsolutePath()));
                 getModel().setClassTrainingImageDirectory(newDir);
-                getModel().setDatabaseRoot(newDir);
+                getModel().setClassImageDirectory(newDir);
             }
         } else if (op.equals("AddTrainingImages")) {
             boolean state = ((JCheckBox) e.getSource()).isSelected();
@@ -103,7 +103,7 @@ public class PreferencesController extends AbstractController {
             File      newDir = (File) box.getSelectedItem();
 
             getModel().setClassTrainingImageDirectory(newDir);
-            getModel().setDatabaseRoot(newDir);
+            getModel().setClassImageDirectory(newDir);
         } else if (op.equals("Close")) {
             getView().setVisible(false);
         } else {

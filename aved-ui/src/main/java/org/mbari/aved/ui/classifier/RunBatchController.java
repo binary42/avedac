@@ -387,7 +387,7 @@ public class RunBatchController extends AbstractController implements ModelListe
                             eventTable.setModel(sorter);
                             exportProcessedResultsAsXls(exportXlsFile, eventTable);
 
-                            // reset will reset and clean-up any created files
+                            // reset will reset and clear-up any created files
                             batch.setStatus("Cleanup...");
                             tmodel.fireTableDataChanged();
                             transcodeWorker.reset(); 
@@ -524,7 +524,7 @@ public class RunBatchController extends AbstractController implements ModelListe
 
             // When the database root directory change or the models are updated
             // reset the color space
-            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED :
+            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_IMAGE_DIR_MODEL_CHANGED :
                 ColorSpace c = UserPreferences.getModel().getColorSpace();
                 getView().selectColorSpace(c);
                 

@@ -56,7 +56,7 @@ public class ClassifierModel extends AbstractModel {
     final String                 syncArrays                 = "syncArrays";
     private final ArrayListModel trainingModelList          = new ArrayListModel();
     private File                 lastClassTrainingDirectory = new File("");
-    private File                 dbrootDirectory            = new File("");
+    private File                 imageDir            = new File("");
 
     /**
      * Constructor.
@@ -111,15 +111,15 @@ public class ClassifierModel extends AbstractModel {
     }
 
     /**
-     * Sets the root class database directory
+     * Sets the root class image directory
      * @param f the root directory to set
      */
-    public void setDatabaseRoot(File directory) {
-        if (changedName(dbrootDirectory, directory)) {
-            dbrootDirectory = directory;
-            UserPreferences.getModel().setClassDatabaseDirectory(directory);
-            notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED,
-                    dbrootDirectory.toString()));
+    public void setClassImageDirectory(File directory) {
+        if (changedName(imageDir, directory)) {
+            imageDir = directory;
+            UserPreferences.getModel().setClassTrainingImageDirectory(directory);
+            notifyChanged(new ClassifierModelEvent(this, ClassifierModelEvent.CLASSIFIER_IMAGE_DIR_MODEL_CHANGED,
+                    imageDir.toString()));
         }
     }
 
@@ -227,7 +227,8 @@ public class ClassifierModel extends AbstractModel {
             while (i.hasNext()) {
                 ClassModel m = i.next();
 
-                if (m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())) {
+                if (m.getName().equals(model.getName()) && 
+                        m.getColorSpace().equals(model.getColorSpace())) {
                     classModelList.remove(m);
 
                     break;
@@ -349,13 +350,37 @@ public class ClassifierModel extends AbstractModel {
             while (i.hasNext()) {
                 ClassModel model = i.next();
 
-                if (m.getName().equals(model.getName()) && m.getColorSpace().equals(model.getColorSpace())) {
+                if (m.getName().equals(model.getName()) && 
+                        m.getColorSpace().equals(model.getColorSpace())) {
                     classModelList.remove(model); 
                     break;
                 }
             }
 
             classModelList.add(m);
+        }
+    }
+    
+    
+    /**
+     * Gets the training model with the given name.
+     *
+     * @param name
+     * @return the class model if found, otherwise returns null
+     */
+    public TrainingModel getTrainingModel(String name) {
+        synchronized (syncArrays) {
+            Iterator<TrainingModel> i = trainingModelList.iterator();
+
+            while (i.hasNext()) {
+                TrainingModel model = i.next();
+
+                if (model.getName().equals(name)) {
+                    return model;
+                }
+            }
+
+            return null;
         }
     }
 
@@ -387,7 +412,7 @@ public class ClassifierModel extends AbstractModel {
      * trained data from this class in
      */
     public File getDatabaseRoot() {
-        return dbrootDirectory;
+        return imageDir;
     }
 
     /**
@@ -427,12 +452,22 @@ public class ClassifierModel extends AbstractModel {
     }
 
     /**
+     * Removes all training and class models
+     */
+    void clear() {
+        synchronized (syncArrays) {
+            classModelList.clear();
+            trainingModelList.clear();
+        } 
+    }
+
+    /**
      *
      * @author dcline
      */
     public class ClassifierModelEvent extends ModelEvent {
  
-        public static final int CLASSIFIER_DBROOT_MODEL_CHANGED = 0;
+        public static final int CLASSIFIER_IMAGE_DIR_MODEL_CHANGED = 0;
         public static final int CLASS_MODELS_UPDATED            = 1;
         public static final int CLASS_MODELS_FILE_ADDED         = 2;
         public static final int JNI_TASK_COMPLETED              = 3;

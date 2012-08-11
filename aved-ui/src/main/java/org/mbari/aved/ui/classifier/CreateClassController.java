@@ -138,7 +138,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                         classModel.setColorSpace(getView().getColorSpace());
                         classModel.updateFileList();
                     } else {
-                        File d = UserPreferences.getModel().getClassDatabaseDirectory();
+                        File d = UserPreferences.getModel().getClassImageDirectory();
                         classModel.setDatabaseRoot(d);
                         classModel.setRawImageDirectory(directory);
                         classModel.setDescription(directory.getName());
@@ -256,7 +256,7 @@ class CreateClassController extends AbstractController implements ModelListener,
                 classModel.setPredictedName(predictedClassName);
                 
                 final ClassModel newModel = classModel.copy();
-                File             d        = UserPreferences.getModel().getClassDatabaseDirectory();
+                File             d        = UserPreferences.getModel().getClassImageDirectory();
 
                 newModel.setDatabaseRoot(d);
 
@@ -359,11 +359,12 @@ class CreateClassController extends AbstractController implements ModelListener,
      */
     private void updateClasses() {
         File dir       = UserPreferences.getModel().getLastClassImageImportDirectory();
-        File parentDir = UserPreferences.getModel().getClassDatabaseDirectory();
+        File parentDir = UserPreferences.getModel().getClassImageDirectory();
 
         if (parentDir != null) {
 
             // This filter only returns directories not named training or features
+            // these directories contain matlab data only
             FileFilter fileFilter = new FileFilter() {
                 public boolean accept(File file) {
                     return file.isDirectory() && (!file.getName().equals("training") 
@@ -382,8 +383,8 @@ class CreateClassController extends AbstractController implements ModelListener,
             if (subdirs != null) {
                 if ((dir != null) && dir.isDirectory()) {
                     for (int i = 0; i < subdirs.length; i++) {
-                        if (subdirs[i].getName().equals(dir.getName())) {
-                            getView().selectImageDirectory(dir);
+                        if (subdirs[i].getName().equals(dir.getName())) { 
+                            getView().selectImageDirectory(subdirs[i]);
 
                             break;
                         }
@@ -413,7 +414,7 @@ class CreateClassController extends AbstractController implements ModelListener,
             // When the class directory changes or class models are updated
             // update the available classes 
             case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED : 
-            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED : 
+            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_IMAGE_DIR_MODEL_CHANGED : 
                 updateClasses();
                 break;  
             }

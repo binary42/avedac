@@ -58,8 +58,10 @@ public class LoadModelWorker extends ClassifierLibraryJNITask {
     @Override
     protected void run(ClassifierLibraryJNI library) {
         try {
-            File   dbDir  = UserPreferences.getModel().getClassDatabaseDirectory();
-            String dbRoot = dbDir.getAbsolutePath();
+            model.clear();
+            
+            File   dir  = UserPreferences.getModel().getClassImageDirectory();
+            String dbRoot = dir.getAbsolutePath();
 
             // Create the collected class directory if it doesn't exist
             File featuresDir = new File(dbRoot + "/features/class");

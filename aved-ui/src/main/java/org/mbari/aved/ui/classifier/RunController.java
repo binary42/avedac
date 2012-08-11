@@ -105,8 +105,9 @@ public class RunController extends AbstractController implements ModelListener {
                 return;
             } else {
                 try { 
-                    final float         minProbThreshold = getView().getProbabilityThreshold();
-                    final TrainingModel trainingModel    = getModel().getTrainingModel(getView().getTrainingModelIndex());
+                    final String        name             = getView().getTrainingModelName();
+                    final float         minProbThreshold = getView().getProbabilityThreshold(); 
+                    final TrainingModel trainingModel    = getModel().getTrainingModel(getView().getTrainingModelName());
                     
                     // Create a progress display thread for monitoring this 
                     final ProcessDisplay display = new ProcessDisplay(
@@ -279,7 +280,7 @@ public class RunController extends AbstractController implements ModelListener {
 
             // When the database root directory change or the models are updated
             // reset the color space
-            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_DBROOT_MODEL_CHANGED  :
+            case ClassifierModel.ClassifierModelEvent.CLASSIFIER_IMAGE_DIR_MODEL_CHANGED  :
                 ColorSpace c = UserPreferences.getModel().getColorSpace();
                 getView().populateTrainingLibraryList(c, lastSelection);
                 getView().setColorSpace(c);

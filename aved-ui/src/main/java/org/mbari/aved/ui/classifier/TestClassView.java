@@ -352,7 +352,7 @@ public class TestClassView extends JFrameView {
 
         libraryNameComboBox.setModel(new ComboBoxAdapter(selectionInList));
  
-        selectLibrary(librarySelection);
+        selectLibrary(librarySelection); 
     }
 
     /**
@@ -409,7 +409,7 @@ public class TestClassView extends JFrameView {
      * @return false if the class is not found, otherwise true
      */
     private boolean selectClass(String name) {
-         int index = -1;
+        int index = -1;
         int size  = classNameComboBox.getModel().getSize();
 
         if (size > 0) {
