@@ -331,8 +331,13 @@ public class EventImageCache {
 
             if (outputFile == null) {
                 return false;
+            } 
+            
+            // If the file already exists, then return
+            if (outputFile.exists()) {
+                return true;
             }
-
+            
             // Calculate the cropping coordinates from the bounding box
             BoundingBox b       = evtObj.getBoundingBox();
             int         xorigin = b.getLowerLeftX();

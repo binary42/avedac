@@ -38,27 +38,30 @@ import javax.swing.ImageIcon;
 import javax.swing.table.AbstractTableModel;
 
 public class EventAbstractTableModel extends AbstractModel {
-    public static final int      NUM_COLUMNS = 13;
-    public static final int      COL_THUMBNAIL = 6;
     
     public static final String[] columnNames = {
-        "Object ID", "Predicted Class", "Probability in Class", "Class", "Tag", "Identity Reference", "Thumbnail", "Max Size",
-        "Start TimeCode", "End Timecode", "Start Frame", "End Frame", "Frame Duration", 
+        "Object ID", "Predicted Class", "Probability in Class", "Class", "Tag", "Identity Reference", "Thumbnail", 
+        "Max Size", "Max Saliency","Start TimeCode", "End Timecode", "Start Frame", "End Frame", "Frame Duration", 
     };
+    
+    public static final int      NUM_COLUMNS = columnNames.length;
+    public static final int      COL_THUMBNAIL = 6;
+    
     public static final String[] columnToolTips = {
         "The  numerical index assigned by mbarivision to this event. "
         + "This is simply a numerically increasing assignment" + " in the order the events were automatically detected",
-        "The predicted class name this event was assigned to be. This can either be a VARS "
-        + "concept, or a user-defined class name. This corresponds to the " + "AVEDac classifier prediction",
+        "The predicted class name this event was assigned to be from the classifier. This can either be a VARS "
+        + "concept, or a user-defined class name.",
         "The probability of the predicted class. A number between 0 and 1.0 "
         + "The higher this number, the more accurate the predicted value.",
         "The class name this event was assigned to be. If using VARS " + "this is equivalent to a VARS concept",
         "A user defined tag. This can be anything you define, e.g. swimming, "
         + "ignore, junk. Useful to help sort and combine events",
-        "A user defined identity reference.  This can be anything you define," 
+        "A user defined identity reference.  This can be anything you define, " 
         + "The frame duration of this event", "A thumbnail picture of event,"
         + " e.g. benthocodon1, benthocodon2. Use e.g. to label whether same " + "animal or new animal",
         "The maximum size (square pixels) of any instance of this event " + "over its lifetime.",
+        "The maximum saliency (milli Volts ) of this event " + "over its lifetime.",
         "The first time the event was detected. An optional field and is emtpy "
         + "if the video source was not ISO860 formatted.",
         "The last time the event was detected. An optional field that's emtpy if "
@@ -207,25 +210,28 @@ public class EventAbstractTableModel extends AbstractModel {
                             return imageIcon;
                         }
 
-                        // If imageIcon is missing, insert a dummy imageIcon
+                        // If imageIcon is missing, insert a default imageIcon
                         return missingFrameImageIcon;
 
                     case 7 :
                         return e.getMaxSize();
-
+ 
                     case 8 :
-                        return e.getStartTimecode();
+                        return e.getSaliencyMilliVolts();
 
                     case 9 :
-                        return e.getEndTimecode();
+                        return e.getStartTimecode();
 
                     case 10 :
-                        return e.getStartFrame();
+                        return e.getEndTimecode();
 
                     case 11 :
-                        return e.getEndFrame();
+                        return e.getStartFrame();
 
                     case 12 :
+                        return e.getEndFrame();
+
+                    case 13 :
                         return e.getTtlFrames();
 
                   

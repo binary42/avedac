@@ -61,6 +61,7 @@ public class EventObjectContainer implements Comparable, Serializable {
     private int                                 bestEventFrame    = -1;
     private final HashMap<Integer, EventObject> eventHashMap      = new HashMap<Integer, EventObject>(51, 0.75f);
     private int                                 maxEventFrame     = -1;
+    private float                               maxSaliencymVolts = 0.0f;
     private long                                objectId          = 0;
     private LinkedList<Integer>                 sortedEventFrames = new LinkedList<Integer>(eventHashMap.keySet());
 
@@ -101,9 +102,10 @@ public class EventObjectContainer implements Comparable, Serializable {
             eventImageCacheData = new EventImageCacheData(this);
 
             if (eventObject != null) {
-                objectId       = eventObject.getObjectId();
-                bestEventFrame = eventObject.getFrameEventSet().getFrameNumber();
-                maxEventFrame  = bestEventFrame;
+                objectId          = eventObject.getObjectId();
+                bestEventFrame    = eventObject.getFrameEventSet().getFrameNumber();
+                maxEventFrame     = bestEventFrame;
+                maxSaliencymVolts = 1000.f*Float.valueOf(eventObject.getSaliency());
                 add(eventObject);
             }
         } catch (Exception ex) {
@@ -130,6 +132,7 @@ public class EventObjectContainer implements Comparable, Serializable {
                 clone.objectId            = this.objectId;
                 clone.mainModel           = this.mainModel;
                 clone.bestEventFrame      = this.bestEventFrame;
+                clone.maxSaliencymVolts   = this.maxSaliencymVolts;
                 clone.eventImageCacheData = this.eventImageCacheData;
 
                 // Iterate over the keys in the map
@@ -246,7 +249,7 @@ public class EventObjectContainer implements Comparable, Serializable {
     /**
      * Sets the best image associated with this event.
      * This will override the default setting of the "best" image representation
-     * that is set to the largest instance found over the duration of the event.
+     * that is set to the middle of the event sequence.
      */
     public void setBestImageFrame(int frameNo) {
         if ((frameNo >= this.getStartFrame()) && (frameNo <= this.getEndFrame())) {
@@ -389,7 +392,7 @@ public class EventObjectContainer implements Comparable, Serializable {
 
             eventHashMap.put(eventObject.getFrameEventSet().getFrameNumber(), eventObject);
 
-            // Reset the Event that represents the maximum sized event
+            // recalc the next biggest size
             if (maxEventFrame != -1) {
                 EventObject object = eventHashMap.get(maxEventFrame);
 
@@ -399,21 +402,25 @@ public class EventObjectContainer implements Comparable, Serializable {
             // Find the new max size
             if (eventObject.getCurrSize() >= maxSize) {
                 maxEventFrame = eventObject.getFrameEventSet().getFrameNumber();
+            } 
+            
+            // Find the new max saliency
+            float mV = 1000f*Float.valueOf(eventObject.getSaliency());
+            if (mV > maxSaliencymVolts) {
+                maxSaliencymVolts = mV;
             }
 
-            // The best event frame is generally the largest, however for very long events
-            // it can take a very long time for transcoding of the entire event,
-            // and subsequent searching for the max size, so we'll skip this for
-            // events longer than 300 frames, which is 10 seconds at 30 fps
-            if ((getTtlFrames() < 300) && (maxEventFrame > bestEventFrame)) {
-                bestEventFrame = maxEventFrame;
-            }
-
-            /*
-             * System.out.println("#########Max size for event: "
-             *    + eventObject.getObjectId() + " size: " + eventObject.getCurrSize()
-             *    + " frameSet#:" + eventObject.getFrameEventSet().getFrameNumber() );
-             */
+            
+            // the best event frame is in the middle; this is generally arbitrary but
+            // works best for fast midwater transects in particular where the 
+            // largest area is often blurred  at the outer edges of the frame
+            bestEventFrame = this.getStartFrame() + this.getTtlFrames()/2;
+            
+            
+             System.out.println("#########Max size for event: "
+                + eventObject.getObjectId() + " size: " + eventObject.getCurrSize()
+                 + " best frame: " + bestEventFrame 
+                 + " frameSet#:" + eventObject.getFrameEventSet().getFrameNumber() ); 
         }
 
         sort();
@@ -656,10 +663,10 @@ public class EventObjectContainer implements Comparable, Serializable {
      */
     int findNextBestFrame() {
         Iterator<Integer> iter        = sortedEventFrames.iterator();
-        int               maxSize     = eventHashMap.get(bestEventFrame).getCurrSize();
         int               nextMaxSize = -1;
 
         if (bestEventFrame != -1) {
+            int maxSize  = eventHashMap.get(bestEventFrame).getCurrSize();
             int maxFrame = bestEventFrame;
 
             while (iter.hasNext()) {
@@ -680,8 +687,8 @@ public class EventObjectContainer implements Comparable, Serializable {
     }
 
     /**
-     * Returns event frameSet that represents the "best" representation of this AVED event.
-     * This is typically the largest instance found over the duration of the event.
+     * Returns event frameSet that represents the "best" representation of this  event.
+     * This is the middle of the event
      * @return best event frameSet, or -1 if none found
      */
     public int getBestEventFrame() {
@@ -702,6 +709,15 @@ public class EventObjectContainer implements Comparable, Serializable {
         }
 
         return "";
+    }
+
+    /**
+     * Returns the maximum saliency map millivolts. This is generally an indication of 
+     * how interesting the event was
+     * @return 
+     */
+    public float getSaliencyMilliVolts() {
+        return maxSaliencymVolts;
     }
 
 }
