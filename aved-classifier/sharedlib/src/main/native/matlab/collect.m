@@ -95,7 +95,7 @@ for jj = 1 : lc
     p0 = 0; v0 = 0;
     init = false;
     ttlImages = 0;
-    savemotion = true;
+    savemotion = false;
     numPts = 24; %number of contour points per segment
     segments = 8;
     display = 1;

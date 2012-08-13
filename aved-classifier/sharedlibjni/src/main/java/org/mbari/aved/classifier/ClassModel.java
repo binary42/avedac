@@ -122,7 +122,7 @@ public class ClassModel implements Comparable<ClassModel> {
 
     /**
      * Get the image directory that holds raw images that have been converted
-     * to square sizes as required for he AVED classifier
+     * to square sizes as required for the AVED classifier
      * @return the image directory
      */
     public File getSquareImageDirectory() {
@@ -131,7 +131,7 @@ public class ClassModel implements Comparable<ClassModel> {
 
     /**
      * Set the image directory that holds raw images that have been converted
-     * to square sizes as required for he AVED classifier
+     * to square sizes as required for the AVED classifier
      * @param directory the image directory
      */
     public void setSquareImageDirectory(File directory) {
@@ -247,9 +247,9 @@ public class ClassModel implements Comparable<ClassModel> {
             // return and don't transcode.
             dest.delete();
 
-            String message = new String("Error copying " + ((dest != null)
-                    ? dest.toString()
-                    : "[null]") + "\nException: " + e.toString());
+            String message = "Error copying " + ((dest != null)
+         ? dest.toString()
+         : "[null]") + "\nException: " + e.toString();
 
             throw new Exception(message);
         }
