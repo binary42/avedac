@@ -57,8 +57,7 @@ public final class UserPreferencesModel extends AbstractModel {
     public static int           ASK_BEFORE_DELETE_CHANGED           = 1;
 
     private static final String CLASS_ADD_ALL_TRAINING              = "CLASS_ADD_ALL_TRAINING";
-    private static final String CLASS_COLOR_SPACE                   = "CLASS_COLOR_SPACE";
-    private static final String CLASS_DATABASE_DIR_ROOT             = "CLASS_DATABASE_DIR_ROOT";
+    private static final String CLASS_COLOR_SPACE                   = "CLASS_COLOR_SPACE"; 
     private static final String CLASS_NAME_LIST                     = "CLASS_NAME_LIST";
     private static final String CLASS_TRAINING_DIR_ROOT             = "CLASS_TRAINING_DIR_ROOT";
     private static final String EVENT_IMAGE_DIR                     = "EVENT_IMAGE_DIR";
@@ -342,18 +341,7 @@ public final class UserPreferencesModel extends AbstractModel {
      */
     public File getClassImageDirectory() {
         return new File(preferences.get(CLASS_TRAINING_DIR_ROOT, getDefaultClassDirectoryString()));
-    }
-
-    /**
-     * Gets the root class database directory.
-     * This defaults to the HOME environment variable, or
-     * the USERPROFILE environment variable
-     * @return a directory
-     */
-    public File getClassDatabaseDirectory() {
-        return new File(preferences.get(CLASS_DATABASE_DIR_ROOT, getDefaultClassDirectoryString()));
-    }
-
+    } 
     /**
      * Gets the list of user-defined ids
      * @return A String list of ids
@@ -571,15 +559,7 @@ public final class UserPreferencesModel extends AbstractModel {
     public void setClassTrainingImageDirectory(File f) {
         put(CLASS_TRAINING_DIR_ROOT, f.getAbsolutePath());
     }
-
-    /**
-     * Sets the root class database directory
-     * @param f the root directory to set
-     */
-    public void setClassDatabaseDirectory(File f) {
-        put(CLASS_DATABASE_DIR_ROOT, f.getAbsolutePath());
-    }
-
+  
     /**
      * Sets the user preference to add all images labeled
      * with a class name to the training library.

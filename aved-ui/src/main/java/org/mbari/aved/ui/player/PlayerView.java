@@ -304,13 +304,13 @@ public class PlayerView extends JFrameView {
                     this.validate();
                 }
 
-                // Scale JAI if the image is larger than 80% of the main display
+                // Scale JAI if the image is larger than 70% of the main display
                 // TODO: this is somewhat arbitrary and really should be scaled by
                 // the total size of the PlayerView, and not just the JAI component
                 // of the PlayerView.
                 Dimension d      = Application.getView().getSize();
                 float     scale  = 1.0f;
-                float     factor = 0.80f;
+                float     factor = 0.70f;
 
                 if ((image.getWidth() >= factor * d.width) || (image.getHeight() >= factor * d.height)) {
                     scale = ImageChangeUtil.calcTheta(image.getWidth(), image.getHeight(), factor * d.width,
