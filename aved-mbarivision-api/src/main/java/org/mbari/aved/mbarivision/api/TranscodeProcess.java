@@ -120,7 +120,7 @@ public class TranscodeProcess extends Thread {
                         Matcher matcher = pattern.matcher(f.toString());
 
                         if (matcher.find()) {
-                            /**String out = String.format("I found the text \"%s\" starting at " +
+			  /**String out= String.format("I found the text \"%s\" starting at " +
                             "index %d and ending at index %d.%n",
                             matcher.group(), matcher.start(), matcher.end());
                             System.out.println(out);*/
@@ -136,7 +136,7 @@ public class TranscodeProcess extends Thread {
                         Matcher matcher2 = pattern2.matcher(f.toString());
 
                         if (matcher2.find()) {
-                            /*String out2 = String.format("I found the text \"%s\" starting at " +
+			    /*String out2 = String.format("I found the text \"%s\" starting at " +
                             "index %d and ending at index %d.%n",
                             matcher2.group(), matcher2.start(), matcher2.end());
                             System.out.println(out2);*/
@@ -540,6 +540,7 @@ public class TranscodeProcess extends Thread {
         } finally {
             timer.cancel();
         }
+
     }
 
     private String getTranscodeCmd() {
@@ -583,7 +584,7 @@ public class TranscodeProcess extends Thread {
         // Set a timer to update information about the transcoded output after timeout period
         Timer timer = new Timer();
 
-        long timeout = (long) 500;
+        long timeout = (long) 100;
         timer.schedule(new UpdateOutputScheduler(this), timeout);
 
         try {
@@ -702,6 +703,9 @@ public class TranscodeProcess extends Thread {
             timer.cancel();
         }
 
+	if (!isInitialized)
+            throw new AvedRuntimeException("-->nscode failed");
+
     }
     
     /**
@@ -717,49 +721,29 @@ public class TranscodeProcess extends Thread {
         String outputfilestem = outputdir.toString() + "/f%06d." + outAvedVideo.getFileExt(); 
         String transcodecmd; 
         String cmd;   
+    
+	// Get transcode path 
+	transcodecmd = getCmdLoc("ffmpeg", 1);
+	
+	cmd = transcodecmd + " -i " + filename  + " -f image2 -vcodec " + outAvedVideo.getFileExt() + " " + outputfilestem ;
+	outputdir.mkdir();
+	System.out.println("Executing " + cmd);
+	process = Runtime.getRuntime().exec(cmd, envParams);
         
-        // Set a timer to update information about the transcoded output after timeout period
-        Timer timer = new Timer();
-
-        long timeout = (long) 5000; 
-        timer.schedule(new UpdateOutputScheduler(this), timeout); 
-        
-        try {
-
-            // Get transcode path 
-            transcodecmd = getCmdLoc("ffmpeg", 1);
-
-            cmd = transcodecmd + " -i " + filename  + " -f image2 -vcodec " + outAvedVideo.getFileExt() + " " + outputfilestem ;
-            outputdir.mkdir();
-            System.out.println("Executing " + cmd);
-            process = Runtime.getRuntime().exec(cmd, envParams);
-            
-            // any error messages ?       
-            ExtendedVector line = new ExtendedVector();
-            StreamGobbler errGobbler = new StreamGobbler(process.getErrorStream(), printStream);
-            // any output?
-            StreamGobbler outGobbler = new StreamGobbler(process.getInputStream(), printStream, "OUTPUT");
-            outGobbler.setLineVector(line);
-
-            outGobbler.start();
-            errGobbler.start();
-
-            int exitVal = process.waitFor();
-            if (exitVal != 0) {
-                timer.cancel();
-                throw new AvedRuntimeException("Error running command " + cmd);
-            } 
-            
-        } catch (NumberFormatException ex) {
-            throw new AvedRuntimeException(ex.toString());
-        } catch (Exception ex) {
-            throw new AvedRuntimeException(ex.toString());
-        } finally {
-            timer.cancel();
-        }
-
-        if (!isInitialized)
-            throw new AvedRuntimeException("ffmpeg failed");
+	// any error messages ?       
+	ExtendedVector line = new ExtendedVector();
+	StreamGobbler errGobbler = new StreamGobbler(process.getErrorStream(), printStream);
+	// any output?
+	StreamGobbler outGobbler = new StreamGobbler(process.getInputStream(), printStream, "OUTPUT");
+	outGobbler.setLineVector(line);
+	
+	outGobbler.start();
+	errGobbler.start();
+	
+	int exitVal = process.waitFor();
+	if (exitVal != 0) {
+	    throw new AvedRuntimeException("Error running command " + cmd);
+	}            
 
     }
     
@@ -776,66 +760,46 @@ public class TranscodeProcess extends Thread {
         String outputfilestem = outputdir.toString() + "/f"; 
         String cmd;
         String ext = Utils.getExtension(file);        
+      
+	// Get transcode path 
+	String transcodecmd = getTranscodeCmd(); 
         
-        // Set a timer to update information about the transcoded output after timeout period
-        Timer timer = new Timer();
-
-        long timeout = (long) 500; 
-        timer.schedule(new UpdateOutputScheduler(this), timeout); 
+	if (ext.equals("avi") || ext.equals("mov")) {
+	    if (codec.equals("DX50") || codec.equals("divx5")) {
+		cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + " -x ffmpeg,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
+	    } else if (codec.equals("mpg2")) {
+		cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + " -x mpeg2,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
+	    } else if (ext.equals("mov")) {
+		cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + " -x mov,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
+	    } else {
+		cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + "  -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
+	    } 
+	    
+	} else if (ext.equals("mpeg") || ext.equals("mpg")) {
+	    cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + " -x mpeg2,null -y " + outAvedVideo.getFileExt() + ",null  " +  " " + extraargs + " " + transcodeopts;
+	}  
+	else {
+	    cmd = transcodecmd + "-i " + filename + " -o " + outputfilestem + " -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
+	}
+	
+	outputdir.mkdir();
+	System.out.println("Executing " + cmd);
+	process = Runtime.getRuntime().exec(cmd, envParams);
         
-        try {
-
-            // Get transcode path 
-            String transcodecmd = getTranscodeCmd(); 
-            
-            if (ext.equals("avi") || ext.equals("mov")) {
-                if (codec.equals("DX50") || codec.equals("divx5")) {
-                    cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + " -x ffmpeg,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
-                } else if (codec.equals("mpg2")) {
-                    cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + " -x mpeg2,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
-                } else if (ext.equals("mov")) {
-                    cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + " -x mov,null -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
-                } else {
-                    cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + "  -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
-                } 
-
-            } else if (ext.equals("mpeg") || ext.equals("mpg")) {
-                cmd = transcodecmd + " -i " + filename + " -o " + outputfilestem + " -x mpeg2,null -y " + outAvedVideo.getFileExt() + ",null  " +  " " + extraargs + " " + transcodeopts;
-            }  
-            else {
-                cmd = transcodecmd + "-i " + filename + " -o " + outputfilestem + " -y " + outAvedVideo.getFileExt() + ",null " + extraargs + " " + transcodeopts;
-            }
-
-            outputdir.mkdir();
-            System.out.println("Executing " + cmd);
-            process = Runtime.getRuntime().exec(cmd, envParams);
-            
-            // any error messages ?       
-            ExtendedVector line = new ExtendedVector();
-            StreamGobbler errGobbler = new StreamGobbler(process.getErrorStream(), printStream);
-            // any output?
-            StreamGobbler outGobbler = new StreamGobbler(process.getInputStream(), printStream, "OUTPUT");
-            outGobbler.setLineVector(line);
-
-            outGobbler.start();
-            errGobbler.start();
-
-            int exitVal = process.waitFor();
-            
-            if (exitVal != 0) {
-                timer.cancel();
-                throw new AvedRuntimeException("Error running command " + cmd);
-            }  
-
-        } catch (NumberFormatException ex) {
-            throw new AvedRuntimeException(ex.toString());
-        } catch (Exception ex) {
-            throw new AvedRuntimeException(ex.toString());
-        } finally {
-            timer.cancel();
-        }
+	// any error messages ?       
+	ExtendedVector line = new ExtendedVector();
+	StreamGobbler errGobbler = new StreamGobbler(process.getErrorStream(), printStream);
+	// any output?
+	StreamGobbler outGobbler = new StreamGobbler(process.getInputStream(), printStream, "OUTPUT");
+	outGobbler.setLineVector(line);
+	
+	outGobbler.start();
+	errGobbler.start();
+	
+	int exitVal = process.waitFor();
         
-        if (!isInitialized)
-            throw new AvedRuntimeException("transcode failed");
-    }
+	if (exitVal != 0) {
+	    throw new AvedRuntimeException("Error running command " + cmd);
+	}  
+    }   
 }
