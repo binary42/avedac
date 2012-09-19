@@ -112,6 +112,16 @@
                 outside of this pom.xml but referenced here because it is
                 needed in the aved-classifier modules -->
                 <mcrRoot>${env.MCR_ROOT}</mcrRoot>
+
+                <!-- The location of the Matlab install. The matlab license
+                should include both the image processing libraries and
+                the matlab runtime compiler. MATLAB_ROOT must be setup external to
+                maven as it is needed to setup the correct LD_LIBRARY_PATH
+                and XAPPLRESDIR environment variables. Since Maven does
+                no explicity set environment variables, this is configured
+                outside of this pom.xml but referenced here because it is
+                needed in the aved-classifier modules -->
+                <matlabRoot>${env.MATLAB_ROOT}</matlabRoot>
             </properties>
 
             <modules>
