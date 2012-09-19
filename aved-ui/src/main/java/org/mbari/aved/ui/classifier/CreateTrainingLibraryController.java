@@ -313,18 +313,17 @@ public class CreateTrainingLibraryController extends AbstractController implemen
     }
 
     public void modelChanged(ModelEvent event) {
+        ColorSpace colorSpace = getView().getColorSpace();
         if (event instanceof ClassifierModel.ClassifierModelEvent) {
             switch (event.getID()) {
 
             // When the database root directory change or the models are updated
             // reset the color space 
             case ClassifierModel.ClassifierModelEvent.CLASSIFIER_IMAGE_DIR_MODEL_CHANGED :
-                getView().clearAllAvailable(); 
-                getView().clearAllSelected();
-                
+                getView().reset();   
+                getView().populateAvailableClassList(colorSpace);
                 break;
-            case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED :
-                ColorSpace colorSpace = getView().getColorSpace();
+             case ClassifierModel.ClassifierModelEvent.CLASS_MODELS_UPDATED : 
                 getView().populateAvailableClassList(colorSpace);
 
                 break;

@@ -196,43 +196,8 @@ public class ImportXMLWorker extends SwingWorker {
             // Update the source metadata if there is one
             SourceMetadata source = null;
 
-            source = eventDataStream.getSourceMetadata();
-
-            progressDisplay.write("Checking for a video source identifier");
-
-            // If a video source defined check if it contains
-            // a file or http protocol string before setting it
-            if (source != null) {
-                String id = source.getSourceIdentifier();
-
-                // If this is a true url reference and not a local file
-                // just set it
-                if (URLUtils.isHttpUrl(id)) {
-                    model.getSummaryModel().setInputSourceURL(new URL(id), true);
-                } else if (URLUtils.isFileUrl(id)) {
-
-                    // otherwise check if a file and convert it to a file URL reference
-                    // Convert to to a file reference
-                    File video = new File(id);
-
-                    // If there is no root path in the source identifier
-                    // assume it is in the same path as the XML,
-                    // and set its root to the same path as the XML
-                    if (video.getParent() == null) {
-                        String v = "file:" + xmlFile.getParent() + "/" + video.getName();
-
-                        model.getSummaryModel().setInputSourceURL(new URL(v), true);
-                    } else {                        
-                        model.getSummaryModel().setInputSourceURL(new URL(id), true);
-                    }
-                }
-            } else {
-                // if no video source identified, set it to a default AVI file
-                // this is completely arbitrary
-                String defaultSource = "file:" + xmlFile.getParent() + "/" + xmlFile.getName() + ".avi";
-                model.getSummaryModel().setInputSourceURL(new URL(defaultSource), true);
-            }
-
+            source = eventDataStream.getSourceMetadata(); 
+            
             long key = 0;
             EventObjectContainer value = null;
 
@@ -312,11 +277,46 @@ public class ImportXMLWorker extends SwingWorker {
                 entries.add(e);
             }
 
+            // Add the sorted collection to the list model
+            model.add(entries); 
+              
+            progressDisplay.write("Checking for a video source identifier");
+
+            // If a video source defined check if it contains
+            // a file or http protocol string before setting it
+            if (source != null) {
+                String id = source.getSourceIdentifier();
+
+                // If this is a true url reference and not a local file
+                // just set it
+                if (URLUtils.isHttpUrl(id)) {
+                    model.getSummaryModel().setInputSourceURL(new URL(id), true);
+                } else if (URLUtils.isFileUrl(id)) {
+
+                    // otherwise check if a file and convert it to a file URL reference
+                    // Convert to to a file reference
+                    File video = new File(id);
+
+                    // If there is no root path in the source identifier
+                    // assume it is in the same path as the XML,
+                    // and set its root to the same path as the XML
+                    if (video.getParent() == null) {
+                        String v = "file:" + xmlFile.getParent() + "/" + video.getName();
+
+                        model.getSummaryModel().setInputSourceURL(new URL(v), true);
+                    } else {                        
+                        model.getSummaryModel().setInputSourceURL(new URL(id), true);
+                    }
+                }
+            } else {
+                // if no video source identified, set it to a default AVI file
+                // this is completely arbitrary
+                String defaultSource = "file:" + xmlFile.getParent() + "/" + xmlFile.getName() + ".avi";
+                model.getSummaryModel().setInputSourceURL(new URL(defaultSource), true);
+            } 
+
             // Set the progress bar to 100% and reset cursor
             setProgress(100);
-
-            // Add the sorted collection to the list model
-            model.add(entries);
             
         } catch (Exception e) {
             Application.getView().setDefaultCursor();

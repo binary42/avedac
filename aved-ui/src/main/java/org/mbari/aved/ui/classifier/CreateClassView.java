@@ -294,7 +294,7 @@ public class CreateClassView extends JFrameView {
      *
      */
     void initializeImageDirectories(File[] directories) {
-        dirComboBox.setModel(new DefaultComboBoxModel(directories));
+        dirComboBox.setModel(new DefaultComboBoxModel(directories)); 
     }
 
     /**

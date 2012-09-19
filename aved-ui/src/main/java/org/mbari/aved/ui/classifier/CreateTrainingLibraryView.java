@@ -164,7 +164,16 @@ public class CreateTrainingLibraryView extends JFrameView {
     }
 
     /**
-     * Clears all items in the available list
+     * Resets all items in available and selected
+     */
+    public void reset() {
+        availableList.removeAll();
+        selectedList.removeAll();
+        availableList.updateUI();
+    }
+    
+    /**
+     * Unselects items in the available list
      */
     public void clearAllAvailable() {
         availableList.clearSelection();

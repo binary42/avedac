@@ -103,8 +103,7 @@ public class EventImageCache {
             totalLoaded       = 0;
 
             if (imageCacheDataList != null) {
-                imageCacheDataList.clear();
-                imageCacheDataList = null;
+                imageCacheDataList.clear(); 
             }
 
             loadingIndex  = -1;
@@ -128,7 +127,8 @@ public class EventImageCache {
                 int size = eventListModel.getSize();
 
                 synchronized (syncArrays) {
-                    imageCacheDataList = new ArrayList<EventImageCacheData>();
+                    if (imageCacheDataList == null)
+                        imageCacheDataList = new ArrayList<EventImageCacheData>();
 
                     for (int i = 0; i < size; i++) {
                         EventObjectContainer c    = (EventObjectContainer) this.eventListModel.getElementAt(i);
@@ -289,7 +289,7 @@ public class EventImageCache {
                 // inconsistencies
                 long i = source.length();
 
-                Thread.sleep(4);
+                Thread.sleep(5);
 
                 long j = source.length();
 
@@ -338,8 +338,13 @@ public class EventImageCache {
                 return true;
             }
             
+            if (evtObj == null) {
+                return false; //should never get here
+            }
+            
             // Calculate the cropping coordinates from the bounding box
-            BoundingBox b       = evtObj.getBoundingBox();
+            BoundingBox b       = evtObj.getBoundingBox(); 
+            
             int         xorigin = b.getLowerLeftX();
             int         yorigin = b.getUpperRightY();
             int         width   = b.getUpperRightX() - b.getLowerLeftX();
@@ -465,7 +470,7 @@ public class EventImageCache {
 
                 if (data != null) {
                     EventObjectContainer ec        = data.getEventObjectContainer();
-                                          bestFrame = ec.getBestEventFrame();
+                                         bestFrame = ec.getBestEventFrame();
                     File                    source = new File(ec.getFrameSource(bestFrame).getParent());
 
                         if (data.initialize(source, "", bestFrame) && createBestCroppedImageOfEvent(data) == true) {
@@ -771,8 +776,10 @@ public class EventImageCache {
             if (cache != null) {
                 int ttl        = cache.size();
                 int ttllast    = 0;
-                int refreshcnt = ((ttl > 50)
-                                  ? 50
+                
+                // every 10 loads update the view
+                int refreshcnt = ((ttl > 10)
+                                  ? 10
                                   : ttl);
 
                 while (cache.iKeepRunning) {

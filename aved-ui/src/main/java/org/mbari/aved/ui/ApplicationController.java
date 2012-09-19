@@ -914,6 +914,7 @@ public final class ApplicationController extends AbstractController implements M
                         // Start reloading the image cache after transcoding starts
                         for (int i = 0; i < 5; i++) {
                             if (transcodeWorker.isInitialized()) {
+                                Thread.sleep(2000);
                                 reloadImageCache();
                                 break;
                             }

@@ -194,7 +194,7 @@ public class VideoTranscodeWorker extends SwingWorker {
             
             // Set the range if defined. This does not work with ffmpeg and is ignored
             if (maxEventFrame > 0) {
-                transcodeProcess.setTranscodeOpts(" -c 0-" + Integer.toString(maxEventFrame) + 1);
+                transcodeProcess.setTranscodeOpts(" -c 0-" + Integer.toString(maxEventFrame));
             }
             
             if (UserPreferences.getModel().getEnableFfmpeg()) { 
@@ -315,12 +315,7 @@ public class VideoTranscodeWorker extends SwingWorker {
      * @param maxEventFrame
      */
     public void setMaxFrame(int maxEventFrame) {
-        if (transcodeProcess != null) {
-            transcodeProcess.setTranscodeOpts(" -c 0-" + Integer.toString(maxEventFrame) + 1);
-        }
-        else {
-            this.maxEventFrame = maxEventFrame;
-        }
+        this.maxEventFrame = maxEventFrame + 1; 
     }
 
 }

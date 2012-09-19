@@ -459,6 +459,8 @@ public class ClassifierModel extends AbstractModel {
             classModelList.clear();
             trainingModelList.clear();
         } 
+        notifyClassModelChanged();
+        notifyTrainingModelChanged("all");
     }
 
     /**

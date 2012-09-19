@@ -132,6 +132,7 @@ public class EventObjectContainer implements Comparable, Serializable {
                 clone.objectId            = this.objectId;
                 clone.mainModel           = this.mainModel;
                 clone.bestEventFrame      = this.bestEventFrame;
+                clone.maxEventFrame       = this.maxEventFrame;
                 clone.maxSaliencymVolts   = this.maxSaliencymVolts;
                 clone.eventImageCacheData = this.eventImageCacheData;
 
@@ -389,8 +390,9 @@ public class EventObjectContainer implements Comparable, Serializable {
     public void add(EventObject eventObject) {
         synchronized (eventHashMap) {
             int maxSize = 0;
+            int frameNum = eventObject.getFrameEventSet().getFrameNumber();
 
-            eventHashMap.put(eventObject.getFrameEventSet().getFrameNumber(), eventObject);
+            eventHashMap.put(frameNum, eventObject);
 
             // recalc the next biggest size
             if (maxEventFrame != -1) {
@@ -410,20 +412,22 @@ public class EventObjectContainer implements Comparable, Serializable {
                 maxSaliencymVolts = mV;
             }
 
+            sortedEventFrames = new LinkedList<Integer>(eventHashMap.keySet());    // Get the keys as a list
+            Collections.sort(sortedEventFrames);    // Sort the events by increasing framenumber
             
             // the best event frame is in the middle; this is generally arbitrary but
             // works best for fast midwater transects in particular where the 
-            // largest area is often blurred  at the outer edges of the frame
-            bestEventFrame = this.getStartFrame() + this.getTtlFrames()/2;
+            // largest area is often blurred  at the outer edges of the frame 
+            bestEventFrame = getIndexedFrame(sortedEventFrames.size()/2);
             
             
              System.out.println("#########Max size for event: "
                 + eventObject.getObjectId() + " size: " + eventObject.getCurrSize()
                  + " best frame: " + bestEventFrame 
-                 + " frameSet#:" + eventObject.getFrameEventSet().getFrameNumber() ); 
-        }
-
-        sort();
+                 + " frameSet#:" + eventObject.getFrameEventSet().getFrameNumber()
+                 + " startFrame: " + getStartFrame() + " endFrame: " + getEndFrame()); 
+        } 
+        
     }
 
     public void sort() {
@@ -626,7 +630,7 @@ public class EventObjectContainer implements Comparable, Serializable {
 
             return -1;
         }
-    }
+    } 
 
     public int getEndFrame() {
         synchronized (eventHashMap) {
@@ -691,8 +695,8 @@ public class EventObjectContainer implements Comparable, Serializable {
      * This is the middle of the event
      * @return best event frameSet, or -1 if none found
      */
-    public int getBestEventFrame() {
-        return bestEventFrame;
+    public int getBestEventFrame() { 
+       return bestEventFrame; 
     }
 
     /**

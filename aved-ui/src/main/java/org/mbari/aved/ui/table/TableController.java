@@ -53,6 +53,7 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel; 
 import org.mbari.aved.ui.EventImagePopupMenu;
 
@@ -202,14 +203,11 @@ public class TableController extends AbstractController implements ModelListener
                 break;
 
             // This will scroll the table to the last loaded image
-            case EventListModel.EventListModelEvent.NUM_LOADED_IMAGES_CHANGED :
-                
-                if (!listmodel.getValueIsAdjusting()) {  
-                    tablemodel.getTableModel().fireTableDataChanged();  
-                }
+            case EventListModel.EventListModelEvent.NUM_LOADED_IMAGES_CHANGED : 
+                tablemodel.getTableModel().fireTableDataChanged();   
                 // uncomment if you want the table to scroll as it is loading
                 // int numchanged = e.getFlag();
-                // eventTable.scrollRectToVisible(eventTable.getCellRect(numchanged, 1, true));
+                //eventTable.scrollRectToVisible(eventTable.getCellRect(numchanged, 1, true));
                 break;
 
             case EventListModel.EventListModelEvent.ONE_ENTRY_REMOVED :
@@ -226,14 +224,11 @@ public class TableController extends AbstractController implements ModelListener
 
                 break;
 
-            case EventListModel.EventListModelEvent.MULTIPLE_ENTRIES_CHANGED :
-                if (!listmodel.getValueIsAdjusting()) {  
-                    tablemodel.getTableModel().fireTableDataChanged();  
-                }
+            case EventListModel.EventListModelEvent.MULTIPLE_ENTRIES_CHANGED : 
+                tablemodel.getTableModel().fireTableDataChanged();     
                 break;
 
-            case EventListModel.EventListModelEvent.LIST_CLEARED :
-
+            case EventListModel.EventListModelEvent.LIST_CLEARED : 
                 // TODO: put some logic to detect if editing and haven't saved results
                 // recently before closing
                 getView().setCursor(ImageUtils.busyCursor);
@@ -246,7 +241,7 @@ public class TableController extends AbstractController implements ModelListener
                 break;
             }
         }
-    }
+        }
 
     /**
      * Translated the real model index  into the  row index
