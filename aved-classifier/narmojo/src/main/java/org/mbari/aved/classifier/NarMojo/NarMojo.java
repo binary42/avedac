@@ -83,12 +83,7 @@ public class NarMojo extends AbstractMojo {
      */
     private ArtifactRepository localRepository;
     private Log log;
-    /**
-     * Level of logging messages, 0 is minimum.
-     *
-     * @parameter expression="${logLevel}" default-value="0"
-     */
-    private int logLevel;
+
     private NarManager narManager;
     /**
      * The Operating System for picking up swig. Some choices are: "Windows",
@@ -111,7 +106,7 @@ public class NarMojo extends AbstractMojo {
         // FIXME, should have some function in NarUtil
         Linker linker = new Linker("g++");
 
-        narManager = new NarManager(getLog(), logLevel, localRepository, project, architecture, os, linker);
+        narManager = new NarManager(getLog(), localRepository, project, architecture, os, linker);
 
         String aol = architecture + "-" + os + "-g++";
         String classifier = aol;

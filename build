@@ -11,8 +11,8 @@ uname="`uname -a`"
 # Crude check for OS, if not Linux, assume MacOSX
 if [ "`echo $uname | grep Linux`" ]; then
   if [ ! "`echo $uname | grep 64`" ] ;then
-     echo "Running Linux 32-bit build"
-     mvn install -PLinux32 -Dmaven.test.skip=true 
+     echo "32-bit build no longer supported"
+     exit -1     
   else
      echo "Running Linux 64-bit build"
      mvn install -PLinux64 -Dmaven.test.skip=true 
@@ -25,12 +25,11 @@ ioreg="`/usr/sbin/ioreg -l -p IODeviceTree | grep firmware-abi`"
       echo "Running MacOSX 64-bit build"
       mvn install -PMac64 -Dmaven.test.skip=true
     else
-      echo "Running MacOSX 32-bit build"
-      mvn install -PMac32 -Dmaven.test.skip=true
+      echo "32-bit build no longer supported"
+      exit -1     
     fi
-  else
-    # Can only run 32-bit if not 64-bit firmware
-    echo "Running MacOSX 32-bit build"
-    mvn install -PMac32 -Dmaven.test.skip=true
+  else 
+    echo "32-bit build no longer supported"
+    exit -1     
   fi
 fi

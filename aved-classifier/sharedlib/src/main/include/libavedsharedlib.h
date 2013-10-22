@@ -1,15 +1,16 @@
 /*
- * MATLAB Compiler: 4.16 (R2011b)
- * Date: Wed Sep 19 12:59:42 2012
+ * MATLAB Compiler: 4.18 (R2012b)
+ * Date: Tue Oct 22 09:43:49 2013
  * Arguments: "-B" "macro_default" "-v" "-W" "lib:libavedsharedlib" "-T"
  * "link:lib" "-I"
- * "/home/aved/avedac/aved-classifier/sharedlib/src/main/native/matlab" "-I"
- * "/home/aved/avedac/aved-classifier/sharedlib/src/main/native/matlab/netlab"
+ * "/home/avedac/dev/avedac/aved-classifier/sharedlib/src/main/native/matlab"
  * "-I"
- * "/home/aved/avedac/aved-classifier/sharedlib/src/main/native/matlab/pnm-3.01/
- * pnm/pnmutil" "-I"
- * "/home/aved/avedac/aved-classifier/sharedlib/src/main/native/matlab/pnm-3.01/
- * pnm/pnm" "-g" "-G" "run_tests_ui" "collect_ui" "collect_tests"
+ * "/home/avedac/dev/avedac/aved-classifier/sharedlib/src/main/native/matlab/net
+ * lab" "-I"
+ * "/home/avedac/dev/avedac/aved-classifier/sharedlib/src/main/native/matlab/pnm
+ * -3.01/pnm/pnmutil" "-I"
+ * "/home/avedac/dev/avedac/aved-classifier/sharedlib/src/main/native/matlab/pnm
+ * -3.01/pnm/pnm" "-g" "-G" "run_tests_ui" "collect_ui" "collect_tests"
  * "collect_class" "assign_class" "test_class" "train_classes_ui" 
  */
 
@@ -101,9 +102,6 @@ bool MW_CALL_CONV mlxTest_class(int nlhs, mxArray *plhs[], int nrhs, mxArray *pr
 extern LIB_libavedsharedlib_C_API 
 bool MW_CALL_CONV mlxTrain_classes_ui(int nlhs, mxArray *plhs[], int nrhs, mxArray 
                                       *prhs[]);
-
-extern LIB_libavedsharedlib_C_API 
-long MW_CALL_CONV libavedsharedlibGetMcrID();
 
 
 
