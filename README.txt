@@ -87,7 +87,7 @@ David and Lucile Packard Foundation.
 	     
 	     export MATLAB_ROOT=/home/aved/matlab7.2
              export JAVA_HOME=/usr/java/latest
-	     export MCR_ROOT=/opt/MATLAB/MATLAB_Compiler_Runtime/v710
+	     export MCR_ROOT=/opt/MATLAB/MATLAB_Compiler_Runtime/v80
 	     export SALIENCY_ROOT=/home/aved/saliency
 	     export XERCESC_ROOT=/home/aved/Xercesc-2_7_0
 
