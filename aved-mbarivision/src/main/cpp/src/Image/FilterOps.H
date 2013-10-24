@@ -32,8 +32,8 @@
 // //////////////////////////////////////////////////////////////////// //
 //
 // Primary maintainer for this file: Rob Peters <rjpeters@klab.caltech.edu>
-// $HeadURL: svn://iLab.usc.edu/trunk/saliency/src/Image/FilterOps.H $
-// $Id: FilterOps.H 10704 2008-05-10 02:43:47Z rjpeters $
+// $HeadURL: svn://isvn.usc.edu/software/invt/trunk/saliency/src/Image/FilterOps.H $
+// $Id: FilterOps.H 13801 2010-08-19 19:54:49Z lior $
 //
 
 
@@ -63,18 +63,18 @@ template <class T> class Image;
 
 //! template matching correlation
 template <class T>
-  Image<typename promote_trait<T, float>::TP>
+Image<typename promote_trait<T, float>::TP>
 correlation(const Image<T>& src, const Image<float>& filter);
 
 //! template matching useing opencv defaults to correlation if no openCV installed
 //! defaults to CV_TM_SQDIFF
 template <class T>
-  Image<typename promote_trait<T, float>::TP>
+Image<typename promote_trait<T, float>::TP>
 templMatch(const Image<T>& src, const Image<float>& filter, int method = 0);
 
 //! Spatial pooling taking the max value over a neighborhood
 /*! Compute max over a rectangle of size (si, sj) starting at positions
-  that increment in steps (sti, stj) */
+ that increment in steps (sti, stj) */
 template <class T>
 Image<typename promote_trait<T, float>::TP>
 spatialPoolMax(const Image<T>& src, const int si, const int sj,
@@ -89,18 +89,18 @@ float featurePoolHmax(const Image<T>& img1, const Image<T>& img2,
 
 //! Oriented filter along theta (deg), spatial freq k
 /*! This filter works on the difference between the image and itself
-    low-passed. It modulates this difference by a complex sinusoid,
-    and then low-passes the real and imaginary parts, and finally
-    takes the modulus. This method is by Greenspan et al. (1994).
-    CAUTION: *you* must provide as input (i.e., in "this") the
-    difference between an image and itself low-pass filtered.
-    CAUTION: results are possibly bad with the integer versions. Use
-    float.
-
-    @param usetab Whether to use trig lookup tables internally to get
-    sin and cos values. This may give up to a 2x speedup, at the cost
-    of some minor loss of precision,
-*/
+ low-passed. It modulates this difference by a complex sinusoid,
+ and then low-passes the real and imaginary parts, and finally
+ takes the modulus. This method is by Greenspan et al. (1994).
+ CAUTION: *you* must provide as input (i.e., in "this") the
+ difference between an image and itself low-pass filtered.
+ CAUTION: results are possibly bad with the integer versions. Use
+ float.
+ 
+ @param usetab Whether to use trig lookup tables internally to get
+ sin and cos values. This may give up to a 2x speedup, at the cost
+ of some minor loss of precision,
+ */
 template <class T_or_RGB>
 Image<typename promote_trait<T_or_RGB, float>::TP>
 orientedFilter(const Image<T_or_RGB>& src, const float k, const float theta,
@@ -108,10 +108,10 @@ orientedFilter(const Image<T_or_RGB>& src, const float k, const float theta,
 
 //! Compute center-surround difference, taking the abs if absol==true
 /*! To the (hires) center will be substracted a (lowres)
-  surround. Image sizes must be int multiples.  CAUTION: values will
-  be clamped to the range of your template type.
-  @param absol if true, take the absolute value of the difference (otherwise,
-  negative values are clamped to zero). */
+ surround. Image sizes must be int multiples.  CAUTION: values will
+ be clamped to the range of your template type.
+ @param absol if true, take the absolute value of the difference (otherwise,
+ negative values are clamped to zero). */
 template <class T>
 Image<T> centerSurround(const Image<T>& center,
                         const Image<T>& surround,
@@ -119,9 +119,9 @@ Image<T> centerSurround(const Image<T>& center,
 
 //! Compute center-surround difference, without clamping or rectifying
 /*! To the (hires) center will be substracted a (lowres)
-  surround. Image sizes must be int multiples. This is implemented in
-  a different function from centerSurround() as it returns two images,
-  for the positive and negative values of the difference */
+ surround. Image sizes must be int multiples. This is implemented in
+ a different function from centerSurround() as it returns two images,
+ for the positive and negative values of the difference */
 template <class T>
 void centerSurround(const Image<T>& center,
                     const Image<T>& surround,
@@ -129,8 +129,8 @@ void centerSurround(const Image<T>& center,
 
 //! compute double-opponent response
 /*! (cplus - cminus) [-] (splus - sminus) where [-] is subtraction of two
-  images of possibly different sizes, followed by absolute value. The result
-  will have the size of the larger (center) image. */
+ images of possibly different sizes, followed by absolute value. The result
+ will have the size of the larger (center) image. */
 template <class T>
 Image<typename promote_trait<T, float>::TP>
 doubleOpp(const Image<T>& cplus, const Image<T>& cminus,
@@ -147,83 +147,146 @@ Image<T> energyNorm(const Image<T>& img);
 
 //! Compute response of a junction detector filter
 /*! In the full implementation here, the junction filter responds only
-if the relevant features are present and the irrelevant features are
-absent.
-  @param i0 image filtered by a 0deg (horisontal) Gabor filter
-  @param i45 image filtered by a 45deg Gabor filter
-  @param i90 image filtered by a 90deg (vertical) Gabor filter
-  @param i135 image filtered by a 135deg Gabor filter
-  @param r boolean array of which features are considered relevant to
-  the junction. The first element is for the horizontal (i0) feature
-  at (x+dx, y), the second for the 45deg (i45) feature at (x+dx,
-  y-dy), and so on, going counterclockwise:
-
-  :    3   2   1
-  :      \ | /
-  :   4 -- o -- 0
-  :      / | \
-  :    5   6   7
-
-  @param dx horizontal distance from current pixel at which the
-  presence or absence of a given feature should be checked for.
-  @param dy vertical distance from current pixel at which the
-  presence or absence of a given feature should be checked for. */
+ if the relevant features are present and the irrelevant features are
+ absent.
+ @param i0 image filtered by a 0deg (horisontal) Gabor filter
+ @param i45 image filtered by a 45deg Gabor filter
+ @param i90 image filtered by a 90deg (vertical) Gabor filter
+ @param i135 image filtered by a 135deg Gabor filter
+ @param r boolean array of which features are considered relevant to
+ the junction. The first element is for the horizontal (i0) feature
+ at (x+dx, y), the second for the 45deg (i45) feature at (x+dx,
+ y-dy), and so on, going counterclockwise:
+ 
+ :    3   2   1
+ :      \ | /
+ :   4 -- o -- 0
+ :      / | \
+ :    5   6   7
+ 
+ @param dx horizontal distance from current pixel at which the
+ presence or absence of a given feature should be checked for.
+ @param dy vertical distance from current pixel at which the
+ presence or absence of a given feature should be checked for. */
 template <class T>
-Image<T> junctionFilterFull(const Image<T>& i0, const Image<T>& i45,
+Image<T> junctionFilterFull(const Image<T>& i0,  const Image<T>& i45,
                             const Image<T>& i90, const Image<T>& i135,
-                            const bool r[8], const int dx = 6,
-                            const int dy = 6);
+                            const bool r[8],     const int dx = 6,
+                            const int dy = 6,
+                            const bool useEuclidDiag = true);
 
 //! Compute response of a junction detector filter, partial implementation
 /*! In the partial implementation here, the junction filter responds
-  when the relevant features are present, without consideration of
-  what the values of the irrelevant features might be.
-  @param i0 image filtered by a 0deg (horisontal) Gabor filter
-  @param i45 image filtered by a 45deg Gabor filter
-  @param i90 image filtered by a 90deg (vertical) Gabor filter
-  @param i135 image filtered by a 135deg Gabor filter
-  @param r boolean array of which features are considered relevant to
-  the junction. The first element is for the horizontal (i0) feature
-  at (x+dx, y), the second for the 45deg (i45) feature at (x+dx,
-  y-dy), and so on, going counterclockwise:
-
-  :    3   2   1
-  :      \ | /
-  :   4 -- o -- 0
-  :      / | \
-  :    5   6   7
-
-  @param dx horizontal distance from current pixel at which the
-  presence or absence of a given feature should be checked for.
-  @param dy vertical distance from current pixel at which the
-  presence or absence of a given feature should be checked for. */
+ when the relevant features are present, without consideration of
+ what the values of the irrelevant features might be.
+ @param i0 image filtered by a 0deg (horisontal) Gabor filter
+ @param i45 image filtered by a 45deg Gabor filter
+ @param i90 image filtered by a 90deg (vertical) Gabor filter
+ @param i135 image filtered by a 135deg Gabor filter
+ @param r boolean array of which features are considered relevant to
+ the junction. The first element is for the horizontal (i0) feature
+ at (x+dx, y), the second for the 45deg (i45) feature at (x+dx,
+ y-dy), and so on, going counterclockwise:
+ 
+ :    3   2   1
+ :      \ | /
+ :   4 -- o -- 0
+ :      / | \
+ :    5   6   7
+ 
+ @param dx horizontal distance from current pixel at which the
+ presence or absence of a given feature should be checked for.
+ @param dy vertical distance from current pixel at which the
+ presence or absence of a given feature should be checked for. */
 template <class T>
 Image<T> junctionFilterPartial(const Image<T>& i0, const Image<T>& i45,
                                const Image<T>& i90, const Image<T>& i135,
                                const bool r[8], const int dx = 6,
-                               const int dy = 6);
+                               const int dy = 6,
+                               const bool useEuclidDiag = false);
+
+
+//! Compute response of a MST detector filter
+/*! In the full implementation here, the MST filter responds only
+ if the relevant features are present and the irrelevant features are
+ absent.
+ @param i0 image filtered by a 0deg (horisontal) Gabor filter
+ @param i45 image filtered by a 45deg Gabor filter
+ @param i90 image filtered by a 90deg (vertical) Gabor filter
+ @param i135 image filtered by a 135deg Gabor filter
+ @param r boolean array of which features are considered relevant to
+ the MST. The first element is for the horizontal (i0) feature
+ at (x+dx, y), the second for the 45deg (i45) feature at (x+dx,
+ y-dy), and so on, going counterclockwise:
+ 
+ :    3   2   1
+ :      \ | /
+ :   4 -- o -- 0
+ :      / | \
+ :    5   6   7
+ 
+ @param dx horizontal distance from current pixel at which the
+ presence or absence of a given feature should be checked for.
+ @param dy vertical distance from current pixel at which the
+ presence or absence of a given feature should be checked for. */
+template <class T>
+Image<T> MSTFilterFull(const Image<T>& i0,  const Image<T>& i45,
+					   const Image<T>& i90, const Image<T>& i135,
+					   const bool r[8],     const int dx = 6,
+					   const int dy = 6,
+					   const bool useEuclidDiag = true);
+
+//! Compute response of a MST detector filter, partial implementation
+/*! In the partial implementation here, the MST filter responds
+ when the relevant features are present, without consideration of
+ what the values of the irrelevant features might be.
+ @param i0 image filtered by a 0deg (horisontal) Gabor filter
+ @param i45 image filtered by a 45deg Gabor filter
+ @param i90 image filtered by a 90deg (vertical) Gabor filter
+ @param i135 image filtered by a 135deg Gabor filter
+ @param r boolean array of which features are considered relevant to
+ the MST. The first element is for the horizontal (i0) feature
+ at (x+dx, y), the second for the 45deg (i45) feature at (x+dx,
+ y-dy), and so on, going counterclockwise:
+ 
+ :    3   2   1
+ :      \ | /
+ :   4 -- o -- 0
+ :      / | \
+ :    5   6   7
+ 
+ @param dx horizontal distance from current pixel at which the
+ presence or absence of a given feature should be checked for.
+ @param dy vertical distance from current pixel at which the
+ presence or absence of a given feature should be checked for. */
+template <class T>
+Image<T> MSTFilterPartial(const Image<T>& i0, const Image<T>& i45,
+						  const Image<T>& i90, const Image<T>& i135,
+						  const bool r[8], const int dx = 6,
+						  const int dy = 6,
+						  const bool useEuclidDiag = false);
 
 
 
 //! Compute the magnitude of the gradient of an image
 /*! This is an approximation to the gradient magnitude as used in the
-  SIFT code. output(x, y) = sqrt([input(x+1, y) - input(x-1, y)]^2 +
-  [input(x, y+1) - input(x, y-1)]^2)*/
+ SIFT code. output(x, y) = sqrt([input(x+1, y) - input(x-1, y)]^2 +
+ [input(x, y+1) - input(x, y-1)]^2)*/
 template <class T>
 Image<typename promote_trait<T, float>::TP> gradientmag(const Image<T>& input);
 
 //! Compute the orientation of the gradient of an image
 /*! This is an approximation to the gradient orientation as used in
-  the SIFT code. output(x, y) = atan2(input(x, y+1) - input(x, y-1),
-  input(x+1, y) - input(x-1, y)). Result is in radians. A value of 0
-  corresponds to a purely horizontal rightward gradient, other values
-  relating to that in a clockwise manner. */
+ the SIFT code. output(x, y) = atan2(input(x, y+1) - input(x, y-1),
+ input(x+1, y) - input(x-1, y)). Result is in radians. A value of 0
+ corresponds to a purely horizontal rightward gradient, other values
+ relating to that in a clockwise manner. */
 template <class T>
 Image<typename promote_trait<T, float>::TP> gradientori(const Image<T>& input);
 
 //! Compute the magnitude and orientation of the gradient
 /*! This is just an efficient combination of gradientmag() and
-  gradientori() */
+ gradientori() */
 template <class T>
 void gradient(const Image<T>& input,
               Image<typename promote_trait<T, float>::TP>& mag,
@@ -232,9 +295,14 @@ void gradient(const Image<T>& input,
 //! Compute the magnitude and orientation of the gradient using the sobel op
 template <class T>
 void gradientSobel(const Image<T>& input,
-              Image<typename promote_trait<T, float>::TP>& mag,
-              Image<typename promote_trait<T, float>::TP>& ori,
-                                  int kernelSize = 3);
+				   Image<typename promote_trait<T, float>::TP>& mag,
+				   Image<typename promote_trait<T, float>::TP>& ori,
+				   int kernelSize = 3);
+
+
+//! Compute the non maximal suppression (edge thinning)
+Image<float> nonMaxSuppr(const Image<float>& mag, const Image<float>& ori);
+
 
 //! shuffle the contents of an image using Fisher-Yates shuffle
 //Randomly permute N elements by exchanging each element ei with a

@@ -6,7 +6,7 @@
 // Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Wed Jul 16 15:47:10 2003
-// commit: $Id: cdeps.cc,v 1.2 2007/08/30 20:02:10 dcline Exp $
+// commit: $Id: cdeps.cc 14533 2011-02-18 07:25:13Z itti $
 //
 // --------------------------------------------------------------------
 //
@@ -31,6 +31,9 @@
 
 #ifndef CPPDEPS_CC_DEFINED
 #define CPPDEPS_CC_DEFINED
+
+
+#define MAX_STACK_SIZE 50
 
 #include <algorithm>
 #include <cassert>
@@ -225,6 +228,103 @@ namespace
     if (p1 != 0)
       s.erase(0, p1);
   }
+
+  inline bool remove_space(const char* &fptr, const char *stop)
+  {
+    while (fptr < stop && isblank(*fptr))
+      ++fptr;
+    return fptr<stop;
+  }
+
+string get_next_token(const char* &fptr, const char *stop)
+{  
+  // Ignore white space
+  remove_space(fptr,stop);
+  const char *fstart = fptr;
+  // Get the next token
+  while((isalnum(*fptr) || *fptr == '_') && fptr < stop)
+  {
+    fptr++;
+  }
+  string s(fstart,fptr-fstart);
+  return s;
+}
+
+  void handle_define(const char* &fptr, const char *stop, bool invert, bool strip_parentheses, bool * &needHandle, int &nested_ifs);
+
+
+void consume_end_if(const char* &fptr, const char *stop, bool allowElseEvaluation, bool * &needHandle, int &nested_ifs)
+{
+
+  // Have to pay attention to nesting in ifdefs
+  int nested_ifs_init = nested_ifs;
+  while( fptr < stop)
+  {
+    // Get to the next line
+    while (fptr < stop && *fptr != '\n')
+      ++fptr;
+    if(fptr==stop)
+      break;
+    ++fptr;
+    // Ignore white space in the beginning of the line
+    if(!remove_space(fptr,stop))
+      break;
+
+    // Check for the preprocessor directive
+    if (*fptr != '#')
+      continue;
+
+    ++fptr;
+
+    // Ignore white space between # and endif
+    if(!remove_space(fptr,stop))
+      break;;
+
+    if(strncmp("endif",fptr,5)==0)
+    {
+      nested_ifs--;
+    }
+    // This case handles #if, #ifdef, #ifndef
+    else if(strncmp("if",fptr,2)==0)
+    {
+      nested_ifs++;
+    }
+    else if(allowElseEvaluation && strncmp("elif",fptr,4)==0 && nested_ifs == nested_ifs_init)
+    {
+      fptr+=4;
+      remove_space(fptr,stop);
+      bool invert;
+      if(strncmp("defined",fptr,7)==0)
+      {
+	fptr+=7; invert = false;
+      }
+      else if(strncmp("!defined",fptr,8)==0)
+      {
+	fptr+=8; invert = true;
+      }
+      else
+      {
+	// Currently entering all vanilla elif statements
+	//nested_ifs+=consume_end_if(fptr,stop,false);
+	continue;
+      }
+      handle_define(fptr,stop,invert,true,needHandle,nested_ifs);
+    }
+    else if(allowElseEvaluation && strncmp("else",fptr,4) == 0 && nested_ifs == nested_ifs_init)
+    {
+      // We have skipped the ifdef and any elseif at this level, so therefore, we must do the else
+      return;
+    }
+    if(nested_ifs == nested_ifs_init-1)
+    {
+      return;
+    }
+  }
+  cerr << "Preprocesser nesting off by [" << nested_ifs-nested_ifs_init << "] at the end of file\n";
+  exit(1);
+}
+
+
 
   string trim_trailing_slashes(const string& inp)
   {
@@ -570,6 +670,9 @@ namespace
 
     string transform(const string& stem) const
     {
+      if (m_wildcard_pos == string::npos)
+        return m_pattern;
+
       string result = m_pattern;
       result.replace(m_wildcard_pos, 1, stem);
       return result;
@@ -590,6 +693,7 @@ namespace
     vector<link_pattern> m_patterns;
     string               m_full_pattern;
     mutable bool         m_ever_matched;
+    bool                 m_any_pattern_needs_stem;
 
   public:
     // Try to parse the input string as follows:
@@ -611,7 +715,8 @@ namespace
     // string 'src/myfile.cc', transform it to an output string
     // 'objdir/myfile.o'.
     formatter(string format_spec) :
-      m_ever_matched(false)
+      m_ever_matched(false),
+      m_any_pattern_needs_stem(false)
     {
       // Find the 'group', if any
       const string::size_type comma = format_spec.find_first_of(',');
@@ -643,7 +748,11 @@ namespace
         {
           string s; strm >> s;
           if (s.length() > 0)
-            m_patterns.push_back(s);
+            {
+              m_patterns.push_back(s);
+              if (m_patterns.back().m_wildcard_pos != string::npos)
+                m_any_pattern_needs_stem = true;
+            }
         }
     }
 
@@ -673,12 +782,7 @@ namespace
 
     string transform(const string& srcfile) const
     {
-      bool needtransform = false;
-      for (unsigned int i = 0; i < m_patterns.size(); ++i)
-        if (m_patterns[i].m_wildcard_pos != string::npos)
-          { needtransform = true; break; }
-
-      if (!needtransform)
+      if (!m_any_pattern_needs_stem)
         return m_full_pattern;
 
       // else...
@@ -760,7 +864,7 @@ namespace
           if (m_links[i-1].matches(srcfile))
             return m_links[i-1].transform(srcfile);
         }
-      return string(); // can't happen, but placate compiler
+      return string();
     }
 
     /// Try to find a pattern that matches srcfile, and return its transformation.
@@ -865,13 +969,91 @@ namespace
 
     bool            ldep_raw_mode;
 
+    bool            use_config_file;
     string          cache_file_name;
+    string          config_file_name;
+    map<string,int> config_defines;  // Definitions from config file
 
     string          sources_make_variable;
     string          headers_make_variable;
   };
 
   dep_config cfg;
+
+//
+// Handle definitions
+//   When a def was in config file, than evaluate the if, otherwise evaluate all parts of #if
+//          clauses
+// 
+void handle_define(const char* &fptr, const char *stop, bool invert, bool strip_parentheses, bool * &needHandle, int &nested_ifs)
+{
+
+  if(strip_parentheses)
+  {
+    // Ignore white space AND open parentheses
+    while ((isblank(*fptr) || *fptr == '(') && fptr < stop)
+      ++fptr;   
+  }
+  string def = get_next_token(fptr,stop);
+ 
+ bool isDefined;
+  switch(cfg.config_defines[def])
+  {
+  case -1:
+    isDefined = false;
+    needHandle[nested_ifs] = true;
+    break;
+  case 0:
+    isDefined = false;
+    needHandle[nested_ifs] = false;
+    break;
+  case 1:
+    isDefined = true;
+    needHandle[nested_ifs] = true;
+    break;
+  default:
+    cerr << "Definition in hashmap is unexpected value " << cfg.config_defines[def] << "\n";
+    exit(1);
+  }
+  // Strip the trailing parentheses if any
+  if(strip_parentheses)
+  {
+    while((isblank(*fptr) || *fptr == ')') && fptr < stop)
+      ++fptr;
+  }
+  // If this is a complex include, then don't handle it
+  string def2 = get_next_token(fptr,stop);
+  if(def2.length() > 0 || !needHandle[nested_ifs])
+  {
+    if(def2.length() > 0)
+      cerr << "WARNING: Compound #if not handled, clause1" << def << ", clause2" << def2 << "\n";
+    return;
+  }
+  if(invert)
+    isDefined = !isDefined;
+  switch(isDefined)
+    {
+    case false:
+      // This value is not defined, so consume fptr until #endif is found or an #elseif/#else that must be gone through
+      consume_end_if(fptr,stop,true,needHandle,nested_ifs);
+      break;
+    case true:
+      // This value is defined, so everything in the middle should be checked
+      break;
+    }
+  return;
+}
+
+void print_definitions()
+{
+  map<string,int>::const_iterator defs = cfg.config_defines.begin(), defs_stop = cfg.config_defines.end();
+  while(defs!=defs_stop)
+  {
+    std::cerr << "# [" << defs->first << "] =  " << defs->second << "\n";
+    defs++;
+  }
+}
+
 
   //----------------------------------------------------------
   //
@@ -888,7 +1070,7 @@ namespace
   };
 
   class dir_info
-  {
+ {
   public:
     typedef map<const char*, dir_info*, string_cmp> map_t;
 
@@ -1164,6 +1346,154 @@ namespace
         }
 
       fclose(f);
+    }
+
+    static void load_config_file()
+    {
+      mapped_file f(cfg.config_file_name.c_str());
+      if (f.length() <= 0)
+        {
+          cfg.warning() << "couldn't open config file : " << cfg.config_file_name
+                        << " for reading\n";
+          return;
+        }
+
+      const char* fptr = static_cast<const char*>(f.memory());
+      const char* const stop = fptr + f.length();
+
+      bool *needHandle = new bool[MAX_STACK_SIZE];
+      bool firsttime = true;
+      int nested_ifs = 0;
+
+      while (fptr < stop)
+      {
+        if (!firsttime)
+          {
+            while (fptr < stop && *fptr != '\n')
+              ++fptr;
+
+            assert(!(fptr > stop));
+
+            if (fptr == stop)
+              break;
+
+            assert(*fptr == '\n');
+            ++fptr;
+          }
+
+        firsttime = false;
+
+        if (fptr >= stop)
+          break;
+
+	if(!remove_space(fptr,stop))
+	  break;;
+
+        // OK, at this point we are guaranteed to be at the beginning of
+        // a line (either we're at the beginning of the file, or else
+        // we've just skipped over a line terminator).
+
+	// WARNING: This is a complete, total, no-holds barred hack
+	// We know the structure of the config file, it looks like:
+	// #define DEFINED_OPTION
+	// /* #undef UNDEFINED_OPTION */
+	// The only way to know it is undefined is to parse within the comment
+	if(strncmp("/*",fptr,2)==0)
+	{
+	  fptr+=2;
+	  if(!remove_space(fptr,stop))
+	    break;
+	  if(strncmp("#undef",fptr,6)==0)
+	  {
+	    fptr+=6;
+	    // Grab string
+	    string def = get_next_token(fptr,stop);
+	    cfg.config_defines[def] = -1;
+	    continue;
+	  }
+	}
+        if (*fptr != '#')
+          continue;
+
+        ++fptr;
+
+	if(!remove_space(fptr,stop))
+	  break;
+
+	if(strncmp("ifdef",fptr,5)==0 || strncmp("ifndef",fptr,6)==0)
+	{
+	  bool invert;
+	  if(strncmp("ifdef",fptr,5)==0)
+	  {
+	    fptr+=5; invert = false;
+	  }
+	  else
+	  {
+	    fptr+=6; invert = true;
+	  }
+	  nested_ifs++;
+	  handle_define(fptr,stop,invert,false,needHandle,nested_ifs);
+	  continue;
+	}
+	else if(strncmp("if",fptr,2)==0)
+	{
+	  fptr+=2;
+	  nested_ifs++;
+	  remove_space(fptr,stop);
+	  bool invert;
+	  if(strncmp("defined",fptr,7)==0)
+	  {
+	    fptr+=7; invert = false;
+	  }
+	  else if(strncmp("!defined",fptr,8)==0)
+	  {
+	    fptr+=8; invert = true;
+	  }
+	  else
+	  {
+	    // Currently entering all vanilla if statements
+	    //nested_ifs+=consume_end_if(fptr,stop,false);
+	    needHandle[nested_ifs]=false;
+	    continue;
+	  }
+	  handle_define(fptr,stop,invert,true,needHandle,nested_ifs);
+	}
+	else if(strncmp("undef",fptr,5)==0)
+	{
+	  fptr+=5;
+	  // Grab string
+	  string def = get_next_token(fptr,stop);
+	  cfg.config_defines[def] = -1;
+	  continue;
+	}
+	else if(strncmp("define",fptr,6)==0)
+	{
+	  fptr+=6;
+	  // Grab string
+	  string def = get_next_token(fptr,stop);
+	  cfg.config_defines[def] = 1;
+	  continue;
+	}
+	else if(strncmp("endif",fptr,5)==0)
+	{
+	  fptr+=5;
+	  nested_ifs--;
+	  continue;
+	}
+	else if(strncmp("elif",fptr,4)==0 || strncmp("else",fptr,4)==0)
+	{
+	  // #elif and #else directives for layers we are handling (config'd defines) should be consumed until the #endif.
+	  // For layers we are not handling, the #else[if] directives should be entered.
+	  fptr+=4;
+	  // Only if we are handling this layer of #if/#endif should we consume to the next endif
+	  if(needHandle[nested_ifs])
+	    consume_end_if(fptr,stop,false,needHandle,nested_ifs);
+	  continue;
+	}
+
+
+      }
+      delete needHandle;
     }
 
     static void load_cache_file()
@@ -1968,8 +2298,16 @@ namespace
     return false;
   }
 
+
+
+
+
+
+
   const dep_list_t& file_info::get_direct_cdeps()
   {
+    // Only having to go through a file once is an unsafe assumption if a full #define parsing is done, 
+    // but we're currently cheating and only #define parsing the config.h file.
     if (this->m_direct_cdeps_done)
       return this->m_direct_cdeps;
 
@@ -1977,6 +2315,8 @@ namespace
       cfg.info() << "get_direct_cdeps for " << this->m_fname << '\n';
 
     ++cfg.nest_level;
+
+    bool *needHandle = new bool[MAX_STACK_SIZE];
 
     mapped_file f(this->m_fname.c_str());
 
@@ -1995,6 +2335,7 @@ namespace
     const char* const stop = fptr + f.length();
 
     bool firsttime = true;
+    int nested_ifs = 0;
 
     while (fptr < stop)
       {
@@ -2021,104 +2362,173 @@ namespace
         // a line (either we're at the beginning of the file, or else
         // we've just skipped over a line terminator).
 
+	if(!remove_space(fptr,stop))
+	  break;
+
         if (*fptr != '#')
           continue;
 
         ++fptr;
 
-        while (isspace(*fptr) && fptr < stop)
-          ++fptr;
+	if(!remove_space(fptr,stop))
+	  break;
 
-        if (*fptr++ != 'i') continue;
-        if (*fptr++ != 'n') continue;
-        if (*fptr++ != 'c') continue;
-        if (*fptr++ != 'l') continue;
-        if (*fptr++ != 'u') continue;
-        if (*fptr++ != 'd') continue;
-        if (*fptr++ != 'e') continue;
+	if(strncmp("ifdef",fptr,5)==0 || strncmp("ifndef",fptr,6)==0)
+	{
+	  bool invert;
+	  if(strncmp("ifdef",fptr,5)==0)
+	  {
+	    fptr+=5; invert = false;
+	  }
+	  else
+	  {
+	    fptr+=6; invert = true;
+	  }
+	  nested_ifs++;
+	  // Determine whether we know the definition to be able to handle it
+	  handle_define(fptr,stop,invert,false,needHandle,nested_ifs);
+	  continue;
+	}
+	else if(strncmp("if",fptr,2)==0)
+	{
+	  fptr+=2;
+	  nested_ifs++;
+	  remove_space(fptr,stop);
+	  bool invert;
+	  if(strncmp("defined",fptr,7)==0)
+	  {
+	    fptr+=7; invert = false;
+	  }
+	  else if(strncmp("!defined",fptr,8)==0)
+	  {
+	    fptr+=8; invert = true;
+	  }
+	  else
+	  {
+	    // All generic if tests are not currently handled.  We aren't parsing definitions outside of 
+	    // config.h, so it is unlikely that we would have the necessary information to do this anyway
+	    //nested_ifs+=consume_end_if(fptr,stop,false);
+	    needHandle[nested_ifs]=false;
+	    continue;
+	  }
+	  // Determine whether we know the definition to be able to handle it
+	  handle_define(fptr,stop,invert,true,needHandle,nested_ifs);
+	}
+	else if(strncmp("endif",fptr,5)==0)
+	{
+	  fptr+=5;
+	  nested_ifs--;
+	  continue;
+	}
+	else if(strncmp("elif",fptr,4)==0 || strncmp("else",fptr,4)==0)
+	{
+	  // #elif and #else directives for layers we are handling (config'd defines) should be consumed until the #endif.
+	  // For layers we are not handling, the #else[if] directives should be entered.
+	  fptr+=4;
+	  // Only if we are handling this layer of #if/#endif
+	  if(needHandle[nested_ifs])
+	    consume_end_if(fptr,stop,false,needHandle,nested_ifs);
+	  continue;
+	}
+	
+	if(strncmp("include",fptr,7) != 0)
+	{
+	  // No need to look at this line any more
+	  continue;
+	}
+	else
+	{
+	  // Handling an #include directive
+	  fptr+=7;
+	  remove_space(fptr,stop);
 
-        while (isspace(*fptr) && fptr < stop)
-          ++fptr;
+	  const char delimiter = *fptr++;
 
-        const char delimiter = *fptr++;
+	  const bool is_valid_delimiter =
+	    (delimiter == '\"') ||
+	    (delimiter == '<' &&
+	     (cfg.check_sys_deps == true || cfg.phantom_sys_deps == true));
 
-        const bool is_valid_delimiter =
-          (delimiter == '\"') ||
-          (delimiter == '<' &&
-           (cfg.check_sys_deps == true || cfg.phantom_sys_deps == true));
+	  if (!is_valid_delimiter)
+	    continue;
 
-        if (!is_valid_delimiter)
-          continue;
+	  const char* const include_start = fptr;
 
-        const char* const include_start = fptr;
+	  switch (delimiter)
+	    {
+	    case '\"':
+	      while (*fptr != '\"' && fptr < stop)
+		++fptr;
+	      break;
+	    case '<':
+	      while (*fptr != '>' && fptr < stop)
+		++fptr;
+	      break;
+	    default:
+	      cerr << "unknown delimiter '" << delimiter << "'\n";
+	      exit(1);
+	      break;
+	    }
 
-        switch (delimiter)
-          {
-          case '\"':
-            while (*fptr != '\"' && fptr < stop)
-              ++fptr;
-            break;
-          case '<':
-            while (*fptr != '>' && fptr < stop)
-              ++fptr;
-            break;
-          default:
-            cerr << "unknown delimiter '" << delimiter << "'\n";
-            exit(1);
-            break;
-          }
+	  if (fptr >= stop)
+	    {
+	      cerr << "premature end-of-file; runaway #include directive?\n";
+	      exit(1);
+	    }
 
-        if (fptr >= stop)
-          {
-            cerr << "premature end-of-file; runaway #include directive?\n";
-            exit(1);
-          }
+	  // include_start and include_length together specify the piece
+	  // of text inside the #include "..." or #include <...> -- we
+	  // need to keep track of include_length because include_start is
+	  // not null-terminated, since it's just pointing into the middle
+	  // of some mmap'ed file
 
-        // include_start and include_length together specify the piece
-        // of text inside the #include "..." or #include <...> -- we
-        // need to keep track of include_length because include_start is
-        // not null-terminated, since it's just pointing into the middle
-        // of some mmap'ed file
+	  const int include_length = fptr - include_start;
+	  const string include_name(include_start, include_length);
+	  //cerr << "in " << this->m_fname << "including header " << include_name << "\n";
+	  if (delimiter == '\"' &&
+	      this->resolve_include(include_name,
+				    cfg.user_ipath,
+				    cfg.literal_exts))
+	    continue;
 
-        const int include_length = fptr - include_start;
-        const string include_name(include_start, include_length);
+	  if (cfg.phantom_sys_deps && delimiter == '<')
+	    {
+	      this->m_direct_cdeps.push_back(file_info::get(include_name));
+	      this->m_direct_cdeps.back()->m_phantom = true;
+	      continue;
+	    }
 
-        if (delimiter == '\"' &&
-            this->resolve_include(include_name,
-                                  cfg.user_ipath,
-                                  cfg.literal_exts))
-          continue;
+	  if (cfg.check_sys_deps &&
+	      this->resolve_include(include_name,
+				    cfg.sys_ipath,
+				    cfg.literal_exts))
+	    continue;
 
-        if (cfg.phantom_sys_deps && delimiter == '<')
-          {
-            this->m_direct_cdeps.push_back(file_info::get(include_name));
-            this->m_direct_cdeps.back()->m_phantom = true;
-            continue;
-          }
+	  if (cfg.verbosity >= NORMAL)
+	    {
+	      cfg.warning() << "in " << this->m_fname
+			    << ": couldn\'t resolve #include \""
+			    << include_name << "\"\n";
 
-        if (cfg.check_sys_deps &&
-            this->resolve_include(include_name,
-                                  cfg.sys_ipath,
-                                  cfg.literal_exts))
-          continue;
+	      cfg.info() << "\twith search path: ";
+	      print_stringvec(cerr, cfg.user_ipath);
+	      cerr << '\n';
 
-        if (cfg.verbosity >= NORMAL)
-          {
-            cfg.warning() << "in " << this->m_fname
-                          << ": couldn\'t resolve #include \""
-                          << include_name << "\"\n";
+	      if (cfg.check_sys_deps)
+		{
+		  cfg.info() << "\tand system search path: ";
+		  print_stringvec(cerr, cfg.sys_ipath);
+		  cerr << '\n';
+		}
+	    }
+	}
+      }
 
-            cfg.info() << "\twith search path: ";
-            print_stringvec(cerr, cfg.user_ipath);
-            cerr << '\n';
-
-            if (cfg.check_sys_deps)
-              {
-                cfg.info() << "\tand system search path: ";
-                print_stringvec(cerr, cfg.sys_ipath);
-                cerr << '\n';
-              }
-          }
+    delete needHandle;
+    if(nested_ifs != 0)
+      {
+	cerr << "Preprocesser nesting off by [" << nested_ifs << "] at the end of file for file: " << this->m_fname << "\n";
+	exit(1);
       }
 
     this->m_direct_cdeps_done = true;
@@ -2127,6 +2537,9 @@ namespace
 
     return this->m_direct_cdeps;
   }
+
+
+
 
   const dep_list_t& file_info::get_nested_cdeps()
   {
@@ -2489,6 +2902,8 @@ cppdeps::cppdeps(const int argc, char** const argv) :
          "                          level  3: lots of extra tracing statements\n"
          "    --inspect             show contents of internal variables while processing\n"
          "                          command-line arguments\n"
+	 "    --config-file [file]  Mandatory definitions used to correctly handle\n"
+	 "                          conditional includes\n"
          "\n"
          "\n"
          "example:\n"
@@ -2503,6 +2918,8 @@ cppdeps::cppdeps(const int argc, char** const argv) :
       exit(1);
     }
 
+  // Default to not using config file
+  cfg.use_config_file = false;
   cfg.sys_ipath.push_back("/usr/include");
   cfg.sys_ipath.push_back("/usr/include/linux");
   cfg.sys_ipath.push_back("/usr/local/matlab/extern/include");
@@ -2730,6 +3147,12 @@ bool cppdeps::handle_option(const char* option, const char* optarg)
     {
       cfg.output_mode |= WARN_ORPHANS;
     }
+  else if (strcmp(option, "--config-file") == 0)
+    {
+      cfg.config_file_name = optarg;
+      cfg.use_config_file = true;
+      return true;
+    }
   else
     {
       cerr << "ERROR: unrecognized command-line option: "
@@ -2941,7 +3364,8 @@ void cppdeps::print_link_deps(file_info* finfo)
 
   const dep_list_t& ldeps = finfo->get_nested_ldeps();
 
-  set<string> links;
+  set<string> regular_links;
+  set<string> phantom_links;
 
   for (dep_list_t::const_iterator
          itr = ldeps.begin(),
@@ -2949,24 +3373,38 @@ void cppdeps::print_link_deps(file_info* finfo)
        itr != stop;
        ++itr)
     {
-      if (cfg.verbosity >= NOISY)
-        cfg.info() << "considering exec " << exe << " --> ldep " << (*itr)->name() << '\n';
+      if ((*itr)->is_pruned())
+        {
+          if (cfg.verbosity >= NOISY)
+            cfg.info() << "considering exec " << exe
+                       << " --> ldep " << (*itr)->name()
+                       << " is pruned\n";
+        }
+      else if ((*itr)->is_phantom())
+        {
+          const string t = cfg.phantom_link_formats.transform((*itr)->name());
+          if (!t.empty())
+            phantom_links.insert(t);
 
-      if (!(*itr)->is_phantom() && !(*itr)->is_pruned())
+          if (cfg.verbosity >= NOISY)
+            cfg.info() << "considering exec " << exe
+                       << " --> ldep " << (*itr)->name()
+                       << " --> phantom link format '" << t << "'\n";
+        }
+      else
         {
           const string t = cfg.link_formats.transform_strict((*itr)->name());
           if (!t.empty())
             {
-              links.insert(t);
+              regular_links.insert(t);
               (*itr)->touch();
             }
 
           if (cfg.verbosity >= NOISY)
-            cfg.info() << "ldep " << (*itr)->name() << " --> link format '" << t << "'\n";
+            cfg.info() << "considering exec " << exe
+                       << " --> ldep " << (*itr)->name()
+                       << " --> regular link format '" << t << "'\n";
         }
-      else
-        if (cfg.verbosity >= NOISY)
-          cfg.info() << "ldep " << (*itr)->name() << " is phantom or pruned\n";
     }
 
   // print all of the link dependencies on one line per executable,
@@ -2978,8 +3416,8 @@ void cppdeps::print_link_deps(file_info* finfo)
 
   printf("%s:", exe.c_str());
   for (set<string>::iterator
-         itr = links.begin(),
-         stop = links.end();
+         itr = regular_links.begin(),
+         stop = regular_links.end();
        itr != stop;
        ++itr)
     {
@@ -2987,26 +3425,12 @@ void cppdeps::print_link_deps(file_info* finfo)
     }
   printf("\n");
 
-  links.clear();
-
-  for (dep_list_t::const_iterator
-         itr = ldeps.begin(),
-         stop = ldeps.end();
-       itr != stop;
-       ++itr)
-    {
-      if ((*itr)->is_phantom() && !(*itr)->is_pruned())
-        {
-          const string t = cfg.phantom_link_formats.transform((*itr)->name());
-          if (!t.empty())
-            links.insert(t);
-        }
-    }
-
+  // now print the phantom-link dependencies that were collected, on
+  // one additional line per executable:
   printf("%s:", exe.c_str());
   for (set<string>::iterator
-         itr = links.begin(),
-         stop = links.end();
+         itr = phantom_links.begin(),
+         stop = phantom_links.end();
        itr != stop;
        ++itr)
     {
@@ -3020,6 +3444,13 @@ void cppdeps::traverse_sources()
   if (cfg.cache_file_name.length() > 0)
     {
       file_info::load_cache_file();
+    }
+
+  if (cfg.use_config_file)
+    {
+      file_info::load_config_file();
+      fprintf(stderr,"Loading config file\n");
+      //print_definitions();
     }
 
   // start off with a copy of m_src_files
@@ -3090,7 +3521,9 @@ void cppdeps::traverse_sources()
               (cfg.output_mode & LDEP_RAW))
             {
               if (finfo->is_cc_fname())
+	      {
                 (void) finfo->get_nested_ldeps();
+	      }
             }
 
           --cfg.nest_level;
@@ -3152,5 +3585,5 @@ int main(int argc, char** argv)
   exit(0);
 }
 
-static const char vcid_cppdeps_cc[] = "$Id: cdeps.cc,v 1.2 2007/08/30 20:02:10 dcline Exp $ $HeadURL: svn://iLab.usc.edu/trunk/saliency/devscripts/cdeps.cc $";
+static const char vcid_cppdeps_cc[] = "$Id: cdeps.cc 14533 2011-02-18 07:25:13Z itti $ $HeadURL: svn://isvn.usc.edu/software/invt/trunk/saliency/devscripts/cdeps.cc $";
 #endif // !CPPDEPS_CC_DEFINED

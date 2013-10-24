@@ -150,10 +150,28 @@ if test -d "$with_xercesc" ; then
                     Set the correct path with --with-xercesc=DIR   ])
    fi
 
+AC_SUBST(with_xercesc)
+
 CPPFLAGS="$cppflags_save"
 LDFLAGS="$ldflags_save"
 
-AC_SUBST(with_xercesc)
+AC_MSG_CHECKING([for library directory /usr/local/lib64])
+ if test -d /usr/local/lib64; then
+    LDFLAGS="$LDFLAGS -L/usr/local/lib64"
+    AC_MSG_RESULT([Added -L/usr/local/lib64 to LDFLAGS])
+ else
+    AC_MSG_RESULT([Not Found; not added to LDFLAGS])
+ fi
+
+AC_MSG_CHECKING([for library directory /usr/local/lib])
+if test -d /usr/local/lib; then
+   LDFLAGS="$LDFLAGS -L/usr/local/lib"
+   AC_MSG_RESULT([Added -L/usr/local/lib to LDFLAGS])
+else
+   AC_MSG_RESULT([Not Found; not added to LDFLAGS])
+fi
+
+
  
 dnl Create these files, making substitutions if necessary
 AC_OUTPUT([Makefile])

@@ -105,7 +105,6 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
  *conditions are met, this function will return.s
  */
 list<WTAwinner> getSalientWinners(
-        nub::soft_ref<SimOutputFrameSeries> simofs,
         const Image< PixRGB<byte> > &img,
         nub::soft_ref<StdBrain> brain,
         nub::soft_ref<SimEventQueue> seq,

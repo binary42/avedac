@@ -10,8 +10,8 @@ SCHEMADIR   := schema/
 CXX         := @CXX@
 CXXFLAGS    := @CXXFLAGS@ 
 DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1
-CPPFLAGS    := @CPPFLAGS@  -I/usr/include/libxml2 -I./lib -I$(SALIENCYROOT)/src -I $(XERCESCROOT)/src -I$(SRCDIR) -I$(LIBDIR) -include $(SALIENCYROOT)/config.h
-LDFLAGS     := @LDFLAGS@ -L/usr/lib -L./lib -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib -lpthread -lxerces-c -lz -lbz2 -lpng -ljpeg -lXext -lpthread  -lavcodec -lavformat -lavutil -lxml2 -lSDL
+CPPFLAGS    := @CPPFLAGS@ -I$(SALIENCYROOT)/src -I$(XERCESCROOT)/src -I$(SRCDIR) -I$(LIBDIR)
+LDFLAGS     := @LDFLAGS@ -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib -lxerces-c 
 DEPFILE	    := alldepends
 COMPILE1    := @echo 
 COMPILE2    := @	
@@ -58,29 +58,30 @@ $(CDEPS): cdeps.cc
 #### e.g. to add a new test file build from the source test.C
 #### --exeformat "$(SRCDIR)test.C : $(BINDIR)test
 #################################################################
-$(DEPFILE):$(CDEPS) 
+$(DEPFILE):$(CDEPS)
 	$(COMPILE1) Computing source file dependencies
 	$(COMPILE2) $(CDEPS) \
-	   --verbosity 0 \
-	   --srcdir "$(SRCDIR)" \
-	   --includedir "$(SRCDIR)" \
-	   --includedir "$(SALIENCYROOT)/src" \
-	   --includedir "$(XERCESCROOT)/src" \
-	   --objdir "$(OBJDIR)" \
-	   --objext ".o" \
-	   --literal .I \
-	   --exeformat "$(SRCDIR)Mbarivision.C : $(BINDIR)mbarivision" \
-	   --linkformat "$(SALIENCYROOT)/src/ : $(SALIENCYROOT)/build/obj/*.o" \
-   	   --linkformat "$(SRCDIR) : $(OBJDIR)*.o" \
-	   --output-link-deps \
-	   --output-compile-deps \
-	   --sources-variable SOURCES \
-	   --headers-variable HEADERS \
-           > $(@)
+           --verbosity 0 \
+           --srcdir "$(SRCDIR)" \
+           --includedir "$(SRCDIR)" \
+           --includedir "$(SALIENCYROOT)/src" \
+           --includedir "$(XERCESCROOT)/src" \
+           --options-file depoptions-all \
+           --objdir "$(OBJDIR)" \
+           --objext ".o" \
+           --literal .I \
+           --linkformat "$(SALIENCYROOT)/src/ : $(SALIENCYROOT)/build/obj/*.o" \
+           --linkformat "$(SRCDIR) : $(OBJDIR)*.o" \
+           --output-link-deps \
+           --output-compile-deps \
+           --sources-variable SOURCES \
+           --headers-variable HEADERS \
+            --config-file $(SALIENCYROOT)/config.h \
+            > $(@)
 
 ##### Explicit rules
 # Grab the flags from the saliency build
-LDFLAGS +=`grep -m 1 LDFLAGS $(SALIENCYROOT)/Makefile | cut -f2 -d =`
+#LDFLAGS +=`grep -m 1 LDFLAGS $(SALIENCYROOT)/Makefile | cut -f2 -d =`
 
 .PHONY: clean allclean uninstall
 

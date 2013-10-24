@@ -1,17 +1,17 @@
 ##### Mbarivision Makefile
 PREFIX      := /usr/local/aved
-SALIENCYROOT := /home/aved/saliency
-XERCESCROOT  := /home/aved/Xerces-C_2_7_0
+SALIENCYROOT := /home/avedac/dev/saliency-20131015
+XERCESCROOT  := /home/avedac/dev/Xerces-C_2_7_0
 SRCDIR      := src/
 OBJDIR	    := target/build/obj/
 BINDIR	    := target/build/bin/
 LIBDIR      := target/build/lib/
 SCHEMADIR   := schema/
-CXX         := g++
-CXXFLAGS    := -g -O2 
+CXX         := /opt/centos/devtoolset-1.1/root/usr/bin/g++
+CXXFLAGS    := -I /opt/centos/devtoolset-1.1/root/usr/include/c++/4.7.2/ 
 DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1
-CPPFLAGS    :=   -I/usr/include/libxml2 -I./lib -I$(SALIENCYROOT)/src -I $(XERCESCROOT)/src -I$(SRCDIR) -I$(LIBDIR) -include $(SALIENCYROOT)/config.h
-LDFLAGS     :=  -L/usr/lib -L./lib -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib -lpthread -lxerces-c -lz -lbz2 -lpng -ljpeg -lXext -lpthread  -lavcodec -lavformat -lavutil -lxml2 -lSDL -lX11 -ldl
+CPPFLAGS    := -I /opt/centos/devtoolset-1.1/root/usr/include/c++/4.7.2/ -I$(SALIENCYROOT)/src -I$(XERCESCROOT)/src -I$(SRCDIR) -I$(LIBDIR)
+LDFLAGS     := -L /opt/centos/devtoolset-1.1/root/usr/lib/gcc/x86_64-redhat-linux/4.7.2/ -L/usr/local/lib64 -L/usr/local/lib -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib -lxerces-c 
 DEPFILE	    := alldepends
 COMPILE1    := @echo 
 COMPILE2    := @	
@@ -31,7 +31,7 @@ $(BINDIR)%:
 	  -o $@ -O \
   	  $(addprefix $(PWD)/,$(filter-out /%, $+)) \
 	  $(filter /%, $+)  \
-	  $(LDFLAGS)  $(LIBS)
+	  $(LDFLAGS) $(LIBS)
 	  @mkdir -p $(BINDIR)/$(SCHEMADIR)
 	  $(COMPILE1) "Installing xml schema files in $(SCHEMADIR) to $(BINDIR) "
 	  @cp -Rf $(SCHEMADIR) $(BINDIR)
@@ -58,29 +58,31 @@ $(CDEPS): cdeps.cc
 #### e.g. to add a new test file build from the source test.C
 #### --exeformat "$(SRCDIR)test.C : $(BINDIR)test
 #################################################################
-$(DEPFILE):$(CDEPS) 
+$(DEPFILE):$(CDEPS)
 	$(COMPILE1) Computing source file dependencies
 	$(COMPILE2) $(CDEPS) \
-	   --verbosity 0 \
-	   --srcdir "$(SRCDIR)" \
-	   --includedir "$(SRCDIR)" \
-	   --includedir "$(SALIENCYROOT)/src" \
-	   --includedir "$(XERCESCROOT)/src" \
-	   --objdir "$(OBJDIR)" \
-	   --objext ".o" \
-	   --literal .I \
+           --verbosity 0 \
+           --srcdir "$(SRCDIR)" \
 	   --exeformat "$(SRCDIR)Mbarivision.C : $(BINDIR)mbarivision" \
-	   --linkformat "$(SALIENCYROOT)/src/ : $(SALIENCYROOT)/build/obj/*.o" \
-   	   --linkformat "$(SRCDIR) : $(OBJDIR)*.o" \
-	   --output-link-deps \
-	   --output-compile-deps \
-	   --sources-variable SOURCES \
-	   --headers-variable HEADERS \
-           > $(@)
+	   --includedir "$(SRCDIR)" \
+           --includedir "$(SALIENCYROOT)/src" \
+           --includedir "$(XERCESCROOT)/src" \
+           --options-file depoptions-all \
+           --objdir "$(OBJDIR)" \
+           --objext ".o" \
+           --literal .I \
+           --linkformat "$(SALIENCYROOT)/src/ : $(SALIENCYROOT)/build/obj/*.o" \
+           --linkformat "$(SRCDIR) : $(OBJDIR)*.o" \
+           --output-link-deps \
+           --output-compile-deps \
+           --sources-variable SOURCES \
+           --headers-variable HEADERS \
+            --config-file $(SALIENCYROOT)/config.h \
+            > $(@)
 
 ##### Explicit rules
 # Grab the flags from the saliency build
-LDFLAGS +=`grep -m 1 LDFLAGS $(SALIENCYROOT)/Makefile | cut -f2 -d =`
+#LDFLAGS +=`grep -m 1 LDFLAGS $(SALIENCYROOT)/Makefile | cut -f2 -d =`
 
 .PHONY: clean allclean uninstall
 
@@ -118,4 +120,3 @@ uninstall:
 	$(COMPILE1) "Done !"
 	
 -include $(DEPFILE)
-

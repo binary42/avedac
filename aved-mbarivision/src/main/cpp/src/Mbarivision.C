@@ -495,8 +495,8 @@ int main(const int argc, const char** argv) {
 
                     LINFO("Getting salient regions for frame: %06d", mbariImg.getFrameNum());
                     
-                    std::list<WTAwinner> winlist = getSalientWinners(simofs,
-                            img2runsaliency, brain, seq, dp.itsMaxEvolveTime, dp.itsMaxWTAPoints,
+                    std::list<WTAwinner> winlist = getSalientWinners(img2runsaliency, 
+			    brain, seq, dp.itsMaxEvolveTime, dp.itsMaxWTAPoints,
                             mbariImg.getFrameNum());
 
                     if (winlist.size() > 0) rv->output(showAllWinners(winlist, mbariImg, dp.itsMaxDist), mbariImg.getFrameNum(), "Winners");

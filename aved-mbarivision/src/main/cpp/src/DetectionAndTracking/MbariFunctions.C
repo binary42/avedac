@@ -365,7 +365,6 @@ std::list<WTAwinner> getGraphWinners(const Image< PixRGB<byte> >& graphBitImg,
 
 // ######################################################################
 list<WTAwinner> getSalientWinners(
-        nub::soft_ref<SimOutputFrameSeries> simofs,
         const Image< PixRGB<byte> > &img,
         nub::soft_ref<StdBrain> brain,
         nub::soft_ref<SimEventQueue> seq,
@@ -393,7 +392,6 @@ list<WTAwinner> getSalientWinners(
 
     LINFO("Start at %.2fms", seq->now().msecs());
  
-    brain->getWTA()->reset(MC_RECURSE);
     brain->reset(MC_RECURSE);
     seq->resetTime();
  
@@ -411,9 +409,6 @@ list<WTAwinner> getSalientWinners(
 
         // main loop:
         while (status == SIM_CONTINUE) {
-
-            // evolve brain:
-            brain->evolve(*seq);
 
             // switch to next time step:
             status = seq->evolve();
@@ -449,11 +444,6 @@ list<WTAwinner> getSalientWinners(
                             e(new SimEventBreak(0, "##### time limit reached #####"));
                     seq->post(e);
                 } 
-
-                // Evolve output frame series. It will trigger a save() on our
-                // modules as needed, before we start loading new inputs and
-                // processing them for the new time step.
-                simofs->evolve(*seq);
             }
             
             if (seq->now().msecs() >= simMaxEvolveTime.msecs()) {
