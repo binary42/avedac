@@ -27,11 +27,6 @@ if [ $USERID != 0 ]; then
 	exit 0
 fi
 
-if [ ! $AVED_BIN ]; then
-    echo "Error \$AVED_BIN environment variable not defined"
-    exit 1
-fi
-
 install_dir=/usr/local/aved
 
 echo "Creating $install_dir/scripts"
