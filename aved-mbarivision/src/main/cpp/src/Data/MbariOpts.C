@@ -88,7 +88,7 @@ const ModelOptionDef OPT_MDPMosaicBenthicStills =
     "--mbari-save-non-interesting-events=yes --mbari-segment-graph-parameters=0.95,500,250 "
     "--mbari-segment-algorithm-input-image=Luminance --mbari-color-space=RGB "
     "--mbari-saliency-input-image=Raw --levelspec=0-3,2-5,2 --mbari-save-original-frame-spec "
-    "--mbari-max-evolve-msec=2000 --vc-type=OC:5I --use-random=true --mbari-segment-algorithm=GraphCutOnly " 
+    "--mbari-max-evolve-msec=2000 --vc-chans=OC:5I --use-random=true --mbari-segment-algorithm=GraphCutOnly " 
     "--shape-estim-mode=ConspicuityMap --foa-radius=60 --fovea-radius=60 "
     "--mbari-cache-size=1 --use-older-version=false --ori-interaction=SubtractMean "
     "--num-orient=16 --gabor-intens=20.0 --rescale-input=1920x1277 --ior-type=ShapeEst "
@@ -103,7 +103,7 @@ const ModelOptionDef OPT_MDPEyeInTheSeaVideo = { MODOPT_ALIAS, "ALIASEyeInTheSea
     "--mbari-segment-algorithm-input-image=Luminance --mbari-color-space=RGB "
     "--mbari-saliency-input-image=Raw --mbari-cache-size=2 "
     "--mbari-max-WTA-points=15 --mbari-max-evolve-msec=1000 "
-    "--vc-type=OIC --use-random=true  --maxnorm-type=Maxnorm "
+    "--vc-chans=OIC --use-random=true  --maxnorm-type=Maxnorm "
     "--oricomp-type=Steerable --levelspec=1-3,2-5,3 "
     "--mbari-cache-size=2 --use-older-version=false "
     "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst "
@@ -119,7 +119,7 @@ const ModelOptionDef OPT_MDPBenthicVideo =
     "--mbari-max-WTA-points=10 --mbari-segment-adaptive-offset=10 "
     "--mbari-tracking-mode=NearestNeighbor --mbari-max-event-area=30000 "
     "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=Luminance "
-    "--vc-type=OI --mbari-color-space=Gray --use-random=true  --mbari-se-size=4 "
+    "--vc-chans=OI --mbari-color-space=Gray --use-random=true  --mbari-se-size=4 "
     "--ori-interaction=None --oricomp-type=Steerable --boring-sm-mv=1.0 "
     "--mbari-cache-size=120 --use-older-version=false "
     "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst --maxnorm-type=Maxnorm"  };
@@ -132,7 +132,7 @@ const ModelOptionDef OPT_MDPMidwaterVideo =
     "--mbari-saliency-dist=3 --mbari-max-WTA-points=10 --mbari-segment-graph-parameters=0.75,100,50"
     "--mbari-tracking-mode=KalmanFilter  --mbari-segment-algorithm=MeanAdaptive --mbari-segment-adaptive-offset=7 "
     "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=Luminance "
-    "--vc-type=I:5OC --mbari-color-space=RGB --use-random=true "
+    "--vc-chans=I:5OC --mbari-color-space=RGB --use-random=true "
     "--ori-interaction=None --oricomp-type=Steerable --boring-sm-mv=1.0 "
     "--mbari-cache-size=60 --use-older-version=false --levelspec=1-3,2-5,3 "
     "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst --maxnorm-type=Maxnorm "};
@@ -177,7 +177,7 @@ const ModelOptionDef OPT_MDPTimeLapseRover =
     "--mbari-save-non-interesting-events=yes "
     "--mbari-segment-algorithm-input-image=DiffMean --mbari-color-space=RGB"
     "--mbari-saliency-input-image=Raw "
-    "--vc-type=O:5IC --use-random=true  "
+    "--vc-chans=O:5IC --use-random=true  "
     "--mbari-max-WTA-points=15 --mbari-max-evolve-msec=15000" };
 
 // #################### MbariResultViewer options:
