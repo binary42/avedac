@@ -522,7 +522,7 @@ bool LineSegment2D::intersects(LineSegment2D &line, double &xcoord, double &ycoo
   double  x, y, distAB, theCos, theSin, newX, ABpos ;
 
   //  Fail if either line is undefined.
-  if (Ax==Bx && Ay==By || Cx==Dx && Cy==Dy) { return false; }
+  if ( (Ax==Bx && Ay==By) || (Cx==Dx && Cy==Dy)) { return false; }
 
   //  (1) Translate the system so that point A is on the origin.
   Bx-=Ax; By-=Ay;

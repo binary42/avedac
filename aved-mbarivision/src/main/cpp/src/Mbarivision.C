@@ -315,7 +315,7 @@ int main(const int argc, const char** argv) {
                 }
 
                 const list<BitObject> bitObjectFrameList = eventSet.getBitObjectsForFrame(curFrame - 1);
-                if (!bitObjectFrameList.empty() && curFrame <= avgCache.size()) {
+                if (!bitObjectFrameList.empty() && curFrame <= int(avgCache.size())) {
                     Image< PixRGB<byte> > imgToAddToTheBackground = getImageToAddToTheBackground(
                             mbariImg, avgCache.mean(),
                             savePreviousPicture,

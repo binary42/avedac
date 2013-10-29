@@ -88,6 +88,7 @@ namespace MbariVisualEvent {
         this->written = tk.written;
         this->scaleW = tk.scaleW;
         this->scaleH = tk.scaleH;
+	return *this;
     }    
     // ######################################################################
     Token::Token(BitObject bo, uint frame, const MbariMetaData& m, float w, float h)
@@ -233,6 +234,7 @@ namespace MbariVisualEvent {
     tokens.push_back(tk);
     ++counter;
     myNum = counter;
+    validendframe = endframe;
   }
   // initialize static variable
   uint VisualEvent::counter = 0;
@@ -293,7 +295,7 @@ namespace MbariVisualEvent {
 	
     for (int i = 0; i < t; ++i) {
       tokens.push_back(Token(is));
-      LINFO("Reading VisualEvent %d Token %d", myNum, tokens.size());
+      LINFO("Reading VisualEvent %d Token %ld", myNum, tokens.size());
     }
   }
 	
@@ -638,7 +640,7 @@ namespace MbariVisualEvent {
     // extract as large as 2x the the last occurance of this event
     std::list<BitObject> objs = extractBitObjects(binMap, region, evtToken.bitObject.getArea()/2, evtToken.bitObject.getArea()*2);
 
-    LINFO("pred. location: %s; region: %s; Number of extracted objects: %i",
+    LINFO("pred. location: %s; region: %s; Number of extracted objects: %ld",
            toStr(pred).data(),toStr(region).data(),objs.size());
 	  
     // now look which one fits best
@@ -680,7 +682,7 @@ namespace MbariVisualEvent {
 	   
     // cost too high no fitting object found? -> close event
     if ((lCost > itsDetectionParms.itsMaxCost) || areapercentdiff > 3.F || lCost == -1.0 || lObj == objs.end()) {
-        if ( frameNum - currEvent->getValidEndFrame() > itsDetectionParms.itsEventExpirationFrames ) {
+        if ( int(frameNum - currEvent->getValidEndFrame()) >= itsDetectionParms.itsEventExpirationFrames ) {
             currEvent->close();
             LINFO("Event %i - no token found, closing event cost: %f maxCost: %f size: %d areaDiffPercent: %f ",
 		currEvent->getEventNum(), lCost, itsDetectionParms.itsMaxCost, area1, areapercentdiff);
@@ -694,7 +696,7 @@ namespace MbariVisualEvent {
     }
     else    {
       // associate the best fitting guy
-      Token tl = currEvent->getToken(frameNum);
+      Token tl = currEvent->getToken(currEvent->getEndFrame());
       Token tk(*lObj, frameNum, metadata, tl.scaleW, tl.scaleH);
       tk.bitObject.computeSecondMoments();
       currEvent->assign(tk, curFOE, frameNum);
@@ -750,7 +752,7 @@ namespace MbariVisualEvent {
     // extract as large as 2x the the last occurance of this event
     std::list<BitObject> objs = extractBitObjects(binMap, region, evtToken.bitObject.getArea()/2, evtToken.bitObject.getArea()*2);
 
-    LINFO("region: %s; Number of extracted objects: %i", toStr(region).data(),objs.size());
+    LINFO("region: %s; Number of extracted objects: %ld", toStr(region).data(),objs.size());
 
     // now find which one fits best
     float lCost = -1.0F, cost = -1.0F, areapercentdiff = 0.F, percentdiff = 0.F;
@@ -796,12 +798,12 @@ namespace MbariVisualEvent {
     // cost too high no fitting object found? -> close event
     if ( (lCost > itsDetectionParms.itsMaxCost) || (areapercentdiff > 3.0F) || (lCost == -1.0))
       {
-        if ( frameNum - currEvent->getValidEndFrame() > itsDetectionParms.itsEventExpirationFrames ) {
+        if ( int(frameNum - currEvent->getValidEndFrame()) >= itsDetectionParms.itsEventExpirationFrames ) {
             currEvent->close();
             LINFO("Event %i - no token found, closing event",currEvent->getEventNum());
         }
         else {
-             LINFO("##########Event %i - no token found, keeping event open for expiration frames: %d event##########",
+             LINFO("##########Event %i - no token found, keeping event open for expiration frames: %d ##########",
 		currEvent->getEventNum(), itsDetectionParms.itsEventExpirationFrames); 
             evtToken.frame_nr = frameNum;
             currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(),  itsDetectionParms.itsEventExpirationFrames);
