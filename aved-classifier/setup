@@ -58,7 +58,7 @@ _ACEOF
   if [ "$maci" = "maci64" ]; then
       echo "Setting MacOSX 64-bit environment variables"
   else
-      echo "Setting MacOSX 32-bit environment variables"
+      echo "32-bit build no longer supported"
   fi
   echo "export DYLD_LIBRARY_PATH=$MCR_ROOT/runtime/$maci:$MCR_ROOT/bin/$maci:$MCR_ROOT/sys/os/$maci" >> $out
 fi

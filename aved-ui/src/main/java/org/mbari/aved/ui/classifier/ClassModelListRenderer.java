@@ -170,9 +170,9 @@ public class ClassModelListRenderer extends JLabel implements ListCellRenderer {
 
         // Create an image icon out of the first file found
         // This is completely arbitrary and there may be a better
-        // imgae to represent any given class than the first image
+        // image to represent any given class than the first image
         try {
-            if (file != null) {
+            if (file != null && !file.getName().isEmpty() ) {
                 BufferedImage image = ImageIO.read(file);
                 if (image != null ) {
                     return new ImageIcon(image);
