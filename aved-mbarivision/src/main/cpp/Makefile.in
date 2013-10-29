@@ -9,8 +9,8 @@ LIBDIR      := target/build/lib/
 SCHEMADIR   := schema/
 CXX         := @CXX@
 CXXFLAGS    := @CXXFLAGS@ 
-DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1
-CPPFLAGS    := @CPPFLAGS@ -I$(SALIENCYROOT)/src -I$(XERCESCROOT)/src -I$(SRCDIR) -I$(LIBDIR)
+DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1 -DHAVE_CONFIG.H
+CPPFLAGS    := @CPPFLAGS@ -I$(SALIENCYROOT)/src -I$(XERCESCROOT)/src -I$(SRCDIR) -include $(SALIENCYROOT)/config.h
 LDFLAGS     := @LDFLAGS@ -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib -lxerces-c 
 DEPFILE	    := alldepends
 COMPILE1    := @echo 
@@ -64,6 +64,7 @@ $(DEPFILE):$(CDEPS)
            --verbosity 0 \
            --srcdir "$(SRCDIR)" \
            --includedir "$(SRCDIR)" \
+           --exeformat "$(SRCDIR)Mbarivision.C : $(BINDIR)mbarivision" \
            --includedir "$(SALIENCYROOT)/src" \
            --includedir "$(XERCESCROOT)/src" \
            --options-file depoptions-all \
@@ -81,7 +82,7 @@ $(DEPFILE):$(CDEPS)
 
 ##### Explicit rules
 # Grab the flags from the saliency build
-#LDFLAGS +=`grep -m 1 LDFLAGS $(SALIENCYROOT)/Makefile | cut -f2 -d =`
+LDFLAGS +=`grep -m 1 LDFLAGS $(SALIENCYROOT)/Makefile | cut -f2 -d =`
 
 .PHONY: clean allclean uninstall
 

@@ -47,19 +47,10 @@ template <class T> class PixRGB;
 template <class T> class Image; 
 namespace rutz { template <class T> class shared_ptr; }
 namespace nub { template <class T> class soft_ref; }
-
-namespace rutz {
-    template <class T> class shared_ptr;
-}
-namespace nub {
-    template <class T> class soft_ref;
-}
-
 #include <iostream>
 #include <list>
 
 using namespace std;
-
 
 //! compute input filename for current frame
 std::string getInputFileName(const std::string& stem,
@@ -95,7 +86,7 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
 //! returns list of SalientWinners of the most salient points
 /*! @param manager the model manager
  @param brain the brain to process saliency
- @param seq the event queue
+ @param q the event queue
  @param maxEvolveTime the maximum time to evolve the brain before stopping
  @param maxNumSalSpots the maximum number of salient locations extracted before stopping
  @param framenum the frame number 
@@ -107,7 +98,7 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
 list<WTAwinner> getSalientWinners(
         const Image< PixRGB<byte> > &img,
         nub::soft_ref<StdBrain> brain,
-        nub::soft_ref<SimEventQueue> seq,
+        nub::soft_ref<SimEventQueue> q,
         float maxEvolveTime,
         int maxNumSalSpots,
         int framenum);

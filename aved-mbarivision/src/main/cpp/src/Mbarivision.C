@@ -68,8 +68,6 @@
 #include <sstream>
 #include <signal.h>
 
-using namespace std;
-
 int main(const int argc, const char** argv) {
 
     // ######## Initialization of variables, reading of parameters etc.  
@@ -86,24 +84,17 @@ int main(const int argc, const char** argv) {
     ModelManager manager("MBARI Automated Visual Event Detection Program");
 
     // turn down log messages until after initialzation
-    MYLOGVERB = LOG_NOTICE;
-
-    nub::ref<JobServerConfigurator>
-            jsc(new JobServerConfigurator(manager));
-    manager.addSubComponent(jsc);
+    MYLOGVERB = LOG_INFO;
 
     nub::soft_ref<SimEventQueueConfigurator>
             seqc(new SimEventQueueConfigurator(manager));
     manager.addSubComponent(seqc);
 
-    nub::soft_ref<InputFrameSeries> ifs(new InputFrameSeries(manager));
-    manager.addSubComponent(ifs);
-
-    nub::soft_ref<SimOutputFrameSeries> simofs(new SimOutputFrameSeries(manager));
-    manager.addSubComponent(simofs);
-
     nub::soft_ref<OutputFrameSeries> ofs(new OutputFrameSeries(manager));
     manager.addSubComponent(ofs);
+
+    nub::soft_ref<InputFrameSeries> ifs(new InputFrameSeries(manager));
+    manager.addSubComponent(ifs);
 
     nub::soft_ref<OutputFrameSeries> evtofs(new OutputFrameSeries(manager));
     manager.addSubComponent(evtofs);
@@ -114,10 +105,10 @@ int main(const int argc, const char** argv) {
     nub::soft_ref<MbariResultViewer> rv(new MbariResultViewer(manager, evtofs, ofs, exe.substr(0, found)));
     manager.addSubComponent(rv);
 
-    nub::soft_ref<DetectionParametersModelComponent> detectionParmsModel(new DetectionParametersModelComponent(manager));
+    nub::ref<DetectionParametersModelComponent> detectionParmsModel(new DetectionParametersModelComponent(manager));
     manager.addSubComponent(detectionParmsModel);
 
-    nub::soft_ref<StdBrain> brain(new StdBrain(manager));
+    nub::ref<StdBrain> brain(new StdBrain(manager));
     manager.addSubComponent(brain);
 
     // Request mbari specific option aliases
@@ -195,7 +186,7 @@ int main(const int argc, const char** argv) {
     const int circleRadius = dims.w() / circleRadiusRatio;
 
     // get reference to the SimEventQueue
-    nub::ref<SimEventQueue> seq = seqc->getQ();
+    nub::soft_ref<SimEventQueue> seq = seqc->getQ();
 
     // start all the ModelComponents
     manager.start();

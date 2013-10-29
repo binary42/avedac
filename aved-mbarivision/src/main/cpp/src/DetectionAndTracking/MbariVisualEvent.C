@@ -810,7 +810,7 @@ namespace MbariVisualEvent {
     else {
       // associate this token to the best fitting guy
       Vector2D emtpy(0.F,0.F);
-      Token tl = currEvent->getToken(frameNum);
+      Token tl = currEvent->getToken(currEvent->getEndFrame());
       Token tk(*lObj, frameNum, metadata, tl.scaleW, tl.scaleH);
       tk.bitObject.computeSecondMoments();
       currEvent->assign(tk, emtpy, frameNum);

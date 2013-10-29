@@ -196,7 +196,7 @@ std::list<BitObject> getSalientObjects(const Image< byte >& bitImg, const list<W
 
         region = region.getOverlap(Rectangle(Point2D<int>(0, 0), d - 1));
 
-        LINFO("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
+        LDEBUG("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
         winner.i, winner.j, convertToString(region).c_str(), p.itsMinEventArea, p.itsMaxEventArea);
 
         std::list<BitObject> sobjs = extractBitObjects(bitImg, region, \
@@ -269,7 +269,7 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg,
 
         region = region.getOverlap(Rectangle(Point2D<int>(0, 0), d - 1));
 
-        LINFO("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
+        LDEBUG("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d",             \
         winner.i, winner.j, convertToString(region).c_str(), p.itsMinEventArea, p.itsMaxEventArea);
 
         std::list<BitObject> sobjsgraph = extractBitObjects(graphBitImg, winner, region, \
@@ -390,8 +390,10 @@ list<WTAwinner> getSalientWinners(
         }
     }
 
+    if (img.initialized())
+	LINFO("----->image initialized");
+
     LINFO("Start at %.2fms", seq->now().msecs());
- 
     brain->reset(MC_RECURSE);
     seq->resetTime();
  
@@ -413,12 +415,17 @@ list<WTAwinner> getSalientWinners(
             // switch to next time step:
             status = seq->evolve();
 
-            if (SeC<SimEventWTAwinner> e = seq->check<SimEventWTAwinner > (0)) {
+	    LINFO("Checking for winner");
 
-                WTAwinner win = e->winner();
+            if (SeC<SimEventWTAwinner> e = seq->check<SimEventWTAwinner>(brain.get())) {
+	    LINFO("Getting for winner");
 
+	    	const WTAwinner win = e->winner();
+
+	    LINFO("1 Getting for winner");
                 LINFO("##### winner #%d found at [%d; %d] with %f voltage frame: %d#####",
-                        numSpots, win.p.i, win.p.j, win.sv, framenum);
+                        numSpots, win.p.i, win.p.j,win.sv , framenum);
+	    LINFO("2 Getting for winner");
 		
 		winners.push_back(win);
                 numSpots++;
@@ -432,7 +439,7 @@ list<WTAwinner> getSalientWinners(
 
                 if (numSpots >= maxNumSalSpots) {
                     rutz::shared_ptr<SimEventBreak>
-                            e(new SimEventBreak(0, "##### found maximum number of salient spots #####"));
+                            e(new SimEventBreak(brain.get(), "##### found maximum number of salient spots #####"));
                     seq->post(e);
                 }
 
@@ -441,7 +448,7 @@ list<WTAwinner> getSalientWinners(
                 if (seq->now().msecs() >= simMaxEvolveTime.msecs()) {
                     LINFO("##### time limit reached time now:%f msecs max evolve time:%f msecs frame: %d #####", seq->now().msecs(), simMaxEvolveTime.msecs(), framenum);
                     rutz::shared_ptr<SimEventBreak>
-                            e(new SimEventBreak(0, "##### time limit reached #####"));
+                            e(new SimEventBreak(brain.get(), "##### time limit reached #####"));
                     seq->post(e);
                 } 
             }

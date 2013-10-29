@@ -549,7 +549,7 @@ namespace MbariVisualEvent {
 	
   // ######################################################################
   inline bool VisualEvent::frameInRange(const uint frame_num) const
-  { 
+  {
     return ((frame_num >= startframe) && (frame_num <= endframe));
   }
 }
