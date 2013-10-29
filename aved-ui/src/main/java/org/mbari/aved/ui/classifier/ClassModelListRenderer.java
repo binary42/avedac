@@ -124,14 +124,19 @@ public class ClassModelListRenderer extends JLabel implements ListCellRenderer {
         // Set the icon and text.  If icon was null, say so.
         if ((value != null) && value.getClass().equals(ClassModel.class)) {
             ClassModel model = (ClassModel) value;
+	    URL imageUrl = null;
 
             if (model != null) {
                 ArrayList<String> listing = model.getRawImageFileListing();
 
                 if (listing.size() > 0) {
-                    File f = new File(model.getRawImageDirectory().toString() + "/" + listing.get(0));
+		    try {
+                        imageUrl = new URL("file://" + model.getRawImageDirectory().toString() + "/" + listing.get(0));
+                        icon = createImageIcon(imageUrl);
+		    } catch (MalformedURLException ex) {
+            		Logger.getLogger(ClassModelListRenderer.class.getName()).log(Level.SEVERE, "Error creating image icon for " + imageUrl.getFile(), ex);
+		    }
 
-                    icon = createImageIcon(f);
                 } else {
 
                     // Insert a default icon here
@@ -166,22 +171,16 @@ public class ClassModelListRenderer extends JLabel implements ListCellRenderer {
     /**
      * Returns an ImageIcon, or null if the path was invalid.
      */
-    public static ImageIcon createImageIcon(File file) {
+    public static ImageIcon createImageIcon(URL imageUrl) {
 
-        // Create an image icon out of the first file found
-        // This is completely arbitrary and there may be a better
-        // image to represent any given class than the first image
         try {
-            if (file != null && !file.getName().isEmpty() ) {
-                BufferedImage image = ImageIO.read(file);
-                if (image != null ) {
-                    return new ImageIcon(image);
-                }
+            if (imageUrl != null) { 
+                    return new ImageIcon(imageUrl);
             } else {
-                System.err.println("Couldn't find file: " + file.getName());
+                System.err.println("Couldn't find image: " + imageUrl.getPath());
             }
         } catch (Exception ex) {
-            Logger.getLogger(ClassModelListRenderer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ClassModelListRenderer.class.getName()).log(Level.SEVERE, "Error creating image icon for " + imageUrl.getPath(), ex);
         }
 
         return null;

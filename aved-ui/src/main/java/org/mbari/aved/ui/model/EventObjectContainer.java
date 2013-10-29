@@ -421,11 +421,11 @@ public class EventObjectContainer implements Comparable, Serializable {
             bestEventFrame = getIndexedFrame(sortedEventFrames.size()/2);
             
             
-             System.out.println("#########Max size for event: "
-                + eventObject.getObjectId() + " size: " + eventObject.getCurrSize()
-                 + " best frame: " + bestEventFrame 
-                 + " frameSet#:" + eventObject.getFrameEventSet().getFrameNumber()
-                 + " startFrame: " + getStartFrame() + " endFrame: " + getEndFrame()); 
+             //System.out.println("#########Max size for event: " 
+               //  + eventObject.getObjectId() + " size: " + eventObject.getCurrSize()
+               //  + " best frame: " + bestEventFrame 
+               //  + " frameSet#:" + eventObject.getFrameEventSet().getFrameNumber()
+               //  + " startFrame: " + getStartFrame() + " endFrame: " + getEndFrame()); 
         } 
         
     }

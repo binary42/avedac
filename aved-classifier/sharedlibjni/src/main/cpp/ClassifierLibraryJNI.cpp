@@ -1139,7 +1139,7 @@ jobjectArray get_collected_classes(JNIEnv * env, jobject obj, jstring jmatlabdb)
         return 0;
     }
 
-    fprintf(stderr, "-->Scanning %s for files matching %s\n", featuresDir, filematch);
+    fprintf(stderr, "Scanning %s for files matching %s\n", featuresDir, filematch);
     for (i = 0; i < fcount; i++) {
         if (strstr(filelist[i]->d_name, filematch))
             numfound++;

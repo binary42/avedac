@@ -151,7 +151,7 @@ public class CreateClassView extends JFrameView {
         // Insert a default icon
         URL url = Application.class.getResource("/org/mbari/aved/ui/images/missingframeexception.jpg");
 
-        initializeImageComponent(new File(url.getFile()));
+        initializeImageComponent(url);
 
         // Set default size and.getName()
         setTitle(ApplicationInfo.getName() + "-" + "Create Class");
@@ -314,15 +314,15 @@ public class CreateClassView extends JFrameView {
             numImagesLabel.setText(numImages.toString());
 
             if (fileList.size() > 0) {
-                File exampleImage = new File(model.getRawImageDirectory() + "/" + fileList.get(0));
+                URL exampleImageUrl = new URL("file://" + model.getRawImageDirectory() + "/" + fileList.get(0));
 
-                initializeImageComponent(exampleImage);
+                initializeImageComponent(exampleImageUrl);
             } else {
 
                 // Insert a default icon
                 URL url = Application.class.getResource("/org/mbari/aved/ui/images/missingframeexception.jpg");
 
-                initializeImageComponent(new File(url.getFile()));
+                initializeImageComponent(url);
             }
         } catch (Exception ex) {
             Logger.getLogger(CreateClassView.class.getName()).log(Level.SEVERE, null, ex);
@@ -334,12 +334,12 @@ public class CreateClassView extends JFrameView {
 
     /**
      * Initializes the image component in this view with the image
-     * found in the <code>imageFile</code>. If no valid image is found
+     * found in the <code>imageUrl</code>. If no valid image is found
      * a default one will be used.
-     * @param imageFile
+     * @param imageUrl
      */
-    private void initializeImageComponent(File imageFile) {
-        ImageIcon icon = ClassModelListRenderer.createImageIcon(imageFile);
+    private void initializeImageComponent(URL imageUrl) {
+        ImageIcon icon = ClassModelListRenderer.createImageIcon(imageUrl);
 
         if (icon == null) {
 

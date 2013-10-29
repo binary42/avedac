@@ -53,6 +53,8 @@ import java.io.File;
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.*;
 import org.mbari.aved.ui.userpreferences.UserPreferences;
@@ -128,7 +130,7 @@ public class TestClassView extends JFrameView {
         // Insert a default icon
         URL url = Application.class.getResource("/org/mbari/aved/ui/images/missingframeexception.jpg");
 
-        initializeImageComponent(new File(url.getFile()), UserPreferences.getModel().getColorSpace());
+        initializeImageComponent(url, UserPreferences.getModel().getColorSpace());
     }
 
     /**
@@ -205,7 +207,8 @@ public class TestClassView extends JFrameView {
      *
      * @param model the to load
      */
-    public void loadClassModel(ClassModel model) {
+    public void loadClassModel(ClassModel model) { 
+     try {
         if (model != null) {
             classNameLabel.setText(model.getName());
             classDescriptionTextArea.setText(model.getDescription());
@@ -227,16 +230,15 @@ public class TestClassView extends JFrameView {
             numImagesLabel.setText(numImages.toString());
 
             if (fileList.size() > 0) {
-                File exampleImage = new File(model.getRawImageDirectory() + "/" + fileList.get(0));
+                URL exampleImageUrl = new URL("file://" + model.getRawImageDirectory() + "/" + fileList.get(0));
 
-                initializeImageComponent(exampleImage, model.getColorSpace());
-            } else {
-
-                // Insert a default icon
+                initializeImageComponent(exampleImageUrl, model.getColorSpace());
+            } else { 
+		// Insert a default icon
                 URL url = Application.class.getResource("/org/mbari/aved/ui/images/missingframeexception.jpg");
 
-                initializeImageComponent(new File(url.getFile()), model.getColorSpace());
-            }
+                initializeImageComponent(url, model.getColorSpace()); 
+	    }
         } else {
             classNameLabel.setText("");
             classDescriptionTextArea.setText("");
@@ -247,18 +249,21 @@ public class TestClassView extends JFrameView {
             // Insert a default icon
             URL url = Application.class.getResource("/org/mbari/aved/ui/images/missingframeexception.jpg");
 
-            initializeImageComponent(new File(url.getFile()), UserPreferences.getModel().getColorSpace());
-        }
+            initializeImageComponent(url, UserPreferences.getModel().getColorSpace());
+        } 
+      } catch (Exception ex) {
+	 Logger.getLogger(TestClassView.class.getName()).log(Level.SEVERE, null, ex);
+     }
     }
 
     /**
      * Initializes the image component in this view with the image
      * found in the <code>imageFile</code>. If no valid image is found
      * a default one will be used.
-     * @param imageFile
+     * @param imageUrl
      */
-    private void initializeImageComponent(File imageFile, ColorSpace color) {
-        ImageIcon icon = ClassModelListRenderer.createImageIcon(imageFile);
+    private void initializeImageComponent(URL imageUrl, ColorSpace color) {
+        ImageIcon icon = ClassModelListRenderer.createImageIcon(imageUrl);
 
         if (icon == null) {
 

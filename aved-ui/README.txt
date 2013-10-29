@@ -50,3 +50,5 @@ Open File in the Actions. In the Type drop-down box, select Absolute Path and en
 -----------------------------------------------------------------------------
 To increment the version (version displayed in the "About" box in the graphical user interface)
         $ mvn generate-sources  -P version-increment
+
+Error logs are written by default on Linux to /var/tmp/

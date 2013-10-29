@@ -147,7 +147,7 @@ public class Application {
                     public void run() {
                         try {
 
-                             URL name = getClass().getResource("/Users/dcline/Desktop/UCDAVIS/test/20100802215958-20100802231421_cropped_6fps.events.xml");
+                            // URL name = getClass().getResource("/Users/dcline/Desktop/UCDAVIS/test/20100802215958-20100802231421_cropped_6fps.events.xml");
                             // URL name = getClass().getResource("/examples/20060808T000000_4912_32_103.events.xml");
                             // URL name = new URL("file:/Volumes/nanomiaRAID-1/JAMSTEC/20080604T063139Z_tests/20080604T063139Z-test1/20080604T063139Z-test1.events.xml");
                             //Application.getController().importProcessedResults(new File("/Users/dcline/Desktop/UCDAVIS/processed_results/20100802215958-20100802231421_cropped_6fps.events.xml"));

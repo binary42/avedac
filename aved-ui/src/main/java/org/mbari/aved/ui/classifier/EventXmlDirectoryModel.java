@@ -126,6 +126,8 @@ public class EventXmlDirectoryModel extends Model {
 	
 	try {
         File[]     filesAndDirs = aStartingDir.listFiles();
+	if (filesAndDirs != null) {
+
         List<File> filesDirs    = Arrays.asList(filesAndDirs);
 
         for (File file : filesDirs) {
@@ -143,6 +145,7 @@ public class EventXmlDirectoryModel extends Model {
 		}
             }
         }
+	}
         } catch (Exception ex) {
             Logger.getLogger(EventXmlDirectoryModel.class.getName()).log(Level.SEVERE, null, ex);
 	}
