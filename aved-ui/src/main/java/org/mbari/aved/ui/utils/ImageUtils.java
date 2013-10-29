@@ -56,6 +56,7 @@ import java.util.Iterator;
 
 import java.util.Map;
 import javax.imageio.*;
+import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.stream.*;
 import sun.awt.image.OffScreenImageSource;
@@ -97,10 +98,10 @@ public class ImageUtils {
     }
 
     /**
-     * Converts an jpeg image into a squared version of the image.
+     * Converts an image into a squared version of the image.
      * This will create a new image with whatever dimension is larger -
      * height or width
-     * @param imgInFile the file  of the jpeg image to convert
+     * @param imgInFile the file  of the image to convert
      * @param imgOutFile the file path to store the resulting image to
      * @throws java.lang.Exception if the image is not found, or is not
      * a jpeg images
@@ -134,7 +135,12 @@ public class ImageUtils {
         Iterator        iterw   = ImageIO.getImageWritersByFormatName(imgExt);
         ImageWriter     writer = (ImageWriter) iterw.next();
         ImageWriteParam iwp    = writer.getDefaultWriteParam();  
-         
+        
+	if (iwp instanceof JPEGImageWriteParam) {
+		JPEGImageWriteParam wp = (JPEGImageWriteParam) iwp;
+		wp.setOptimizeHuffmanTables(true);	
+	}
+ 
         FileImageOutputStream output = new FileImageOutputStream(new File(imgOutFilePath));
 
         writer.setOutput(output);
