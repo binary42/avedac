@@ -120,7 +120,7 @@ public class TranscodeProcess extends Thread {
                         Matcher matcher = pattern.matcher(f.toString());
 
                         if (matcher.find()) {
-			  /**String out= String.format("I found the text \"%s\" starting at " +
+			   /*String out= String.format("I found the text \"%s\" starting at " +
                             "index %d and ending at index %d.%n",
                             matcher.group(), matcher.start(), matcher.end());
                             System.out.println(out);*/
@@ -148,8 +148,12 @@ public class TranscodeProcess extends Thread {
                         }
                          
                         isInitialized = true;
+			this.cancel();
                     }
-                } 
+                }
+		else {
+			throw new AvedRuntimeException("Directory invalid " + directory.getName());
+		} 
         }
     } 
 
@@ -219,10 +223,8 @@ public class TranscodeProcess extends Thread {
      * Sets the path where the AvedVideo will be stored
      * @param p the path where the AvedVideo will be stored
      */
-    public void setOutTemporaryStorage(String p) {
-        if (this.isVideoFileValid()) {
-            getOutAVEDVideo().setOutputDirectory(new File(p));
-        }
+    public void setOutTemporaryStorage(String p) { 
+	getOutAVEDVideo().setOutputDirectory(new File(p));
     }
 
     /**
@@ -494,7 +496,7 @@ public class TranscodeProcess extends Thread {
         Timer timer = new Timer();
 
         long timeout = (long) 500;
-        timer.schedule(new UpdateOutputScheduler(this), timeout);
+        timer.scheduleAtFixedRate(new UpdateOutputScheduler(this), 0, timeout);
 
         try {
 
@@ -584,8 +586,8 @@ public class TranscodeProcess extends Thread {
         // Set a timer to update information about the transcoded output after timeout period
         Timer timer = new Timer();
 
-        long timeout = (long) 100;
-        timer.schedule(new UpdateOutputScheduler(this), timeout);
+        long timeout = (long) 500;
+        timer.scheduleAtFixedRate(new UpdateOutputScheduler(this), 0, timeout);
 
         try {
 
@@ -704,7 +706,7 @@ public class TranscodeProcess extends Thread {
         }
 
 	if (!isInitialized)
-            throw new AvedRuntimeException("-->nscode failed");
+            throw new AvedRuntimeException("transcode failed");
 
     }
     
