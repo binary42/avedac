@@ -66,7 +66,8 @@ public class EventAbstractTableModel extends AbstractModel {
         + "if the video source was not ISO860 formatted.",
         "The last time the event was detected. An optional field that's emtpy if "
         + "the video source was not ISO860 formatted.",
-        "The first frame the event was detected", "The last frame the event was detected"
+        "The first frame the event was detected", "The last frame the event was detected",
+        "The total frame duration of the event" 
     };
     private static final long serialVersionUID = 1L;
 

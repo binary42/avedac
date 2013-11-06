@@ -38,11 +38,11 @@ import org.mbari.aved.ui.utils.TeeStream;
 
 public class ErrorLog {
     private static final ErrorLog INSTANCE = new ErrorLog();
+    private static File logroot = new File("/var/tmp");
 
     private ErrorLog() {
         try {
-            File tmp = new File("/var/tmp");
-            File logroot;
+            File tmp = new File("/var/tmp"); 
 
             if (tmp.exists() && tmp.canWrite()) {
                 logroot = tmp;
@@ -67,13 +67,16 @@ public class ErrorLog {
             System.setErr(teeErr); 
             
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
-
+            e.printStackTrace(); 
             // TODO: what to do if cannot log ? popup window to confirm with user ?
         }
     }
 
     public static ErrorLog getInstance() {
         return INSTANCE;
+    }
+    
+    public static File getLogRoot() {
+        return logroot;
     }
 }
