@@ -190,4 +190,10 @@ To build the GUI and classifier:
             <offline>false</offline>
                 ...
             </settings>
-  
+ 
+	5.4 To just install mbarivision 
+
+			$ cd aved-mbarivision
+			$ sudo mvn install
+
+	 
