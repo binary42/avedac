@@ -97,7 +97,7 @@ public class EditMenu extends JFrame {
     private static String DELETE_EVENT     = "Delete";
 
     /** Defines the strings to use in the dynamically created mainMenu */
-    private static String                 GOTO           = "Goto";
+    private static String                 GOTO           = "Go to";
     private static String                 ID_MAINMENU    = "Identity reference";
     private static String                 ID_REPEAT      = "Assign last identity ";
     private static String                 LABEL_EVENT    = "Label event";
@@ -497,13 +497,14 @@ public class EditMenu extends JFrame {
 
     /**
      * Displays the goto dialog at a given point location
+     * @param description description of the goto field
      * @param point point to display the dialog
      */
-    private void displayGoto(String field, Point point) {
-        gotoFrame = new JFrame(GOTO + field);
+    private void displayGoto(String description, Point point) {
+        gotoFrame = new JFrame(GOTO + description);
 
         try {
-            gotoDialog = new GotoDialog(gotoFrame, point);
+            gotoDialog = new GotoDialog(gotoFrame, description, point);
         } catch (Exception ex) {
             Logger.getLogger(EditMenu.class.getName()).log(Level.SEVERE, null, ex);
         }

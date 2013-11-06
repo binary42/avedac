@@ -132,7 +132,7 @@ public class EventObjectContainer implements Comparable, Serializable {
                 clone.objectId            = this.objectId;
                 clone.mainModel           = this.mainModel;
                 clone.bestEventFrame      = this.bestEventFrame;
-                clone.maxEventFrame       = this.maxEventFrame;
+                //clone.maxEventFrame       = this.maxEventFrame;
                 clone.maxSaliencymVolts   = this.maxSaliencymVolts;
                 clone.eventImageCacheData = this.eventImageCacheData;
 

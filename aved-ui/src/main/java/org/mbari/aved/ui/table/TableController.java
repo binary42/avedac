@@ -188,8 +188,8 @@ public class TableController extends AbstractController implements ModelListener
                 if (!listmodel.getValueIsAdjusting() && (eventTable != null)) {
 
                     // TODO: don't we need model to view translation here ?
-                    // int row = listmodel.getValue();
-                    // eventTable.scrollRectToVisible(eventTable.getCellRect(row, 1, true));
+                    int row = listmodel.getValue();
+                    eventTable.scrollRectToVisible(eventTable.getCellRect(row, 1, true));
                 }
 
                 break;

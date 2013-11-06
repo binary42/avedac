@@ -54,22 +54,23 @@ public class GotoDialog extends JDialog implements ActionListener {
     private static final long   serialVersionUID = 1L;
     private boolean             isAnswered       = false,
                                 isGoto           = false;
-    private JFormattedTextField objectIdTextField;
+    private JFormattedTextField textField;
     private Object              value;
 
-    public GotoDialog(JFrame frame, Point location) throws Exception {
+    public GotoDialog(JFrame frame, String description, Point location) throws Exception {
         super(frame, true /* modal */);
 
         FormPanel myForm = new FormPanel("org/mbari/aved/ui/forms/Goto.xml");
 
         this.setContentPane(myForm);
-        objectIdTextField = (JFormattedTextField) myForm.getTextField("goto");
-        objectIdTextField.setValue("1");
-        objectIdTextField.setColumns(40);
+        myForm.getLabel("description").setText(description);
+        textField = (JFormattedTextField) myForm.getTextField("goto");
+        textField.setValue("");
+        textField.setColumns(40);
 
         final JButton button = (JButton) myForm.getButton("goto2");
 
-        if ((objectIdTextField == null) || (button == null)) {
+        if ((textField == null) || (button == null)) {
             throw new Exception("Invalid dialog components");
         }
 
@@ -98,7 +99,7 @@ public class GotoDialog extends JDialog implements ActionListener {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         pack();
         setResizable(false);
-        objectIdTextField.requestFocusInWindow();
+        textField.requestFocusInWindow();
         this.setVisible(true);
     }
 
@@ -135,12 +136,12 @@ public class GotoDialog extends JDialog implements ActionListener {
         isAnswered = true;
 
         try {
-            objectIdTextField.commitEdit();
+            textField.commitEdit();
         } catch (ParseException ex) {
             Logger.getLogger(GotoDialog.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        value = objectIdTextField.getValue();
+        value = textField.getValue();
         notifyAll();
         dispose();
     }
@@ -149,7 +150,7 @@ public class GotoDialog extends JDialog implements ActionListener {
         JFrame gotoFrame = new JFrame("Goto Object ID");
 
         try {
-            GotoDialog gotoDialog = new GotoDialog(gotoFrame, null);
+            GotoDialog gotoDialog = new GotoDialog(gotoFrame, "ObjectID", null);
 
             gotoDialog.setAlwaysOnTop(true);
         } catch (Exception ex) {
