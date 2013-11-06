@@ -28,7 +28,7 @@ package org.mbari.aved.ui.utils;
 
 //~--- JDK imports ------------------------------------------------------------
 
-import java.io.*;
+import java.io.PrintStream;
 
 //All writes to this print stream are copied to two print streams
 //From http://www.exampledepot.com/egs/java.lang/Redirect.html

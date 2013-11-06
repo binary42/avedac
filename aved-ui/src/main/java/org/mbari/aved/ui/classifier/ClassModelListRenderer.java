@@ -27,6 +27,7 @@
 package org.mbari.aved.ui.classifier;
 
 //~--- non-JDK imports --------------------------------------------------------
+import org.apache.commons.io.FilenameUtils;
 
 import org.mbari.aved.classifier.ClassModel;
 import org.mbari.aved.classifier.ColorSpace;
@@ -47,6 +48,7 @@ import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import org.mbari.aved.ui.appframework.ErrorLog;
 
 /**
  * Configure to display the specified class image and class name
@@ -174,8 +176,27 @@ public class ClassModelListRenderer extends JLabel implements ListCellRenderer {
     public static ImageIcon createImageIcon(URL imageUrl) {
 
         try {
-            if (imageUrl != null) { 
+            if (imageUrl != null) {
+		String fileName = imageUrl.getFile(); 
+		String extension = "";
+
+		int i = fileName.lastIndexOf('.');
+		if (i > 0) {
+    			extension = fileName.substring(i+1).toUpperCase();
+		}
+
+		if (extension.equals("GIF") || extension.equals("JPG") || extension.equals("PNG"))
                     return new ImageIcon(imageUrl);
+		else {
+                   File tmproot = ErrorLog.getInstance().getLogRoot();
+                   String basename = FilenameUtils.getBaseName(imageUrl.getFile()); 
+		   File output = new File(tmproot + "/" +  basename + ".jpg");
+                   if (!output.exists()) {
+                       BufferedImage image = ImageIO.read(imageUrl);
+                       ImageIO.write(image, "jpg", output);  
+                   } 
+		   return new ImageIcon(output.toURL());
+		}
             } else {
                 System.err.println("Couldn't find image: " + imageUrl.getPath());
             }

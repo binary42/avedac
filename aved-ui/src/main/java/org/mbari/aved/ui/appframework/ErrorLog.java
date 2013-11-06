@@ -28,13 +28,13 @@ package org.mbari.aved.ui.appframework;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import org.mbari.aved.ui.ApplicationInfo;
 import org.mbari.aved.ui.message.MessagePrintStream;
 import org.mbari.aved.ui.utils.TeeStream;
-
-//~--- JDK imports ------------------------------------------------------------
-
-import java.io.*;
 
 public class ErrorLog {
     private static final ErrorLog INSTANCE = new ErrorLog();
@@ -59,12 +59,13 @@ public class ErrorLog {
             PrintStream teeOut = new TeeStream(System.out, out, message);
 
             System.setOut(teeOut);
-
+             
             // // Tee standard error to system, to file, and to message console display
             PrintStream err = new PrintStream(new FileOutputStream(logroot + "/" + ApplicationInfo.getName() + ".err"));
 
             PrintStream teeErr = new TeeStream(System.err, err, message);
-            System.setErr(teeErr);
+            System.setErr(teeErr); 
+            
         } catch (FileNotFoundException e) {
             e.printStackTrace();
 

@@ -28,12 +28,9 @@ package org.mbari.aved.ui.message;
 
 //~--- non-JDK imports --------------------------------------------------------
 
+import java.awt.event.ActionEvent;
 import org.mbari.aved.ui.appframework.AbstractController;
 import org.mbari.aved.ui.appframework.JFrameView;
-
-//~--- JDK imports ------------------------------------------------------------
-
-import java.awt.event.ActionEvent;
 
 public class TextDisplayController extends AbstractController {
     public TextDisplayController() {

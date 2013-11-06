@@ -35,7 +35,7 @@ import javax.swing.JFrame;
 public class MessagePrintStream extends PrintStream {
     private static final MessagePrintStream INSTANCE   = new MessagePrintStream(System.out);
     MessageController                       controller = null;
-
+ 
     private MessagePrintStream(OutputStream out) {
         super(out);
 
@@ -68,12 +68,15 @@ public class MessagePrintStream extends PrintStream {
 
     @Override
     public void write(byte b[]) throws IOException {
-        write(b, 0, b.length);    
+        String str = new String(b);
+
+        controller.display(str);
     }
 
     @Override
-    public void write(byte b[], int off, int len) {  
-        controller.display(new String(b, off, len));
-    } 
-   
+    public void write(byte b[], int off, int len) {
+        String str = new String(b, off, len);
+
+        controller.display(str);
+    }
 }
