@@ -71,9 +71,9 @@
             </properties>
 
             <modules>
-                <!--<module>aved-pmbarivision</module>-->
+                <!--<module>aved-pmbarivision</module>
                 <module>aved-mbarivision</module>
-                <module>aved-classifier</module>
+                <module>aved-classifier</module>-->
                 <module>aved-mbarivision-api</module>
                 <module>aved-ui</module>
             </modules>
@@ -118,7 +118,7 @@
                 <matlabRoot>${env.MATLAB_ROOT}</matlabRoot>
             </properties>
             <modules>
-                <module>aved-classifier</module>
+                <!--<module>aved-classifier</module>-->
                 <module>aved-mbarivision-api</module>
                 <module>aved-ui</module>
             </modules>
