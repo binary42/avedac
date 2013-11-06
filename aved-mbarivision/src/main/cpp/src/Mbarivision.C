@@ -74,7 +74,7 @@ int main(const int argc, const char** argv) {
     DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
     MbariMetaData metadata;
     Segmentation segmentation;
-    //PauseWaiter p(3000000);
+    //PauseWaiter pause;
     //setPause(true);
 
     const int foaSizeRatio = 19;
@@ -597,7 +597,8 @@ int main(const int argc, const char** argv) {
             while (!eventListToSave.empty()) eventListToSave.pop_front();
         }
 
-        //if ( p.checkPause()) continue;
+        //if ( pause.checkPause()) Raster::waitForKey(); 
+		//continue;
     } // end loop over all frames
     //######################################################
     LINFO("%s done!!!", PACKAGE);

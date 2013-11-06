@@ -616,8 +616,7 @@ namespace MbariVisualEvent {
     Token evtToken = currEvent->getToken(currEvent->getEndFrame());    
 	
     // is the prediction too far outside the image?
-    //int gone = itsMaxDist / 2;
-    int gone = 0;
+    int gone = itsDetectionParms.itsMaxDist / 2;
     if ((pred.i < -gone) || (pred.i >= (binMap.getWidth() + gone)) ||
         (pred.j < -gone) || (pred.j >= (binMap.getHeight() + gone)))
       {
@@ -746,7 +745,6 @@ namespace MbariVisualEvent {
         return;
       }
  
-
     // extract all the BitObjects from the region
     // extract as small as 1/2 of the last occurance of this event
     // extract as large as 2x the the last occurance of this event
