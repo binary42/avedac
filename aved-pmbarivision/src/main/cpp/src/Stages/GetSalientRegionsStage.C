@@ -1,4 +1,4 @@
-/*
+kkkkkkk/*
  * Copyright 2010 MBARI
  *
  * Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1 
@@ -249,7 +249,7 @@ std::list<WTAwinner> GetSalientRegionsStage::getSalientWinners(const Image< PixR
 
             WTAwinner newwinraw = e->winner();
             WTAwinner newwin = e->winner();
-	    currwin = newwin.getSMcoords(sml);
+	        currwin = newwin.getSMcoords(sml);
             newwin.p.i = (int) ((float) newwin.p.i * itsScaleW);
             newwin.p.j = (int) ((float) newwin.p.j * itsScaleH); 
 
@@ -514,6 +514,8 @@ void GetSalientRegionsStage::sendImage(const Image< PixRGB<byte> >& img, int fra
     // buffer to send messages to nodes
     TCPmessage smsg; 
 
+    itsTimer.reset(); ff = framenum % NAVG;
+      
     // compute luminance and send it off:
     Image<byte> lum = luminance(img);
 
@@ -561,7 +563,9 @@ int GetSalientRegionsStage::receiveCMAPS(nub::soft_ref<Beowulf>& beo, Image<floa
     TCPmessage rmsg; // buffer to receive messages from nodes
     int32 rframe, raction, rnode = -1, recnb = 0, reccmaps = 0; // receive from any node
 
-    while (beo->receive(rnode, rmsg, rframe, raction)) {
+    while (beo->receive(rnode, rmsg, rframe, raction)) { 
+		// accumulate data for average latency computation:
+		latency += frame - rframe; nlat ++;
         LDEBUG("received %d/%d from %d", rframe, raction, rnode);
         switch (raction & 0xffff) {
             case BEO_CMAP: // ##############################
@@ -598,6 +602,27 @@ int GetSalientRegionsStage::receiveCMAPS(nub::soft_ref<Beowulf>& beo, Image<floa
         recnb++;
         if (recnb > 3) break;
     }
-
+    
+	itst[3][itsff] = itsTimer.get() - itst[2][itsff] - itst[1][itsff] - itst[0][itsff]; // receive time
+	
+	// compute and show framerate and stats over the last NAVG frames:
+	if (itsff == 1 && frame > 1)
+	{
+		int avg[NSTAT];
+		for (int j = 0; j < NSTAT; j ++)
+		{
+			avg[j] = 0;
+			for (int i = 0; i < NAVG; i ++) avg[j] += itst[j][i];
+			avg[j] /= NAVG;
+		}
+		if (nlat == 0) { latency = -1; nlat = 1; }
+		LINFO("%.1ffps [G=%d D=%d S=%d R=%d A=%d T=%d F=%d]",
+			  1000.0 / ((float)(avg[5])), avg[0], avg[1], avg[2], avg[3], avg[4], 
+			  latency / nlat);
+		latency = 0; nlat = 0;
+		// try to resorb the number of dropped frames:
+		if (dropped) dropped --;
+	}
+	itst[4][itsff] = itsTimer.get();  // total time 
     return reccmaps;
 }

@@ -43,6 +43,12 @@
 #include "DetectionAndTracking/MbariFunctions.H"
 #include "Neuro/VisualCortexWeights.H"
 
+//! Number of frames over which average framerate is computed
+#define NAVG 20
+
+//! Number of stats collected
+#define NSTAT 6
+
 // ######################################################################
 //! Runs the longest stage. This stage communicates with workers running on
 // Beowulf nodes to run an faster version of saliency algorithm. 
@@ -116,6 +122,8 @@ private:
   const int itsFoaRadius;
   const char **itsArgv;
   const int itsArgc;
+  int itst[NSTAT][NAVG], itsff; // to compute average framerate and other stats
+  Timer itsTimer;            // for computation of framerate
   LevelSpec itsLevelSpec;
   MaxNormType itsMaxNormType;
   VisualCortexWeights itsWeights; 
