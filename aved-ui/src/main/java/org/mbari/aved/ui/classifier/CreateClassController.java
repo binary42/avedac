@@ -156,7 +156,7 @@ class CreateClassController extends AbstractController implements ModelListener,
             } catch (Exception ex) {
                 Logger.getLogger(CreateClassController.class.getName()).log(Level.SEVERE, null, ex);
 
-                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.getMessage());
+                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.toString());
 
                 dialog.setVisible(true);
             }
@@ -345,7 +345,7 @@ class CreateClassController extends AbstractController implements ModelListener,
             } catch (Exception ex) {
                 Logger.getLogger(CreateClassController.class.getName()).log(Level.SEVERE, null, ex);
 
-                NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), ex.getMessage());
+                NonModalMessageDialog dialog = new NonModalMessageDialog((JFrame) this.getView(), ex.toString());
 
                 dialog.setVisible(true);
                 getView().setRunButton(true);
@@ -525,9 +525,9 @@ class CreateClassController extends AbstractController implements ModelListener,
                 try {
                     ImageUtils.squareImageThumbnail(f, imageFileOut, ext);
                 } catch (Exception ex) {
+                    this.setCancelled();
                     NonModalMessageDialog dialog;
-
-                    dialog = new NonModalMessageDialog(getView(), ex.getMessage());
+                    dialog = new NonModalMessageDialog(getView(), ex.toString());
                     dialog.setVisible(true);
 
                     return;

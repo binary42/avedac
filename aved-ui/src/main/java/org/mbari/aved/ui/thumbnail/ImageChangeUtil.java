@@ -69,7 +69,7 @@ public class ImageChangeUtil {
 
             return op.filter(newimage, null);
         } catch (Exception ex) {
-            System.err.println(ex.getMessage());
+            System.err.println(ex.toString());
             ex.printStackTrace();
 
             // Fail safe because this randomly blew up once in Linux.

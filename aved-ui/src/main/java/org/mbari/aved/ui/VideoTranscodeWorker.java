@@ -233,7 +233,7 @@ public class VideoTranscodeWorker extends SwingWorker {
         catch (IOException ex) {
                // If this wasn't cancelled by the user
             if (!isUserCancel) {
-                NonModalMessageDialog dialog = new NonModalMessageDialog(view, ex.getMessage());
+                NonModalMessageDialog dialog = new NonModalMessageDialog(view, ex.toString());
 
                 dialog.setVisible(true);
                 dialog.answer();
@@ -244,7 +244,7 @@ public class VideoTranscodeWorker extends SwingWorker {
 
             // If this wasn't cancelled by the user
             if (!isUserCancel) {
-                NonModalMessageDialog dialog = new NonModalMessageDialog(view, ex.getMessage());
+                NonModalMessageDialog dialog = new NonModalMessageDialog(view, ex.toString());
 
                 dialog.setVisible(true);
                 dialog.answer();

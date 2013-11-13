@@ -229,7 +229,7 @@ class TestClassController extends AbstractController implements ModelListener {
                     } catch (Exception ex) {
                         Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
 
-                        NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.getMessage());
+                        NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.toString());
 
                         dialog.setVisible(true);
                     }
@@ -238,7 +238,7 @@ class TestClassController extends AbstractController implements ModelListener {
         } catch (Exception ex) {
             Logger.getLogger(TestClassController.class.getName()).log(Level.SEVERE, null, ex);
 
-            NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.getMessage());
+            NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.toString());
 
             dialog.setVisible(true);
         }

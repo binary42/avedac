@@ -49,6 +49,8 @@ import java.awt.image.IndexColorModel;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -59,6 +61,7 @@ import javax.imageio.*;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.stream.*;
+import javax.media.jai.Interpolation;
 import sun.awt.image.OffScreenImageSource;
 
 public class ImageUtils {
@@ -95,44 +98,45 @@ public class ImageUtils {
             super(i,i1,i2,icm); 
             
     }
-    }
-
+    }  
+     
     /**
      * Converts an image into a squared version of the image.
      * This will create a new image with whatever dimension is larger -
      * height or width
-     * @param imgInFile the file  of the image to convert
+     * @param imgInFile the file path of the image to convert
      * @param imgOutFile the file path to store the resulting image to
-     * @throws java.lang.Exception if the image is not found, or is not
-     * a jpeg images
+     * @throws java.lang.Exception if the image cannot be squared
      */
     public static void squareImageThumbnail(String imgInFilePath, String imgOutFilePath, String imgExt) throws Exception {
+      
+        System.out.println("------>writing " + imgOutFilePath);
+        FileInputStream in = new FileInputStream(imgInFilePath);
+        ImageInputStream iin = ImageIO.createImageInputStream(in);
+        ImageReader reader = ImageIO.getImageReaders(iin).next();
+        reader.setInput(iin, true, true);
+        BufferedImage image = reader.read(0);
+        BufferedImage sqImage;
+        ImageIO.setUseCache(false); 
+        int maxDim;
         
-        Iterator        iterr   = ImageIO.getImageReadersByFormatName(imgExt);
-        ImageReader     reader = (ImageReader) iterr.next(); 
-        ImageOutputStream ios = ImageIO.createImageOutputStream(new File(imgInFilePath));  
-        reader.setInput(ios);   
-        BufferedImage inImage = reader.read(0);
-              
-        int imageWidth  = inImage.getWidth();
-        int imageHeight = inImage.getHeight();
-        int maxLength   = 0;
-
-        // square the image with the largest dimension
-        // if the image is already square then copy it
+        int imageWidth  = image.getWidth();
+        int imageHeight = image.getHeight();
+        
+        // square the image with the largest dimension 
         if (imageWidth > imageHeight) {
-            maxLength = imageWidth;
+            maxDim = imageWidth;
         } else {
-            maxLength = imageHeight;
+            maxDim = imageHeight;
         }
-
-        BufferedImage sqImage = new BufferedImage(maxLength, maxLength, BufferedImage.TYPE_INT_RGB);
-        Graphics2D    graphics2D = sqImage.createGraphics();
- 
-        graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        graphics2D.drawImage(inImage, 0, 0, maxLength, maxLength, null);
-
-        Iterator        iterw   = ImageIO.getImageWritersByFormatName(imgExt);
+        Image i = image.getScaledInstance(maxDim, maxDim, Image.SCALE_FAST);
+        sqImage = new BufferedImage(maxDim, maxDim, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sqImage.createGraphics();
+        g.drawImage(i, null, null);
+        g.dispose();
+        i.flush(); 
+         
+        Iterator        iterw   = ImageIO.getImageWritersByFormatName(imgExt); 
         ImageWriter     writer = (ImageWriter) iterw.next();
         ImageWriteParam iwp    = writer.getDefaultWriteParam();  
         
@@ -140,19 +144,17 @@ public class ImageUtils {
 		JPEGImageWriteParam wp = (JPEGImageWriteParam) iwp;
 		wp.setOptimizeHuffmanTables(true);	
 	}
- 
-        FileImageOutputStream output = new FileImageOutputStream(new File(imgOutFilePath));
-
-        writer.setOutput(output);
- 
+        FileImageOutputStream output = new FileImageOutputStream(new File(imgOutFilePath)); 
+        writer.setOutput(output); 
+        
         IIOImage iiimage = new IIOImage(sqImage,null,null); 
         iiimage.setMetadata(reader.getImageMetadata(0));
 
         writer.write(null, iiimage, iwp);
         writer.dispose();
-         
+        output.close();  
     }
-    
+     
     public static boolean checkForPpmReader() {
         ImageIO.scanForPlugins();
 

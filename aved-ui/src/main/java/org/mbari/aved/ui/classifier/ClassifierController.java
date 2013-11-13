@@ -129,7 +129,7 @@ public class ClassifierController extends AbstractController implements ModelLis
         } catch (Exception ex) {
             Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
 
-            throw new Exception(ex.getMessage());
+            throw new Exception(ex.toString());
         }
 
         // Initialize the directory from the user-defined preferences
@@ -384,7 +384,7 @@ public class ClassifierController extends AbstractController implements ModelLis
                 } catch (FileNotFoundException ex) {
                     Logger.getLogger(ClassifierLibraryJNITaskWorker.class.getName()).log(Level.SEVERE, null,
                             "ERROR: cannot write to log file " + logFile.getAbsolutePath() + " "
-                            + ex.getMessage());
+                            + ex.toString());
                 } catch (IOException ex) {
                     Logger.getLogger(ClassifierController.class.getName()).log(Level.SEVERE, null, ex);
                 }

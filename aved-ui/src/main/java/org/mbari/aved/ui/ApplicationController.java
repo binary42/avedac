@@ -153,7 +153,7 @@ public final class ApplicationController extends AbstractController implements M
 
             NonModalMessageDialog dialog;
 
-            dialog = new NonModalMessageDialog(getView(), ex.getMessage());
+            dialog = new NonModalMessageDialog(getView(), ex.toString());
             dialog.setVisible(true);
         } catch (BrowserLaunchingInitializingException e1) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, e1);
@@ -651,7 +651,7 @@ public final class ApplicationController extends AbstractController implements M
 
                                             NonModalMessageDialog dialog = new NonModalMessageDialog(getView(),
                                                                                "Cannot execute " + cmd + " "
-                                                                               + ex.getMessage());
+                                                                               + ex.toString());
 
                                             dialog.setVisible(true);
                                         }
@@ -925,7 +925,7 @@ public final class ApplicationController extends AbstractController implements M
                         NonModalMessageDialog dialog;
 
                         try {
-                            dialog = new NonModalMessageDialog((ApplicationView) getView(), ex.getMessage());
+                            dialog = new NonModalMessageDialog((ApplicationView) getView(), ex.toString());
                             dialog.setVisible(true);
                         } catch (Exception ex1) {
                             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null,
@@ -1036,7 +1036,7 @@ public final class ApplicationController extends AbstractController implements M
                     }
                 } catch (Exception ex) {
                     try {
-                        Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex.getMessage()); 
+                        Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex.toString()); 
                          
                             String question = "A local file reference to the video input source associated with the\n"
                                     + model.getXmlFile().getName()

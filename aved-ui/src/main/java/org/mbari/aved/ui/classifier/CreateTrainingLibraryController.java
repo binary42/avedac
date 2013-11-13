@@ -296,7 +296,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                 thread.start();
             } catch (Exception ex) {
                 Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex); 
-                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.getMessage()); 
+                NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.toString()); 
                 dialog.setVisible(true); 
             }
         } else if (actionCommand.equals("<<")) {
@@ -417,7 +417,7 @@ public class CreateTrainingLibraryController extends AbstractController implemen
                 if (!isCancelled()) {
                     Logger.getLogger(CreateTrainingLibraryController.class.getName()).log(Level.SEVERE, null, ex);
 
-                    NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.getMessage());
+                    NonModalMessageDialog dialog = new NonModalMessageDialog(getView(), ex.toString());
 
                     dialog.setVisible(true);
                     setFini();
