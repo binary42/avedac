@@ -1,7 +1,7 @@
 /*
  * @(#)ApplicationInfoView.java
  * 
- * Copyright 2011 MBARI
+ * Copyright 2013 MBARI
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,7 +51,7 @@ public class ApplicationInfoView extends JFrame {
 
         JLabel appinfo = (JLabel) form.getLabel("appinfo");
         String s       = "<html>" + ApplicationInfo.getName() + "<p><p>" + "Version: " + ApplicationInfo.getVersion()
-                         + "<p><p>" + "(C) Copyright 2011 MBARI <p>"
+                         + "<p><p>" + "(C) Copyright 2013 MBARI <p>"
                          + "MBARI Proprietary Information. All rights reserved" + "<p><p>"
                          + "For information on the AVED project see " + "<a href> http://www.mbari.org/aved</a></html>";
 
