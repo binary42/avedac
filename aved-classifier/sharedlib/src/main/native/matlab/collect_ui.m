@@ -235,7 +235,7 @@ while ( ii < ttl )
             data = calcola_invarianti(im, scale); % compute invariants at different scales
             val = apply_non_lin3(data,scale); % Apply non linearity
             vals{end+1} = double(val); % store feature vector
-        end 
+        end     
     
     ii = ii + 1;   
     
