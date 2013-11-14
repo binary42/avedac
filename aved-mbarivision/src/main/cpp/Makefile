@@ -9,7 +9,7 @@ LIBDIR      := target/build/lib/
 SCHEMADIR   := schema/
 CXX         := /opt/centos/devtoolset-1.1/root/usr/bin/g++
 CXXFLAGS    := -I /opt/centos/devtoolset-1.1/root/usr/include/c++/4.7.2/ 
-DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1 -DHAVE_CONFIG.H
+DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1
 CPPFLAGS    := -I /opt/centos/devtoolset-1.1/root/usr/include/c++/4.7.2/ -I$(SALIENCYROOT)/src -I$(XERCESCROOT)/src -I$(SRCDIR) -include $(SALIENCYROOT)/config.h
 LDFLAGS     := -L /opt/centos/devtoolset-1.1/root/usr/lib/gcc/x86_64-redhat-linux/4.7.2/ -L/usr/local/lib64 -L/usr/local/lib -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib -lxerces-c 
 DEPFILE	    := alldepends

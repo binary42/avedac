@@ -9,7 +9,7 @@ LIBDIR      := target/build/lib/
 SCHEMADIR   := schema/
 CXX         := @CXX@
 CXXFLAGS    := @CXXFLAGS@ 
-DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1 -DHAVE_CONFIG.H
+DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1
 CPPFLAGS    := @CPPFLAGS@ -I$(SALIENCYROOT)/src -I$(XERCESCROOT)/src -I$(SRCDIR) -include $(SALIENCYROOT)/config.h
 LDFLAGS     := @LDFLAGS@ -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib -lxerces-c 
 DEPFILE	    := alldepends
