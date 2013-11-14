@@ -79,13 +79,14 @@ end
 
 if(isdir(sqdirct))
     s1 = dir([sqdirct '/*.ppm']);
-    s2 = dir([sqdirct '/*.jpg']);
-    s3 = dir([sqdirct '/*.jpeg']);
+    s2 = dir([sqdirct '/*.png']);
+    s3 = dir([sqdirct '/*.jpg']);
+    s4 = dir([sqdirct '/*.jpeg']);
     
     fprintf(1,'Searching for images in %s \n', sqdirct);
     
     %*added - concatenate together
-    s = [s1 s2 s3];
+    s = [s1; s2; s3; s4];
     
     if(size(s,1) == 0)
         error('Error %s class empty\n', classname); 

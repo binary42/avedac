@@ -125,11 +125,12 @@ for jj = 1 : lc
     end
     
     s1 = dir([dirct '/' ppat '*.ppm']);
-    s2 = dir([dirct '/' ppat '*.jpg']);
-    s3 = dir([dirct '/' ppat '*.jpeg']);
+    s2 = dir([dirct '/' ppat '*.png']);
+    s3 = dir([dirct '/' ppat '*.jpg']);
+    s4 = dir([dirct '/' ppat '*.jpeg']);
     
     %*added - concatenate together all the image files found
-    s = [s1 s2 s3];
+    s = [s1; s2; s3; s4];
     
     if(~isempty(ppat))
         fprintf(1,'\nCollecting %s',ppat);
