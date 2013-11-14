@@ -110,7 +110,7 @@ public class ImageUtils {
      */
     public static void squareImageThumbnail(String imgInFilePath, String imgOutFilePath, String imgExt) throws Exception {
       
-        System.out.println("------>writing " + imgOutFilePath);
+        System.out.println("Writing " + imgOutFilePath);
         FileInputStream in = new FileInputStream(imgInFilePath);
         ImageInputStream iin = ImageIO.createImageInputStream(in);
         ImageReader reader = ImageIO.getImageReaders(iin).next();
