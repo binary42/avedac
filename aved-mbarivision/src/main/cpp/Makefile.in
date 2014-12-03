@@ -2,6 +2,7 @@
 PREFIX      := @prefix@
 SALIENCYROOT := @with_saliency@
 XERCESCROOT  := @with_xercesc@
+OPENCVROOT  := @with_opencv@
 SRCDIR      := src/
 OBJDIR	    := target/build/obj/
 BINDIR	    := target/build/bin/
@@ -9,9 +10,9 @@ LIBDIR      := target/build/lib/
 SCHEMADIR   := schema/
 CXX         := @CXX@
 CXXFLAGS    := @CXXFLAGS@ 
-DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1
-CPPFLAGS    := @CPPFLAGS@ -I$(SALIENCYROOT)/src -I$(XERCESCROOT)/src -I$(SRCDIR) -include $(SALIENCYROOT)/config.h
-LDFLAGS     := @LDFLAGS@ -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib -lxerces-c 
+DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1 -DHAVE_OPENCV2=1 -DHAVE_OPENCV=1 -DCV_MAJOR_VERSION=2.4.9
+CPPFLAGS    := @CPPFLAGS@ -I$(OPENCVROOT)/include/opencv -I$(OPENCVROOT)/include/opencv2 -I$(SALIENCYROOT)/src -I$(XERCESCROOT)/src -I$(SRCDIR) -include $(SALIENCYROOT)/config.h
+LDFLAGS     := @LDFLAGS@ -L$(OPENCVROOT) -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib -lxerces-c -lopencv_core -lopencv_imgproc -lopencv_video -lopencv_objdetect -lopencv_legacy
 DEPFILE	    := alldepends
 COMPILE1    := @echo 
 COMPILE2    := @	
@@ -39,6 +40,15 @@ $(BINDIR)%:
 	  
 # make an object file from a C++ source file
 $(OBJDIR)%.o: $(SRCDIR)%.C
+	@mkdir -p $(dir $@)
+	$(COMPILE1) "Compiling C++ file        " $<
+	$(COMPILE2) $(CXX) $(DEFS) $(CPPFLAGS) $(CXXFLAGS) \
+		-c $< \
+		-o $@
+	$(COMPILE3)
+
+# make an object file from a C++ source file
+$(OBJDIR)%.o: $(SRCDIR)%.cpp
 	@mkdir -p $(dir $@)
 	$(COMPILE1) "Compiling C++ file        " $<
 	$(COMPILE2) $(CXX) $(DEFS) $(CPPFLAGS) $(CXXFLAGS) \

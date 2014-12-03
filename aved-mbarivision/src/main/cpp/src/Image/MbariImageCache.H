@@ -120,7 +120,9 @@ MbariImageCache<T>::MbariImageCache(uint maxSize)
 // ######################################################################
 template <class T> inline
 MbariImageCache<T>::~MbariImageCache()
-{}
+{
+  popOffOld();
+}
 
 // ######################################################################
 template <class T> inline

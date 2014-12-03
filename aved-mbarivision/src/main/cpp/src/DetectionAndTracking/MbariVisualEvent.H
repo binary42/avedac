@@ -31,15 +31,17 @@
 #ifndef VISUALEVENT_H_DEFINED
 #define VISUALEVENT_H_DEFINED
 
+#include "Image/OpenCVUtil.H"
 #include "Image/KalmanFilter.H"
 #include "Image/Point2D.H"
 #include "Image/Rectangle.H"
 #include "Util/Assert.H"
 #include "Util/Types.H"
-
 #include "DetectionAndTracking/DetectionParameters.H"
+#include "DetectionAndTracking/HoughTracker.H"
 #include "Data/MbariMetaData.H"
 #include "Image/BitObject.H"
+#include "Image/MbariImage.H"
 
 #include <list>
 #include <string>
@@ -47,11 +49,12 @@
 
 template <class T> class Image;
 template <class T> class PixRGB;
+
 class Vector2D;
 class StraighLine2D;
+class MbariResultViewer;
 
 namespace MbariVisualEvent {
-	
   // ######################################################################
   //! public class that contains information for a visual token for tracking
   class Token
@@ -166,8 +169,10 @@ namespace MbariVisualEvent {
   {
   public:
     //! constructor
-    /*!@param tk the first token for this event*/
-    VisualEvent(Token tk, const DetectionParameters &parms);
+    /*!@param tk the first token for this event
+    @param parms the detection parameters
+    @param img the image the token was extracted from*/
+    VisualEvent(Token tk, const DetectionParameters &parms,  MbariImage< PixRGB<byte> >& img);
 	  
     //! destructor
     ~VisualEvent();
@@ -202,7 +207,11 @@ namespace MbariVisualEvent {
 	
     //! if the BitObject intersects with the one for this event at frameNum
     bool doesIntersect(const BitObject& obj, int frameNum) const;
-	
+
+	//! updates the Hough-based tracker
+	// returns false if tracker fails
+	bool updateHoughTracker(nub::soft_ref<MbariResultViewer>& rv, MbariImage< PixRGB<byte> >& img);
+
     // ! VisualEvent states
     enum State {
       OPEN,
@@ -302,8 +311,9 @@ namespace MbariVisualEvent {
     uint maxsize_framenr;
     // ! VisualEvent state
     VisualEvent::State itsState;  
-    KalmanFilter xTracker, yTracker;   
-    //! True if intesting, otherwise false (for boring) defaults to boring
+    KalmanFilter xTracker, yTracker;
+    HoughTracker::HoughTracker hTracker;
+    //! True if interesting, otherwise false (for boring) defaults to boring
     Category itsCategory;
     DetectionParameters itsDetectionParms;
   };
@@ -339,25 +349,26 @@ namespace MbariVisualEvent {
     void writePositions(std::ostream& os) const;
 	
     //!update events with new binary map
-    /*!@param trackingMode the tracking mode used to track and assign events
+    /*!@param rv the results viewer for showing intermediate results
+      @param img image to update events from
       @param binMap binary image used to extract BitObjects from
       @param curFOE the current focus of expansion for detecting unusual 
-      motion 
-      @param frameNum current frame number
+      motion
       @param metadata associated with current frame number*/
-    void updateEvents(const Image<byte>& binMap, \
+    void updateEvents(nub::soft_ref<MbariResultViewer>& rv, \
+                      MbariImage< PixRGB<byte> >& img, \
+                      const Image<byte>& binMap, \
                       const Vector2D& curFOE, \
-                      int frameNum, \
                       const MbariMetaData &m);
 	
     //! insert event into current list of event
     void insert(VisualEvent *event);
 	
     //! initiate new events for all BitObjects in bos if they aren't tracked yet
-    void initiateEventsColor(std::list<BitObject>& bos, int frameNum, const MbariMetaData &metadata, float scaleW, float scaleH);
+    void initiateEventsColor(std::list<BitObject>& bos, const MbariMetaData &metadata, float scaleW, float scaleH, MbariImage< PixRGB<byte> >& img);
 	
     //! initiate new events for all BitObjects in bos if they aren't tracked yet
-    void initiateEvents(std::list<BitObject>& bos, int frameNum, const MbariMetaData &metadata, float scaleW, float scaleH);
+    void initiateEvents(std::list<BitObject>& bos, const MbariMetaData &metadata, float scaleW, float scaleH, MbariImage< PixRGB<byte> >& img);
 	
     //! if obj intersects with any of the event at frameNum
     bool doesIntersect(BitObject& obj, int frameNum);
@@ -395,7 +406,7 @@ namespace MbariVisualEvent {
                     PixRGB<byte> colorPred,
                     PixRGB<byte> colorFOE,
                     bool showEventLabels,
-		    bool showCandidate,
+		            bool showCandidate,
                     bool saveNonInterestingEvents);
     
     //! returns a PropertyVectorSet for this VisualEventSet
@@ -441,7 +452,10 @@ namespace MbariVisualEvent {
     // runs the Kalman filter tracking on @param event
     void runKalmanTracker(VisualEvent *event, uint frameNum, const MbariMetaData &m,
                           const Image<byte>& binMap, const Vector2D& curFOE);
-	
+
+	// run the Hough-based tracker on @param event
+    void runHoughTracker(nub::soft_ref<MbariResultViewer>& rv, VisualEvent *currEvent, MbariImage< PixRGB<byte> >& img);
+
     std::list<VisualEvent *> itsEvents; 
     std::list<VisualEvent *> itsColorEvents; 
     int startframe; 

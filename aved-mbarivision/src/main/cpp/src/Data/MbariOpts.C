@@ -305,7 +305,7 @@ const ModelOptionDef OPT_MRVmetadataSource =
 const ModelOptionDef OPT_MDPtrackingMode =
   { MODOPT_ARG(TrackingMode), "MDPtrackingMode", &MOC_MBARI, OPTEXP_MRV,
     "Way to mark interesting events in output of MBARI programs",
-    "mbari-tracking-mode", '\0', "<KalmanFilter|NearestNeighbor|None>",
+    "mbari-tracking-mode", '\0', "<KalmanFilter|NearestNeighbor|Hough|None>",
     "KalmanFilter" };
 const ModelOptionDef OPT_MDPsegmentAlgorithmType =
   { MODOPT_ARG(SegmentAlgorithmType), "MDPsegmentAlgorithm", &MOC_MBARI, OPTEXP_MRV,

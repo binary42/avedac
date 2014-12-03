@@ -202,7 +202,7 @@ std::list<BitObject> getSalientObjects(const Image< byte >& bitImg, const list<W
         std::list<BitObject> sobjs = extractBitObjects(bitImg, region, \
         p.itsMinEventArea, p.itsMaxEventArea);
 
-	LDEBUG("Found bitobject(s) in bitImg: %ld", sobjs.size());
+	    LDEBUG("Found bitobject(s) in bitImg: %ld", sobjs.size());
         
         // if no objects found so need to look for them so skip to the next winner
         if (sobjs.size() > 0) {
@@ -275,7 +275,7 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg,
         std::list<BitObject> sobjsgraph = extractBitObjects(graphBitImg, winner, region, \
         p.itsMinEventArea,  p.itsMaxEventArea);
  
-	LDEBUG("Found bitobject(s) in graphBitImg: %ld", sobjsgraph.size());
+	    LDEBUG("Found bitobject(s) in graphBitImg: %ld", sobjsgraph.size());
 
         // if no objects found so need to look for them so skip to the next winner
         if (sobjsgraph.size() > 0) {
@@ -420,7 +420,7 @@ list<WTAwinner> getSalientWinners(
                 LINFO("##### winner #%d found at [%d; %d] with %f voltage frame: %d#####",
                         numSpots, win.p.i, win.p.j,win.sv , framenum);
 		
-		winners.push_back(win);
+		        winners.push_back(win);
                 numSpots++;
 
                 // if a boring event detected, and not keeping boring WTA points then break simulation

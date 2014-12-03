@@ -29,6 +29,7 @@
 #ifndef MBARIRESULTVIEWER_H_
 #define MBARIRESULTVIEWER_H_
 
+#include "Image/OpenCVUtil.H"
 #include "Component/ModelComponent.H"
 #include "Component/ModelParam.H"
 #include "Image/ArrayData.H"
@@ -50,7 +51,6 @@ class ModelManager;
 class XWinManaged;
 template <class T> class MbariImage;
 
-using namespace MbariVisualEvent;
 using namespace std;
 
 // ######################################################################
@@ -86,7 +86,7 @@ public:
     determined by the ModelParams
     @param img the image containing the intermediate result
     @param frameNum the frame number of the image
-    @param resultName a string that defines the kind of interemediate
+    @param resultName a string that defines the kind of intermediate
     result - this is appended to the filestem for the file name
     and/or window title
     @param resNum if there are several results of this type for each frame,

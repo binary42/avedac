@@ -30,8 +30,9 @@
  */ 
 #ifndef MBARIUTILS_DEFINED
 #define MBARIUTILS_DEFINED
+
+#include "Image/OpenCVUtil.H"
 #include "Media/SimFrameSeries.H"
-#include "Util/Types.H" 
 #include "Neuro/WinnerTakeAll.H"
 #include "Neuro/StdBrain.H"
 #include "Simulation/SimEventQueueConfigurator.H"

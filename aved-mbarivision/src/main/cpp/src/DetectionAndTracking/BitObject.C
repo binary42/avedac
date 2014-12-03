@@ -503,6 +503,10 @@ Dims BitObject::getObjectDims() const
 { return itsObjectMask.getDims(); }
 
 // ######################################################################
+Dims BitObject::getImageDims() const
+{ return itsImageDims; }
+
+// ######################################################################
 Point2D BitObject::getObjectOrigin() const
 {
   return Point2D(itsBoundingBox.left(),itsBoundingBox.top());

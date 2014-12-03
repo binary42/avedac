@@ -26,6 +26,7 @@
  * David and Lucile Packard Foundation
  */
 
+#include "Image/OpenCVUtil.H"
 #include "Channels/ChannelOpts.H"
 #include "Component/GlobalOpts.H"
 #include "Component/ModelManager.H"
@@ -54,7 +55,6 @@
 #include "DetectionAndTracking/MbariVisualEvent.H"
 #include "DetectionAndTracking/DetectionParameters.H"
 #include "DetectionAndTracking/MbariFunctions.H"
-#include "DetectionAndTracking/DetectionParameters.H"
 #include "DetectionAndTracking/Segmentation.H"
 #include "DetectionAndTracking/ColorSpaceTypes.H"
 #include "Image/MbariImage.H"
@@ -67,6 +67,8 @@
 #include <iostream>
 #include <sstream>
 #include <signal.h>
+
+using namespace MbariVisualEvent;
 
 int main(const int argc, const char** argv) {
 
@@ -83,7 +85,7 @@ int main(const int argc, const char** argv) {
     //initialize a few things
     ModelManager manager("MBARI Automated Visual Event Detection Program");
 
-    // turn down log messages until after initialzation
+    // turn down log messages until after initialization
     MYLOGVERB = LOG_INFO;
 
     nub::soft_ref<SimEventQueueConfigurator>
@@ -111,7 +113,7 @@ int main(const int argc, const char** argv) {
     nub::ref<StdBrain> brain(new StdBrain(manager));
     manager.addSubComponent(brain);
 
-    // Request mbari specific option aliases
+    // Request MBARI specific option aliases
     REQUEST_OPTIONALIAS_MBARI(manager);
 
     // Request a bunch of toolkit option aliases
@@ -138,7 +140,7 @@ int main(const int argc, const char** argv) {
     // unset the rescaling in the event output frame series in case it is set
     evtofs->setModelParamVal(string("OutputFrameDims"), Dims(0, 0));
 
-    // get image dimensions and set a few paremeters that depend on it
+    // get image dimensions and set a few parameters that depend on it
     detectionParmsModel->reset(&dp);
 
     // is this a a gray scale sequence ? if so disable computing the color channels
@@ -475,8 +477,8 @@ int main(const int argc, const char** argv) {
 
             rv->output(bitImgMasked, mbariImg.getFrameNum(), "Segment_output");
 
-            // update the events with the segmented  images
-            eventSet.updateEvents(bitImgMasked, curFOE, mbariImg.getFrameNum(), metadata);
+            // update the events with the segmented images
+            eventSet.updateEvents(rv, mbariImg, bitImgMasked, curFOE, metadata);
 
             // is counter at 0?
             --countFrameDist;
@@ -497,7 +499,7 @@ int main(const int argc, const char** argv) {
                     if (sobjs.size() > 0) rv->output(showAllObjects(sobjs), mbariImg.getFrameNum(), "Salient_Objects");
 
                     // initiate events with these objects
-                    eventSet.initiateEvents(sobjs, mbariImg.getFrameNum(), metadata, scaleW, scaleH);
+                    eventSet.initiateEvents(sobjs, metadata, scaleW, scaleH, mbariImg);
                 }
             }
 

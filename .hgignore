@@ -1,3 +1,5 @@
+glob:\.idea/*
+\.iml$
 \.orig$
 \.orig\..*$
 \.chg\..*$

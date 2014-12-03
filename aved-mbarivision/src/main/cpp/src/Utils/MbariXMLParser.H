@@ -29,6 +29,7 @@
 #ifndef MBARI_XML_PARSER_H_
 #define MBARI_XML_PARSER_H_
 
+#include "Image/OpenCVUtil.H"
 #include "Component/ModelComponent.H"
 #include "Media/FrameRange.H"
 #include "Util/Types.H"
@@ -36,7 +37,7 @@
 
 #include "DetectionAndTracking/DetectionParameters.H"
 #include "DetectionAndTracking/MbariVisualEvent.H"
-#include "Utils/ErrReporter.H" 
+#include "Utils/ErrReporter.H"
 
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/XMLString.hpp>

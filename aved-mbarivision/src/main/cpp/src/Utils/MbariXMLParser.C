@@ -26,6 +26,7 @@
  * David and Lucile Packard Foundation
  */ 
 
+#include "Image/OpenCVUtil.H"
 #include "DetectionAndTracking/DetectionParameters.H"
 
 #include "Utils/MbariXMLParser.H"

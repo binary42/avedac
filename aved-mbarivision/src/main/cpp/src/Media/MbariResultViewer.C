@@ -25,7 +25,7 @@
  * This work would not be possible without the generous support of the 
  * David and Lucile Packard Foundation
  */ 
-
+#include "Image/OpenCVUtil.H"
 #include "Media/MbariResultViewer.H"
 
 #include "Component/ModelManager.H"

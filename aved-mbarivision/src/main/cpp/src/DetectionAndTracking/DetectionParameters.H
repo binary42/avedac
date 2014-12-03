@@ -32,6 +32,7 @@ parameters*/
 #ifndef DETECTIONPARAMETERS_H_DEFINED
 #define DETECTIONPARAMETERS_H_DEFINED
 
+#include "Image/OpenCVUtil.H"
 #include "Component/ModelManager.H"
 #include "Component/ModelComponent.H"
 #include "Component/ModelOptionDef.H"
@@ -165,7 +166,7 @@ public:
     SegmentAlgorithmType itsSegmentAlgorithmType;
     // @param itsSegmentAlgorithmInputType = segment algorithm input image type
     SegmentAlgorithmInputImageType itsSegmentAlgorithmInputType;
-    // @param itsSegmenGraphParameters =  graph based segment algorithm parameters
+    // @param itsSegmentGraphParameters =  graph based segment algorithm parameters
     std::string itsSegmentGraphParameters;
     // @param size of the offset to subtract from the mean or median in the segment algorithm
     int itsSegmentAdaptiveOffset;
@@ -222,32 +223,32 @@ public:
     void reset(DetectionParameters *p);
 
 private:
-    OModelParam<int> itsMaxWTAPoints;
     OModelParam<int> itsMaxEvolveTime;
+    OModelParam<int> itsMaxWTAPoints;
+    OModelParam<bool> itsSaveNonInteresting;
+    OModelParam<bool> itsSaveOriginalFrameSpec;
+    OModelParam<int> itsEventExpirationFrames;
     OModelParam<TrackingMode> itsTrackingMode;
     OModelParam<ColorSpaceType> itsColorSpaceType;
     OModelParam<float> itsMinStdDev;
-    OModelParam<SegmentAlgorithmInputImageType> itsSegmentAlgorithmInputType;
-    OModelParam<SegmentAlgorithmType> itsSegmentAlgorithmType;
-    OModelParam<int> itsSegmentAdaptiveOffset;
-    OModelParam<std::string> itsSegmentGraphParameters;
-    OModelParam<int> itsCleanupStructureElementSize;
-    OModelParam<SaliencyInputImageType> itsSaliencyInputType;
+    OModelParam<int> itsMaxEventFrames;
+    OModelParam<int> itsMinEventFrames;
+    OModelParam<int> itsMaxEventArea;
+    OModelParam<int> itsMinEventArea;
+    OModelParam<int> itsSaliencyFrameDist;
     OModelParam<std::string> itsMaskPath;
+    OModelParam<int> itsSizeAvgCache;
     OModelParam<int> itsMaskXPosition;
     OModelParam<int> itsMaskYPosition;
     OModelParam<int> itsMaskWidth;
     OModelParam<int> itsMaskHeight;
-    OModelParam<int> itsSizeAvgCache;
-    OModelParam<int> itsMinEventArea;
-    OModelParam<int> itsMaxEventArea;
-    OModelParam<int> itsMinEventFrames;
-    OModelParam<int> itsMaxEventFrames;
-    OModelParam<int> itsSaliencyFrameDist;
-    OModelParam<int> itsEventExpirationFrames;
+    OModelParam<SegmentAlgorithmType> itsSegmentAlgorithmType;
+    OModelParam<SegmentAlgorithmInputImageType> itsSegmentAlgorithmInputType;
+    OModelParam<std::string> itsSegmentGraphParameters;
+    OModelParam<int> itsSegmentAdaptiveOffset;
+    OModelParam<int> itsCleanupStructureElementSize;
+    OModelParam<SaliencyInputImageType> itsSaliencyInputType;
     OModelParam<bool> itsKeepWTABoring;
-    OModelParam<bool> itsSaveNonInteresting;
-    OModelParam<bool> itsSaveOriginalFrameSpec; 
 };
 
 #endif

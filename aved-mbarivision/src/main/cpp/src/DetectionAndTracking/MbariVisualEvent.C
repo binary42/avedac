@@ -27,10 +27,8 @@
  */ 
 
 /*!@file MbariVisualEvent.C classes useful for event tracking */
-  
-#include "DetectionAndTracking/MbariVisualEvent.H"
-#include "DetectionAndTracking/MbariFunctions.H"
 
+#include "Image/OpenCVUtil.H"
 #include "Image/DrawOps.H"
 #include "Image/Image.H"
 #include "Image/Pixels.H"
@@ -40,12 +38,14 @@
 #include "Image/colorDefs.H"
 #include "Util/Assert.H"
 #include "Util/StringConversions.H"
-
+#include "DetectionAndTracking/MbariVisualEvent.H"
+#include "DetectionAndTracking/MbariFunctions.H"
 #include "Image/Geometry2D.H"
-
 #include <algorithm>
 #include <istream>
 #include <ostream>
+
+using namespace std;
 
 namespace MbariVisualEvent {
 	
@@ -219,7 +219,7 @@ namespace MbariVisualEvent {
   // ######################################################################
   // ####### VisualEvent
   // ######################################################################
-  VisualEvent::VisualEvent(Token tk, const DetectionParameters &parms)
+  VisualEvent::VisualEvent(Token tk, const DetectionParameters &parms, MbariImage< PixRGB<byte> >& img)
     : startframe(tk.frame_nr),
       endframe(tk.frame_nr),
       max_size(tk.bitObject.getArea()),
@@ -227,6 +227,7 @@ namespace MbariVisualEvent {
       itsState(VisualEvent::OPEN),
       xTracker(tk.location.x(),0.1F,10.0F),
       yTracker(tk.location.y(),0.1F,0.0F),
+      hTracker(img, tk.bitObject.getBoundingBox()),
       itsDetectionParms(parms)
   {
     LDEBUG("tk.location = (%g, %g); area: %i",tk.location.x(),tk.location.y(),
@@ -307,7 +308,7 @@ namespace MbariVisualEvent {
 	
     os << "\n";
   }
-	
+
   // ######################################################################
   Point2D<int> VisualEvent::predictedLocation()
   {
@@ -364,7 +365,7 @@ namespace MbariVisualEvent {
             tokens.back().prediction.x(), tokens.back().prediction.y());
 
     // initialize token SMV to last token SMV
-    // this is sort of a strange way to propogate values
+    // this is sort of a strange way to propagate values
     // need a bitObject copy operator?
     tokens.back().bitObject.setSMV(smv);
     
@@ -380,6 +381,53 @@ namespace MbariVisualEvent {
   }
 
   // ######################################################################
+  bool VisualEvent::updateHoughTracker(nub::soft_ref<MbariResultViewer>& rv, MbariImage< PixRGB<byte> >& img)
+  {
+    uint frame = (uint) img.getFrameNum();
+    Point2D<int> prediction;
+    Image< byte > binaryImg(img.getDims(), ZEROS);
+    BitObject obj;
+    const byte threshold = 1;
+    DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
+
+    // update the tracker getting the binary image mask
+    bool found = hTracker.update(rv, img, prediction, binaryImg, myNum);
+
+    // create new token from binary image
+    obj.reset(binaryImg, prediction, threshold);
+
+    if (found && obj.getArea() >= p.itsMinEventArea && obj.getArea() <= p.itsMaxEventArea) {
+
+      LINFO("Event %i - found token area: %d, min area: %d max area: %d ", \
+          myNum, obj.getArea(),  p.itsMinEventArea, p.itsMaxEventArea);
+      Token tk(obj, frame);
+
+      ASSERT(isTokenOk(tk));
+      tokens.push_back(tk);
+
+      // copy SMV forward
+      double smv = tokens.back().bitObject.getSMV();
+      tokens.back().bitObject.setSMV(smv);
+
+      tokens.back().prediction = Vector2D(prediction.i, prediction.j);
+      tokens.back().location = Vector2D(tk.location.x(), tk.location.y());
+
+      if (tk.bitObject.getArea() > (int) max_size) {
+        max_size = tk.bitObject.getArea();
+        maxsize_framenr = tk.frame_nr;
+      }
+      endframe = tk.frame_nr;
+      this->validendframe = validendframe;
+      return true;
+    }
+    else {
+      LINFO("Event %i - no token found or outside bounds, found area: %d, min area: %d max area: %d ", \
+          myNum, obj.getArea(),  p.itsMinEventArea, p.itsMaxEventArea);
+      return false;
+    }
+  }
+
+  // ######################################################################
   void VisualEvent::assign(const Token& tk, const Vector2D& foe, uint validendframe)
   {
     ASSERT(isTokenOk(tk));
@@ -389,7 +437,7 @@ namespace MbariVisualEvent {
     tokens.push_back(tk);
 	  
     // initialize token SMV to last token SMV  
-    // this is sort of a strange way to propogate values
+    // this is sort of a strange way to propagate values
     // need a bitObject copy operator?
     tokens.back().bitObject.setSMV(smv);
 	
@@ -600,7 +648,18 @@ namespace MbariVisualEvent {
   {
     itsEvents.push_back(event);
   }
-	
+  // ######################################################################
+  void VisualEventSet::runHoughTracker(nub::soft_ref<MbariResultViewer>& rv,
+                                        VisualEvent *currEvent,
+                                        MbariImage< PixRGB<byte> >& img)
+  {
+    //int frameNum = img.getFrameNum();
+    LINFO("-------------------------------------->Running Hough Tracker for event %d", currEvent->getEventNum());
+	if (!currEvent->updateHoughTracker(rv, img)) {
+      LINFO("------------------------------------------->Event %i - no token found  ", currEvent->getEventNum());
+      currEvent->close();
+    }
+  }
   // ######################################################################
   void VisualEventSet::runKalmanTracker(VisualEvent *currEvent, \
                                         uint frameNum,
@@ -635,8 +694,8 @@ namespace MbariVisualEvent {
     region = region.getOverlap(Rectangle(Point2D<int>(0,0), d - 1));
 
     // extract all the BitObjects from the region
-    // extract as small as 1/2 of the last occurance of this event 
-    // extract as large as 2x the the last occurance of this event
+    // extract as small as 1/2 of the last occurrence of this event
+    // extract as large as 2x the the last occurrence of this event
     std::list<BitObject> objs = extractBitObjects(binMap, region, evtToken.bitObject.getArea()/2, evtToken.bitObject.getArea()*2);
 
     LINFO("pred. location: %s; region: %s; Number of extracted objects: %ld",
@@ -684,11 +743,11 @@ namespace MbariVisualEvent {
         if ( int(frameNum - currEvent->getValidEndFrame()) >= itsDetectionParms.itsEventExpirationFrames ) {
             currEvent->close();
             LINFO("Event %i - no token found, closing event cost: %f maxCost: %f size: %d areaDiffPercent: %f ",
-		currEvent->getEventNum(), lCost, itsDetectionParms.itsMaxCost, area1, areapercentdiff);
+		    currEvent->getEventNum(), lCost, itsDetectionParms.itsMaxCost, area1, areapercentdiff);
         }
         else {
-             LINFO("########## Event %i - no token found, keeping event open for expiration frames: %d ##########",
-		currEvent->getEventNum(), itsDetectionParms.itsEventExpirationFrames); 
+            LINFO("########## Event %i - no token found, keeping event open for expiration frames: %d ##########",
+		    currEvent->getEventNum(), itsDetectionParms.itsEventExpirationFrames);
             evtToken.frame_nr = frameNum;
             currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(), itsDetectionParms.itsEventExpirationFrames);
         }
@@ -746,8 +805,8 @@ namespace MbariVisualEvent {
       }
  
     // extract all the BitObjects from the region
-    // extract as small as 1/2 of the last occurance of this event
-    // extract as large as 2x the the last occurance of this event
+    // extract as small as 1/2 of the last occurrence of this event
+    // extract as large as 2x the the last occurrence of this event
     std::list<BitObject> objs = extractBitObjects(binMap, region, evtToken.bitObject.getArea()/2, evtToken.bitObject.getArea()*2);
 
     LINFO("region: %s; Number of extracted objects: %ld", toStr(region).data(),objs.size());
@@ -824,11 +883,13 @@ namespace MbariVisualEvent {
   }
 	
   // ######################################################################
-  void VisualEventSet::updateEvents(const Image<byte>& binMap,  
-                                    const Vector2D& curFOE, 
-                                    int frameNum,
+  void VisualEventSet::updateEvents(nub::soft_ref<MbariResultViewer>& rv,
+                                    MbariImage< PixRGB<byte> >& img,
+                                    const Image<byte>& binMap,
+                                    const Vector2D& curFOE,
                                     const MbariMetaData &metadata)
   {
+    int frameNum = img.getFrameNum();
     if (startframe == -1) {startframe = frameNum; endframe = frameNum;}
     if (frameNum > endframe) endframe = frameNum;
 	
@@ -843,6 +904,9 @@ namespace MbariVisualEvent {
         case(TMNearestNeighbor):
           runNearestNeighborTracker(*currEvent, frameNum, metadata, binMap, curFOE);
           break;
+        case(TMHough):
+          runHoughTracker(rv, *currEvent, img);
+          break;
         case(TMNone):
           break;
         default:
@@ -853,9 +917,12 @@ namespace MbariVisualEvent {
   }
 	
   // ######################################################################
-  void VisualEventSet::initiateEventsColor(std::list<BitObject>& bos, int frameNum, \
-                                      const MbariMetaData &metadata, float scaleW, float scaleH)
+  void VisualEventSet::initiateEventsColor(std::list<BitObject>& bos, \
+                                          const MbariMetaData &metadata, \
+                                          float scaleW, float scaleH,  \
+                                          MbariImage< PixRGB<byte> >& img)
   {
+    int frameNum = img.getFrameNum();
     if (startframe == -1) {startframe = frameNum; endframe = frameNum;}
     if (frameNum > endframe) endframe = frameNum;  
 	
@@ -864,16 +931,19 @@ namespace MbariVisualEvent {
     //  go through all the remaining BitObjects and create new events for them
     for (currObj = bos.begin(); currObj != bos.end(); ++currObj)
       {
-        itsColorEvents.push_back(new VisualEvent(Token(*currObj, frameNum, metadata, scaleW, scaleH), itsDetectionParms));
+        itsColorEvents.push_back(new VisualEvent(Token(*currObj, frameNum, metadata, scaleW, scaleH), itsDetectionParms, img));
         LINFO("assigning object of area: %i to new event %i",currObj->getArea(),
               itsColorEvents.back()->getEventNum());
       }
   }
 	
   // ######################################################################
-  void VisualEventSet::initiateEvents(std::list<BitObject>& bos, int frameNum, \
-                                      const MbariMetaData &metadata, float scaleW, float scaleH )
+  void VisualEventSet::initiateEvents(std::list<BitObject>& bos, \
+                                      const MbariMetaData &metadata, \
+                                      float scaleW, float scaleH, \
+                                      MbariImage< PixRGB<byte> >& img)
   {
+    int frameNum = img.getFrameNum();
     if (startframe == -1) {startframe = frameNum; endframe = frameNum;}
     if (frameNum > endframe) endframe = frameNum;  
 	
@@ -895,7 +965,7 @@ namespace MbariVisualEvent {
     // now go through all the remaining BitObjects and create new events for them
     for (currObj = bos.begin(); currObj != bos.end(); ++currObj)
       {
-        itsEvents.push_back(new VisualEvent(Token(*currObj, frameNum, metadata, scaleW, scaleH), itsDetectionParms));
+        itsEvents.push_back(new VisualEvent(Token(*currObj, frameNum, metadata, scaleW, scaleH), itsDetectionParms, img));
         LINFO("assigning object of area: %i to new event %i",currObj->getArea(),
               itsEvents.back()->getEventNum());
       }
@@ -1288,5 +1358,3 @@ namespace MbariVisualEvent {
     return itsDetectionParms.itsMinEventArea;
   }
 }
-
-

@@ -134,6 +134,9 @@ public:
   //! The dimensions of the bounding box of the object
   Dims getObjectDims() const;
 
+   // ! The dimensions of the image the BitObject was extracted from
+  Dims getImageDims() const;
+
   //! The location of the upper left corner of the boundary box in the original image
   Point2D<int> getObjectOrigin() const;
 

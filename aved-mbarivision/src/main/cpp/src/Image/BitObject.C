@@ -550,6 +550,11 @@ double BitObject::getSMV()
   return itsSMV;
 }
 // ######################################################################
+Dims BitObject::getImageDims() const
+{
+  return itsImageDims;
+}
+// ######################################################################
 bool BitObject::isValid() const
 { return ((itsArea > 0) && itsBoundingBox.isValid()); }
 

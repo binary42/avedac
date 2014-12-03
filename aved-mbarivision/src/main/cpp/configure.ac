@@ -152,6 +152,40 @@ if test -d "$with_xercesc" ; then
 
 AC_SUBST(with_xercesc)
 
+# Enable users to specify where OpenCV is installed.
+# Note the 2.4.9 version is required
+# The default is to have the libraries in the /usr/local/ directory
+AC_ARG_WITH([opencv],
+            [AC_HELP_STRING([--with-opencv=DIR],
+                            [where the OpenCV is installed (e.g., /usr/local/ )
+            [default=/usr/local/]])],
+            ,
+            [with_opencv=/usr/local/])
+
+# Use the supplied (or default) OpenCV directory to set
+# makefile variables
+if test -d "$with_opencv" ; then
+
+   opencv_cppflags_save="$CPPFLAGS"
+   opencv_ldflags_save="$LDFLAGS"
+   CPPFLAGS="$CPPFLAGS -I/usr/include -I$with_opencv"
+   LDFLAGS="$LDFLAGS -L$with_opencv/lib"
+
+   AC_CHECK_LIB_CXX_DASH(opencv, opencv_imgproc, [
+#include <opencv2/imgproc/imgproc.hpp>
+], [ ],
+                       [with_opencv=$with_opencv],
+                       [AC_MSG_ERROR([OpenCV directory "$with_opencv" missing or incorrect.
+                        Set the correct path with --with-opencv=DIR])
+                       ],
+                       [-lopencv_imgproc ])
+   else
+      AC_MSG_ERROR([OpenCV directory $with_opencv missing or incorrect.
+                    Set the correct path with --with_opencv=DIR   ])
+   fi
+
+AC_SUBST(with_opencv)
+
 CPPFLAGS="$cppflags_save"
 LDFLAGS="$ldflags_save"
 

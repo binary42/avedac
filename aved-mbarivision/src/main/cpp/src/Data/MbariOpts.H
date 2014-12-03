@@ -31,6 +31,7 @@
 #ifndef MBARIOPTIONDEF_H_
 #define MBARIOPTIONDEF_H_
 
+#include "Image/OpenCVUtil.H"
 #include "Component/ModelComponent.H"
 
 extern void REQUEST_OPTIONALIAS_MBARI(OptionManager& m);
