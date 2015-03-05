@@ -188,10 +188,10 @@ public:
     bool itsKeepWTABoring;
     //! @param itsMaxCost = used for maximum cost function in tracking algorithm
     float itsMaxCost;
-    //! @param itsMaskDynamic = true if want to dynamically create a mask (good for shadows)
+    //! @param itsMaskDynamic = true if want to dynamically create a mask using the image mean (good for shadows in benthic video)
     bool itsMaskDynamic;
-    //! @param itsMaskGraphCut = true if want to mask the output of the graph cut algorithm
-    bool itsMaskGraphCut;
+    //! @param itsMaskLasers = true if want to mask out anything bright red
+    bool itsMaskLasers;
      //! write the DetectionParameters to the output stream os
     DetectionParameters & operator=(const DetectionParameters& p);
     //! write the DetectionParameters to the output stream os
@@ -265,7 +265,7 @@ private:
     OModelParam<int> itsCleanupStructureElementSize;
     OModelParam<SaliencyInputImageType> itsSaliencyInputType;
     OModelParam<bool> itsKeepWTABoring;
-    OModelParam<bool> itsMaskGraphCut;
+    OModelParam<bool> itsMaskLasers;
     OModelParam<bool> itsMaskDynamic;
 };
 

@@ -84,16 +84,15 @@ const ModelOptionDef OPT_MDPToolSledVideo640x360 =
     "Implements good choice of options to experiment with detecting  summary of results from a camera mounted on a "
     "benthic toolsled with shadowing and a moving frame",
     "mbari-toolsled-video-480-270", '\0',"",
-    "--mbari-tracking-mode=KalmanFilterHough --rescale-input=480x270--mbari-cache-size=30 --mbari-mask-graphcut=false "
-    "--mbari-min-event-area=200 --mbari-max-event-area=3000 --mbari-save-original-frame-spec --test-mode=true "
-    "--mbari-color-space=RGB --vc-chans=O  --use-random=true --mbari-min-event-frames=3 "
-    "--shape-estim-mode=ConspicuityMap --use-older-version=false --ori-interaction=SubtractMean --num-orient=4 "
-    "--ior-type=ShapeEst --maxnorm-type=FancyOne --mbari-saliency-input-image=Raw "
-    "--levelspec=1-3,2-4,2 --oricomp-type=Steerable --mbari-dynamic-mask=true --mbari-se-size=4 "
-    "--mbari-segment-algorithm=Best  --mbari-segment-algorithm-input-image=Luminance "
-    "--mbari-saliency-dist=1 --shape-estim-smoothmethod=None "
-    "--mbari-x-kalman-parameters=0.1,10.0 --mbari-y-kalman-parameters=0.1,10.0 "
-    "--mbari-segment-adaptive-parameters=2,7"};
+    "--mbari-tracking-mode=KalmanFilterHough --rescale-input=640x480 --mbari-cache-size=90 "
+    "--mbari-min-event-area=100 --mbari-max-event-area=6000 --mbari-save-original-frame-spec --test-mode=true "
+    "--mbari-color-space=RGB --vc-chans=O  --use-random=true --mbari-min-event-frames=2 --num-orient=4 "
+    "--shape-estim-mode=ConspicuityMap --use-older-version=false --ori-interaction=SubtractMean "
+    "--ior-type=ShapeEst --maxnorm-type=FancyOne --mbari-saliency-input-image=DiffMean --mbari-mask-lasers=true "
+    "--levelspec=1-2,2-3,1 --oricomp-type=Steerable --mbari-dynamic-mask=true --mbari-se-size=2 "
+    "--mbari-segment-algorithm=GraphCut  --mbari-segment-algorithm-input-image=DiffMean "
+    "--mbari-saliency-dist=1 --shape-estim-smoothmethod=None --mbari-max-evolve-msec=1000 "
+    "--mbari-x-kalman-parameters=0.1,20.0 --mbari-y-kalman-parameters=0.1,20.0 "};
 
 const ModelOptionDef OPT_MDPMosaicBenthicStills =
   { MODOPT_ALIAS, "ALIASMosaicBenthicStills", &MOC_MBARI, OPTEXP_MRV,
@@ -433,12 +432,10 @@ const ModelOptionDef OPT_MDPmaskDynamic =
   { MODOPT_FLAG, "OPT_MDPmaskDynamic", &MOC_MBARI, OPTEXP_MRV,
     "Generate dyamic mask for brain during saliency computation using segmented images ",
     "mbari-dynamic-mask", '\0', "", "false" };
-const ModelOptionDef OPT_MDPmaskGraphCut =
-  { MODOPT_FLAG, "OPT_MDPmaskGraphCut", &MOC_MBARI, OPTEXP_MRV,
-    "Mask the graphcut output. Only applies if mask supplied with --mbari-mask-path option. "
-    "Not commonly used except for toolsled application where graphcut segments within shadows "
-    "and needs to not be masked with dynamic mask. ",
-    "mbari-mask-graphcut", '\0', "", "true" };
+const ModelOptionDef OPT_MDPmaskLasers =
+  { MODOPT_FLAG, "OPT_MDPmaskLasers", &MOC_MBARI, OPTEXP_MRV,
+    "Mask lasers commonly used for measurement in underwater video.",
+    "mbari-mask-lasers", '\0', "", "true" };
 const ModelOptionDef OPT_MDPsaveNonInterestingEvents =
   { MODOPT_FLAG, "OPT_MDPsaveNonInterestingEvents", &MOC_MBARI, OPTEXP_MRV,
     "Save non-interesting events. Default is to remove non-interesting events, set to true to save",

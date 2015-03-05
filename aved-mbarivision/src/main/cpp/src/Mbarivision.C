@@ -456,6 +456,10 @@ int main(const int argc, const char** argv) {
             }
         } // end if needFrames
 
+    // update the original input frame series for display/output images
+    ifsorg->updateNext();
+    mbariImg.updateData(ifsorg->readRGB(), mbariImgEnhanced.getFrameNum());
+
     rv->output(mbariImgEnhanced, mbariImgEnhanced.getFrameNum(), "Input");
 
 	if (dp.itsSizeAvgCache > 1) rv->output(avgCache.mean(), mbariImgEnhanced.getFrameNum(), "Background_mean");
@@ -464,9 +468,9 @@ int main(const int argc, const char** argv) {
 
             // update the mask
             if (dp.itsMaskDynamic) {
-                Image< byte > img2 = luminance(lowPass5x(lowPass5y(mbariImgEnhanced)));
-                float m = mean(img2);
-                mask = maskArea(makeBinary(img2, byte(m)),&dp);
+                Image< byte > imgtmp = luminance(lowPass5x(lowPass5y(mbariImgEnhanced)));
+                float m = mean(imgtmp);
+                mask = maskArea(makeBinary(imgtmp, byte(m)),&dp);
 
                 /*maskArea(makeBinary2(img,
                                            byte(m-5),
@@ -476,6 +480,21 @@ int main(const int argc, const char** argv) {
             }
             else
                 mask = staticClipMask;
+
+            if (dp.itsMaskLasers) {
+                Image<PixRGB<float> > input = mbariImg;
+                Image<byte>::iterator mitr = mask.beginw();
+                Image<PixRGB<float>>::const_iterator ritr = input.beginw(), stop = input.end();
+                float thresholda = 50.F, thresholdl = 50.F;
+                // mask out any significant red in the L*a*b color space where strong red has positive a values
+                // TODO: make this a parameter the user can set
+                while(ritr != stop) {
+                    const PixLab<float> pix = PixLab<float>(*ritr++);
+                    float l = pix.p[0]/3.0F; // 1/3 weight
+                    float a = pix.p[1]/3.0F; // 1/3 weight
+                    *mitr++ = (a > thresholda && l > thresholdl) ? 0 : *mitr;
+                }
+            }
 
             // mask is inverted so morphological operations are in reverse; here we are enlarging the mask
             // enlarge the mask some to cover
@@ -541,10 +560,6 @@ int main(const int argc, const char** argv) {
             eventSet.cleanUp(curFrame);
 
         } // end if (!loadedEvents)
-
-        // update the original input frame series for display/output images
-        ifsorg->updateNext();
-        mbariImg.updateData(ifsorg->readRGB(), mbariImgEnhanced.getFrameNum());
 
         // if not saving in the original frame dimensions, rescale back
         if (!dp.itsSaveOriginalFrameSpec)  rescale(mbariImg, dims);

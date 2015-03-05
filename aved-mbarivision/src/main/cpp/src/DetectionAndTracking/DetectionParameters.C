@@ -73,7 +73,7 @@ itsCleanupStructureElementSize(DEFAULT_SE_SIZE),
 itsSaliencyInputType(DEFAULT_SALIENCY_INPUT_TYPE),
 itsKeepWTABoring(DEFAULT_KEEP_WTA_BORING),
 itsMaskDynamic(DEFAULT_DYNAMIC_MASK),
-itsMaskGraphCut(DEFAULT_MASK_GRAPHCUT),
+itsMaskLasers(DEFAULT_MASK_GRAPHCUT),
 itsXKalmanFilterParameters(DEFAULT_KALMAN_PARAMETERS),
 itsYKalmanFilterParameters(DEFAULT_KALMAN_PARAMETERS)
 {
@@ -106,7 +106,7 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     os << "\tmaxwtapoints:" << itsMaxWTAPoints;
     os << "\tsavenoninteresting:" << itsSaveNonInteresting;
     os << "\tsaveoriginalframespec:" << itsSaveOriginalFrameSpec;
-    os << "\taddgraphpoints:" << itsMaskGraphCut;
+    os << "\taddgraphpoints:" << itsMaskLasers;
     os << "\tcolorspace:" << colorSpaceType(itsColorSpaceType);
     os << "\tminstddev:" << itsMinStdDev;
     os << "\teventexpirationframes:" << itsEventExpirationFrames;
@@ -152,7 +152,7 @@ DetectionParameters &DetectionParameters::operator=(const DetectionParameters& p
     this->itsMaskXPosition = p.itsMaskXPosition;
     this->itsMaskYPosition = p.itsMaskYPosition;
     this->itsMaskDynamic = p.itsMaskDynamic;
-    this->itsMaskGraphCut = p.itsMaskGraphCut;
+    this->itsMaskLasers = p.itsMaskLasers;
     return *this;
 }
 // ######################################################################
@@ -239,7 +239,7 @@ itsSegmentAdaptiveParameters(&OPT_MDPsegmentAdaptiveParameters, this),
 itsCleanupStructureElementSize(&OPT_MDPcleanupSESize, this),
 itsSaliencyInputType(&OPT_MDPsaliencyInputImage, this),
 itsKeepWTABoring(&OPT_MDPkeepBoringWTAPoints, this),
-itsMaskGraphCut(&OPT_MDPmaskGraphCut, this),
+itsMaskLasers(&OPT_MDPmaskLasers, this),
 itsMaskDynamic(&OPT_MDPmaskDynamic, this),
 itsXKalmanFilterParameters(&OPT_MDPXKalmanFilterParameters, this),
 itsYKalmanFilterParameters(&OPT_MDPYKalmanFilterParameters, this)
@@ -311,7 +311,7 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
     p->itsSegmentAlgorithmType = itsSegmentAlgorithmType.getVal();
     p->itsSegmentAdaptiveParameters = itsSegmentAdaptiveParameters.getVal();
     p->itsSegmentGraphParameters = itsSegmentGraphParameters.getVal();
-    p->itsMaskGraphCut = itsMaskGraphCut.getVal();
+    p->itsMaskLasers = itsMaskLasers.getVal();
     p->itsMaskDynamic = itsMaskDynamic.getVal();
     p->itsXKalmanFilterParameters = itsXKalmanFilterParameters.getVal();
     p->itsYKalmanFilterParameters = itsYKalmanFilterParameters.getVal();

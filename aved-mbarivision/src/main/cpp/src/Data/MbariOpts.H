@@ -104,7 +104,7 @@ extern const ModelOptionDef OPT_MDPMidwaterVideo;
 extern const ModelOptionDef OPT_MDPEyeInTheSeaVideo;
 extern const ModelOptionDef OPT_MDPBenthicVideo;
 extern const ModelOptionDef OPT_MDPmaskDynamic;
-extern const ModelOptionDef OPT_MDPmaskGraphCut;
+extern const ModelOptionDef OPT_MDPmaskLasers;
 extern const ModelOptionDef OPT_MDPXKalmanFilterParameters;
 extern const ModelOptionDef OPT_MDPYKalmanFilterParameters;
 //@}
