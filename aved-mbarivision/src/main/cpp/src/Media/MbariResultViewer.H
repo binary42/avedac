@@ -150,7 +150,7 @@ public:
 
   void outputResultFrame(MbariImage< PixRGB<byte> >& resultImg, 
 			 MbariVisualEvent::VisualEventSet& evts, 
-			 const int circleRadius);
+			 const int circleRadius, const float scaleW = 1.0F, const float scaleH = 1.0F);
 
   //! check if the LoadEventsName is set
   bool isLoadEventsNameSet() const;

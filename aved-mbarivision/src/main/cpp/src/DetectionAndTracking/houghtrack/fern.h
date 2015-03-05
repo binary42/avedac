@@ -12,6 +12,7 @@
 #include <deque>
 #include <math.h>
 #include <iostream>
+#include <exception>
 
 #include "features.h"
 #include "utilities.h"
@@ -44,6 +45,8 @@ private:
 	unsigned int channel;
 	cv::Point A, B;
 };
+ 
+class VoteTooLargeException: public std::exception {};
 
 class Node
 {
@@ -51,7 +54,6 @@ public:
 	Node() : numPos(1.0f), numNeg(1.0f), probPos(0.5f)
 	{
 		voteMap = cv::Mat( MapSize, MapSize, CV_32FC1, cv::Scalar(0.0f) );
-		buffered.clear();
 	};
 
 	~Node()
@@ -63,9 +65,9 @@ public:
 	Node(const Node& n) : numPos(n.numPos), numNeg(n.numNeg), probPos(n.probPos)
 	{
 		voteMap = n.voteMap;
-		buffered.clear();
 	};
 
+ 
 	float numPos, numNeg;
 	float probPos;
 
@@ -96,11 +98,13 @@ public:
 		int idx = round(static_cast<float>(vote.x) / MapStep) + MapSize/2.0f;
 		int idy = round(static_cast<float>(vote.y) / MapStep) + MapSize/2.0f;
 
-		if(idx < 0 || idy < 0 || idx >= MapSize || idy >= MapSize)
-			return;//std::cerr << "Vote is too large for Map (" << vote.x << "/" << vote.y << ")" << std::endl;
+		if(idx < 0 || idy < 0 || idx >= MapSize || idy >= MapSize) {
+			std::cout << "Vote is too large for Map (" << vote.x << "/" << vote.y << ")" << std::endl;
+			throw VoteTooLargeException();
+		}
 		else {
 			voteMap.at<float>(idy, idx) += 1.0f;
-			}
+		}
 	}
 
 	inline std::vector< std::pair<cv::Point, float> > getVotes() const
@@ -201,12 +205,15 @@ public:
 
 	~Ferns()
 	{
+		clear();
 		m_ferns.clear();
 	};
 
 	void initialize(unsigned int numFerns, const cv::Size& baseSize, unsigned int numTests, unsigned int numChannels)
 	{
-	    std::cout << " INIT FERNS (" << numFerns << ", " << baseSize.width << "/" << baseSize.height << ", " << numTests << ", " << numChannels << ")" << std::endl;
+		clear();
+		m_ferns.clear();
+		std::cout << " INIT FERNS (" << numFerns << ", " << baseSize.width << "/" << baseSize.height << ", " << numTests << ", " << numChannels << ")" << std::endl;
     		for(unsigned int f = 0; f < numFerns; f++)
     		{
     			m_ferns.push_back( Fern(baseSize, numTests, numChannels) );

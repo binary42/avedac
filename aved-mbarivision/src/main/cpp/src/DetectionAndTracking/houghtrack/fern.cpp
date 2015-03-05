@@ -62,6 +62,8 @@ void Fern::evaluate(Features& ft, const cv::Rect& ROI, cv::Mat& result, int step
 						if((pos.x >= 0) && (pos.y >= 0) && (pos.x < result.cols) && (pos.y < result.rows))
 							result.at<float>( pos.y, pos.x ) += votes.at(v).second;
 					}
+
+					//?votes.clear();
 				}
 
 			}
@@ -95,8 +97,6 @@ int Fern::backProject(Features& ft, cv::Mat& projected, const cv::Rect& ROI, cv:
 				{
 					std::vector< std::pair< cv::Point, float > > votes = node.getVotes();
 
-					//projected.at<unsigned char>( y, x ) = GC_PR_FGD;
-
 					for(unsigned int v = 0; v < votes.size(); v++)
 					{
 						cv::Point pos = cv::Point(x + votes.at(v).first.x, y + votes.at(v).first.y);
@@ -108,6 +108,8 @@ int Fern::backProject(Features& ft, cv::Mat& projected, const cv::Rect& ROI, cv:
 							projected.at<unsigned char>( y, x ) = cv::GC_FGD;
 						}
 					}
+
+					//?votes.clear();
 				}
 			}
 		}

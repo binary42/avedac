@@ -37,18 +37,20 @@
 enum TrackingMode {
   TMKalmanFilter = 0, //! Kalman filter - assumes constant motion
   TMNearestNeighbor = 1,  //! Tracking nearest neighbor - good for non-motion
-  TMHough = 2,  //! Hough-based tracking  - good for start/stop motion and/or poor video quality
-  TMNone = 3, //! No tracking - use for still frame images
+  TMHough = 2,  //! Hough-based tracking  - good for deformable bodies in slow video
+  TMNearestNeighborHough = 3,  //! Combine nearest neighbor and Hough good for start/stop motion and/or poor video quality
+  TMKalmanHough = 4,  //! Combine Kalman and Hough tracker
+  TMNone = 5, //! No tracking - use for still frame images
   // if you add a new mode here, also update the names in the function below!
 };
 //! number of event tracking modes:
-#define NTRACKINGMODES 4
+#define NTRACKINGMODES 6
 
-//! Returns name of trakcing mode
+//! Returns name of tracking mode
 inline const char* trackingModeName(const TrackingMode p)
 {
   static const char n[NTRACKINGMODES][25] = {
-    "KalmanFilter", "NearestNeighbor", "Hough", "None"};
+    "KalmanFilter", "NearestNeighbor", "Hough", "NearestNeighborHough", "KalmanFilterHough", "None"};
   return n[int(p)];
 }
 

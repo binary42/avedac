@@ -77,11 +77,16 @@ public:
 
 	~Features()
 	{
-	    for(unsigned int c = 0; c < m_channels.size(); c++)
-	    	cvReleaseImage(&m_channels.at(c));
-
-	    m_channels.clear();
+		clear();
     }
+
+	inline void clear()
+	{
+		for(unsigned int c = 0; c < m_channels.size(); c++)
+					cvReleaseImage(&m_channels.at(c));
+
+		m_channels.clear();
+	}
 
 	inline void setImage(cv::Mat& img)
 	{

@@ -52,7 +52,6 @@ template <class T> class PixRGB;
 
 class Vector2D;
 class StraighLine2D;
-class MbariResultViewer;
 
 namespace MbariVisualEvent {
   // ######################################################################
@@ -88,7 +87,7 @@ namespace MbariVisualEvent {
     //!the angle between line and the connection to the FOE
     float angle;
 	
-    //!the focus of epansion (FOE)  for this token
+    //!the focus of expansion (FOE)  for this token
     Vector2D foe;
 	
     //!the frame number at which the token occurred
@@ -107,7 +106,7 @@ namespace MbariVisualEvent {
     //! read the Token from the input stream is
     void readFromStream(std::istream& is);
 	
-    //! write the Token's position to the output streeam os
+    //! write the Token's position to the output stream os
     void writePosition(std::ostream& os) const;
 
     //! scaling factors for writing to the output stream os
@@ -191,7 +190,10 @@ namespace MbariVisualEvent {
 	
     //! get the prediction for the location of the next token
     Point2D<int> predictedLocation() ;
-	
+
+    //! get the average acceleration speed the token is moving
+    float getAcceleration() const;
+
     //! is this token allowed as the next one?
     bool isTokenOk(const Token& tk) const;
 	
@@ -209,8 +211,16 @@ namespace MbariVisualEvent {
     bool doesIntersect(const BitObject& obj, int frameNum) const;
 
 	//! updates the Hough-based tracker
-	// returns false if tracker fails
-	bool updateHoughTracker(nub::soft_ref<MbariResultViewer>& rv, MbariImage< PixRGB<byte> >& img);
+	// !@returns false if tracker fails
+	bool updateHoughTracker(nub::soft_ref<MbariResultViewer>& rv, MbariImage< PixRGB<byte> >& img,
+	                        const Image< byte >& occlusionImg, Image< byte >& binaryImg, \
+	                        Point2D<int> &prediction,  Rectangle &boundingBox);
+
+    //! reset the Hough-based tracker
+    void resetHoughTracker(MbariImage< PixRGB<byte> >& img, BitObject &bo, float maxScale );
+
+    //! free up memory associated with the Hough-based tracker
+    void freeHoughTracker();
 
     // ! VisualEvent states
     enum State {
@@ -219,7 +229,7 @@ namespace MbariVisualEvent {
       WRITE_FINI,
       DELETE
     };
-	
+
     //! set the state of the VisualEvent
     inline void setState(VisualEvent::State state);
 	
@@ -272,7 +282,10 @@ namespace MbariVisualEvent {
 	
     //! return the maximum object size of any of the tokens 
     inline int getMaxSize() const;
-	
+
+    //! return the minimum object size of any of the tokens
+    inline int getMinSize() const;
+
     //! return the token that has the maximum object size
     inline Token getMaxSizeToken() const;
 	
@@ -285,20 +298,44 @@ namespace MbariVisualEvent {
     //!return whether frame_num is between start frame and end frame
     inline bool frameInRange(const uint frame_num) const;	
 
+    //! return the last bit object area that was used to initialize the Hough tracker
+    inline int getHoughArea() const;
+
+    //! return the forget constant that is used with the Hough tracker
+    inline void setForgetConstant(float constant);
+
+    //! return the forget constant that is used with the Hough tracker
+    inline float getForgetConstant();
+
     //! return a vector that contains a bunch of numbers that describe the event
     /*! see source code for details */
     std::vector<float>  getPropertyVector();
 	
     //! returns the maximum dimensions of the tracked object in any of the frames
     Dims getMaxObjectDims() const;
-	
+
     enum Category {
       BORING,
       INTERESTING
     };
-	
+
     //! get category for this event returns INTERESTING OR BORING
     VisualEvent::Category getCategory() const;
+
+	enum TrackerType {
+	  NN,
+	  KALMAN,
+	  HOUGH
+	};
+
+    //! set the type of tracker for the visualEvent
+    inline void setTrackerType(VisualEvent::TrackerType type);
+
+    //! returns TrackerType
+    inline TrackerType getTrackerType();
+
+    //! return true if the tracker changed
+    inline bool trackerChanged();
 
   private:
     static uint counter;  
@@ -307,15 +344,21 @@ namespace MbariVisualEvent {
     uint startframe;
     uint endframe;
     uint validendframe;
-    int max_size;
+    int max_size,min_size;
     uint maxsize_framenr;
     // ! VisualEvent state
     VisualEvent::State itsState;  
     KalmanFilter xTracker, yTracker;
     HoughTracker::HoughTracker hTracker;
+    TrackerType itsTrackerType;
+    bool itsTrackerChanged;
+    uint houghArea;
+    float houghConstant;
+    static const std::string trackerName[];
     //! True if interesting, otherwise false (for boring) defaults to boring
     Category itsCategory;
     DetectionParameters itsDetectionParms;
+
   };
 	
   // ######################################################################
@@ -356,23 +399,39 @@ namespace MbariVisualEvent {
       motion
       @param metadata associated with current frame number*/
     void updateEvents(nub::soft_ref<MbariResultViewer>& rv, \
+                      const Image< byte >& mask, \
                       MbariImage< PixRGB<byte> >& img, \
+                      MbariImage< PixRGB<byte> >& prevImg,
                       const Image<byte>& binMap, \
+                      const Image<PixRGB<byte>>& graphMap,
                       const Vector2D& curFOE, \
                       const MbariMetaData &m);
-	
+
+	//! return the average speed events are moving
+	float getAverageSpeed();
+
+    //! get the min and max areas across all events
+    void getAreaRange(int &minArea, int &maxArea);
+
+    //! get average acceleration for all events except the skipEventNum
+    float getAcceleration(uint skipEventNum);
+
     //! insert event into current list of event
     void insert(VisualEvent *event);
-	
+
     //! initiate new events for all BitObjects in bos if they aren't tracked yet
-    void initiateEventsColor(std::list<BitObject>& bos, const MbariMetaData &metadata, float scaleW, float scaleH, MbariImage< PixRGB<byte> >& img);
+    void initiateEvents(std::list<BitObject>& bos, const MbariMetaData &metadata, \
+    float scaleW, float scaleH, MbariImage< PixRGB<byte> >& img);
 	
-    //! initiate new events for all BitObjects in bos if they aren't tracked yet
-    void initiateEvents(std::list<BitObject>& bos, const MbariMetaData &metadata, float scaleW, float scaleH, MbariImage< PixRGB<byte> >& img);
-	
-    //! if obj intersects with any of the event at frameNum
+    //! if obj intersects with any of the event at frameNum, reset SMV and Hough bounds
+    bool resetIntersect(MbariImage< PixRGB<byte> >& img, BitObject& obj, int frameNum);
+
+    //! if obj intersects with any of the event at frameNum, reset SMV
     bool doesIntersect(BitObject& obj, int frameNum);
-	
+
+    //! if obj intersects with any of the events in frameNum, return true and first found intersecting eventNum
+    bool doesIntersect(BitObject& obj, uint *eventNum, int frameNum);
+
     //! return the number of stored events
     uint numEvents() const;
 	
@@ -407,7 +466,8 @@ namespace MbariVisualEvent {
                     PixRGB<byte> colorFOE,
                     bool showEventLabels,
 		            bool showCandidate,
-                    bool saveNonInterestingEvents);
+                    bool saveNonInterestingEvents,
+                    float scaleW = 1.0F, float scaleH = 1.0F);
     
     //! returns a PropertyVectorSet for this VisualEventSet
     PropertyVectorSet getPropertyVectorSet();
@@ -432,10 +492,7 @@ namespace MbariVisualEvent {
 	
     //! Returns a list of all BitObject at framnum
     std::list<BitObject> getBitObjectsForFrame(uint framenum);
-	
-    //! Returns a list of all color segmented BitObject at framnum
-    std::list<BitObject> getColorBitObjectsForFrame(uint framenum);
-	
+
     //! Returns an iterator pointing to all (interesting or boring)
     // ready to be written for given framenum
     std::list<VisualEvent *> getEventsReadyToSave(uint framenum);
@@ -446,18 +503,55 @@ namespace MbariVisualEvent {
                              Dims textDims) const;
 	
     // runs the nearest neighbor tracking on @param event
-    void runNearestNeighborTracker(VisualEvent *event, uint frameNum, const MbariMetaData &m,
-                               const Image<byte>& binMap,  const Vector2D& curFOE);
+    // returns true if able to track
+    bool runNearestNeighborTracker(VisualEvent *event, uint frameNum, const MbariMetaData &m,
+                               const Image<byte>& binMap,
+                               const Image<PixRGB<byte>>& graphMap,
+                               const Vector2D& curFOE,
+                               MbariImage< PixRGB<byte> >& img,
+                               bool skip  = false);
 	
     // runs the Kalman filter tracking on @param event
-    void runKalmanTracker(VisualEvent *event, uint frameNum, const MbariMetaData &m,
-                          const Image<byte>& binMap, const Vector2D& curFOE);
+    // returns true if able to track
+    bool runKalmanTracker(VisualEvent *event, uint frameNum, const MbariMetaData &m,
+                          const Image<byte>& binMap,
+                          const Image<PixRGB<byte>>& graphMap,
+                          const Vector2D& curFOE,
+                          MbariImage< PixRGB<byte> >& img,
+                           bool skip = false);
 
 	// run the Hough-based tracker on @param event
-    void runHoughTracker(nub::soft_ref<MbariResultViewer>& rv, VisualEvent *currEvent, MbariImage< PixRGB<byte> >& img);
+	// returns true if able to track
+    bool runHoughTracker( nub::soft_ref<MbariResultViewer>& rv,
+                                VisualEvent *currEvent, uint frameNum, const MbariMetaData &m,
+                                MbariImage< PixRGB<byte> >& img,
+                                const Image< byte >& mask,
+                                const Vector2D& curFOE,
+                                bool skip= false);
 
-    std::list<VisualEvent *> itsEvents; 
-    std::list<VisualEvent *> itsColorEvents; 
+	// run the combination Hough and NearestNeighbor tracker on @param event
+    void runNearestNeighborHoughTracker(VisualEvent *event, uint frameNum, const MbariMetaData &m,
+                               const Image<byte>& binMap,
+                               const Image<PixRGB<byte>>& graphMap,
+                               const Vector2D& curFOE,
+                               nub::soft_ref<MbariResultViewer>& rv,
+                               MbariImage< PixRGB<byte> >& img,
+                               MbariImage< PixRGB<byte> >& prevImg);
+
+	// run the combination Hough and Kalman tracker on @param event
+    void runKalmanHoughTracker(VisualEvent *event, uint frameNum, const MbariMetaData &m,
+                               const Image<byte>& binMap,
+                               const Image<PixRGB<byte>>& graphMap,
+                               const Vector2D& curFOE,
+                               nub::soft_ref<MbariResultViewer>& rv,
+                               MbariImage< PixRGB<byte> >& img,
+                               MbariImage< PixRGB<byte> >& prevImg,
+                               const Image< byte >& mask);
+
+    // run the check for failure conditions on the @param event
+    void checkFailureConditions(VisualEvent *currEvent, Dims d);
+
+    std::list<VisualEvent *> itsEvents;
     int startframe; 
     int endframe;
     std::string itsFileName;
@@ -466,6 +560,14 @@ namespace MbariVisualEvent {
 	  
   // ######################################################################
   // ########### INLINED METHODS
+  // ######################################################################
+  inline VisualEvent::TrackerType VisualEvent::getTrackerType()
+  { return itsTrackerType; }
+
+  // ######################################################################
+  inline bool VisualEvent::trackerChanged()
+  { return itsTrackerChanged; }
+
   // ######################################################################
   inline void VisualEvent::setState(VisualEvent::State state)
   { itsState = state; }
@@ -536,6 +638,10 @@ namespace MbariVisualEvent {
   // ######################################################################
   inline int VisualEvent::getMaxSize() const
   { return max_size; }
+
+  // ######################################################################
+  inline int VisualEvent::getMinSize() const
+  { return min_size; }
 	
   // ######################################################################
   inline Token VisualEvent::getMaxSizeToken() const
@@ -565,6 +671,24 @@ namespace MbariVisualEvent {
   inline bool VisualEvent::frameInRange(const uint frame_num) const
   {
     return ((frame_num >= startframe) && (frame_num <= endframe));
+  }
+
+  // ######################################################################
+  inline int VisualEvent::getHoughArea() const
+  {
+    return houghArea;
+  }
+
+  // ######################################################################
+  inline float VisualEvent::getForgetConstant()
+  {
+    return houghConstant;
+  }
+
+  // ######################################################################
+  inline void VisualEvent::setForgetConstant(float constant)
+  {
+    houghConstant = constant;
   }
 }
 #endif

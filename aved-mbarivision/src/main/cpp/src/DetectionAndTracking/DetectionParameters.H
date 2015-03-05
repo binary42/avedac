@@ -53,7 +53,7 @@ parameters*/
 // Default multiplier for determining the maximum event area
 #define MAX_SIZE_FACTOR 700
 // Default multiplier for determining the maximum tracking distance
-#define MAX_DIST_RATIO 60
+#define MAX_DIST_RATIO 30
 // Default maximum number of frames an event can be before closing
 // -1 = unlimited
 // 10 minutes @ 30 fps = 18000
@@ -70,11 +70,13 @@ parameters*/
 // Default segmentation algorithm input type
 #define DEFAULT_SEGMENT_ALGORITHM_INPUT_TYPE SAIDiffMean
 // Default segmentation algorithm type
-#define DEFAULT_SEGMENT_ALGORITHM_TYPE SAMeanAdaptiveThreshold
+#define DEFAULT_SEGMENT_ALGORITHM_TYPE SABest
 // Default segmentation algorithm offset to subtract from the mean or median
-#define DEFAULT_SEGMENT_ALGORITHM_OFFSET 0
+#define DEFAULT_SEGMENT_ADAPTIVE_PARAMETERS "2,7"
 // Default graph based segment parameters
 #define DEFAULT_SEGMENT_GRAPH_PARAMETERS "0.75,500,50"
+// Default Kalman filter parameters for process noise and measurement noise
+#define DEFAULT_KALMAN_PARAMETERS "0.1, 0.0"
 // Default saliency input image type which is the difference
 // in the mean. This is only meaningful if there are cached
 // images to calculate a mean. 
@@ -82,7 +84,7 @@ parameters*/
 // Default structure element type to use for cleaning
 // up segmented images
 #define DEFAULT_SE_SIZE 2
-#define MAX_SE_SIZE 5
+#define MAX_SE_SIZE 20
 // Default tracking mode to track event objects
 #define DEFAULT_TRACKING_MODE TMKalmanFilter
 // Default maximum evolve time of the brain model in msecs
@@ -112,6 +114,10 @@ parameters*/
 // Default event expiration frames. How long an event can exist
 // without being tracked before expiring.
 #define DEFAULT_EVENT_EXPIRATION_FRAMES 0
+// Default is not to create a dynamic mask
+#define DEFAULT_DYNAMIC_MASK false
+// Default is true to enable masking of the graph cut output
+#define DEFAULT_MASK_GRAPHCUT true
 
 // ######################################################################
 //! Class that contains event detection parameters used to filter and track events 
@@ -168,16 +174,24 @@ public:
     SegmentAlgorithmInputImageType itsSegmentAlgorithmInputType;
     // @param itsSegmentGraphParameters =  graph based segment algorithm parameters
     std::string itsSegmentGraphParameters;
-    // @param size of the offset to subtract from the mean or median in the segment algorithm
-    int itsSegmentAdaptiveOffset;
+    // @param the neighborhood size and offset to subtract from the mean or median in the segment algorithm
+    std::string itsSegmentAdaptiveParameters;
+    // @param the Kalman filter x tracker parameters
+    std::string itsXKalmanFilterParameters;
+    // @param the Kalman filter y tracker parameters
+    std::string itsYKalmanFilterParameters;
     //! @param itsCleanupStructureElementSIze = size of square structure element to erode/dilate clean-up
     int itsCleanupStructureElementSize;
      // @param itsSaliencyInputImageType = type of image to input into saliency computation
-    SaliencyInputImageType itsSaliencyInputType;    
+    SaliencyInputImageType itsSaliencyInputType;
     //! @param itsKeepWTABoring = true if want to keep WTA boring points as candidates for detections
     bool itsKeepWTABoring;
     //! @param itsMaxCost = used for maximum cost function in tracking algorithm
     float itsMaxCost;
+    //! @param itsMaskDynamic = true if want to dynamically create a mask (good for shadows)
+    bool itsMaskDynamic;
+    //! @param itsMaskGraphCut = true if want to mask the output of the graph cut algorithm
+    bool itsMaskGraphCut;
      //! write the DetectionParameters to the output stream os
     DetectionParameters & operator=(const DetectionParameters& p);
     //! write the DetectionParameters to the output stream os
@@ -245,10 +259,14 @@ private:
     OModelParam<SegmentAlgorithmType> itsSegmentAlgorithmType;
     OModelParam<SegmentAlgorithmInputImageType> itsSegmentAlgorithmInputType;
     OModelParam<std::string> itsSegmentGraphParameters;
-    OModelParam<int> itsSegmentAdaptiveOffset;
+    OModelParam<std::string> itsSegmentAdaptiveParameters;
+    OModelParam<std::string> itsXKalmanFilterParameters;
+    OModelParam<std::string> itsYKalmanFilterParameters;
     OModelParam<int> itsCleanupStructureElementSize;
     OModelParam<SaliencyInputImageType> itsSaliencyInputType;
     OModelParam<bool> itsKeepWTABoring;
+    OModelParam<bool> itsMaskGraphCut;
+    OModelParam<bool> itsMaskDynamic;
 };
 
 #endif

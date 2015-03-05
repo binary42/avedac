@@ -23,7 +23,9 @@
  * See http://iLab.usc.edu for information about this project. 
  *  
  * This work would not be possible without the generous support of the 
- * David and Lucile Packard Foundation
+ * David and Lucile Packard Foundation:q
+ m:q
+ :
  */ 
 
 /*!@file MbariModelOptionDef.H Types for defining command-line options. */
@@ -69,7 +71,7 @@ extern const ModelOptionDef OPT_MDPsaliencyFrameDist;
 extern const ModelOptionDef OPT_MDPsegmentAlgorithmInputImage;
 extern const ModelOptionDef OPT_MDPsegmentAlgorithmType;
 extern const ModelOptionDef OPT_MDPsegmentGraphParameters;
-extern const ModelOptionDef OPT_MDPsegmentAdaptiveOffset;
+extern const ModelOptionDef OPT_MDPsegmentAdaptiveParameters;
 extern const ModelOptionDef OPT_MDPcleanupSESize;
 extern const ModelOptionDef OPT_MDPmaxEvolveTime;
 extern const ModelOptionDef OPT_MDPmaxWTAPoints;
@@ -77,6 +79,7 @@ extern const ModelOptionDef OPT_MDPsaveNonInterestingEvents;
 extern const ModelOptionDef OPT_MDPsaveOriginalFrameSpec;
 extern const ModelOptionDef OPT_MDPBenthicVideo;
 extern const ModelOptionDef OPT_MDPMidwaterVideo;
+extern const ModelOptionDef OPT_MDPToolSledVideo640x360;
 extern const ModelOptionDef OPT_MDPcolorSpace;
 extern const ModelOptionDef OPT_MDPminStdDev;
 extern const ModelOptionDef OPT_MDPeventExpirationFrames;
@@ -100,7 +103,10 @@ extern const ModelOptionDef OPT_MDPTimeLapseRover;
 extern const ModelOptionDef OPT_MDPMidwaterVideo;
 extern const ModelOptionDef OPT_MDPEyeInTheSeaVideo;
 extern const ModelOptionDef OPT_MDPBenthicVideo;
-
+extern const ModelOptionDef OPT_MDPmaskDynamic;
+extern const ModelOptionDef OPT_MDPmaskGraphCut;
+extern const ModelOptionDef OPT_MDPXKalmanFilterParameters;
+extern const ModelOptionDef OPT_MDPYKalmanFilterParameters;
 //@}
 
 //! Command-line options for Version

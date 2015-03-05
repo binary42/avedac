@@ -56,6 +56,14 @@ public:
   BitObject(const Image<byte>& img, const Point2D<int> location, 
             const byte threshold = 1);
 
+  //! Constructor from a byte Image, location and rectangle
+  /*!@param img Image from which the object is extracted
+    @param boundingBox the bounding box of the object
+    @param center a point that represents the center of the object
+    @return the area of the extracted object; -1 if no object could
+    be extracted - in this case the BitObject is invalid */
+  BitObject(const Image<byte>& img, const Point2D<int> center, const Rectangle boundingBox);
+
   //! custom operator used when combining std::lists of
   /*BitObjects   */
   bool operator < ( const BitObject object ) {
@@ -87,7 +95,16 @@ public:
     @return the area of the extracted object; -1 if no object could
     be extracted - in this case the BitObject is invalid */
   int reset(const Image<byte>& img);
-  
+
+  //! Reset to a new object not accounting for flooding the area
+  // useful for unconnected objects
+  /*!@param img Image from which the object is extracted
+    @param boundingBox the bounding box of the object
+    @param center a point that represents the center of the object
+    @return the area of the extracted object; -1 if no object could
+    be extracted - in this case the BitObject is invalid */
+  int reset(const Image<byte>& img, const Point2D<int> center, const Rectangle boundingBox);
+
   //! delete all stored data, makes the object invalid
   void freeMem();
 
@@ -148,6 +165,9 @@ public:
 
   //! The area (number of pixels) of the object
   int getArea() const;
+
+  //! The area (number of pixels) of the object
+  //float getStdDev() const;
 
   //! Returns the second moments of the object (normalized by the area)
   void getSecondMoments(float& uxx, float& uyy, float& uxy);

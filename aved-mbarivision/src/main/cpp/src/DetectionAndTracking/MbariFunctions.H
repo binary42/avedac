@@ -37,6 +37,7 @@
 #include "Neuro/StdBrain.H"
 #include "Simulation/SimEventQueueConfigurator.H"
 #include "Image/Point2D.H"
+#include "Data/Winner.H"
 #include "DetectionAndTracking/DetectionParameters.H"
 #include "Image/Transforms.H"
 #include "Parallel/pvisionTCP-defs.H"
@@ -84,8 +85,9 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
         const int minSize,
         const int maxSize);
 
-//! returns list of SalientWinners of the most salient points
+ //! returns list of SalientWinners of the most salient points
 /*! @param manager the model manager
+ @param clipMask image to apply as mask over the input image
  @param brain the brain to process saliency
  @param q the event queue
  @param maxEvolveTime the maximum time to evolve the brain before stopping
@@ -96,7 +98,9 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
  *If either @param maxEolveTime or @param maxNumSalSpots
  *conditions are met, this function will return.s
  */
-list<WTAwinner> getSalientWinners(
+list<Winner> getSalientWinners(
+        nub::soft_ref<MbariResultViewer>& rv,
+        const Image< byte >& clipMask,
         const Image< PixRGB<byte> > &img,
         nub::soft_ref<StdBrain> brain,
         nub::soft_ref<SimEventQueue> q,
@@ -112,41 +116,72 @@ list<WTAwinner> getSalientWinners(
 std::list<WTAwinner> getGraphWinners(const Image<PixRGB<byte> >& graphBitImg,
         int framenum);
  
-//! returns the BitObjects at the most winning locations points
-/*!*@param bitImg a binary image used for extracting BitObjects at the 
- * winner locations
- @param winners list of Salient winners*/
-std::list<BitObject> getSalientObjects(const Image<byte>& bitImg,
-        const list<WTAwinner> &winners);
-
-//! returns the BitObjects at the most winning locations points
+//! returns the largest BitObjects near the winning locations points
 /*!*@param graphBitImg a color coded image used for extracting BitObjects at the
  * winner locations
- @param winners list of Salient winners*/
-std::list<BitObject> getSalientObjects(const Image<PixRGB<byte> >& graphBitImg, 
-        const list<WTAwinner> &winners);
+ @param winners list of  winners*/
+std::list<BitObject> getSalientObjects(const Image<PixRGB<byte> >& graphBitImg,
+        const list<Winner> &winners);
 
+//! returns the largest BitObjects near the most winning locations points
+// if bit object cannot be found in graphBitImg or bitImg, returns the foamask image
+/*!*@param graphBitImg a color coded image used for extracting BitObjects at the
+ * winner locations
+ * @param bitImg a binary image used for extracting BitObjects at the winner locations
+ @param winners list of Salient winners*/
+std::list<BitObject> getSalientObjects(const Image<PixRGB<byte> >& graphBitImg,
+        const Image<byte>& bitImg, const list<Winner> &winners, const Image< byte >& mask);
+
+//! Filters the graph winners with the clip Mask removing those that fall within the mask
+std::list<Winner> filterGraphWinners(const Image< byte >& clipMask, const std::list<Winner> &winlist);
 
 //! all BitObjects in objs are drawninto the return image
 Image<byte> showAllObjects(const std::list<BitObject>& objs);
 
 //! Draw circle around winning point in image and return annotated image
-Image< PixRGB<byte > > showAllWinners(const list<WTAwinner> winlist, const Image< PixRGB<byte > > & img, int maxDist);
+Image< PixRGB<byte > > showAllWinners(const list<Winner> winlist, const Image< PixRGB<byte > > & img, int maxDist);
 
 // ! Run mask option: flag the area specified as background after the segmentation
-Image< byte > maskArea( const Image<byte>& img, DetectionParameters *parms);
+Image< byte > maskArea( const Image<byte>& img, DetectionParameters *parms, byte maskval = byte(0));
+
+// ! flag the area specified as background after the segmentation
+Image< byte > maskArea(const Image< byte >& img, const Image< byte >& mask, const byte maskval = byte(0));
 
 // ! Run mask option on a color image: flag the area specified as background after the segmentation
-Image<  PixRGB <byte > >  maskArea( const Image<  PixRGB<byte> > & img, DetectionParameters *parms);
+Image<  PixRGB <byte > >  maskArea( const Image<  PixRGB<byte> > & img, DetectionParameters *parms, const byte maskval = byte(0));
+
+// ! flag the area specified as background after the segmentation
+Image< PixRGB <byte> > maskArea(const Image< PixRGB<byte> >& img, const Image<byte>& mask, const byte maskval = byte(0));
 
 // ! Return the max value of a matrix
 float getMax(const Image<float> matrix);
 
 // ! Return the picture to add to the background Model: take in consideration if it's a fixedCam then 
 // objects detected are not included into it
-Image< PixRGB<byte> > getImageToAddToTheBackground(const Image< PixRGB<byte> > &img,
+Image< PixRGB<byte> > getBackgroundImage(const Image< PixRGB<byte> > &img,
         const Image< PixRGB<byte> > &currentBackgroundMean,
         Image< PixRGB<byte> > savePreviousPicture,
         const list<BitObject> &bitObjectFrameList);
+
+// ! Return the image to add to the mask cache
+Image< byte > getMaskImage(const Image< byte > &img, const list<BitObject> &bitObjectFrameList);
+
+// ! Return largest BitObject not intersecting with those in the @param bos
+BitObject findBestBitObject(Rectangle r1, int maxDist, std::list<BitObject>& sobjs, std::list<BitObject>& bos);
+
+// ! Return the float parameters
+vector< float > getFloatParameters(const string  &str);
+
+// ! Adjust gamma  in place in @hsvRes image
+void adjustGamma(Image<byte>&lum, std::map<int, double> &cdfw, Image<PixHSV<float> >&hsvRes);
+
+// ! Constrast enhance image
+Image<PixRGB<byte> > enhanceImage(const Image<PixRGB<byte> >& img, std::map<int, double> &cdfw);
+
+// ! Update the mapping curve for contrast enhancement; returns the cumulative distribution function
+std::map<int, double> updateGammaCurve(const Image<PixRGB<byte> >& img, std::map<int, double> &pdf,  bool init = true);
+
+// ! Update the entropy model for contrast enhancement; returns theapproximation of entropy
+float updateEntropyModel(const Image<PixRGB<byte> >& img, std::map<int, double> &pdf);
 
 #endif

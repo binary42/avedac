@@ -30,15 +30,19 @@
 
 #include "Image/CutPaste.H"    // for crop()
 #include "Image/IO.H"
+#include "Image/Kernels.H"     // for twofiftyfives()
+#include "Image/MorphOps.H"    // for erode/dilate
 #include "Image/Image.H"
 #include "Image/MathOps.H"
 #include "Image/Pixels.H"
+#include "Image/ShapeOps.H"   // for rescale()
 #include "Image/Transforms.H"
 #include "Raster/GenericFrame.H"
 #include "Raster/PnmParser.H"
 #include "Raster/PnmWriter.H"
 #include "Util/Assert.H"
 #include "Util/MathFunctions.H"
+#include "Util/StringConversions.H"
 
 #include <cmath>
 #include <istream>
@@ -68,6 +72,67 @@ BitObject::BitObject(std::istream& is)
 {
   readFromStream(is);
 }
+// ######################################################################
+BitObject::BitObject(const Image<byte>& img, const Point2D<int> location, const Rectangle boundingBox)
+{
+  reset(img, location, boundingBox);
+}
+
+// ######################################################################
+int BitObject::reset(const Image<byte>& img, const Point2D<int> location, const Rectangle boundingBox)
+{
+
+  ASSERT(img.initialized());
+
+  // first, reset everything to defaults
+  freeMem();
+
+  itsBoundingBox = boundingBox;
+  Image<byte> dest;
+
+  // threshold to get binary object
+  dest = highThresh(img, byte(0), byte(1));
+
+  // count all foreground pixels as area
+  int area = countParticles(dest, byte(1));
+
+  LINFO("AREA %d", area);
+
+  // no object found? return -1
+  if (area == 0)
+    {
+      itsCentroidXY.reset(location);
+      return area;
+    }
+
+  // set the dimensions of the original image
+  itsImageDims = img.getDims();
+
+  // crop the object mask from the flooding destination
+  itsObjectMask = crop(dest, itsBoundingBox);
+
+  // get the area, the centroid, and the bounding box
+  std::vector<float> sumx, sumy;
+  itsArea = (int)sumXY(itsObjectMask, sumx, sumy);
+  //itsStdDev = stdev(luminance(img));
+
+  int firstX, lastX, firstY, lastY;
+  float cX, cY;
+  bool success = (getCentroidFirstLast(sumx, cX, firstX, lastX) |
+                  getCentroidFirstLast(sumy, cY, firstY, lastY));
+  itsCentroidXY.reset(cX,cY);
+
+  if (!success) LFATAL("determining the centroid failed");
+
+  if ((firstX != 0) || (lastX != itsObjectMask.getWidth()-1) ||
+      (firstY != 0) || (lastY != itsObjectMask.getHeight()-1))
+    LFATAL("boundary box doesn't match the one from flooding");
+
+  itsCentroidXY += Vector2D(itsBoundingBox.left(),itsBoundingBox.top());
+
+
+  return itsArea;
+}
 
 // ######################################################################
 Image<byte> BitObject::reset(const Image<byte>& img, const Point2D<int> location,
@@ -87,6 +152,7 @@ Image<byte> BitObject::reset(const Image<byte>& img, const Point2D<int> location
   // no object found? return -1
   if (area == -1)
     {
+      LINFO("no object found");
       itsCentroidXY.reset(location);
       return Image<byte>();
     }
@@ -100,6 +166,8 @@ Image<byte> BitObject::reset(const Image<byte>& img, const Point2D<int> location
   // get the area, the centroid, and the bounding box
   std::vector<float> sumx, sumy;
   itsArea = (int)sumXY(itsObjectMask, sumx, sumy);
+  //itsStdDev = stdev(luminance(itsObjectMask));
+
   if (area != itsArea)
     LFATAL("area %i doesn't match the one from flooding %i", itsArea, area);
 
@@ -131,7 +199,7 @@ int BitObject::reset(const Image<byte>& img)
   // set the dimensions of the original image
   itsImageDims = img.getDims();
 
-  // get the area, the centroid, and the bounding box
+  // get the area, stddev, centroid, and the bounding box
   std::vector<float> sumx, sumy;
   itsArea = (int)sumXY(img, sumx, sumy);
 
@@ -215,7 +283,7 @@ void BitObject::computeSecondMoments()
   float e = -coeff * itsUxy;
   float f =  coeff * itsUxx;
 
-  // from these guys, compute the paramters d and f for the
+  // from these guys, compute the parameters d and f for the
   // ellipse when it is rotated so that x is the main axis
   // and figure out the angle of rotation for this.
   float expr = sqrt(4*e*e + squareOf(d - f));
@@ -421,7 +489,7 @@ void BitObject::getMaxMinAvgIntensity(float& maxIntensity,
 
 // ######################################################################
 Rectangle BitObject::getBoundingBox(const BitObject::Coords coords) const
-{ 
+{
   switch(coords)
     {
     case OBJECT: return Rectangle::tlbrI(0, 0, itsBoundingBox.height() - 1,
@@ -435,14 +503,17 @@ Rectangle BitObject::getBoundingBox(const BitObject::Coords coords) const
 
 // ######################################################################
 template <class T_or_RGB>
-void BitObject::drawMaskedObject(Image<T_or_RGB>& img, const T_or_RGB backgroundcolor)
+    void BitObject::drawMaskedObject(Image<T_or_RGB>& img, const T_or_RGB backgroundcolor)
 {
   ASSERT(isValid());
   ASSERT(img.initialized());
-  ASSERT(img.getDims() == itsImageDims);
   const byte maskcolor = byte(1);
-
   Image<byte> mask = getObjectMask(maskcolor,IMAGE);
+
+  // rescale if needed
+  if (img.getDims() != itsImageDims)
+    mask = rescale(mask, img.getDims());
+
   typename Image<T_or_RGB>::iterator itr = img.beginw();
   typename Image<byte>::iterator mitr = mask.beginw();
 
@@ -512,6 +583,10 @@ int BitObject::getArea() const
 { return itsArea; }
 
 // ######################################################################
+/*float BitObject::getStdDev() const
+{ return itsStdDev; }*/
+
+// ######################################################################
 void BitObject::getSecondMoments(float& uxx, float& uyy, float& uxy)
 { 
   if (!haveSecondMoments) computeSecondMoments();
@@ -564,7 +639,7 @@ bool BitObject::doesIntersect(const BitObject& other) const
   // are this and other actually valid? no -> return false
   if (!(isValid() && other.isValid())) 
     {
-      LINFO("no interesect, because one of the objects is invalid.");
+      LINFO("no intersect, because one of the objects is invalid.");
       return false;
     }
 
@@ -626,18 +701,33 @@ void BitObject::drawShape(Image<T_or_RGB>& img,
 {
   ASSERT(isValid());
   ASSERT(img.initialized());
-  ASSERT(img.getDims() == itsImageDims);
+  Dims d = img.getDims();
+  Image<byte> mask = itsObjectMask;
+  Rectangle bbox = itsBoundingBox;
+
+  // rescale if needed
+  if (d != itsImageDims) {
+    float scaleW = (float) d.w() / (float) itsImageDims.w();
+    float scaleH = (float) d.h() / (float) itsImageDims.h();
+    int i = (int) ((float) bbox.left() * scaleW);
+    int j = (int) ((float) bbox.top() * scaleH);
+    int w = (int) ((float) bbox.width() * scaleW);
+    int h = (int) ((float) bbox.height() *scaleH);
+    const Point2D<int> topleft(i,j);
+    bbox = Rectangle(topleft, Dims(w,h));
+    mask = zoomXY(mask, scaleW, scaleH);
+  }
 
   int w = img.getWidth();
   float op2 = 1.0F - opacity;
 
   typename Image<T_or_RGB>::iterator iptr, iptr2;
-  Image<byte>::const_iterator mptr = itsObjectMask.begin();
-  iptr2 = img.beginw() + itsBoundingBox.top() * w + itsBoundingBox.left();
-  for (int y = itsBoundingBox.top(); y <= itsBoundingBox.bottomI(); ++y)
+  Image<byte>::const_iterator mptr = mask.begin();
+  iptr2 = img.beginw() + bbox.top() * w + bbox.left();
+  for (int y = bbox.top(); y <= bbox.bottomI(); ++y)
     {
       iptr = iptr2;
-      for (int x = itsBoundingBox.left(); x <= itsBoundingBox.rightI(); ++x)
+      for (int x = bbox.left(); x <= bbox.rightI(); ++x)
         {
           if (*mptr > 0) *iptr = T_or_RGB(*iptr * op2 + color * opacity);
           ++iptr; ++mptr;
@@ -654,20 +744,38 @@ void BitObject::drawOutline(Image<T_or_RGB>& img,
 {
   ASSERT(isValid());
   ASSERT(img.initialized());
-  ASSERT(img.getDims() == itsImageDims);
   float op2 = 1.0F - opacity;
 
   Image<byte> marked(img.getDims(), ZEROS);
+  Dims d = img.getDims();
+  Image<byte> mask = itsObjectMask;
+  Rectangle bbox = itsBoundingBox;
 
-  int t = itsBoundingBox.top();
-  int b = itsBoundingBox.bottomI();
-  int l = itsBoundingBox.left();
-  int r = itsBoundingBox.rightI();
+  // rescale if needed
+  if (d != itsImageDims) {
+    float scaleW = (float) d.w() / (float) itsImageDims.w();
+    float scaleH = (float) d.h() / (float) itsImageDims.h();
+    int i = (int) ((float) bbox.left() * scaleW);
+    int j = (int) ((float) bbox.top() * scaleH);
+    int w = (int) ((float) bbox.width() * scaleW);
+    int h = (int) ((float) bbox.height() * scaleH);
+    const Point2D<int> topleft(i,j);
+    bbox = Rectangle(topleft, Dims(w,h));
+    mask = zoomXY(mask, scaleW, scaleH);
+
+    Image<byte> se = twofiftyfives(4);
+    mask = dilateImg(mask, se);
+  }
+
+  int t = bbox.top();
+  int b = bbox.bottomI();
+  int l = bbox.left();
+  int r = bbox.rightI();
   
   for (int y = t; y <= b; ++y)
     for (int x = l; x <= r; ++x)
       {
-        if (itsObjectMask.getVal(x-l,y-t) == 0) continue;
+        if (mask.getVal(x-l,y-t) == 0) continue;
         for (int dy = -1; dy <= 1; ++dy)
           for (int dx = -1; dx <= 1; ++dx)
             {
@@ -677,8 +785,8 @@ void BitObject::drawOutline(Image<T_or_RGB>& img,
 
               bool isBoundary = false;
               Point2D<int> pm(x+dx-l,y+dy-t);
-              if (!itsObjectMask.coordsOk(pm)) isBoundary = true;
-              else if (itsObjectMask.getVal(pm) == 0) isBoundary = true;
+              if (!mask.coordsOk(pm)) isBoundary = true;
+              else if (mask.getVal(pm) == 0) isBoundary = true;
 
               if (isBoundary && marked.getVal(pim) == 0) 
                 {
@@ -698,13 +806,27 @@ void BitObject::drawBoundingBox(Image<T_or_RGB>& img,
 {
   ASSERT(isValid());
   ASSERT(img.initialized());
-  ASSERT(img.getDims() == itsImageDims);
+  Rectangle bbox = itsBoundingBox;
+
+  // rescale if needed
+  if (img.getDims() != itsImageDims) {
+    Dims d = img.getDims();
+    float scaleW = (float) d.w() / (float) itsImageDims.w();
+    float scaleH = (float) d.h() / (float) itsImageDims.h();
+    int i = (int) ((float) bbox.left() * scaleW);
+    int j = (int) ((float) bbox.top() * scaleH);
+    int w = (int) ((float) bbox.width() * scaleW);
+    int h = (int) ((float) bbox.height() *scaleH);
+    const Point2D<int> topleft(i,j);
+    LINFO("==========================================================================%g=%g======++++%d %d %d %d", scaleW, scaleH, i, j,w,h);
+    bbox = Rectangle(topleft, Dims(w,h));
+  }
 
   float op2 = 1.0F - opacity;
-  int t = itsBoundingBox.top();
-  int b = itsBoundingBox.bottomI();
-  int l = itsBoundingBox.left();
-  int r = itsBoundingBox.rightI();
+  int t = bbox.top();
+  int b = bbox.bottomI();
+  int l = bbox.left();
+  int r = bbox.rightI();
   
   for (int x = l; x <= r; ++x)
     {

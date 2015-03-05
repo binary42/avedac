@@ -181,6 +181,7 @@ BitObject &BitObject::operator=(const BitObject& bitObj) {
     this->itsMaxIntensity = bitObj.itsMaxIntensity;
     this->itsMinIntensity = bitObj.itsMinIntensity;
     this->itsAvgIntensity = bitObj.itsAvgIntensity;
+    this->itsStdDev = bitObj.itsStdDev;
     this->haveSecondMoments = bitObj.haveSecondMoments;
     this->itsSMV = bitObj.itsSMV;
 }
@@ -284,6 +285,7 @@ void BitObject::freeMem()
   itsMaxIntensity = -1.0F;
   itsMinIntensity = -1.0F;
   itsAvgIntensity = -1.0F;
+  itsStdDev = 0.0F;
   haveSecondMoments = false;
 }
 // ######################################################################
@@ -327,7 +329,8 @@ void BitObject::writeToStream(std::ostream& os) const
   // max, min and avg intensity
   os << itsMaxIntensity << " "
      << itsMinIntensity << " "
-     << itsAvgIntensity << "\n";
+     << itsAvgIntensity << " "
+     << itsStdDev << "\n";
 
   // the object mask
   PnmWriter::writeAsciiBW(itsObjectMask, 1, os);
@@ -372,10 +375,11 @@ void BitObject::readFromStream(std::istream& is)
   is >> itsMajorAxis; is >> itsMinorAxis;
   is >> itsElongation; is >> itsOriAngle;
 
-  // max, min, avg intensity
+  // max, min, avg, stddev intensity
   is >> itsMaxIntensity;
   is >> itsMinIntensity;
   is >> itsAvgIntensity;
+  is >> itsStdDev;
 
   // object mask
   PnmParser pp(is);
@@ -583,7 +587,7 @@ bool BitObject::doesIntersect(const BitObject& other) const
   // are this and other actually valid? no -> return false
   if (!(isValid() && other.isValid())) 
     {
-      LINFO("no interesect, because one of the objects is invalid.");
+      LINFO("no intersect, because one of the objects is invalid.");
       return false;
     }
 
@@ -596,15 +600,15 @@ bool BitObject::doesIntersect(const BitObject& other) const
   int tt = std::max(tBB.top(),oBB.top());
   int bb = std::min(tBB.bottomI(),oBB.bottomI());
 
-  //LINFO("this.ObjMask.dims = %s; other.ObjMask.dims = %s",
-  //    toStr(getObjectMask(byte(1),OBJECT).getDims()).data(),
-  //    toStr(other.getObjectMask(byte(1),OBJECT).getDims()).data());
+  LINFO("this.ObjMask.dims = %s; other.ObjMask.dims = %s",
+      toStr(getObjectMask(byte(1),OBJECT).getDims()).data(),
+      toStr(other.getObjectMask(byte(1),OBJECT).getDims()).data());
 
   // is this a valid rectangle?
   if ((ll > rr)||(tt > bb)) 
     {
-      //LINFO("No intersect because the bounding boxes don't overlap: %s and %s",
-      //    toStr(tBB).data(),toStr(oBB).data());
+      LINFO("No intersect because the bounding boxes don't overlap: %s and %s",
+          toStr(tBB).data(),toStr(oBB).data());
       return false;
     }
 
@@ -614,25 +618,25 @@ bool BitObject::doesIntersect(const BitObject& other) const
   Rectangle oCM = Rectangle::tlbrI(tt - oBB.top(), ll - oBB.left(),
                                   bb - oBB.top(), rr - oBB.left());
 
-  //LINFO("tCM = %s; oCM = %s; this.ObjMask.dims = %s; other.ObjMask.dims = %s",
-  //    toStr(tCM).data(),toStr(oCM).data(),
-  //    toStr(getObjectMask(byte(1),OBJECT).getDims()).data(),
-  //    toStr(other.getObjectMask(byte(1),OBJECT).getDims()).data());
-  //LINFO("tCM: P2D = %s, dims = %s; oCM: P2D = %s, dims = %s",
-  //    toStr(Point2D(tCM.left(), tCM.top())).data(),
-  //    toStr(Dims(tCM.width(), tCM.height())).data(),
-  //    toStr(Point2D(oCM.left(), oCM.top())).data(),
-  //    toStr(Dims(oCM.width(), oCM.height())).data());
+  LINFO("tCM = %s; oCM = %s; this.ObjMask.dims = %s; other.ObjMask.dims = %s",
+      toStr(tCM).data(),toStr(oCM).data(),
+      toStr(getObjectMask(byte(1),OBJECT).getDims()).data(),
+      toStr(other.getObjectMask(byte(1),OBJECT).getDims()).data());
+  LINFO("tCM: P2D = %s, dims = %s; oCM: P2D = %s, dims = %s",
+      toStr(Point2D(tCM.left(), tCM.top())).data(),
+      toStr(Dims(tCM.width(), tCM.height())).data(),
+      toStr(Point2D(oCM.left(), oCM.top())).data(),
+      toStr(Dims(oCM.width(), oCM.height())).data());
 
   // crop the object masks and get the intersecting image
   Image<byte> cor = takeMin(crop(getObjectMask(byte(1),OBJECT),tCM),
                             crop(other.getObjectMask(byte(1),OBJECT),oCM));
   double s = sum(cor);
 
-  //LINFO("tCM = %s; oCM = %s; this.ObjMask.dims = %s; other.ObjMask.dims = %s; sum = %g",
-      //toStr(tCM).data(),toStr(oCM).data(),
-      //toStr(getObjectMask(byte(1),OBJECT).getDims()).data(),
-      //toStr(other.getObjectMask(byte(1),OBJECT).getDims()).data(),s);
+  LINFO("tCM = %s; oCM = %s; this.ObjMask.dims = %s; other.ObjMask.dims = %s; sum = %g",
+      toStr(tCM).data(),toStr(oCM).data(),
+      toStr(getObjectMask(byte(1),OBJECT).getDims()).data(),
+      toStr(other.getObjectMask(byte(1),OBJECT).getDims()).data(),s);
 
   return (s > 0.0);
 }

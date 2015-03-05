@@ -40,6 +40,7 @@
 #include "Util/StringConversions.H"
 #include "DetectionAndTracking/MbariVisualEvent.H"
 #include "DetectionAndTracking/MbariFunctions.H"
+#include "Media/MbariResultViewer.H"
 #include "Image/Geometry2D.H"
 #include <algorithm>
 #include <istream>
@@ -223,11 +224,12 @@ namespace MbariVisualEvent {
     : startframe(tk.frame_nr),
       endframe(tk.frame_nr),
       max_size(tk.bitObject.getArea()),
+      min_size(tk.bitObject.getArea()),
       maxsize_framenr(tk.frame_nr),
       itsState(VisualEvent::OPEN),
-      xTracker(tk.location.x(),0.1F,10.0F),
-      yTracker(tk.location.y(),0.1F,0.0F),
-      hTracker(img, tk.bitObject.getBoundingBox()),
+      itsTrackerChanged(true),
+      houghArea(0),
+      houghConstant(DEFAULT_FORGET_CONSTANT),
       itsDetectionParms(parms)
   {
     LDEBUG("tk.location = (%g, %g); area: %i",tk.location.x(),tk.location.y(),
@@ -236,9 +238,46 @@ namespace MbariVisualEvent {
     ++counter;
     myNum = counter;
     validendframe = endframe;
+    vector< float > p;
+    float mnoise = 0.1F;
+    float pnoise = 0.0F;
+     //TODO: need check on values
+    p = getFloatParameters(parms.itsXKalmanFilterParameters);
+    pnoise = p.at(0); mnoise = p.at(1);
+    xTracker.init(tk.location.x(),pnoise,mnoise);
+    LINFO("====================================================================X===%g %g", pnoise,mnoise);
+
+    p = getFloatParameters(parms.itsYKalmanFilterParameters);
+    pnoise = p.at(0); mnoise = p.at(1);
+    LINFO("====================================================================Y===%g %g", pnoise,mnoise);
+    yTracker.init(tk.location.y(),pnoise,mnoise);
+    switch (parms.itsTrackingMode) {
+      case(TMKalmanFilter):
+        itsTrackerType = KALMAN;
+      break;
+      case(TMNearestNeighbor):
+        itsTrackerType = NN;
+      break;
+      case(TMHough):
+        resetHoughTracker(img, tk.bitObject, DEFAULT_SCALE_INCREASE);
+        itsTrackerType = HOUGH;
+      break;
+      case(TMNearestNeighborHough):
+        itsTrackerType = NN;
+      break;
+      case(TMKalmanHough):
+        itsTrackerType = KALMAN;
+      break;
+      case(TMNone):
+        // just placeholder
+        itsTrackerType = NN;
+      break;
+    }
   }
-  // initialize static variable
+  // initialize static variables
   uint VisualEvent::counter = 0;
+  const std::string VisualEvent::trackerName[3] = {"NearestNeighbor", "Kalman", "Hough"};
+
   // ######################################################################
   VisualEvent::~VisualEvent()
   {
@@ -299,7 +338,6 @@ namespace MbariVisualEvent {
       LINFO("Reading VisualEvent %d Token %ld", myNum, tokens.size());
     }
   }
-	
   // ######################################################################
   void VisualEvent::writePositions(std::ostream& os) const
   {
@@ -307,6 +345,53 @@ namespace MbariVisualEvent {
       tokens[i].writePosition(os);
 	
     os << "\n";
+  }
+
+  // ######################################################################
+  void VisualEvent::setTrackerType(VisualEvent::TrackerType type)
+  {
+    if (itsTrackerType != type) {
+     LINFO("====================================================================+++>Event %i switching to %s ", myNum, trackerName[type].c_str());
+     itsTrackerChanged = true;
+    }
+    else {
+     itsTrackerChanged = false;
+    }
+    itsTrackerType = type;
+  }
+
+// ######################################################################
+  float VisualEvent::getAcceleration() const
+  {
+    if (getNumberOfFrames() > 2) {
+      //int numFrames = getNumberOfFrames();
+      int numSamples = 3;//std::min(4,numFrames); if need to do larger average
+      uint endFrame = getEndFrame();
+      uint frameNum = endFrame - numSamples + 1;
+      bool init = false;
+      float lv = 0.F;
+      float asum = 0.F;
+
+      while(frameNum < endFrame) {
+        Token t1 = getToken(frameNum);
+        Token t2 = getToken(frameNum+1);
+        if (t1.bitObject.isValid() && t2.bitObject.isValid()) {
+        Point2D<int> p2 = t2.bitObject.getCentroid();
+        Point2D<int> p1 = t1.bitObject.getCentroid();
+        // distance between centroids
+        float v = sqrt(pow((double)(p1.i - p2.i),2.0) + pow((double)(p1.j - p2.j),2.0));
+
+        if (init)
+          asum += (v - lv);
+        else
+         init = true;
+        lv = v;
+        }
+        frameNum++;
+      }
+      return asum/numSamples;
+    }
+    return 0.F;
   }
 
   // ######################################################################
@@ -333,9 +418,9 @@ namespace MbariVisualEvent {
     float cost = (xTracker.getCost(tk.location.x()) +
                   yTracker.getCost(tk.location.y()));
 	
-    LINFO("Event no. %i; obj location: %g, %g; predicted location: %g, %g; cost: %g",
+    LINFO("Event no. %i; obj location: %g, %g; predicted location: %g, %g; cost: %g maxCost: %g",
            myNum, tk.location.x(), tk.location.y(), xTracker.getEstimate(), 
-           yTracker.getEstimate(), cost);
+           yTracker.getEstimate(), cost, itsDetectionParms.itsMaxCost);
     return cost;
   }
 
@@ -354,12 +439,10 @@ namespace MbariVisualEvent {
     else
         frameNum = validendframe;
 
-    Token t = getToken(frameNum);
-
-    tokens.back().prediction =  Vector2D(t.location.x(), t.location.y());
-    tokens.back().location = Vector2D(t.location.x(), t.location.y());
-    xTracker.update(t.location.x());
-    yTracker.update(t.location.y()); 
+    tokens.back().prediction = Vector2D(xTracker.getEstimate(),
+                                        yTracker.getEstimate());
+    tokens.back().location = Vector2D(xTracker.update(tk.location.x()),
+                                      yTracker.update(tk.location.y()));
 
     LINFO("Getting token for frame: %d actual location: %g %g", frameNum,
             tokens.back().prediction.x(), tokens.back().prediction.y());
@@ -368,63 +451,45 @@ namespace MbariVisualEvent {
     // this is sort of a strange way to propagate values
     // need a bitObject copy operator?
     tokens.back().bitObject.setSMV(smv);
-    
+
     tokens.back().foe = foe;
- 
+
     if (tk.bitObject.getArea() > (int) max_size)
       {
         max_size = tk.bitObject.getArea();
         maxsize_framenr = tk.frame_nr;
+      }
+    if (tk.bitObject.getArea() < (int) min_size)
+      {
+        min_size = tk.bitObject.getArea();
       }
     endframe = tk.frame_nr;
     this->validendframe = validendframe;
   }
 
   // ######################################################################
-  bool VisualEvent::updateHoughTracker(nub::soft_ref<MbariResultViewer>& rv, MbariImage< PixRGB<byte> >& img)
+  void VisualEvent::resetHoughTracker(MbariImage< PixRGB<byte> >& img, BitObject &bo, float maxScale )
   {
-    uint frame = (uint) img.getFrameNum();
-    Point2D<int> prediction;
-    Image< byte > binaryImg(img.getDims(), ZEROS);
-    BitObject obj;
-    const byte threshold = 1;
-    DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
+    // save the area used to reset since the Hough tracker is bounded by a max area
+    houghArea = bo.getArea();
+    hTracker.reset(img, bo, maxScale, houghConstant);
+  }
 
-    // update the tracker getting the binary image mask
-    bool found = hTracker.update(rv, img, prediction, binaryImg, myNum);
+  // ######################################################################
+  void VisualEvent::freeHoughTracker()
+  {
+    hTracker.free();
+  }
 
-    // create new token from binary image
-    obj.reset(binaryImg, prediction, threshold);
-
-    if (found && obj.getArea() >= p.itsMinEventArea && obj.getArea() <= p.itsMaxEventArea) {
-
-      LINFO("Event %i - found token area: %d, min area: %d max area: %d ", \
-          myNum, obj.getArea(),  p.itsMinEventArea, p.itsMaxEventArea);
-      Token tk(obj, frame);
-
-      ASSERT(isTokenOk(tk));
-      tokens.push_back(tk);
-
-      // copy SMV forward
-      double smv = tokens.back().bitObject.getSMV();
-      tokens.back().bitObject.setSMV(smv);
-
-      tokens.back().prediction = Vector2D(prediction.i, prediction.j);
-      tokens.back().location = Vector2D(tk.location.x(), tk.location.y());
-
-      if (tk.bitObject.getArea() > (int) max_size) {
-        max_size = tk.bitObject.getArea();
-        maxsize_framenr = tk.frame_nr;
-      }
-      endframe = tk.frame_nr;
-      this->validendframe = validendframe;
-      return true;
-    }
-    else {
-      LINFO("Event %i - no token found or outside bounds, found area: %d, min area: %d max area: %d ", \
-          myNum, obj.getArea(),  p.itsMinEventArea, p.itsMaxEventArea);
-      return false;
-    }
+  // ######################################################################
+  bool VisualEvent::updateHoughTracker(nub::soft_ref<MbariResultViewer>& rv,\
+                                        MbariImage< PixRGB<byte> >& img, \
+                                        const Image< byte >& occlusionImg, \
+                                        Image< byte >& binaryImg, \
+                                        Point2D<int>& prediction, \
+                                        Rectangle &boundingBox)
+  {
+    return hTracker.update(rv, img, occlusionImg, prediction, boundingBox, binaryImg, myNum, houghConstant);
   }
 
   // ######################################################################
@@ -461,7 +526,11 @@ namespace MbariVisualEvent {
       {
         max_size = tk.bitObject.getArea();
         maxsize_framenr = tk.frame_nr;
-      }  
+      }
+    if (tk.bitObject.getArea() < (int) min_size)
+      {
+        min_size = tk.bitObject.getArea();
+      }
     endframe = tk.frame_nr;
     this->validendframe = validendframe;
   } 
@@ -536,7 +605,7 @@ namespace MbariVisualEvent {
     vec.push_back(maxIntens);
     vec.push_back(minIntens);
     vec.push_back(avgIntens);
-	
+
     // 13 - angle with respect to expansion
     vec.push_back(tk.angle);
 	
@@ -557,7 +626,7 @@ namespace MbariVisualEvent {
       }
     return Dims(w,h);
   }
-	
+
   // ######################################################################
   // ###### VisualEventSet
   // ######################################################################
@@ -648,80 +717,470 @@ namespace MbariVisualEvent {
   {
     itsEvents.push_back(event);
   }
-  // ######################################################################
-  void VisualEventSet::runHoughTracker(nub::soft_ref<MbariResultViewer>& rv,
-                                        VisualEvent *currEvent,
-                                        MbariImage< PixRGB<byte> >& img)
+  // ######################################################   ################
+  void VisualEventSet::runKalmanHoughTracker(VisualEvent *currEvent,
+                                               uint frameNum,
+                                               const MbariMetaData &metadata,
+                                               const Image<byte>& binMap,
+                                               const Image<PixRGB<byte>>& graphMap,
+                                               const Vector2D& curFOE,
+                                               nub::soft_ref<MbariResultViewer>& rv,
+                                               MbariImage< PixRGB<byte> >& img,
+                                               MbariImage< PixRGB<byte> >& prevImg,
+                                               const Image< byte >& mask)
   {
-    //int frameNum = img.getFrameNum();
-    LINFO("-------------------------------------->Running Hough Tracker for event %d", currEvent->getEventNum());
-	if (!currEvent->updateHoughTracker(rv, img)) {
-      LINFO("------------------------------------------->Event %i - no token found  ", currEvent->getEventNum());
+    /*bool found = false;
+    Token evtToken;
+
+    if (currEvent->getTrackerType() == VisualEvent::KALMAN) {
+      found = runKalmanTracker(currEvent, frameNum, metadata, binMap, graphMap, curFOE, img, true);
+    }
+    else {
+      found = runHoughTracker(rv, currEvent, frameNum, metadata, img, curFOE, true);
+    }
+
+    if (!found) {
+      // switch to Hough if Kalman fails and reinitialize Hough
+      if (currEvent->getTrackerType() == VisualEvent::KALMAN && currEvent->getCategory() == VisualEvent::INTERESTING) {
+        currEvent->setTrackerType(VisualEvent::HOUGH);
+        evtToken = currEvent->getToken(currEvent->getEndFrame());
+        LINFO("Resetting Hough Tracker frame: %d event: %d with bounding box %s",
+               frameNum,currEvent->getEventNum(),toStr(evtToken.bitObject.getBoundingBox()).data());
+        currEvent->resetHoughTracker(prevImg, evtToken.bitObject, DEFAULT_SCALE_INCREASE);
+        currEvent->setForgetConstant(DEFAULT_FORGET_CONSTANT);
+      }
+      else //switch to Kalman if Hough fails
+        currEvent->setTrackerType(VisualEvent::KALMAN);
+    }
+    else {
+      // if successfully using the Kalman tracker, reset the Hough tracker
+      if (currEvent->getTrackerType() == VisualEvent::KALMAN) {
+        //evtToken = currEvent->getToken(currEvent->getEndFrame());
+        //currEvent->resetHoughTracker(img, evtToken.bitObject, DEFAULT_SCALE_INCREASE);
+        // update state
+        currEvent->setTrackerType(VisualEvent::KALMAN);
+      }
+      else {
+        // update state
+        currEvent->setTrackerType(VisualEvent::HOUGH);
+      }
+    }
+
+    // if exceeded expiration frames, close
+    int frameInc = int(frameNum - currEvent->getValidEndFrame());
+    if ( frameInc > itsDetectionParms.itsEventExpirationFrames + 1 ) {
+      LINFO("Event %i - KalmanHough Tracker failed, closing event",currEvent->getEventNum());
       currEvent->close();
+    }
+
+    checkFailureConditions(currEvent, img.getDims());
+
+    // if still open and not found assign emtpy token using last known event
+    if (!currEvent->isClosed() && !found) {
+      evtToken = currEvent->getToken(currEvent->getEndFrame());
+      evtToken.frame_nr = frameNum;
+      currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(),  itsDetectionParms.itsEventExpirationFrames);
+    }*/
+
+   bool found = false;
+   Token evtToken;
+
+    // prefer the Kalman tracker, and fall back to the Hough tracker
+    if (!runKalmanTracker(currEvent, frameNum, metadata, binMap, graphMap, curFOE, img, true)){
+      evtToken = currEvent->getToken(currEvent->getEndFrame());
+
+      // only use the Hough tracker if object found to be interesting or has high enough voltage
+      if (!currEvent->isClosed() && (evtToken.bitObject.getSMV() > .005F ||
+                                    currEvent->getCategory() == VisualEvent::INTERESTING)){
+        currEvent->setTrackerType(VisualEvent::HOUGH);
+
+        // reset Hough tracker if only now switching to this tracker to save computation
+        if (currEvent->trackerChanged()) {
+          evtToken = currEvent->getToken(currEvent->getEndFrame());
+          LINFO("Resetting Hough Tracker frame: %d event: %d with bounding box %s",
+                 frameNum,currEvent->getEventNum(),toStr(evtToken.bitObject.getBoundingBox()).data());
+          currEvent->resetHoughTracker(prevImg, evtToken.bitObject, DEFAULT_SCALE_INCREASE);
+          currEvent->setForgetConstant(DEFAULT_FORGET_CONSTANT);
+        }
+
+        // try to run the Hough tracker; if fails, switch to Kalman tracker
+        if (runHoughTracker(rv, currEvent, frameNum, metadata, img, mask, curFOE, true))
+          found = true;
+        else {
+          currEvent->setTrackerType(VisualEvent::KALMAN);
+          LINFO("Event %i - Hough Tracker failed",currEvent->getEventNum());
+        }
+      }
+    }
+    else
+    {
+      found = true;
+      currEvent->setTrackerType(VisualEvent::KALMAN);
+    }
+
+    int frameInc = int(frameNum - currEvent->getValidEndFrame());
+    if ( frameInc > itsDetectionParms.itsEventExpirationFrames ) {
+      LINFO("Event %i - KalmanHough Tracker failed, closing event",currEvent->getEventNum());
+      currEvent->close();
+    }
+
+    checkFailureConditions(currEvent, img.getDims());
+
+    if (!currEvent->isClosed() && !found) {
+      // assign an empty token
+      evtToken = currEvent->getToken(currEvent->getEndFrame());
+      evtToken.frame_nr = frameNum;
+      currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(),\
+        itsDetectionParms.itsEventExpirationFrames);
+    }
+  }
+
+  void VisualEventSet::checkFailureConditions(VisualEvent *currEvent, Dims d)
+  {
+    float acc = 0.F;
+    Token evtToken = currEvent->getToken(currEvent->getEndFrame());
+    ///Rectangle r1 = evtToken.bitObject.getBoundingBox();
+
+    if (currEvent->getNumberOfFrames() > 1) {
+      Token evtToken2 = currEvent->getToken(currEvent->getEndFrame()-1);
+      // area difference
+      int areaCurrent = evtToken.bitObject.getArea();
+      int areaLast = evtToken2.bitObject.getArea();
+
+      // acceleration
+      acc = currEvent->getAcceleration();
+      float accAll = getAcceleration(currEvent->getEventNum());
+      float pacc = 0.F;
+      if (accAll != 0.F) pacc = 100.F*(accAll-acc)/accAll;
+      LINFO("Event %i avg acceleration %f acceleration %f percent change %6.2f", currEvent->getEventNum(),
+      accAll, acc, pacc);
+
+      // large accelerations can indicate when tracking fails
+      /*if (abs(acc) > 7.0F )   {
+         LINFO("Event %i tracker acceleration error - closed",currEvent->getEventNum());
+         currEvent->close();
+      }
+      if( areaCurrent < areaLast && currEvent->getTrackerType() == VisualEvent::HOUGH) {
+            float c = 0.80F*currEvent->getForgetConstant();
+            if (c < 0.10F) c = 0.F; //clamp to 0 when too small to avoid drifting
+            LINFO("Event %i growing small in Hough tracking mode. Changing forget ratio from %3.2f to %3.2f to avoid drift", \
+            currEvent->getEventNum(), currEvent->getForgetConstant(), c);
+            currEvent->setForgetConstant(c);
+      }*/
+    }
+
+    //float percentdiff = 0.F;
+
+    // check distance to edge and size; if close to edge, turn down forget ratio
+    /*if ( (r1.bottomI() >= d.h()-20 || r1.rightI() >= d.w()-20 || r1.top() <=20 || r1.left() <=20) \
+      && currEvent->getTrackerType() == VisualEvent::HOUGH )
+    {
+      float c = 0.80F*currEvent->getForgetConstant();
+      if (c < 0.10F) c = 0.F; //clamp to 0 when too small to avoid drifting
+      LINFO("Event %i near edge. Changing forget ratio from %3.2f to %3.2f  to avoid drift", \
+      currEvent->getEventNum(), currEvent->getForgetConstant(), c);
+      currEvent->setForgetConstant(c);
+    }
+
+    int maxSize = currEvent->getMaxSize() ;
+    int size = evtToken.bitObject.getArea();
+
+    if( size < maxSize/4 ) {
+      float c = 0.25F*currEvent->getForgetConstant();
+      if (c < 0.10F) c = 0.F; //clamp to 0 when too small to avoid drifting
+      LINFO("=========>Event %i growing small in Hough tracking mode. Changing forget ratio from %3.2f to %3.2f to avoid drift", \
+      currEvent->getEventNum(), currEvent->getForgetConstant(), c);
+      currEvent->setForgetConstant(c);
+    }*/
+  }
+  // ######################################################################
+  void VisualEventSet::runNearestNeighborHoughTracker(VisualEvent *currEvent,
+                                               uint frameNum,
+                                               const MbariMetaData &metadata,
+                                               const Image<byte>& binMap,
+                                               const Image<PixRGB<byte>>& graphMap,
+                                               const Vector2D& curFOE,
+                                               nub::soft_ref<MbariResultViewer>& rv,
+                                               MbariImage< PixRGB<byte> >& img,
+                                               MbariImage< PixRGB<byte> >& prevImg)
+  {
+    /*bool found = false;
+    Token evtToken;
+
+    if (currEvent->getTrackerType() == VisualEvent::NN) {
+      found = runKalmanTracker(currEvent, frameNum, metadata, binMap, graphMap, curFOE, img, true);
+    }
+    else {
+      found = runHoughTracker(rv, currEvent, frameNum, metadata, img, curFOE, true);
+    }
+
+    if (!found) {
+      if (currEvent->getTrackerType() == VisualEvent::NN)
+        currEvent->setTrackerType(VisualEvent::HOUGH);
+      else
+        currEvent->setTrackerType(VisualEvent::NN);
+    }
+    else {
+      // if successfully using the NN tracker, reset the Hough tracker
+      if (currEvent->getTrackerType() == VisualEvent::NN) {
+        evtToken = currEvent->getToken(currEvent->getEndFrame());
+        currEvent->resetHoughTracker(img, evtToken.bitObject);
+        // update state
+        currEvent->setTrackerType(VisualEvent::NN);
+      }
+      else {
+        // update state
+        currEvent->setTrackerType(VisualEvent::HOUGH);
+      }
+    }
+
+    // if exceeded expiration frames, close
+    int frameInc = int(frameNum - currEvent->getValidEndFrame());
+    if ( frameInc > itsDetectionParms.itsEventExpirationFrames ) {
+      LINFO("Event %i - NearestNeighborHough Tracker failed, closing event",currEvent->getEventNum());
+      currEvent->close();
+    }
+
+    // if still open and not found assign emtpy token using last known event
+    if (!currEvent->isClosed() && !found) {
+      evtToken = currEvent->getToken(currEvent->getEndFrame());
+      evtToken.frame_nr = frameNum;
+      currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(),  itsDetectionParms.itsEventExpirationFrames);
+    }*/
+
+    bool found = false;
+    Token evtToken;
+
+    //TODO: CLEAN_UP and remove above
+    // prefer the NN tracker, and fall back to the Hough tracker
+    if (!runNearestNeighborTracker(currEvent, frameNum, metadata, binMap, graphMap, curFOE, img, true)) {
+
+      if (!currEvent->isClosed()) {
+        currEvent->setTrackerType(VisualEvent::HOUGH);
+
+        // try to run the Hough tracker; if fails, switch to NN tracker
+        /*if (runHoughTracker(rv, currEvent, frameNum, metadata, img, mask, curFOE, true)) {
+          found = true;
+          }
+        else {
+          currEvent->setTrackerType(VisualEvent::NN);
+          LINFO("Event %i - Hough Tracker failed",currEvent->getEventNum());
+        }*/
+      }
+      int frameInc = int(frameNum - currEvent->getValidEndFrame());
+      if ( frameInc > itsDetectionParms.itsEventExpirationFrames ) {
+        LINFO("Event %i - NearestNeighborHough Tracker past expiration frames, closing event",currEvent->getEventNum());
+        currEvent->close();
+      }
+    }
+    else
+    {
+      found = true;
+      // if successfully using the NN tracker, reset the Hough tracker
+      currEvent->setTrackerType(VisualEvent::NN);
+      evtToken = currEvent->getToken(currEvent->getEndFrame());
+      LINFO("Resetting Hough Tracker frame: %d event: %d with bounding box %s",
+             frameNum,currEvent->getEventNum(),toStr(evtToken.bitObject.getBoundingBox()).data());
+      currEvent->resetHoughTracker(img, evtToken.bitObject, DEFAULT_SCALE_INCREASE);
+    }
+
+    checkFailureConditions(currEvent, img.getDims());
+
+    if (!currEvent->isClosed() && !found) {
+      // assign an empty token
+      evtToken = currEvent->getToken(currEvent->getEndFrame());
+      evtToken.frame_nr = frameNum;
+      currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(),  itsDetectionParms.itsEventExpirationFrames);
     }
   }
   // ######################################################################
-  void VisualEventSet::runKalmanTracker(VisualEvent *currEvent, \
+  bool VisualEventSet::runHoughTracker(nub::soft_ref<MbariResultViewer>& rv,
+                                        VisualEvent *currEvent,
+                                        uint frameNum, const MbariMetaData &metadata,
+                                        MbariImage< PixRGB<byte> >& img,
+                                        const Image< byte >& mask,
+                                        const Vector2D& curFOE,
+                                        bool skip)
+  {
+
+    DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
+    Image< byte > binaryImg(img.getDims(), ZEROS);
+    Image< byte > occlusionImg(img.getDims(), ZEROS);
+    occlusionImg = highThresh(occlusionImg, byte(0), byte(255)); //invert image
+    Point2D<int> prediction;
+    Rectangle region;
+    // get a copy of the last token in this event
+    Token evtToken = currEvent->getToken(currEvent->getEndFrame());
+    uint intersectEventNum;
+    bool found = false;
+    bool occlusion = false;
+    BitObject obj;
+    const byte black = byte(0);
+    float opacity = 1.0F;
+    const byte threshold = byte(1);
+
+    // if an object intersects, create a mask for it
+    if (doesIntersect(evtToken.bitObject, &intersectEventNum, frameNum)) {
+        LINFO("Event %i - Hough Tracker intersection with event %i",currEvent->getEventNum(),\
+                                                                    intersectEventNum);
+        VisualEvent* vevt = getEventByNumber(intersectEventNum);
+        BitObject intersectObj = vevt->getToken(frameNum).bitObject;
+        intersectObj.drawShape(occlusionImg, black, opacity);
+        occlusion = true;
+        rv->output(occlusionImg, frameNum, "Occlusion");
+    }
+
+    // then apply the mask
+    occlusionImg = maskArea(occlusionImg, mask);
+
+    LINFO("Running Hough Tracker for event %d", currEvent->getEventNum());
+	if (!currEvent->updateHoughTracker(rv, img, occlusionImg, binaryImg, prediction, region)) {
+	    if (!skip) {
+          LINFO("Event %i - Hough Tracker failed, closing event",currEvent->getEventNum());
+          currEvent->close();
+        }
+        return false;
+    }
+
+    // create new token from returned binary image
+    obj.reset(binaryImg, prediction, threshold);
+
+    LINFO("Found Hough object size: width %d height %d; top %d left %d area %d",region.width(), region.height(),
+    region.top(), region.left(), obj.getArea() );
+
+    // allow to grow up to 2.0x and shrink up to 0.5
+    int minArea = std::max(itsDetectionParms.itsMinEventArea,(int)(0.5*evtToken.bitObject.getArea()));
+    int maxArea = std::min(itsDetectionParms.itsMaxEventArea,(int)(2.0*evtToken.bitObject.getArea()));
+
+    if (obj.getArea() >= minArea && obj.getArea() <= maxArea ) {
+      // apply same cost function as Kalman to make sure Hough is not drifting
+      float cost = currEvent->getCost(Token(obj,frameNum));
+
+      // skip cost function with occlusion since this shifts the centroid
+      if (occlusion || currEvent->trackerChanged())
+        found = true;
+      else if(cost < itsDetectionParms.itsMaxCost) {
+        found = true;
+      }
+    }
+    else
+      LINFO("Event %i - no token found within area bounds min area: %d max area: %d ", \
+          currEvent->getEventNum(), minArea, maxArea);
+
+    if (!found && !skip) {
+        if ( int(frameNum - currEvent->getValidEndFrame()) >= itsDetectionParms.itsEventExpirationFrames ) {
+          currEvent->close();
+          LINFO("Event %i - no token found, closing event",currEvent->getEventNum());
+        }
+        else {
+          // skip over putting in a placeholder for prediction when running multiple trackers and
+          // let the multiple tracker algorithm decide
+           LINFO("##########Event %i - no token found, keeping event open for expiration frames: %d ##########",
+                            currEvent->getEventNum(), itsDetectionParms.itsEventExpirationFrames);
+          // get a copy of the last token in this event as placeholder
+          Token evtToken = currEvent->getToken(currEvent->getEndFrame());
+          evtToken.frame_nr = frameNum;
+          currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(), \
+                                      itsDetectionParms.itsEventExpirationFrames);
+         }
+   }
+
+   if (found) {
+     // associate the best fitting guy
+     Token tl = currEvent->getToken(currEvent->getEndFrame());
+     Token tk(obj, frameNum, metadata, tl.scaleW, tl.scaleH);
+     tk.bitObject.computeSecondMoments();
+     region = tk.bitObject.getBoundingBox();
+     currEvent->assign(tk, curFOE, frameNum);
+     LINFO("Event %i - token found at %g, %g area: %d",currEvent->getEventNum(),
+           tl.location.x(),
+           tl.location.y(),
+           tk.bitObject.getArea());
+   }
+
+   return found;
+  }
+
+  // ######################################################################
+  bool VisualEventSet::runKalmanTracker(VisualEvent *currEvent, \
                                         uint frameNum,
                                         const MbariMetaData &metadata,
-                                        const Image<byte>& binMap, 
-                                        const Vector2D& curFOE)
+                                        const Image<byte> &binMap,
+                                        const Image<PixRGB<byte>>& graphMap,
+                                        const Vector2D& curFOE,
+                                        MbariImage< PixRGB<byte> >& img,
+                                        bool skip)
   {
-	
+
+    bool found = false;
+
     // get the predicted location
     const Point2D<int> pred = currEvent->predictedLocation();
 	
     // get a copy of the last token in this event for prediction
-    Token evtToken = currEvent->getToken(currEvent->getEndFrame());    
-	
+    Token evtToken = currEvent->getToken(currEvent->getEndFrame());
+
+    // allow to grow up to 2.0x and shrink up to 0.5
+    int minArea = std::max(itsDetectionParms.itsMinEventArea,(int)(0.5*evtToken.bitObject.getArea()));
+    int maxArea = std::min(itsDetectionParms.itsMaxEventArea,(int)(2.0*evtToken.bitObject.getArea()));
+
+    LINFO("Event %i prediction: %d,%d", currEvent->getEventNum(), pred.i, pred.j);
+
     // is the prediction too far outside the image?
-    int gone = itsDetectionParms.itsMaxDist / 2;
+    int gone = itsDetectionParms.itsMaxDist;
     if ((pred.i < -gone) || (pred.i >= (binMap.getWidth() + gone)) ||
         (pred.j < -gone) || (pred.j >= (binMap.getHeight() + gone)))
       {
         currEvent->close();
         LINFO("Event %i out of bounds - closed",currEvent->getEventNum());
-        return;
+        return false;
       }
-	  
-    // get the region used for searching for a match
-    Rectangle region = Rectangle::tlbrI(pred.j - itsDetectionParms.itsMaxDist,
-                                        pred.i - itsDetectionParms.itsMaxDist,
-                                        pred.j + itsDetectionParms.itsMaxDist,
-                                        pred.i + itsDetectionParms.itsMaxDist);
-											
-    Dims d =  binMap.getDims();
-    region = region.getOverlap(Rectangle(Point2D<int>(0,0), d - 1));
 
-    // extract all the BitObjects from the region
-    // extract as small as 1/2 of the last occurrence of this event
-    // extract as large as 2x the the last occurrence of this event
-    std::list<BitObject> objs = extractBitObjects(binMap, region, evtToken.bitObject.getArea()/2, evtToken.bitObject.getArea()*2);
+    // adjust prediction if negative
+    const Point2D<int> center =  Point2D<int>(std::max(pred.i,0), std::max(pred.j,0));
+
+    // get the region used for searching for a match
+    Dims searchDims = Dims(itsDetectionParms.itsMaxDist,itsDetectionParms.itsMaxDist);
+    Rectangle region = Rectangle::centerDims(center, searchDims);
+    region = region.getOverlap(Rectangle(Point2D<int>(0, 0), img.getDims() - 1));
+    LINFO("Region %i %s ", currEvent->getEventNum(),toStr(region).data());
+
+    if (!region.isValid()) {
+      LINFO("Invalid region. Closing event %i", currEvent->getEventNum());
+      currEvent->close();
+      return false;
+    }
+
+    std::list<BitObject> objs, objs2;
+    objs = extractBitObjects(graphMap, center, region, minArea, maxArea);
+
+    if (itsDetectionParms.itsSegmentAlgorithmType != SAGraphCut) {
+      objs2 = extractBitObjects(binMap, region, minArea, maxArea);
+      objs.splice(objs.end(), objs2);
+    }
 
     LINFO("pred. location: %s; region: %s; Number of extracted objects: %ld",
            toStr(pred).data(),toStr(region).data(),objs.size());
-	  
+
     // now look which one fits best
-    float lCost = -1.0F, areapercentdiff = 0.F, percentdiff = 0.F;
-    int area1 = evtToken.bitObject.getArea();
-	 
-    std::list<BitObject>::iterator cObj, lObj = objs.end();
+    float lCost = -1.0F;
+    int size = objs.size();
+
+    std::list<BitObject>::iterator cObj, lObj = objs.begin();
     for (cObj = objs.begin(); cObj != objs.end(); ++cObj)
       {
         std::list<BitObject>::iterator next = cObj;
         ++next;
-	
-        if (doesIntersect(*cObj, frameNum)) {
+
+        if (size > 1 && doesIntersect(*cObj, frameNum)) {
           objs.erase(cObj);
           cObj = next;
           continue;      
         }
-	      
-        int areadiff = cObj->getArea() - area1;
-        if(abs(areadiff) > 0 && area1 > 0) percentdiff = (float)abs(areadiff)/(float)area1;
-	
-        float cost = currEvent->getCost(Token(*cObj,frameNum));
-	      
+
+	    float areaCost = ((float)(evtToken.bitObject.getArea())/(float)(cObj->getArea()));
+        float cost = currEvent->getCost(Token(*cObj,frameNum)) + areaCost;
+
         if (cost < 0.0F) {
           objs.erase(cObj);
           cObj = next;
@@ -732,211 +1191,269 @@ namespace MbariVisualEvent {
           {
             lCost = cost;
             lObj = cObj;
-            LINFO("best cost: %f maxCost: %f areadiff: %d change:%f",lCost, 
-                   itsDetectionParms.itsMaxCost,areadiff, percentdiff); 
-            areapercentdiff =  percentdiff;
+            found = true;
           }
       }
-	   
-    // cost too high no fitting object found? -> close event
-    if ((lCost > itsDetectionParms.itsMaxCost) || areapercentdiff > 3.F || lCost == -1.0 || lObj == objs.end()) {
-        if ( int(frameNum - currEvent->getValidEndFrame()) >= itsDetectionParms.itsEventExpirationFrames ) {
+
+    float distul = 0.F;
+    float distbr = 0.F;
+    if (found) {
+      Rectangle r1 = evtToken.bitObject.getBoundingBox();
+      Rectangle r2 = lObj->getBoundingBox();
+      distul = sqrt(pow((double)(r1.top() - r2.top()),2.0) +  pow((double)(r1.left() - r2.left()),2.0));
+      distbr = sqrt(pow((double)(r1.bottomI() - r2.bottomI()),2.0) + pow((double)(r1.rightI() - r2.rightI()),2.0));
+    }
+
+    // cost too high
+    if ( found && (lCost > itsDetectionParms.itsMaxCost || lCost == -1.0) ) {
+      LINFO("Event %i - no token found, event cost: %f maxCost: %f ",
+     		    currEvent->getEventNum(), lCost, itsDetectionParms.itsMaxCost);
+      found = false;
+    }
+
+    if ( distul > itsDetectionParms.itsMaxCost && distbr > itsDetectionParms.itsMaxCost ) {
+      LINFO("Event %i - token found but bounding box too skewed: upper left delta: %g bottom right delta: %g max: %g",
+     		    currEvent->getEventNum(), distul, distbr, itsDetectionParms.itsMaxCost);
+      found = false;
+    }
+
+    // skip over this when running multiple trackers; let the multiple tracker algorithm decide
+    if (!skip && !found) {
+        if ( int(frameNum - currEvent->getValidEndFrame()) > itsDetectionParms.itsEventExpirationFrames )
             currEvent->close();
-            LINFO("Event %i - no token found, closing event cost: %f maxCost: %f size: %d areaDiffPercent: %f ",
-		    currEvent->getEventNum(), lCost, itsDetectionParms.itsMaxCost, area1, areapercentdiff);
-        }
         else {
-            LINFO("########## Event %i - no token found, keeping event open for expiration frames: %d ##########",
-		    currEvent->getEventNum(), itsDetectionParms.itsEventExpirationFrames);
-            evtToken.frame_nr = frameNum;
-            currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(), itsDetectionParms.itsEventExpirationFrames);
+	        LINFO("########## Event %i - no token found, keeping event open for expiration frames: %d ##########",
+              currEvent->getEventNum(), itsDetectionParms.itsEventExpirationFrames);
+              evtToken.frame_nr = frameNum;
+              currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(), itsDetectionParms.itsEventExpirationFrames);
         }
     }
-    else    {
+
+    if (found) {
       // associate the best fitting guy
       Token tl = currEvent->getToken(currEvent->getEndFrame());
       Token tk(*lObj, frameNum, metadata, tl.scaleW, tl.scaleH);
       tk.bitObject.computeSecondMoments();
+      region = tk.bitObject.getBoundingBox();
       currEvent->assign(tk, curFOE, frameNum);
       LINFO("Event %i - token found at %g, %g area: %d",currEvent->getEventNum(),
-            tl.location.x(), 
+            tl.location.x(),
             tl.location.y(),
             tk.bitObject.getArea());
     }
 	    
-    objs.clear();    
+    objs.clear();
+    return found;
+
   }
   // ######################################################################
-  void VisualEventSet::runNearestNeighborTracker(VisualEvent *currEvent,
+  bool VisualEventSet::runNearestNeighborTracker(VisualEvent *currEvent,
                                              uint frameNum,
                                              const MbariMetaData &metadata,
-                                             const Image<byte>& binMap,
-                                             const Vector2D& curFOE)
+                                             const Image<byte> &binMap,
+                                             const Image<PixRGB<byte>>& graphMap,
+                                             const Vector2D& curFOE,
+                                             MbariImage< PixRGB<byte> >& img,
+                                             bool skip)
   {
     Dims d;
     Point2D<int> center;
-    int maxDistHeightPred, maxDistWidthPred;
-	
+
     // get a copy of the last token in this event for prediction
-    Token evtToken = currEvent->getToken(currEvent->getEndFrame());    
-	
+    Token evtToken = currEvent->getToken(currEvent->getEndFrame());
+
+    int minArea = std::max(itsDetectionParms.itsMinEventArea,(int)(0.5*evtToken.bitObject.getArea()));
+    int maxArea = std::min(itsDetectionParms.itsMaxEventArea,(int)(2.0*evtToken.bitObject.getArea()));
+
     // get the object dimensions and centroid for token
     d = evtToken.bitObject.getObjectDims();
     center = evtToken.bitObject.getCentroid();
-	
-    // calculate maximum bounding box distance prediction
-    maxDistHeightPred = d.h()/2  + itsDetectionParms.itsMaxDist;
-    maxDistWidthPred = d.w()/2  + itsDetectionParms.itsMaxDist;
-	
-    // calculate the region the bounding box should be in
-    Rectangle region = Rectangle::tlbrI(std::max(0,center.j - maxDistHeightPred),
-                                        std::max(0,center.i - maxDistWidthPred),
-                                        std::min(center.j + maxDistHeightPred,binMap.getHeight()),
-                                        std::min(center.i + maxDistWidthPred,binMap.getWidth()));
-    region = region.getOverlap(binMap.getBounds());
-	
-    // make sure prediction is not outside image; allow for image size
-    if ( ((center.j + itsDetectionParms.itsMaxDist) >= binMap.getHeight() + d.h()) ||
-         ((center.i + itsDetectionParms.itsMaxDist) >= binMap.getWidth() + d.w()) )
-      {
-        currEvent->close();
-        LINFO("Event %i out of bounds - closed",currEvent->getEventNum());
-        return;
-      }
- 
-    // extract all the BitObjects from the region
-    // extract as small as 1/2 of the last occurrence of this event
-    // extract as large as 2x the the last occurrence of this event
-    std::list<BitObject> objs = extractBitObjects(binMap, region, evtToken.bitObject.getArea()/2, evtToken.bitObject.getArea()*2);
+
+    // get the region used for searching for a match
+    Dims searchDims = Dims(itsDetectionParms.itsMaxDist,itsDetectionParms.itsMaxDist);
+    Rectangle region = Rectangle::centerDims(center, searchDims);
+    region = region.getOverlap(Rectangle(Point2D<int>(0, 0), img.getDims() - 1));
+    LINFO("Region %i %s ", currEvent->getEventNum(),toStr(region).data());
+
+    if (!region.isValid()) {
+      LINFO("Invalid region. Closing event %i", currEvent->getEventNum());
+      currEvent->close();
+      return false;
+    }
+
+    std::list<BitObject> objs;
+    if (itsDetectionParms.itsSegmentAlgorithmType == SAGraphCut)
+      objs = extractBitObjects(graphMap, center, region, minArea, maxArea);
+    else
+      objs = extractBitObjects(binMap, region, minArea, maxArea);
 
     LINFO("region: %s; Number of extracted objects: %ld", toStr(region).data(),objs.size());
 
     // now find which one fits best
-    float lCost = -1.0F, cost = -1.0F, areapercentdiff = 0.F, percentdiff = 0.F;
-    Rectangle d1 = evtToken.bitObject.getBoundingBox();
-    int area1 = evtToken.bitObject.getArea();
-	
-    std::list<BitObject>::iterator cObj, lObj = objs.end();
+    float maxCost = 3*itsDetectionParms.itsMaxCost;
+    float lCost = -1.0F;
+    bool found = false;
+    int size = objs.size();
+    Point2D<int> p1 = evtToken.bitObject.getCentroid();
+    Rectangle r1 = evtToken.bitObject.getBoundingBox();
+
+    std::list<BitObject>::iterator cObj, lObj = objs.begin();
     for (cObj = objs.begin(); cObj != objs.end(); ++cObj)
       {
         std::list<BitObject>::iterator next = cObj;
         ++next;
-	
-        if (doesIntersect(*cObj, frameNum)) {
+
+        if (size > 1 && doesIntersect(*cObj, frameNum)) {
           objs.erase(cObj);
-          cObj = next; 
+          cObj = next;
           continue;
         }
-	
-        Rectangle d2 = cObj->getBoundingBox();
-        // calculate cost function as sum of distance between bounding box corners
-        float cost1 =  sqrt(pow((double)abs(d1.top() - d2.top()),2.0)+pow((double)abs(d1.left() - d2.left()),2.0));
-        float cost2 =  sqrt(pow(((double)abs(d1.bottomI() - d2.bottomI())),2.0)+pow((double)abs(d1.rightI() - d2.rightI()),2.0));
-        int areadiff = cObj->getArea() - area1;
-        cost = cost1 + cost2;
-        if(abs(areadiff) > 0 && area1 > 0) percentdiff = (float)abs(areadiff)/(float)area1;
-	      
-        if (cost < 0.0F) {
+
+        Point2D<int> p2 = cObj->getCentroid();
+        Rectangle r2 = cObj->getBoundingBox();
+
+        // calculate cost function as distance between centroids
+        float cost1 = sqrt(pow((double)(p1.i - p2.i),2.0) + pow((double)(p1.j - p2.j),2.0));
+        // calculate other cost function as distance between bounding box corners
+        float cost2 = sqrt(pow((double)(r1.top() - r2.top()),2.0) +  pow((double)(r1.left() - r2.left()),2.0));
+        float cost3 = sqrt(pow((double)(r1.bottomI() - r2.bottomI()),2.0) +
+        pow((double)(r1.rightI() - r2.rightI()),2.0));
+        float cost = cost1 + cost2 + cost3;
+
+        if (cost < 0.0F ) {
           objs.erase(cObj);
-          cObj = next; 
-          continue;      
+          cObj = next;
+          continue;
         }
-        else if ((lCost == -1.0F) || cost < lCost )
+        else if ((lCost == -1.0F) || (cost < lCost))
           {
             lCost = cost;
             lObj = cObj;
-            LINFO("best cost: %f maxCost: %f areadiff: %d %%change:%f",lCost, \
-                  itsDetectionParms.itsMaxCost,areadiff,
-                  percentdiff); 			   
-            areapercentdiff = percentdiff;
-          }        
+            found = true;
+          }
       }// end for all objects
-	   
+
     // cost too high no fitting object found? -> close event
-    if ( (lCost > itsDetectionParms.itsMaxCost) || (areapercentdiff > 3.0F) || (lCost == -1.0))
+    if ( found  && (lCost > maxCost || lCost == -1.0) )
       {
-        if ( int(frameNum - currEvent->getValidEndFrame()) >= itsDetectionParms.itsEventExpirationFrames ) {
-            currEvent->close();
-            LINFO("Event %i - no token found, closing event",currEvent->getEventNum());
+        found = false;
+        // skip over this when running multiple trackers; let the multiple tracker algorithm decide
+        if (!skip) {
+          if ( int(frameNum - currEvent->getValidEndFrame()) > itsDetectionParms.itsEventExpirationFrames ) {
+              currEvent->close();
+              LINFO("Event %i - no token found, closing event",currEvent->getEventNum());
+          }
+          else {
+              LINFO("##########Event %i - no token found, keeping event open for expiration frames: %d ##########",
+                    currEvent->getEventNum(), itsDetectionParms.itsEventExpirationFrames);
+              evtToken.frame_nr = frameNum;
+              currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(),
+               itsDetectionParms.itsEventExpirationFrames);
         }
-        else {
-             LINFO("##########Event %i - no token found, keeping event open for expiration frames: %d ##########",
-		currEvent->getEventNum(), itsDetectionParms.itsEventExpirationFrames); 
-            evtToken.frame_nr = frameNum;
-            currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(),  itsDetectionParms.itsEventExpirationFrames);
         }
-      } 
-    else {
+      }
+   if (found) {
       // associate this token to the best fitting guy
       Vector2D emtpy(0.F,0.F);
       Token tl = currEvent->getToken(currEvent->getEndFrame());
       Token tk(*lObj, frameNum, metadata, tl.scaleW, tl.scaleH);
       tk.bitObject.computeSecondMoments();
+      region = tk.bitObject.getBoundingBox();
       currEvent->assign(tk, emtpy, frameNum);
-      LINFO("Event %i - token found at %g, %g area: %d",currEvent->getEventNum(),
-            tl.location.x(), 
-            tl.location.y(),
-            area1);
-    }    
-	   
-    objs.clear();    
+      LINFO("Event %i - token found at %g, %g ",currEvent->getEventNum(),
+            tl.location.x(),
+            tl.location.y());
+    }
+
+    objs.clear();
+    return found;
   }
-	
+
+  // ######################################################################
+  void VisualEventSet::getAreaRange(int &minArea, int &maxArea)
+  {
+    std::list<VisualEvent *>::iterator currEvent;
+    int currMinArea = itsDetectionParms.itsMinEventArea;
+    int currMaxArea = itsDetectionParms.itsMaxEventArea;
+
+    for (currEvent = itsEvents.begin(); currEvent != itsEvents.end(); ++currEvent) {
+      if((*currEvent)->getMaxSize() > currMaxArea)
+       currMaxArea = (*currEvent)->getMaxSize();
+
+      if((*currEvent)->getMinSize() < currMinArea)
+       currMinArea = (*currEvent)->getMinSize();
+    }
+  }
+
+  // ######################################################################
+  float VisualEventSet::getAcceleration(uint skipEventNum)
+  {
+    std::list<VisualEvent *>::iterator currEvent;
+    float sumAccel = 0.F;
+    int i = 0;
+
+    for (currEvent = itsEvents.begin(); currEvent != itsEvents.end(); ++currEvent) {
+      if((*currEvent)->getEventNum() != skipEventNum) {
+       sumAccel += (*currEvent)->getAcceleration();
+       i++;
+       }
+    }
+    if (i > 0)
+      return sumAccel/(float)i;
+    return 0.F;
+  }
+
+
   // ######################################################################
   void VisualEventSet::updateEvents(nub::soft_ref<MbariResultViewer>& rv,
+                                    const Image< byte >& mask,
                                     MbariImage< PixRGB<byte> >& img,
+                                    MbariImage< PixRGB<byte> >& prevImg,
                                     const Image<byte>& binMap,
+                                    const Image<PixRGB<byte>>& graphMap,
                                     const Vector2D& curFOE,
                                     const MbariMetaData &metadata)
   {
     int frameNum = img.getFrameNum();
     if (startframe == -1) {startframe = frameNum; endframe = frameNum;}
     if (frameNum > endframe) endframe = frameNum;
-	
+
+    Image<byte> binMapMasked = maskArea(binMap, mask);
+    Image<PixRGB<byte>> graphMapMasked = maskArea(graphMap, mask);
+
     std::list<VisualEvent *>::iterator currEvent;
 	
     for (currEvent = itsEvents.begin(); currEvent != itsEvents.end(); ++currEvent)
       if ((*currEvent)->isOpen()) {
         switch(itsDetectionParms.itsTrackingMode) {
         case(TMKalmanFilter):
-          runKalmanTracker(*currEvent, frameNum, metadata, binMap, curFOE);
+          (*currEvent)->setTrackerType(VisualEvent::KALMAN);
+          runKalmanTracker(*currEvent, frameNum, metadata, binMapMasked, graphMapMasked, curFOE, img);
           break;
         case(TMNearestNeighbor):
-          runNearestNeighborTracker(*currEvent, frameNum, metadata, binMap, curFOE);
+          (*currEvent)->setTrackerType(VisualEvent::NN);
+          runNearestNeighborTracker(*currEvent, frameNum, metadata, binMapMasked, graphMapMasked, curFOE, img);
           break;
         case(TMHough):
-          runHoughTracker(rv, *currEvent, img);
+          runHoughTracker(rv, *currEvent, frameNum, metadata, img, mask, curFOE);
+          checkFailureConditions(*currEvent, img.getDims());
+          break;
+        case(TMNearestNeighborHough):
+          runNearestNeighborHoughTracker(*currEvent, frameNum, metadata, binMapMasked, graphMapMasked, curFOE, rv, img, prevImg);
+          break;
+        case(TMKalmanHough):
+          runKalmanHoughTracker(*currEvent, frameNum, metadata, binMapMasked, graphMapMasked, curFOE, rv, img, prevImg, mask);
           break;
         case(TMNone):
           break;
         default:
-          runKalmanTracker(*currEvent, frameNum, metadata, binMap, curFOE);
+          (*currEvent)->setTrackerType(VisualEvent::KALMAN);
+          runKalmanTracker(*currEvent, frameNum, metadata, binMapMasked, graphMapMasked, curFOE, img);
           break;
         }
       }
   }
-	
-  // ######################################################################
-  void VisualEventSet::initiateEventsColor(std::list<BitObject>& bos, \
-                                          const MbariMetaData &metadata, \
-                                          float scaleW, float scaleH,  \
-                                          MbariImage< PixRGB<byte> >& img)
-  {
-    int frameNum = img.getFrameNum();
-    if (startframe == -1) {startframe = frameNum; endframe = frameNum;}
-    if (frameNum > endframe) endframe = frameNum;  
-	
-    std::list<BitObject>::iterator currObj;
-	
-    //  go through all the remaining BitObjects and create new events for them
-    for (currObj = bos.begin(); currObj != bos.end(); ++currObj)
-      {
-        itsColorEvents.push_back(new VisualEvent(Token(*currObj, frameNum, metadata, scaleW, scaleH), itsDetectionParms, img));
-        LINFO("assigning object of area: %i to new event %i",currObj->getArea(),
-              itsColorEvents.back()->getEventNum());
-      }
-  }
-	
+
   // ######################################################################
   void VisualEventSet::initiateEvents(std::list<BitObject>& bos, \
                                       const MbariMetaData &metadata, \
@@ -956,13 +1473,14 @@ namespace MbariVisualEvent {
       ++next;
 	            
       // is there an intersection with an event?
-      if (doesIntersect(*currObj, frameNum))   
-        bos.erase(currObj);       
+      if (resetIntersect(img, *currObj, frameNum))
+        bos.erase(currObj);
 	
       currObj = next;
     }
-	
+
     // now go through all the remaining BitObjects and create new events for them
+    // if they are not already out of bounds and using a tracker
     for (currObj = bos.begin(); currObj != bos.end(); ++currObj)
       {
         itsEvents.push_back(new VisualEvent(Token(*currObj, frameNum, metadata, scaleW, scaleH), itsDetectionParms, img));
@@ -972,18 +1490,107 @@ namespace MbariVisualEvent {
   }
 	
   // ######################################################################
+  bool VisualEventSet::resetIntersect(MbariImage< PixRGB<byte> >& img, BitObject& obj, int frameNum)
+  {
+    // ######## Initialization of variables, reading of parameters etc.
+    DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
+    std::list<VisualEvent *>::iterator cEv;
+    //int area;
+    //float areadiff;
+    //float areapercentdiff;
+    Token evtToken;
+    //Point2D<int> p1,p2;
+    //float dist;
+Rectangle r1, r2;
+float distul, distbr;
+
+    for (cEv = itsEvents.begin(); cEv != itsEvents.end(); ++cEv) {
+      if ((*cEv)->doesIntersect(obj, frameNum)) {
+        //reset the SMV for this bitObject
+        (*cEv)->resetBitObject(frameNum, obj);
+        //reset Hough tracker depending on tracking mode
+        switch (dp.itsTrackingMode) {
+              case(TMHough):
+                /*area = (*cEv)->getHoughArea();
+                areadiff = -1.F;
+                if (area > 0) {
+                  areadiff =(float)(obj.getArea() - area)/(float)area;
+                   LINFO("Hough Tracker frame: %d event: %d areadiff %f, default scale: %f",
+                      frameNum,(*cEv)->getEventNum(), areadiff,DEFAULT_SCALE_INCREASE);
+                }*/
+                // if area changed at least half the scale factor or grown smaller,
+                // reset the Hough tracker
+                /*if (areadiff != -1.F && (areadiff > DEFAULT_SCALE_INCREASE/2.F || areadiff < 0.F) )  {
+                  LINFO("Resetting Hough Tracker frame: %d event: %d with bounding box %s",
+                       frameNum,(*cEv)->getEventNum(),toStr(obj.getBoundingBox()).data());
+                  (*cEv)->resetHoughTracker(img, obj, DEFAULT_SCALE_INCREASE);
+                //}*/
+              break;
+
+              case(TMNearestNeighborHough):
+              case(TMKalmanHough):
+                evtToken = (*cEv)->getToken((*cEv)->getEndFrame());
+                /*area = evtToken.bitObject.getArea();
+                areapercentdiff = -1.F;
+                if (area > 0) {
+                  areapercentdiff =(float)100.F*abs(obj.getArea() - area)/(float)area;
+                   LINFO("Hough Tracker frame: %d event: %d area change %3.2f %%", frameNum,(*cEv)->getEventNum(), areapercentdiff);
+                }*/
+                //evtToken2 = (*cEv)->getToken((*cEv)->getEndFrame());
+                //p1 = evtToken2.bitObject.getCentroid();
+                //p2 = obj.getCentroid();
+                //dist = sqrt(pow((double)(p1.i - p2.i),2.0) + pow((double)(p1.j - p2.j),2.0));
+                ////} && dist < dp.itsMaxDist){//} && obj.getArea() > (*cEv)->getHoughArea()) {
+
+      r2 = obj.getBoundingBox();
+      r1 = evtToken.bitObject.getBoundingBox();
+       // calculate distance between bounding box corners
+      distul = sqrt(pow((double)(r1.top() - r2.top()),2.0) +  pow((double)(r1.left() - r2.left()),2.0));
+      distbr = sqrt(pow((double)(r1.bottomI() - r2.bottomI()),2.0) + pow((double)(r1.rightI() - r2.rightI()),2.0));
+
+                if ((*cEv)->getTrackerType() == VisualEvent::HOUGH){//}  && (distul < dp.itsMaxDist || distbr < dp.itsMaxDist)) {//&& areapercentdiff < MAX_AREA_PERCENT_INCREASE) {
+                  LINFO("Resetting Hough Tracker frame: %d event: %d with bounding box %s",
+                         frameNum,(*cEv)->getEventNum(),toStr(obj.getBoundingBox()).data());
+                          (*cEv)->resetHoughTracker(img, obj, DEFAULT_SCALE_INCREASE);
+                }
+              break;
+              case(TMKalmanFilter):
+              case(TMNearestNeighbor):
+              case(TMNone):
+              break;
+            }
+      return true;
+      }
+    }
+    return false;
+  }
+
+  // ######################################################################
   bool VisualEventSet::doesIntersect(BitObject& obj, int frameNum)
   {
     std::list<VisualEvent *>::iterator cEv;
     for (cEv = itsEvents.begin(); cEv != itsEvents.end(); ++cEv)
-      if ((*cEv)->doesIntersect(obj,frameNum)) {        
-        //reset the SMV for this bitObject  
+      if ((*cEv)->doesIntersect(obj,frameNum)) {
+        //reset the SMV for this bitObject
         (*cEv)->resetBitObject(frameNum, obj);
         return true;
-      }    
+      }
     return false;
   }
-	
+
+  // ######################################################################
+  bool VisualEventSet::doesIntersect(BitObject& obj, uint* eventNum, int frameNum)
+  {
+    std::list<VisualEvent *>::iterator cEv;
+    for (cEv = itsEvents.begin(); cEv != itsEvents.end(); ++cEv)
+      // return the first object that intersects
+      if ((*cEv)->doesIntersect(obj,frameNum)) {
+        *eventNum = (*cEv)->getEventNum();
+        return true;
+      }
+    return false;
+  }
+
   // ######################################################################
   uint VisualEventSet::numEvents() const
   {
@@ -1020,7 +1627,7 @@ namespace MbariVisualEvent {
       std::list<VisualEvent *>::iterator next = currEvent;
       ++next;
 	
-      switch((*currEvent)->getState()) 
+      switch((*currEvent)->getState())
         {			
         case(VisualEvent::DELETE):
           LINFO("Erasing event %i", (*currEvent)->getEventNum());
@@ -1064,7 +1671,7 @@ namespace MbariVisualEvent {
     std::list<VisualEvent *>::iterator cEvent;
     for (cEvent = itsEvents.begin(); cEvent != itsEvents.end(); ++cEvent)
       {
-        LINFO("EVENT %d sframe %d eframe %d numtokens %d", 
+        LINFO("EVENT %d sframe %d eframe %d numtokens %d",
               (*cEvent)->getEventNum(),
               (*cEvent)->getStartFrame(),
               (*cEvent)->getEndFrame(),
@@ -1086,9 +1693,9 @@ namespace MbariVisualEvent {
 	
     return tokens;
   }
-	
+
   // ######################################################################
-  void VisualEventSet::drawTokens(Image< PixRGB<byte> >& img, 
+  void VisualEventSet::drawTokens(Image< PixRGB<byte> >& img,
                                   uint frameNum,
                                   int circleRadius,
                                   BitObjectDrawMode mode,
@@ -1099,13 +1706,15 @@ namespace MbariVisualEvent {
                                   PixRGB<byte> colorFOE,
                                   bool showEventLabels,
                                   bool showCandidate,
-                                  bool saveNonInterestingEvents)
+                                  bool saveNonInterestingEvents,
+                                  float scaleW,
+                                  float scaleH)
   {
     // dimensions of the number text and location to put it at
     const int numW = 10; 
     const int numH = 21;
     Token tk;
-     
+
     std::list<VisualEvent *>::iterator currEvent;
     for (currEvent = itsEvents.begin(); currEvent != itsEvents.end(); ++currEvent)
     {      
@@ -1119,11 +1728,14 @@ namespace MbariVisualEvent {
           {
             PixRGB<byte> circleColor;            
             tk = (*currEvent)->getToken(frameNum);
-	    if(!tk.location.isValid())
-		continue;
+
+	        if(!tk.location.isValid())
+		      continue;
 
             Point2D<int> center = tk.location.getPoint2D();
-	
+	        center.i *= tk.scaleW;
+	        center.j *= tk.scaleH;
+
             if ((*currEvent)->getCategory() == VisualEvent::INTERESTING)
               circleColor = colorInteresting;
             else
@@ -1135,8 +1747,15 @@ namespace MbariVisualEvent {
               {
                 // write the text and create the overlay image
                 std::string numText = toStr((*currEvent)->getEventNum());
+                //std::ostringstream ss;
+                //ss.precision(2);
+               // ss << numText << "," << (*currEvent)->getForgetConstant();
+                //ss << numText << "," << tk.bitObject.getStdDev();
+
+                //textImg.resize(numW * ss.str().length(), numH, NO_INIT);
                 textImg.resize(numW * numText.length(), numH, NO_INIT);
                 textImg.clear(COL_WHITE);
+                //writeText(textImg, Point2D<int>(0,0), ss.str().data());
                 writeText(textImg, Point2D<int>(0,0), numText.data());
               }
 	
@@ -1151,6 +1770,9 @@ namespace MbariVisualEvent {
                   {
                     tk.bitObject.draw(mode, img, circleColor, opacity);
                     bbox = tk.bitObject.getBoundingBox(BitObject::IMAGE);
+                    Point2D<int> topleft(bbox.left()*scaleW, bbox.top()*scaleH);
+                    Dims dims(bbox.width()*scaleW, bbox.height()*scaleH);
+                    bbox = Rectangle(topleft, dims);
                     bbox = bbox.getOverlap(img.getBounds());
                   }
                 else
@@ -1170,7 +1792,6 @@ namespace MbariVisualEvent {
                     Image<PixRGB <byte> > textImg2 = replaceVals(textImg,COL_BLACK,circleColor);
                     textImg2 = replaceVals(textImg2,COL_WHITE,COL_TRANSPARENT);
                     pasteImage(img,textImg2,COL_TRANSPARENT, numLoc, opacity);
-	
                   } // end if (showEventLabels)
 	
               } // end if we're not transparent
@@ -1178,7 +1799,9 @@ namespace MbariVisualEvent {
             // now do the same for the predicted value
             if ((colorPred != COL_TRANSPARENT) && tk.prediction.isValid())
               {
-                Point2D<int> ctr = tk.prediction.getPoint2D();  
+                Point2D<int> ctr = tk.prediction.getPoint2D();
+                ctr.i *= tk.scaleW;
+	            ctr.j *= tk.scaleH;
                 Rectangle ebox =
                   Rectangle::tlbrI(ctr.j - circleRadius, ctr.i - circleRadius, ctr.j + circleRadius, ctr.i + circleRadius);
                     ebox = ebox.getOverlap(img.getBounds());
@@ -1202,6 +1825,8 @@ namespace MbariVisualEvent {
     if ((colorFOE != COL_TRANSPARENT) && tk.foe.isValid())
       {
         Point2D<int> ctr = tk.foe.getPoint2D();
+        ctr.i *= tk.scaleW;
+        ctr.j *= tk.scaleH;
         drawDisk(img, ctr,2,colorFOE);
       }
   }
@@ -1217,7 +1842,7 @@ namespace MbariVisualEvent {
 	
     Point2D<int> loc(bbox.left(),(bbox.top() - dist - textDims.h()));
 	
-    // not enough space to the right? -> shift as apropriate
+    // not enough space to the right? -> shift as appropriate
     if ((loc.i + textDims.w()) > imgDims.w())
       loc.i = imgDims.w() - textDims.w() - 1;
 	
@@ -1336,22 +1961,7 @@ namespace MbariVisualEvent {
 	  
     return result;
   }
-	
-  // ######################################################################
-  std::list<BitObject>
-  VisualEventSet::getColorBitObjectsForFrame(uint framenum)
-  {
-    std::list<BitObject> result;
-    std::list<VisualEvent *>::iterator evt;
-	 
-    for (evt = itsColorEvents.begin(); evt != itsColorEvents.end(); ++evt) 
-      if ((*evt)->frameInRange(framenum))
-        if((*evt)->getToken(framenum).bitObject.isValid())
-          result.push_back((*evt)->getToken(framenum).bitObject);
-	  
-    return result;
-  }
-	
+
   // ######################################################################
   const int VisualEventSet::minSize()
   {

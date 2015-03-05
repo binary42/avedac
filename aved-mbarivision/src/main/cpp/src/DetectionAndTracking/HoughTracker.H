@@ -42,11 +42,16 @@
 #include "Image/MbariImage.H"
 #include "nub/ref.h"
 
+#define DEFAULT_FORGET_CONSTANT 0.90f
+#define DEFAULT_SCALE_INCREASE 1.25F
+#define HOUGH_EDGE_OFFSET 20
+
 template <class T> class Image;
 template <class T> class PixRGB;
 template <class T> class MbariImage;
 
 class MbariResultViewer;
+class BitObject;
 
 namespace HoughTracker {
 
@@ -58,69 +63,90 @@ public:
   //! constructor
   /* !@img the image to segment and track
   @region the bounding box to initialize the tracker */
-  HoughTracker(const MbariImage< PixRGB<byte> >& img, const Rectangle &region);
+  HoughTracker(const MbariImage< PixRGB<byte> >& img, BitObject& bo, float maxScale);
 
- //! constructor
+  //! constructor
   HoughTracker();
+
+  //! destructor
+  ~HoughTracker();
+
+  //! free up memory associated with this tracker
+  void free();
 
   //! update with a new frame from the video
   /* !@rv the results viewer to display intermediate results
   @img the image to segment and track
+  @occlusionImg a mask representing the objects that are occluding this
   @prediction the predicted maximum point
-  @binaryImg the tracked object; object pixels are 1; all other pixels are 0
+  @binaryImg the tracked object; object pixels are white; all other pixels are black
   @evtNum the event number this tracker is assigned to
+  @forgetConstant the tao forgetting constant
   @return true if object tracked*/
   bool update(nub::soft_ref<MbariResultViewer>&rv, \
               MbariImage< PixRGB<byte> >& img, \
+              const Image<byte> &occlusionImg, \
               Point2D<int> &prediction, \
+              Rectangle &boundingBox, \
               Image< byte >& binaryImg, \
-              int evtNum);
+              const int evtNum,
+              const float forgetConstant);
+
+  /* !reset the tracker
+  @img the image to segment and track
+  @region the bounding box to initialize the tracker */
+  void reset(const MbariImage< PixRGB<byte> >& img, BitObject& bo, const float maxScale, const float forgetConstant);
 
 private:
 
-  void run(const cv::Rect& ROI, const cv::Point& center, cv::Mat& mask);
+  void run(const cv::Rect& ROI, const cv::Point& center, const cv::Mat& mask, const float forgetConstant);
 
   //! calculates the center of mass of the foreground segment
   // to be used to track. This center is of the currently visible part of the tracked
   // object only
   /*!@return the center of mass point in image coordinates*/
-  cv::Point centerOfMass(cv::Mat& mask);
+  cv::Point centerOfMass(const cv::Mat& mask);
 
   //! calculates the bounding box of the back projection
   /*!@return the bounding box region*/
-  cv::Rect getBoundingBox(cv::Mat& backproject);
+  cv::Rect getBoundingBox(const cv::Mat& backproject);
 
   //! converts Hough-based back projection  to binary
-  void makeBinarySegmentation(nub::soft_ref<MbariResultViewer>&rv, \
-											cv::Mat& backproject, \
-											Image< byte >& output, \
-											uint frameNum, \
-											int evtNum);
+  Image< byte > makeBinarySegmentation(nub::soft_ref<MbariResultViewer>&rv, \
+											const cv::Mat& backproject, \
+											const uint frameNum, \
+											const int evtNum);
 
   //! colorisze and show the end results
   void showResult(nub::soft_ref<MbariResultViewer>&rv, \
-                                cv::Mat& frame, \
-                                cv::Mat& backproject, \
+                                const cv::Mat& frame, \
+                                const cv::Mat& backproject, \
                                 const cv::Rect& ROI, \
                                 const cv::Rect& object, \
-                                uint frameNum, \
-                                int evtNum);
+                                const std::string title, \
+                                const uint frameNum, \
+                                const int evtNum);
 
   //! show the segmentation request
   void showSegmentation(nub::soft_ref<MbariResultViewer>& rv, \
-                        cv::Mat& backproject, \
-                        std::string title, \
-                        uint frameNum, \
-                        int evtNum);
+                        const cv::Mat& backproject, \
+                        const std::string title, \
+                        const uint frameNum, \
+                        const int evtNum);
 
-  inline cv::Rect squarify(cv::Rect object, double searchFactor)
+
+
+  //! mask known occlusions in back project image; sets pixels that are occluded to background
+  cv::Mat maskOcclusion(const Image<byte> &occlusionImg,  const cv::Mat& backProject);
+
+  inline cv::Rect squarify(const cv::Rect object, const double searchFactor)
   {
 	int len = std::max(object.width * searchFactor, object.height * searchFactor);
 	return cv::Rect( object.x + object.width/2 - len/2, object.y + object.height/2 - len/2, len, len );
   }
 
   Ferns itsFerns;
-  cv::Rect itsMaxObject, itsImgRect, itsObject, itsSearchWindow, itsUpdateRegion ;
+  cv::Rect itsMaxObject, itsImgRect, itsObject, itsSearchWindow;
   Features itsFeatures;
   cv::Point itsMaxLoc;
 };

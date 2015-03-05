@@ -90,8 +90,8 @@ colInteresting(COL_INTERESTING),
 colCandidate(COL_CANDIDATE),
 colPrediction(COL_PREDICTION),
 colFOE(COL_FOE),
-itsEvtOfs(evtofs),
 itsOfs(ofs),
+itsEvtOfs(evtofs),
 XMLfileCreated(false),
 appendEvents(false),
 appendEventSummary(false),
@@ -226,8 +226,7 @@ void MbariResultViewer::save(const Image<float>& img,
 // #############################################################################
 
 void MbariResultViewer::outputResultFrame(MbariImage< PixRGB<byte> >& resultImg,
-        MbariVisualEvent::VisualEventSet& evts,
-        const int circleRadius) {
+        MbariVisualEvent::VisualEventSet& evts, const int circleRadius, const float scaleW, const float scaleH) {
     MbariMetaData m = resultImg.getMetaData();
     Image< PixRGB<byte> > final_image = resultImg;
 
@@ -237,8 +236,9 @@ void MbariResultViewer::outputResultFrame(MbariImage< PixRGB<byte> >& resultImg,
                 colInteresting, colCandidate, colPrediction,
                 colFOE,
                 itsShowEventLabels.getVal(),
-	        itsMarkCandidate.getVal(),
-                itsSaveNonInterestingEvents);
+	            itsMarkCandidate.getVal(),
+                itsSaveNonInterestingEvents,
+                scaleW, scaleH);
     }
 
     // get timecode string
@@ -261,8 +261,8 @@ void MbariResultViewer::outputResultFrame(MbariImage< PixRGB<byte> >& resultImg,
     const int numH = (25 * d.h()) / 480;
     const int fntH = (20 * d.h()) / 480;
 
-    // create the timecode text
-    textImg.resize(numW * textboxstring.length(), numH, NO_INIT);
+    // create the timecode text adding padding extra 10 pixels to ensure fits
+    textImg.resize(numW * textboxstring.length() + 10, numH, NO_INIT);
     textImg.clear(COL_WHITE);
 
     // set the maximum font height. This may not necessarily

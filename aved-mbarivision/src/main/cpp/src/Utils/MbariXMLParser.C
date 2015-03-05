@@ -215,7 +215,7 @@ void MbariXMLParser::addDetectionParameters(DetectionParameters params) {
   // Add the DetectionParameters values
   XMLCh* detectionparameters = XMLString::transcode("EventDetectionParameters");
   DOMElement* eventsroot = itsXMLdoc->createElement(detectionparameters);
-  std::ostringstream cachesizevalue, mineventareavalue, maxeventareavalue, segmentadaptiveoffset, \
+  std::ostringstream cachesizevalue, mineventareavalue, maxeventareavalue, segmentadaptiveparms, \
     maskxposvalue, maskyposvalue, maskwidthvalue, maskheightvalue,maxWTApointsvalue, \
   maxevolvetimevalue, maxframeseventvalue, minframeseventvalue, maxcostvalue, minstdevvalue;
 
@@ -281,9 +281,9 @@ void MbariXMLParser::addDetectionParameters(DetectionParameters params) {
   XMLString::release(&algorithmtype);
   XMLString::release(&algorithmtypexmlstring);
 
-  if(segmentadaptiveoffset << params.itsSegmentAdaptiveOffset) {
-    XMLCh* offset = XMLString::transcode("SegmentAlgorithmOffset");
-    XMLCh* offsetxmlstring = XMLString::transcode(segmentadaptiveoffset.str().c_str());
+  if(segmentadaptiveparms << params.itsSegmentAdaptiveParameters) {
+    XMLCh* offset = XMLString::transcode("SegmentAdaptiveParameters");
+    XMLCh* offsetxmlstring = XMLString::transcode(segmentadaptiveparms.str().c_str());
     eventsroot->setAttribute(offset, offsetxmlstring);
     XMLString::release(&offset);
     XMLString::release(&offsetxmlstring);

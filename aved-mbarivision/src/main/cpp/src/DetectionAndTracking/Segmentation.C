@@ -33,6 +33,8 @@
 #include "DetectionAndTracking/segment/segment-image.h"
 #include "DetectionAndTracking/Segmentation.H"
 #include "Image/MathOps.H"
+#include "Image/MorphOps.H"
+#include "Image/Kernels.H"
 #include "Raster/Raster.H"
 #include "Raster/PngWriter.H"
 #include <cstdio>
@@ -47,20 +49,29 @@ Segmentation::Segmentation() {
 Segmentation::~Segmentation() {
 }
 
+
 // ######################################################################
-// Return the parameters from a comma-delimited string
+// Returns neighborhood to search for adaptive segmentation. If not between 1 and 20
+// defaults to 5
 // ######################################################################
-vector< float > Segmentation::getFloatParameters(const string  &str) {
-    vector< float > aFloats; 
-    istringstream floats(str);
-    string floatStr;
-    float aFloat;
-    while (getline(floats, floatStr, ',')
-            && istringstream(floatStr) >> aFloat) {
-        aFloats.push_back(aFloat);
-    }
-    return aFloats;
+int Segmentation::getNeighborhoodSize(const vector< float > & v) {
+    float n = v.at(0);
+       if ( n >= 1.0F && n <= 20.F )
+           return (int) n;
+       return 5;
 }
+
+// ######################################################################
+// Returns neighborhood to search for adaptive segmentation. If not between 0 and 20
+// defaults to 7
+// ######################################################################
+int Segmentation::getOffset(const vector< float > & v) {
+    float n = v.at(1);
+       if ( n >= 0.F && n <= 20.F )
+           return (int) n;
+       return 7;
+}
+
 // ######################################################################
 // Returns sigma for graph segmentation. If not between 0 and 1 defaults to 0.5
 // ######################################################################
@@ -75,7 +86,7 @@ float Segmentation::getSigma(const vector< float > & v) {
 // ######################################################################
 int Segmentation::getK(const vector< float > & v) {
     float k = v.at(1);
-    if ( k > 0)
+    if ( k > 0.F)
         return (int) k;
     return 500;
 }
@@ -84,7 +95,7 @@ int Segmentation::getK(const vector< float > & v) {
 // ######################################################################
 int Segmentation::getMinSize(const vector< float > & v) {
     float minSize = v.at(2);
-    if ( minSize > 0)
+    if ( minSize > 0.F)
         return (int) minSize;
     return 50;
 }
@@ -92,7 +103,7 @@ int Segmentation::getMinSize(const vector< float > & v) {
 // ######################################################################
 
 Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, const int min_size, 
-        std::list<WTAwinner> &winners, float scaleW, float scaleH,
+        std::list<Winner> &winners, float scaleW, float scaleH,
         const Image < PixRGB<byte> >&input) {
   LDEBUG("processing with sigma: %f k: %d minsize: %d ",sigma,k,min_size);
 
@@ -224,7 +235,7 @@ Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, con
 	//Find the median value
 
 	//First Sort the array
-        sort(values.begin(), values.end());
+    sort(values.begin(), values.end());
 
 	//Then select the median
 	count = count / 2;
@@ -300,4 +311,80 @@ Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, con
       }
     }
     return resultfinal;
+  }
+
+  // ######################################################################
+  /*void Segmentation::runGraph(uint frameNum, Image<byte> &img2segment,
+   nub::soft_ref<MbariResultViewer> &rv, std::list<Winner> &winlistGraph, float scaleW, float scaleH,
+   Image< PixRGB<byte> >&graphImg, Image<byte>& bitImg)
+  {
+    DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
+    Image<byte> graphBitImg(img2segment.getDims(), ZEROS);
+    // get graph parameters
+    vector<float> p = getFloatParameters(dp.itsSegmentGraphParameters);
+    const float sigma = getSigma(p);
+    const int k = getK(p);
+    const int min_size = getMinSize(p);
+    std::list<BitObject> sobjs;
+
+    LINFO("Running graph segmentation for frame %d", frameNum);
+    graphImg = runGraph(sigma, k, min_size, winlistGraph, scaleW, scaleH, img2segment);
+    rv->output(graphImg, frameNum, "Segment_graph");
+
+    sobjs = getSalientObjects(graphImg, winlistGraph);
+    if (sobjs.size() > 0 && dp.itsSegmentAlgorithmType == SAGraphCut)
+     bitImg = showAllObjects(sobjs);
+  }*/
+
+  // ######################################################################
+  void Segmentation::run(uint frameNum, Image<PixRGB<byte>>& img2segmentBin, Image<byte> &img2segmentGraph,
+                        float scaleW, float scaleH, Image< PixRGB<byte> >&graphImg, Image<byte>& bitImg)
+  {
+    DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
+    Image<byte> se = twofiftyfives(dp.itsCleanupStructureElementSize);
+    std::list<Winner> winlistGraph;
+
+    LINFO("Running segmentation for frame %d", frameNum);
+
+    // run segmentation per options chosen and return binary representation of the image
+    if (dp.itsSegmentAlgorithmType == SAGraphCut || dp.itsSegmentAlgorithmType == SABest) {
+        vector<float> p = getFloatParameters(dp.itsSegmentGraphParameters);
+        const float sigma = getSigma(p);
+        const int k = getK(p);
+        const int min_size = getMinSize(p);
+
+        graphImg = runGraph(sigma, k, min_size, winlistGraph, scaleW, scaleH, img2segmentGraph);
+    }
+
+    vector<float> p = getFloatParameters(dp.itsSegmentAdaptiveParameters);
+    const int size = getNeighborhoodSize(p);
+    const int conn = getOffset(p);
+
+    // Get the images to segment
+    /*Image<byte> r,b,g;
+    getComponents(img2segmentBin, r, g, b);
+    bitImg = makeBinary(maxRGB(img2segmentBin), byte(size));
+    bitImg = erodeImg(dilateImg(bitImg, se), se);*/
+
+    if (dp.itsSegmentAlgorithmType == SAMeanAdaptiveThreshold) {
+        bitImg = mean_thresh(img2segmentGraph, size, conn);
+        bitImg = erodeImg(dilateImg(bitImg, se), se);
+    }
+    else if (dp.itsSegmentAlgorithmType == SAMedianAdaptiveThreshold || dp.itsSegmentAlgorithmType == SABest ) {
+        bitImg = median_thresh(img2segmentGraph, size, conn);
+        bitImg = erodeImg(dilateImg(bitImg, se), se);
+    }
+    else if (dp.itsSegmentAlgorithmType == SAMeanMinMaxAdaptiveThreshold) {
+        bitImg = meanMaxMin_thresh(img2segmentGraph, size, conn);
+        bitImg = erodeImg(dilateImg(bitImg, se), se);
+    }
+
+    // if only using graphcut, need to generate a binary image for the focus of expansion update
+    if (dp.itsSegmentAlgorithmType == SAGraphCut) {
+        std::list<BitObject> sobjs = getSalientObjects(graphImg, winlistGraph);
+        if (sobjs.size() > 0) {
+             bitImg = showAllObjects(sobjs);
+         }
+         sobjs.clear();
+    }
   }

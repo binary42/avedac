@@ -32,10 +32,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 // random color
 rgb random_rgb(){ 
   rgb c;
-  
+
   c.r = random();
   c.g = random();
   c.b = random();
+
+  // exclude black since that's the mask color used in the image provided by --mbari-mask-path, e.g.
+  while (c.r == 0 && c.g == 0 && c.b == 0) {
+      c.r = random();
+      c.g = random();
+      c.b = random();
+  }
 
   return c;
 }
@@ -55,14 +62,14 @@ static inline float diff(image<float> *r, image<float> *g, image<float> *b,
  *
  * im: image to segment.
  * sigma: to smooth the image.
- * c: constant for treshold function.
+ * c: constant for threshold function.
  * min_size: minimum component size (enforced by post-processing stage).
  * winners: each color is awarded a winner. These are assigned to a winner-take-all mapping
  * scaleW: amount to scale X seedWinner
  * scaleH: amount to scale H seedWinner.
  */
 image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
-			  std::list<WTAwinner> &winners, float scaleW, float scaleH) {
+			  std::list<Winner> &winners, float scaleW, float scaleH) {
   int width = im->width();
   int height = im->height();
 
@@ -142,9 +149,9 @@ image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
   for (int i = 0; i < width*height; i++)
     colors[i] = random_rgb();
 
-    bool found;
-    rgb seedColor;
-    std::list<rgb> seedColors;
+  bool found;
+  rgb seedColor;
+  std::list<rgb> seedColors;
 
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
@@ -169,12 +176,53 @@ image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
                 win.p.i = (int) ( (float) x*scaleW);
                 win.p.j = (int) ( (float) y*scaleH);
                 win.sv = 0.f;
+                BitObject bo;
                 //LINFO("##### winner #%d found at [%d; %d]  frame: %d#####",
                //         numSpots, win.p.i, win.p.j, framenum);
-               winners.push_back(win);
+               winners.push_back(Winner(win, bo));
             }
     }
-  }  
+  }
+
+  /*Image< PixRGB<byte> > graphBitImg;
+
+  for (int x = 0; x < output.getWidth(); x++)
+    for (int y = 0; y < output.getHeight(); y++) {
+        rgb val = imRef(output, x, y);
+        PixRGB<byte> val2((byte) val.r, (byte) val.g, (byte) val.b);
+        graphBitImg.setVal(x, y, val2);
+    }
+
+  Image<byte> labelImg(Dims(width*scaleW, height*scaleH), ZEROS);
+  Image<byte> bitImg(Dims(width*scaleW, height*scaleH), ZEROS);
+
+  // go through seed colors and create new bit objects for them
+  std::list<rgb>::const_iterator iter = seedColors.begin();
+  while (iter != seedColors.end()) {
+
+        // create a binary representation with the 1 equal to the
+        // color at the center of the seed everything else 0
+        Image< PixRGB<byte> >::const_iterator sptr = graphBitImg.begin();
+        Image<byte>::iterator rptr = bitImg.beginw();
+
+        while (sptr != graphBitImg.end())
+            *rptr++ = (*sptr++ == newColor) ? 1 : 0;
+
+        // create bit object from that
+        BitObject obj;
+        Image<byte> dest = obj.reset(bitImg, Point2D<int>(rx, ry));
+        WTAwinner win = WTAwinner::NONE();
+        Point2D<int> center = obj.getCentroid();
+        win.p.i = (int) ( (float) center.i*scaleW);
+        win.p.j = (int) ( (float) center.j*scaleH);
+        win.sv = 0.f;
+        //LINFO("##### winner #%d found at [%d; %d]  frame: %d#####",
+        //         numSpots, win.p.i, win.p.j, framenum);
+        winners.push_back(Winner(win, obj));
+
+        iter++;
+  }*/
+
   delete [] colors;  
   delete u;
 

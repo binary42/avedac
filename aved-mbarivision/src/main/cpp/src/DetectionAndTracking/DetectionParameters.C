@@ -68,10 +68,14 @@ itsMaskHeight(DEFAULT_MASK_WIDTH),
 itsSegmentAlgorithmType(DEFAULT_SEGMENT_ALGORITHM_TYPE),
 itsSegmentAlgorithmInputType(DEFAULT_SEGMENT_ALGORITHM_INPUT_TYPE),
 itsSegmentGraphParameters(DEFAULT_SEGMENT_GRAPH_PARAMETERS),
-itsSegmentAdaptiveOffset(DEFAULT_SEGMENT_ALGORITHM_OFFSET),
+itsSegmentAdaptiveParameters(DEFAULT_SEGMENT_ADAPTIVE_PARAMETERS),
 itsCleanupStructureElementSize(DEFAULT_SE_SIZE),
 itsSaliencyInputType(DEFAULT_SALIENCY_INPUT_TYPE),
-itsKeepWTABoring(DEFAULT_KEEP_WTA_BORING)
+itsKeepWTABoring(DEFAULT_KEEP_WTA_BORING),
+itsMaskDynamic(DEFAULT_DYNAMIC_MASK),
+itsMaskGraphCut(DEFAULT_MASK_GRAPHCUT),
+itsXKalmanFilterParameters(DEFAULT_KALMAN_PARAMETERS),
+itsYKalmanFilterParameters(DEFAULT_KALMAN_PARAMETERS)
 {
     //initialize with some defaults
     float maxDist = itsMaxDist;
@@ -87,9 +91,11 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     os << "\ttrackingmode:" << trackingModeName(itsTrackingMode); 
     os << "\tsegmentalgorithminputimagetype:" << segmentAlgorithmInputImageType(itsSegmentAlgorithmInputType);
     os << "\tsegmentalgorithmtype:" << segmentAlgorithmType(itsSegmentAlgorithmType);
-    os << "\tsegmentadaptivemoffset:" << itsSegmentAdaptiveOffset;
+    os << "\tsegmentadaptiveparameters:" << itsSegmentAdaptiveParameters;
     os << "\tsaliencyinputimagetype:" << saliencyInputImageType(itsSaliencyInputType);
     os << "\tsegmentgraphparameters:" << itsSegmentGraphParameters;
+    os << "\txkalmanfilterparameters:" << itsXKalmanFilterParameters;
+    os << "\tykalmanfilterparameters:" << itsYKalmanFilterParameters;
     os << "\tcleanupelementsize:" << itsCleanupStructureElementSize;
     os << "\tminframes:" << itsMinEventFrames;
     os << "\tmaxframes:" << itsMaxEventFrames;
@@ -100,10 +106,12 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     os << "\tmaxwtapoints:" << itsMaxWTAPoints;
     os << "\tsavenoninteresting:" << itsSaveNonInteresting;
     os << "\tsaveoriginalframespec:" << itsSaveOriginalFrameSpec;
+    os << "\taddgraphpoints:" << itsMaskGraphCut;
     os << "\tcolorspace:" << colorSpaceType(itsColorSpaceType);
     os << "\tminstddev:" << itsMinStdDev;
     os << "\teventexpirationframes:" << itsEventExpirationFrames;
 
+    os << "\tdynamicmask:" << itsMaskDynamic;
     if (itsMaskPath.length() > 0) {
         os << "\tmaskpath:" << itsMaskPath;
         os << "\tmaskxposition:" << itsMaskXPosition;
@@ -114,21 +122,23 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     os << "\n";
 }
 // ######################################################################
-
 DetectionParameters &DetectionParameters::operator=(const DetectionParameters& p) {
     this->itsMaxEvolveTime = p.itsMaxEvolveTime;
     this->itsMaxWTAPoints = p.itsMaxWTAPoints;
     this->itsMaxDist = p.itsMaxDist;
+    this->itsMaxCost = p.itsMaxCost;
     this->itsMaxEventFrames = p.itsMaxEventFrames;
     this->itsMinEventFrames = p.itsMinEventFrames;
     this->itsMinEventArea = p.itsMinEventArea;
     this->itsMaxEventArea = p.itsMaxEventArea;
     this->itsTrackingMode = p.itsTrackingMode;
     this->itsEventExpirationFrames = p.itsEventExpirationFrames;
+    this->itsSegmentAdaptiveParameters = p.itsSegmentAdaptiveParameters;
     this->itsSegmentAlgorithmInputType = p.itsSegmentAlgorithmInputType;
     this->itsSegmentAlgorithmType = p.itsSegmentAlgorithmType;
-    this->itsSegmentAdaptiveOffset = p.itsSegmentAdaptiveOffset;
     this->itsSegmentGraphParameters = p.itsSegmentGraphParameters;
+    this->itsXKalmanFilterParameters = p.itsXKalmanFilterParameters;
+    this->itsYKalmanFilterParameters = p.itsYKalmanFilterParameters;
     this->itsCleanupStructureElementSize = p.itsCleanupStructureElementSize;
     this->itsSaliencyInputType = p.itsSaliencyInputType;
     this->itsSaliencyFrameDist = p.itsSaliencyFrameDist;
@@ -138,12 +148,11 @@ DetectionParameters &DetectionParameters::operator=(const DetectionParameters& p
     this->itsColorSpaceType = p.itsColorSpaceType;
     this->itsMinStdDev = p.itsMinStdDev;
     this->itsMaskPath = p.itsMaskPath;
+    this->itsMaskWidth = p.itsMaskWidth;
     this->itsMaskXPosition = p.itsMaskXPosition;
     this->itsMaskYPosition = p.itsMaskYPosition;
-    this->itsMaskWidth = p.itsMaskWidth;
-    this->itsMaskHeight = p.itsMaskHeight;
-    this->itsSizeAvgCache = p.itsSizeAvgCache; 
-    this->itsMaxCost = p.itsMaxCost; 
+    this->itsMaskDynamic = p.itsMaskDynamic;
+    this->itsMaskGraphCut = p.itsMaskGraphCut;
     return *this;
 }
 // ######################################################################
@@ -171,20 +180,22 @@ void DetectionParametersSingleton::initialize(DetectionParameters &p, const Dims
     DetectionParametersSingleton *dp = instance();
 
     // calculate cost parameter from other derived values
-    // initialize paramters
+    // initialize parameters
     const int maxDist = dims.w() / MAX_DIST_RATIO;
-    const float maxDistFloat = (float) maxDist;
-    const float maxAreaDiff = pow((double) maxDistFloat, 2) / (double) 4.0;
-    if (p.itsTrackingMode == TMKalmanFilter)
-        p.itsMaxCost = pow((double) maxDistFloat, 2) + pow((double) maxAreaDiff, 2);
-    else 
-	p.itsMaxCost = (float) maxDist / 2 * maxAreaDiff;
+    float maxAreaDiff = maxDist * maxDist / 4.0F;
+    float maxDistFloat = (float) maxDist;
+
+    if (p.itsTrackingMode == TMKalmanFilter || p.itsTrackingMode == TMKalmanHough)
+        p.itsMaxCost = 2*maxDistFloat;
+    else
+	    p.itsMaxCost = maxDist;
     p.itsMaxDist = maxDist;
+
     if (p.itsMinEventArea == 0) 
     	p.itsMinEventArea = foaRadius;
     if (p.itsMaxEventArea == 0) 
     	p.itsMaxEventArea = foaRadius * MAX_SIZE_FACTOR;
- 
+
     dp->itsParameters = p;
 }
 // ######################################################################
@@ -224,10 +235,14 @@ itsMaskHeight(&OPT_MDPmaskHeight, this),
 itsSegmentAlgorithmType(&OPT_MDPsegmentAlgorithmType, this),
 itsSegmentAlgorithmInputType(&OPT_MDPsegmentAlgorithmInputImage, this),
 itsSegmentGraphParameters(&OPT_MDPsegmentGraphParameters, this),
-itsSegmentAdaptiveOffset(&OPT_MDPsegmentAdaptiveOffset, this),
+itsSegmentAdaptiveParameters(&OPT_MDPsegmentAdaptiveParameters, this),
 itsCleanupStructureElementSize(&OPT_MDPcleanupSESize, this),
 itsSaliencyInputType(&OPT_MDPsaliencyInputImage, this),
-itsKeepWTABoring(&OPT_MDPkeepBoringWTAPoints, this)
+itsKeepWTABoring(&OPT_MDPkeepBoringWTAPoints, this),
+itsMaskGraphCut(&OPT_MDPmaskGraphCut, this),
+itsMaskDynamic(&OPT_MDPmaskDynamic, this),
+itsXKalmanFilterParameters(&OPT_MDPXKalmanFilterParameters, this),
+itsYKalmanFilterParameters(&OPT_MDPYKalmanFilterParameters, this)
 {
 };
 // ######################################################################
@@ -241,7 +256,7 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
         p->itsTrackingMode = itsTrackingMode.getVal();
      if (itsSaliencyInputType.getVal() > 0)
         p->itsSaliencyInputType = itsSaliencyInputType.getVal();
-    if (itsCleanupStructureElementSize.getVal() > 1 && itsCleanupStructureElementSize.getVal() < MAX_SE_SIZE)
+    if (itsCleanupStructureElementSize.getVal() > 1 && itsCleanupStructureElementSize.getVal() <= MAX_SE_SIZE)
         p->itsCleanupStructureElementSize = itsCleanupStructureElementSize.getVal();
     if (itsMaskPath.getVal().length() > 0)
         p->itsMaskPath = itsMaskPath.getVal().data();
@@ -263,7 +278,7 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
     if (p->itsMinEventArea >= p->itsMaxEventArea && p->itsMinEventArea > 0 && p->itsMaxEventArea > 0)
 	p->itsMinEventArea = p->itsMaxEventArea - 1;
 	
-    if (itsMinEventFrames.getVal() > 0)
+    if (itsMinEventFrames.getVal() >= 0)
         p->itsMinEventFrames = itsMinEventFrames.getVal();
     else
         p->itsMinEventFrames = DEFAULT_MIN_EVENT_FRAMES;
@@ -294,6 +309,10 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
     p->itsColorSpaceType = itsColorSpaceType.getVal();
     p->itsSegmentAlgorithmInputType = itsSegmentAlgorithmInputType.getVal();
     p->itsSegmentAlgorithmType = itsSegmentAlgorithmType.getVal();
-    p->itsSegmentAdaptiveOffset = itsSegmentAdaptiveOffset.getVal();
+    p->itsSegmentAdaptiveParameters = itsSegmentAdaptiveParameters.getVal();
     p->itsSegmentGraphParameters = itsSegmentGraphParameters.getVal();
+    p->itsMaskGraphCut = itsMaskGraphCut.getVal();
+    p->itsMaskDynamic = itsMaskDynamic.getVal();
+    p->itsXKalmanFilterParameters = itsXKalmanFilterParameters.getVal();
+    p->itsYKalmanFilterParameters = itsYKalmanFilterParameters.getVal();
 }

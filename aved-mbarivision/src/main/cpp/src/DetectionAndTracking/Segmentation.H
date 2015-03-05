@@ -36,6 +36,8 @@
 #include "DetectionAndTracking/DetectionParameters.H"
 #include "Util/StringConversions.H"
 #include "Neuro/WTAwinner.H"
+#include "Media/MbariResultViewer.H"
+#include "Data/Winner.H"
 
 #include <vector>
 #include <list>
@@ -50,20 +52,25 @@ public:
 
   Segmentation();
   virtual ~Segmentation();
-  Image< PixRGB<byte> > runGraph(const float sigma, const int k, const int min_size, list<WTAwinner> &winners, float scaleW, float scaleH, const Image < PixRGB<byte> > &image);
   float getSigma(const vector< float > & v);
   int getK(const vector< float > & v);
   int getMinSize(const vector< float > & v);
-  vector< float > getFloatParameters(const string  &str);
+  int getNeighborhoodSize(const vector< float > & v) ;
+  int getOffset(const vector< float > & v);
   Image<byte> mean_thresh(const Image<byte>& src,  const int size, const int con);
   Image<byte> median_thresh(const Image<byte>& src, const int size, const int con);
   Image<byte> meanMaxMin_thresh(const Image<byte>& src, const int size, const int con);
-    
+  void run(uint frameNum, Image<PixRGB<byte>>& img2segmentBin, Image<byte>& img2segmentGraph,
+          float scaleW, float scaleH, Image< PixRGB<byte> >&graphImg, Image<byte>& bitImg);
+
 private:
 
   /* private functions related to the BinaryAdaptive algorithm */
   byte getThreshold(const Image<byte> &bwImg);
   Image<byte> runBinaryAdaptive(const Image<byte>& src, const byte& threshold, const float& pct);
+  /* private functions related to the GraphCut algorithm */
+  Image< PixRGB<byte> > runGraph(const float sigma, const int k, const int min_size, list<Winner> &winners,\
+   float scaleW, float scaleH, const Image < PixRGB<byte> > &image);
 };
 
 #endif /*SEGMENTATION_H_*/

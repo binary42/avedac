@@ -72,7 +72,7 @@ public:
     is flooded starting from this seed
     @param threshold for flooding
     @return a mask of the extracted object (in IMAGE coordinates) */
-  Image<byte> reset(const Image<byte>& img, const Point2D location, 
+  Image<byte> reset(const Image<byte>& img, const Point2D location,
                     const byte threshold = 1);
   
   //! Reset to a new object
@@ -81,7 +81,7 @@ public:
     @return the area of the extracted object; -1 if no object could
     be extracted - in this case the BitObject is invalid */
   int reset(const Image<byte>& img);
-  
+
   //! delete all stored data, makes the object invalid
   void freeMem();
 
@@ -108,7 +108,7 @@ public:
 
   //! Return the maximum, minimum and average intensity
   /*! See setMinMaxAvgIntensity for details*/
-  void getMaxMinAvgIntensity(float& maxIntensity, float& minIntensity, 
+  void getMaxMinAvgIntensity(float& maxIntensity, float& minIntensity,
                              float& avgIntensity);
 
   //! Returns the bounding box of the object
@@ -207,7 +207,7 @@ private:
   float itsUxx, itsUyy, itsUxy;
   float itsMajorAxis, itsMinorAxis, itsElongation, itsOriAngle;
   Dims itsImageDims;
-  float itsMaxIntensity, itsMinIntensity, itsAvgIntensity;
+  float itsMaxIntensity, itsMinIntensity, itsAvgIntensity, itsStdDev;
   bool haveSecondMoments;
   double itsSMV;
 };
