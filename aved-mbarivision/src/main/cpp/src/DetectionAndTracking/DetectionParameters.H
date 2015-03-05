@@ -53,7 +53,7 @@ parameters*/
 // Default multiplier for determining the maximum event area
 #define MAX_SIZE_FACTOR 700
 // Default multiplier for determining the maximum tracking distance
-#define MAX_DIST_RATIO 30
+#define MAX_DIST_RATIO 40
 // Default maximum number of frames an event can be before closing
 // -1 = unlimited
 // 10 minutes @ 30 fps = 18000

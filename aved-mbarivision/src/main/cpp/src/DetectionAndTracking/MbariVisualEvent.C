@@ -245,11 +245,11 @@ namespace MbariVisualEvent {
     p = getFloatParameters(parms.itsXKalmanFilterParameters);
     pnoise = p.at(0); mnoise = p.at(1);
     xTracker.init(tk.location.x(),pnoise,mnoise);
-    LINFO("====================================================================X===%g %g", pnoise,mnoise);
+    LINFO("Kalman X tracker parameters process noise: %g measurement noise: %g", pnoise, mnoise);
 
     p = getFloatParameters(parms.itsYKalmanFilterParameters);
     pnoise = p.at(0); mnoise = p.at(1);
-    LINFO("====================================================================Y===%g %g", pnoise,mnoise);
+    LINFO("Kalman Y tracker parameters process noise: %g measurement noise: %g", pnoise, mnoise);
     yTracker.init(tk.location.y(),pnoise,mnoise);
     switch (parms.itsTrackingMode) {
       case(TMKalmanFilter):
@@ -351,7 +351,7 @@ namespace MbariVisualEvent {
   void VisualEvent::setTrackerType(VisualEvent::TrackerType type)
   {
     if (itsTrackerType != type) {
-     LINFO("====================================================================+++>Event %i switching to %s ", myNum, trackerName[type].c_str());
+     LINFO("Event %i switching to %s ", myNum, trackerName[type].c_str());
      itsTrackerChanged = true;
     }
     else {
@@ -468,7 +468,7 @@ namespace MbariVisualEvent {
   }
 
   // ######################################################################
-  void VisualEvent::resetHoughTracker(MbariImage< PixRGB<byte> >& img, BitObject &bo, float maxScale )
+  void VisualEvent::resetHoughTracker(Image< PixRGB<byte> >& img, BitObject &bo, float maxScale )
   {
     // save the area used to reset since the Hough tracker is bounded by a max area
     houghArea = bo.getArea();
@@ -482,14 +482,14 @@ namespace MbariVisualEvent {
   }
 
   // ######################################################################
-  bool VisualEvent::updateHoughTracker(nub::soft_ref<MbariResultViewer>& rv,\
-                                        MbariImage< PixRGB<byte> >& img, \
-                                        const Image< byte >& occlusionImg, \
-                                        Image< byte >& binaryImg, \
-                                        Point2D<int>& prediction, \
+  bool VisualEvent::updateHoughTracker(nub::soft_ref<MbariResultViewer>& rv, uint frameNum,
+                                        Image< PixRGB< byte > >& img,
+                                        const Image< byte >& occlusionImg,
+                                        Image< byte >& binaryImg,
+                                        Point2D<int>& prediction,
                                         Rectangle &boundingBox)
   {
-    return hTracker.update(rv, img, occlusionImg, prediction, boundingBox, binaryImg, myNum, houghConstant);
+    return hTracker.update(rv, frameNum, img, occlusionImg, prediction, boundingBox, binaryImg, myNum, houghConstant);
   }
 
   // ######################################################################
@@ -717,76 +717,23 @@ namespace MbariVisualEvent {
   {
     itsEvents.push_back(event);
   }
-  // ######################################################   ################
+  // ######################################################################
   void VisualEventSet::runKalmanHoughTracker(VisualEvent *currEvent,
-                                               uint frameNum,
+                                               const uint frameNum,
                                                const MbariMetaData &metadata,
-                                               const Image<byte>& binMap,
-                                               const Image<PixRGB<byte>>& graphMap,
+                                               const Image< byte >& binMap,
+                                               const Image<PixRGB < byte > >& graphMap,
+                                               const Image< byte >& mask,
                                                const Vector2D& curFOE,
                                                nub::soft_ref<MbariResultViewer>& rv,
-                                               MbariImage< PixRGB<byte> >& img,
-                                               MbariImage< PixRGB<byte> >& prevImg,
-                                               const Image< byte >& mask)
+                                               Image< PixRGB< byte > >& img,
+                                               Image< PixRGB< byte > >& prevImg)
   {
-    /*bool found = false;
-    Token evtToken;
-
-    if (currEvent->getTrackerType() == VisualEvent::KALMAN) {
-      found = runKalmanTracker(currEvent, frameNum, metadata, binMap, graphMap, curFOE, img, true);
-    }
-    else {
-      found = runHoughTracker(rv, currEvent, frameNum, metadata, img, curFOE, true);
-    }
-
-    if (!found) {
-      // switch to Hough if Kalman fails and reinitialize Hough
-      if (currEvent->getTrackerType() == VisualEvent::KALMAN && currEvent->getCategory() == VisualEvent::INTERESTING) {
-        currEvent->setTrackerType(VisualEvent::HOUGH);
-        evtToken = currEvent->getToken(currEvent->getEndFrame());
-        LINFO("Resetting Hough Tracker frame: %d event: %d with bounding box %s",
-               frameNum,currEvent->getEventNum(),toStr(evtToken.bitObject.getBoundingBox()).data());
-        currEvent->resetHoughTracker(prevImg, evtToken.bitObject, DEFAULT_SCALE_INCREASE);
-        currEvent->setForgetConstant(DEFAULT_FORGET_CONSTANT);
-      }
-      else //switch to Kalman if Hough fails
-        currEvent->setTrackerType(VisualEvent::KALMAN);
-    }
-    else {
-      // if successfully using the Kalman tracker, reset the Hough tracker
-      if (currEvent->getTrackerType() == VisualEvent::KALMAN) {
-        //evtToken = currEvent->getToken(currEvent->getEndFrame());
-        //currEvent->resetHoughTracker(img, evtToken.bitObject, DEFAULT_SCALE_INCREASE);
-        // update state
-        currEvent->setTrackerType(VisualEvent::KALMAN);
-      }
-      else {
-        // update state
-        currEvent->setTrackerType(VisualEvent::HOUGH);
-      }
-    }
-
-    // if exceeded expiration frames, close
-    int frameInc = int(frameNum - currEvent->getValidEndFrame());
-    if ( frameInc > itsDetectionParms.itsEventExpirationFrames + 1 ) {
-      LINFO("Event %i - KalmanHough Tracker failed, closing event",currEvent->getEventNum());
-      currEvent->close();
-    }
-
-    checkFailureConditions(currEvent, img.getDims());
-
-    // if still open and not found assign emtpy token using last known event
-    if (!currEvent->isClosed() && !found) {
-      evtToken = currEvent->getToken(currEvent->getEndFrame());
-      evtToken.frame_nr = frameNum;
-      currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(),  itsDetectionParms.itsEventExpirationFrames);
-    }*/
-
    bool found = false;
    Token evtToken;
 
     // prefer the Kalman tracker, and fall back to the Hough tracker
-    if (!runKalmanTracker(currEvent, frameNum, metadata, binMap, graphMap, curFOE, img, true)){
+    if (!runKalmanTracker(currEvent, frameNum, metadata, img, binMap, graphMap, curFOE, true)){
       evtToken = currEvent->getToken(currEvent->getEndFrame());
 
       // only use the Hough tracker if object found to be interesting or has high enough voltage
@@ -835,6 +782,7 @@ namespace MbariVisualEvent {
     }
   }
 
+  // ######################################################################
   void VisualEventSet::checkFailureConditions(VisualEvent *currEvent, Dims d)
   {
     float acc = 0.F;
@@ -855,11 +803,12 @@ namespace MbariVisualEvent {
       LINFO("Event %i avg acceleration %f acceleration %f percent change %6.2f", currEvent->getEventNum(),
       accAll, acc, pacc);
 
-      // large accelerations can indicate when tracking fails
-      /*if (abs(acc) > 7.0F )   {
+      // large accelerations can indicate a tracking failure
+      if (abs(acc) > 7.0F )   {
          LINFO("Event %i tracker acceleration error - closed",currEvent->getEventNum());
          currEvent->close();
       }
+      /*
       if( areaCurrent < areaLast && currEvent->getTrackerType() == VisualEvent::HOUGH) {
             float c = 0.80F*currEvent->getForgetConstant();
             if (c < 0.10F) c = 0.F; //clamp to 0 when too small to avoid drifting
@@ -880,9 +829,9 @@ namespace MbariVisualEvent {
       LINFO("Event %i near edge. Changing forget ratio from %3.2f to %3.2f  to avoid drift", \
       currEvent->getEventNum(), currEvent->getForgetConstant(), c);
       currEvent->setForgetConstant(c);
-    }
+    }*/
 
-    int maxSize = currEvent->getMaxSize() ;
+    /*int maxSize = currEvent->getMaxSize() ;
     int size = evtToken.bitObject.getArea();
 
     if( size < maxSize/4 ) {
@@ -895,93 +844,57 @@ namespace MbariVisualEvent {
   }
   // ######################################################################
   void VisualEventSet::runNearestNeighborHoughTracker(VisualEvent *currEvent,
-                                               uint frameNum,
+                                               const uint frameNum,
                                                const MbariMetaData &metadata,
                                                const Image<byte>& binMap,
                                                const Image<PixRGB<byte>>& graphMap,
+                                               const Image<byte> &mask,
                                                const Vector2D& curFOE,
                                                nub::soft_ref<MbariResultViewer>& rv,
-                                               MbariImage< PixRGB<byte> >& img,
-                                               MbariImage< PixRGB<byte> >& prevImg)
+                                               Image< PixRGB<byte> >& img,
+                                               Image< PixRGB<byte> >& prevImg)
   {
-    /*bool found = false;
-    Token evtToken;
 
-    if (currEvent->getTrackerType() == VisualEvent::NN) {
-      found = runKalmanTracker(currEvent, frameNum, metadata, binMap, graphMap, curFOE, img, true);
-    }
-    else {
-      found = runHoughTracker(rv, currEvent, frameNum, metadata, img, curFOE, true);
-    }
+   bool found = false;
+   Token evtToken;
 
-    if (!found) {
-      if (currEvent->getTrackerType() == VisualEvent::NN)
-        currEvent->setTrackerType(VisualEvent::HOUGH);
-      else
-        currEvent->setTrackerType(VisualEvent::NN);
-    }
-    else {
-      // if successfully using the NN tracker, reset the Hough tracker
-      if (currEvent->getTrackerType() == VisualEvent::NN) {
-        evtToken = currEvent->getToken(currEvent->getEndFrame());
-        currEvent->resetHoughTracker(img, evtToken.bitObject);
-        // update state
-        currEvent->setTrackerType(VisualEvent::NN);
-      }
-      else {
-        // update state
-        currEvent->setTrackerType(VisualEvent::HOUGH);
-      }
-    }
-
-    // if exceeded expiration frames, close
-    int frameInc = int(frameNum - currEvent->getValidEndFrame());
-    if ( frameInc > itsDetectionParms.itsEventExpirationFrames ) {
-      LINFO("Event %i - NearestNeighborHough Tracker failed, closing event",currEvent->getEventNum());
-      currEvent->close();
-    }
-
-    // if still open and not found assign emtpy token using last known event
-    if (!currEvent->isClosed() && !found) {
-      evtToken = currEvent->getToken(currEvent->getEndFrame());
-      evtToken.frame_nr = frameNum;
-      currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(),  itsDetectionParms.itsEventExpirationFrames);
-    }*/
-
-    bool found = false;
-    Token evtToken;
-
-    //TODO: CLEAN_UP and remove above
     // prefer the NN tracker, and fall back to the Hough tracker
-    if (!runNearestNeighborTracker(currEvent, frameNum, metadata, binMap, graphMap, curFOE, img, true)) {
+    if (!runNearestNeighborTracker(currEvent, frameNum, metadata, binMap, graphMap, curFOE, true)){
+      evtToken = currEvent->getToken(currEvent->getEndFrame());
 
-      if (!currEvent->isClosed()) {
+      // only use the Hough tracker if object found to be interesting or has high enough voltage
+      if (!currEvent->isClosed() && (evtToken.bitObject.getSMV() > .005F ||
+                                    currEvent->getCategory() == VisualEvent::INTERESTING)){
         currEvent->setTrackerType(VisualEvent::HOUGH);
+
+        // reset Hough tracker if only now switching to this tracker to save computation
+        if (currEvent->trackerChanged()) {
+          evtToken = currEvent->getToken(currEvent->getEndFrame());
+          LINFO("Resetting Hough Tracker frame: %d event: %d with bounding box %s",
+                 frameNum,currEvent->getEventNum(),toStr(evtToken.bitObject.getBoundingBox()).data());
+          currEvent->resetHoughTracker(prevImg, evtToken.bitObject, DEFAULT_SCALE_INCREASE);
+          currEvent->setForgetConstant(DEFAULT_FORGET_CONSTANT);
+        }
 
         // try to run the Hough tracker; if fails, switch to NN tracker
-        /*if (runHoughTracker(rv, currEvent, frameNum, metadata, img, mask, curFOE, true)) {
+        if (runHoughTracker(rv, currEvent, frameNum, metadata, img, mask, curFOE, true))
           found = true;
-          }
         else {
           currEvent->setTrackerType(VisualEvent::NN);
           LINFO("Event %i - Hough Tracker failed",currEvent->getEventNum());
-        }*/
-      }
-      int frameInc = int(frameNum - currEvent->getValidEndFrame());
-      if ( frameInc > itsDetectionParms.itsEventExpirationFrames ) {
-        LINFO("Event %i - NearestNeighborHough Tracker past expiration frames, closing event",currEvent->getEventNum());
-        currEvent->close();
+        }
       }
     }
     else
     {
       found = true;
-      // if successfully using the NN tracker, reset the Hough tracker
       currEvent->setTrackerType(VisualEvent::NN);
-      evtToken = currEvent->getToken(currEvent->getEndFrame());
-      LINFO("Resetting Hough Tracker frame: %d event: %d with bounding box %s",
-             frameNum,currEvent->getEventNum(),toStr(evtToken.bitObject.getBoundingBox()).data());
-      currEvent->resetHoughTracker(img, evtToken.bitObject, DEFAULT_SCALE_INCREASE);
+    }
+
+    int frameInc = int(frameNum - currEvent->getValidEndFrame());
+    if ( frameInc > itsDetectionParms.itsEventExpirationFrames ) {
+      LINFO("Event %i - NearestNeighborHough Tracker failed, closing event",currEvent->getEventNum());
+      currEvent->close();
     }
 
     checkFailureConditions(currEvent, img.getDims());
@@ -990,17 +903,18 @@ namespace MbariVisualEvent {
       // assign an empty token
       evtToken = currEvent->getToken(currEvent->getEndFrame());
       evtToken.frame_nr = frameNum;
-      currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(),  itsDetectionParms.itsEventExpirationFrames);
+      currEvent->assign_noprediction(evtToken, curFOE,  currEvent->getValidEndFrame(),\
+        itsDetectionParms.itsEventExpirationFrames);
     }
+
   }
   // ######################################################################
   bool VisualEventSet::runHoughTracker(nub::soft_ref<MbariResultViewer>& rv,
-                                        VisualEvent *currEvent,
-                                        uint frameNum, const MbariMetaData &metadata,
-                                        MbariImage< PixRGB<byte> >& img,
-                                        const Image< byte >& mask,
-                                        const Vector2D& curFOE,
-                                        bool skip)
+                                       VisualEvent *currEvent, const uint frameNum, const MbariMetaData &metadata,
+                                       Image< PixRGB<byte> >& img,
+                                       const Image< byte >& mask,
+                                       const Vector2D& curFOE,
+                                       bool skip)
   {
 
     DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
@@ -1034,7 +948,7 @@ namespace MbariVisualEvent {
     occlusionImg = maskArea(occlusionImg, mask);
 
     LINFO("Running Hough Tracker for event %d", currEvent->getEventNum());
-	if (!currEvent->updateHoughTracker(rv, img, occlusionImg, binaryImg, prediction, region)) {
+	if (!currEvent->updateHoughTracker(rv, frameNum, img, occlusionImg, binaryImg, prediction, region)) {
 	    if (!skip) {
           LINFO("Event %i - Hough Tracker failed, closing event",currEvent->getEventNum());
           currEvent->close();
@@ -1048,9 +962,9 @@ namespace MbariVisualEvent {
     LINFO("Found Hough object size: width %d height %d; top %d left %d area %d",region.width(), region.height(),
     region.top(), region.left(), obj.getArea() );
 
-    // allow to grow up to 2.0x and shrink up to 0.5
+    // allow to grow up to 4.0x and shrink up to 0.5
     int minArea = std::max(itsDetectionParms.itsMinEventArea,(int)(0.5*evtToken.bitObject.getArea()));
-    int maxArea = std::min(itsDetectionParms.itsMaxEventArea,(int)(2.0*evtToken.bitObject.getArea()));
+    int maxArea = std::min(itsDetectionParms.itsMaxEventArea,(int)(4.0*evtToken.bitObject.getArea()));
 
     if (obj.getArea() >= minArea && obj.getArea() <= maxArea ) {
       // apply same cost function as Kalman to make sure Hough is not drifting
@@ -1102,13 +1016,11 @@ namespace MbariVisualEvent {
   }
 
   // ######################################################################
-  bool VisualEventSet::runKalmanTracker(VisualEvent *currEvent, \
-                                        uint frameNum,
-                                        const MbariMetaData &metadata,
+  bool VisualEventSet::runKalmanTracker(VisualEvent *currEvent, const uint frameNum, const MbariMetaData &metadata,
+                                        Image< PixRGB<byte> >& img,
                                         const Image<byte> &binMap,
                                         const Image<PixRGB<byte>>& graphMap,
                                         const Vector2D& curFOE,
-                                        MbariImage< PixRGB<byte> >& img,
                                         bool skip)
   {
 
@@ -1247,13 +1159,10 @@ namespace MbariVisualEvent {
 
   }
   // ######################################################################
-  bool VisualEventSet::runNearestNeighborTracker(VisualEvent *currEvent,
-                                             uint frameNum,
-                                             const MbariMetaData &metadata,
+  bool VisualEventSet::runNearestNeighborTracker(VisualEvent *currEvent, const uint frameNum, const MbariMetaData &metadata,
                                              const Image<byte> &binMap,
                                              const Image<PixRGB<byte>>& graphMap,
                                              const Vector2D& curFOE,
-                                             MbariImage< PixRGB<byte> >& img,
                                              bool skip)
   {
     Dims d;
@@ -1272,7 +1181,7 @@ namespace MbariVisualEvent {
     // get the region used for searching for a match
     Dims searchDims = Dims(itsDetectionParms.itsMaxDist,itsDetectionParms.itsMaxDist);
     Rectangle region = Rectangle::centerDims(center, searchDims);
-    region = region.getOverlap(Rectangle(Point2D<int>(0, 0), img.getDims() - 1));
+    region = region.getOverlap(Rectangle(Point2D<int>(0, 0), binMap.getDims() - 1));
     LINFO("Region %i %s ", currEvent->getEventNum(),toStr(region).data());
 
     if (!region.isValid()) {
@@ -1290,7 +1199,7 @@ namespace MbariVisualEvent {
     LINFO("region: %s; Number of extracted objects: %ld", toStr(region).data(),objs.size());
 
     // now find which one fits best
-    float maxCost = 3*itsDetectionParms.itsMaxCost;
+    float maxCost = itsDetectionParms.itsMaxCost;
     float lCost = -1.0F;
     bool found = false;
     int size = objs.size();
@@ -1407,16 +1316,16 @@ namespace MbariVisualEvent {
   // ######################################################################
   void VisualEventSet::updateEvents(nub::soft_ref<MbariResultViewer>& rv,
                                     const Image< byte >& mask,
-                                    MbariImage< PixRGB<byte> >& img,
-                                    MbariImage< PixRGB<byte> >& prevImg,
+                                    const uint frameNum,
+                                    Image< PixRGB<byte> >& img,
+                                    Image< PixRGB<byte> >& prevImg,
                                     const Image<byte>& binMap,
-                                    const Image<PixRGB<byte>>& graphMap,
+                                    const Image< PixRGB<byte> >& graphMap,
                                     const Vector2D& curFOE,
                                     const MbariMetaData &metadata)
   {
-    int frameNum = img.getFrameNum();
-    if (startframe == -1) {startframe = frameNum; endframe = frameNum;}
-    if (frameNum > endframe) endframe = frameNum;
+    if (startframe == -1) {startframe = (int) frameNum; endframe = (int) frameNum;}
+    if ((int) frameNum > endframe) endframe = (int) frameNum;
 
     Image<byte> binMapMasked = maskArea(binMap, mask);
     Image<PixRGB<byte>> graphMapMasked = maskArea(graphMap, mask);
@@ -1428,27 +1337,27 @@ namespace MbariVisualEvent {
         switch(itsDetectionParms.itsTrackingMode) {
         case(TMKalmanFilter):
           (*currEvent)->setTrackerType(VisualEvent::KALMAN);
-          runKalmanTracker(*currEvent, frameNum, metadata, binMapMasked, graphMapMasked, curFOE, img);
+          runKalmanTracker(*currEvent, frameNum, metadata, img, binMapMasked, graphMapMasked, curFOE);
           break;
         case(TMNearestNeighbor):
           (*currEvent)->setTrackerType(VisualEvent::NN);
-          runNearestNeighborTracker(*currEvent, frameNum, metadata, binMapMasked, graphMapMasked, curFOE, img);
+          runNearestNeighborTracker(*currEvent, frameNum, metadata, binMapMasked, graphMapMasked, curFOE);
           break;
         case(TMHough):
           runHoughTracker(rv, *currEvent, frameNum, metadata, img, mask, curFOE);
           checkFailureConditions(*currEvent, img.getDims());
           break;
         case(TMNearestNeighborHough):
-          runNearestNeighborHoughTracker(*currEvent, frameNum, metadata, binMapMasked, graphMapMasked, curFOE, rv, img, prevImg);
+          runNearestNeighborHoughTracker(*currEvent, frameNum, metadata, binMapMasked, graphMapMasked, mask, curFOE, rv, img, prevImg);
           break;
         case(TMKalmanHough):
-          runKalmanHoughTracker(*currEvent, frameNum, metadata, binMapMasked, graphMapMasked, curFOE, rv, img, prevImg, mask);
+          runKalmanHoughTracker(*currEvent, frameNum, metadata, binMapMasked, graphMapMasked, mask, curFOE, rv, img, prevImg);
           break;
         case(TMNone):
           break;
         default:
           (*currEvent)->setTrackerType(VisualEvent::KALMAN);
-          runKalmanTracker(*currEvent, frameNum, metadata, binMapMasked, graphMapMasked, curFOE, img);
+          runKalmanTracker(*currEvent, frameNum, metadata, img, binMapMasked, graphMapMasked, curFOE);
           break;
         }
       }

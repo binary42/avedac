@@ -82,10 +82,10 @@ int main(const int argc, const char** argv) {
     DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
     MbariMetaData metadata;
     Segmentation segmentation;
-    //#ifdef DEBUG
+    #ifdef DEBUG
     PauseWaiter pause;
     setPause(true);
-    //#endif
+    #endif
     const int foaSizeRatio = 19;
     const int circleRadiusRatio = 40;
 
@@ -498,7 +498,7 @@ int main(const int argc, const char** argv) {
             rv->display(bitImg, curFrame, "BinarySegment");
 
             // update the events with the segmented images
-            eventSet.updateEvents(rv, mask, mbariImgEnhanced, prevImg, bitImg, graphBitImg, curFOE, metadata);
+            eventSet.updateEvents(rv, mask, curFrame, img2segmentBin, prevImg, bitImg, graphBitImg, curFOE, metadata);
 
             // is counter at 0?
             --countFrameDist;
@@ -635,10 +635,10 @@ int main(const int argc, const char** argv) {
             while (!eventFrameList.empty()) eventFrameList.pop_front();
             while (!eventListToSave.empty()) eventListToSave.pop_front();
         }
-        //#ifdef DEBUG
+        #ifdef DEBUG
         if ( pause.checkPause()) Raster::waitForKey();
 		continue;
-		//#endif
+		#endif
     } // end loop over all frames
     //######################################################
     LINFO("%s done!!!", PACKAGE);

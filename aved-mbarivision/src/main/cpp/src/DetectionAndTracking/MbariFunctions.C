@@ -877,7 +877,7 @@ void adjustGamma(Image<byte>&lum, std::map<int, double> &cdfw, Image<PixHSV<floa
 // ######################################################################
 std::map<int, double> updateGammaCurve(const Image<PixRGB<byte> >& img, std::map<int, double> &pdf, bool init)
 {
-    LINFO("==========================================================================================Updating gamma curve");
+    LINFO("Updating gamma curve");
     std::map<int, double> pdfw,cdfw;
     float pdfmin = 1.f;
     float pdfmax = 0.f;

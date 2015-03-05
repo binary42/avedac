@@ -450,7 +450,7 @@ const ModelOptionDef OPT_MDPsaveOriginalFrameSpec =
 const ModelOptionDef OPT_MDPminStdDev =
   { MODOPT_ARG_FLOAT, "OPT_MDPminStdDev", &MOC_MBARI, OPTEXP_MRV,
     "Minimum std deviation of input image required for processing. This is useful to remove black frames, or frames with high visual noise",
-    "mbari-min-std-dev", '\0.', "<float>", "0."};
+    "mbari-min-std-dev", '\0.', "<float>", "0"};
 const ModelOptionDef OPT_MDPeventExpirationFrames = {
    MODOPT_ARG_INT, "MDPeventExpirationFrames", &MOC_MBARI, OPTEXP_MRV,
    "How long to keep an event in memory before removing it if no bit objects found to combine with the event. Useful for noisy video or reduced frame rate video where tracking problems occur.",

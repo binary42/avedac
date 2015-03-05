@@ -51,7 +51,7 @@ HoughTracker::HoughTracker()
 {}
 
 // ######################################################################
-HoughTracker::HoughTracker(const MbariImage< PixRGB<byte> >& img, BitObject &bo, const float maxScale)
+HoughTracker::HoughTracker(const Image< PixRGB<byte> >& img, BitObject &bo, const float maxScale)
 {
    	reset(img, bo, DEFAULT_FORGET_CONSTANT, maxScale);
 }
@@ -70,7 +70,7 @@ void HoughTracker::free()
 }
 
 // ######################################################################
-void HoughTracker::reset(const MbariImage< PixRGB<byte> >& img, BitObject& bo,
+void HoughTracker::reset(const Image< PixRGB<byte> >& img, BitObject& bo,
 						const float maxScale, const float forgetConstant)
 {
     Rectangle region = bo.getBoundingBox();
@@ -114,13 +114,14 @@ void HoughTracker::reset(const MbariImage< PixRGB<byte> >& img, BitObject& bo,
 }
 
 // ######################################################################
-bool HoughTracker::update(nub::soft_ref<MbariResultViewer>&rv, \
-                            MbariImage< PixRGB<byte> >& img, \
-                            const Image<byte> &occlusionImg, \
-                            Point2D<int> &prediction, \
-                            Rectangle &boundingBox, \
-                            Image<byte>& binaryImg, \
-                            const int evtNum, \
+bool HoughTracker::update(nub::soft_ref<MbariResultViewer>&rv,
+							const uint frameNum,
+                            Image< PixRGB<byte> >& img,
+                            const Image<byte> &occlusionImg,
+                            Point2D<int> &prediction,
+                            Rectangle &boundingBox,
+                            Image<byte>& binaryImg,
+                            const int evtNum,
                             const float forgetConstant)
 {
   float backProjectRadius = 0.5;
@@ -164,7 +165,7 @@ bool HoughTracker::update(nub::soft_ref<MbariResultViewer>&rv, \
 	  cv::rectangle(backProject, cv::Point(itsMaxObject.x, itsMaxObject.y), cv::Point(itsMaxObject.x+itsMaxObject.width, itsMaxObject.y+itsMaxObject.height), cv::Scalar(cv::GC_PR_BGD), -1);
 
 	  int cnt = itsFerns.backProject(itsFeatures, backProject, intersect( itsMaxObject, itsImgRect), itsMaxLoc, backProjectRadius, STEP_WIDTH, backProjectminProb);
-	  showSegmentation(rv, backProject, "BackProject",  img.getFrameNum(), evtNum);
+	  showSegmentation(rv, backProject, "BackProject",  frameNum, evtNum);
 
 	  if(cnt > 0)
 	  {
@@ -175,7 +176,7 @@ bool HoughTracker::update(nub::soft_ref<MbariResultViewer>&rv, \
 		cv::Mat fgmdl, bgmdl;
 		grabCut(subframe, subbackProject, itsObject, fgmdl, bgmdl, GRABCUT_ROUNDS, cv::GC_INIT_WITH_MASK);
 		backProject = maskOcclusion(occlusionImg,  backProject);
-		showSegmentation(rv, backProject, "Segmentation", img.getFrameNum(), evtNum);
+		showSegmentation(rv, backProject, "Segmentation", frameNum, evtNum);
 
 	  #ifdef SHIFT_TO_CENTER
 		center = centerOfMass(backProject);
@@ -185,7 +186,7 @@ bool HoughTracker::update(nub::soft_ref<MbariResultViewer>&rv, \
 	  #endif
 	  }
 
-	  //showResult(rv, frame, backProject, itsMaxObject, getBoundingBox(backProject), "Hough", img.getFrameNum(), evtNum);
+	  //showResult(rv, frame, backProject, itsMaxObject, getBoundingBox(backProject), "Hough", frameNum, evtNum);
 
 	  if(cnt > 0)
 	  {
@@ -202,7 +203,7 @@ bool HoughTracker::update(nub::soft_ref<MbariResultViewer>&rv, \
 		  const Dims dims(bbox.width, bbox.height);
 		  Rectangle r(topleft, dims);
 		  boundingBox = r;
-		  binaryImg = makeBinarySegmentation(rv, backProject, img.getFrameNum(), evtNum);
+		  binaryImg = makeBinarySegmentation(rv, backProject, frameNum, evtNum);
 		  return true;
 	  }
 	  return

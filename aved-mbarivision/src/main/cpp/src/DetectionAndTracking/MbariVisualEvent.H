@@ -212,12 +212,12 @@ namespace MbariVisualEvent {
 
 	//! updates the Hough-based tracker
 	// !@returns false if tracker fails
-	bool updateHoughTracker(nub::soft_ref<MbariResultViewer>& rv, MbariImage< PixRGB<byte> >& img,
-	                        const Image< byte >& occlusionImg, Image< byte >& binaryImg, \
+	bool updateHoughTracker(nub::soft_ref<MbariResultViewer>& rv, uint frameNum, Image< PixRGB<byte> >& img,
+	                        const Image< byte >& occlusionImg, Image< byte >& binaryImg,
 	                        Point2D<int> &prediction,  Rectangle &boundingBox);
 
     //! reset the Hough-based tracker
-    void resetHoughTracker(MbariImage< PixRGB<byte> >& img, BitObject &bo, float maxScale );
+    void resetHoughTracker(Image< PixRGB<byte> >& img, BitObject &bo, float maxScale );
 
     //! free up memory associated with the Hough-based tracker
     void freeHoughTracker();
@@ -399,12 +399,13 @@ namespace MbariVisualEvent {
       motion
       @param metadata associated with current frame number*/
     void updateEvents(nub::soft_ref<MbariResultViewer>& rv, \
-                      const Image< byte >& mask, \
-                      MbariImage< PixRGB<byte> >& img, \
-                      MbariImage< PixRGB<byte> >& prevImg,
-                      const Image<byte>& binMap, \
-                      const Image<PixRGB<byte>>& graphMap,
-                      const Vector2D& curFOE, \
+                      const Image< byte >& mask,
+                      const uint frameNum,
+                      Image< PixRGB<byte> >& img,
+                      Image< PixRGB<byte> >& prevImg,
+                      const Image< byte >& binMap,
+                      const Image< PixRGB< byte > >& graphMap,
+                      const Vector2D& curFOE,
                       const MbariMetaData &m);
 
 	//! return the average speed events are moving
@@ -504,49 +505,49 @@ namespace MbariVisualEvent {
 	
     // runs the nearest neighbor tracking on @param event
     // returns true if able to track
-    bool runNearestNeighborTracker(VisualEvent *event, uint frameNum, const MbariMetaData &m,
+    bool runNearestNeighborTracker(VisualEvent *event, const uint frameNum, const MbariMetaData &m,
                                const Image<byte>& binMap,
                                const Image<PixRGB<byte>>& graphMap,
                                const Vector2D& curFOE,
-                               MbariImage< PixRGB<byte> >& img,
                                bool skip  = false);
 	
     // runs the Kalman filter tracking on @param event
     // returns true if able to track
-    bool runKalmanTracker(VisualEvent *event, uint frameNum, const MbariMetaData &m,
+    bool runKalmanTracker(VisualEvent *event, const uint frameNum, const MbariMetaData &m,
+                          Image< PixRGB<byte> >& img,
                           const Image<byte>& binMap,
                           const Image<PixRGB<byte>>& graphMap,
                           const Vector2D& curFOE,
-                          MbariImage< PixRGB<byte> >& img,
-                           bool skip = false);
+                          bool skip = false);
 
 	// run the Hough-based tracker on @param event
 	// returns true if able to track
     bool runHoughTracker( nub::soft_ref<MbariResultViewer>& rv,
-                                VisualEvent *currEvent, uint frameNum, const MbariMetaData &m,
-                                MbariImage< PixRGB<byte> >& img,
+                                VisualEvent *currEvent, const uint frameNum, const MbariMetaData &m,
+                                Image< PixRGB<byte> >& img,
                                 const Image< byte >& mask,
                                 const Vector2D& curFOE,
-                                bool skip= false);
+                                bool skip = false);
 
 	// run the combination Hough and NearestNeighbor tracker on @param event
-    void runNearestNeighborHoughTracker(VisualEvent *event, uint frameNum, const MbariMetaData &m,
-                               const Image<byte>& binMap,
-                               const Image<PixRGB<byte>>& graphMap,
+    void runNearestNeighborHoughTracker(VisualEvent *event, const uint frameNum, const MbariMetaData &m,
+                               const Image< byte >& binMap,
+                               const Image< PixRGB < byte > >& graphMap,
+                               const Image< byte >& mask,
                                const Vector2D& curFOE,
                                nub::soft_ref<MbariResultViewer>& rv,
-                               MbariImage< PixRGB<byte> >& img,
-                               MbariImage< PixRGB<byte> >& prevImg);
+                               Image< PixRGB< byte> >& img,
+                               Image< PixRGB< byte> >& prevImg);
 
 	// run the combination Hough and Kalman tracker on @param event
-    void runKalmanHoughTracker(VisualEvent *event, uint frameNum, const MbariMetaData &m,
-                               const Image<byte>& binMap,
-                               const Image<PixRGB<byte>>& graphMap,
+    void runKalmanHoughTracker(VisualEvent *event, const uint frameNum, const MbariMetaData &m,
+                               const Image< byte >& binMap,
+                               const Image< PixRGB< byte > >& graphMap,
+                               const Image< byte >& mask,
                                const Vector2D& curFOE,
                                nub::soft_ref<MbariResultViewer>& rv,
-                               MbariImage< PixRGB<byte> >& img,
-                               MbariImage< PixRGB<byte> >& prevImg,
-                               const Image< byte >& mask);
+                               Image< PixRGB< byte> >& img,
+                               Image< PixRGB< byte> >& prevImg);
 
     // run the check for failure conditions on the @param event
     void checkFailureConditions(VisualEvent *currEvent, Dims d);

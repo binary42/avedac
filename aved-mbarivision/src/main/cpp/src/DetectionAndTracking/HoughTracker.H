@@ -63,7 +63,7 @@ public:
   //! constructor
   /* !@img the image to segment and track
   @region the bounding box to initialize the tracker */
-  HoughTracker(const MbariImage< PixRGB<byte> >& img, BitObject& bo, float maxScale);
+  HoughTracker(const Image< PixRGB<byte> >& img, BitObject& bo, float maxScale);
 
   //! constructor
   HoughTracker();
@@ -76,6 +76,7 @@ public:
 
   //! update with a new frame from the video
   /* !@rv the results viewer to display intermediate results
+  @frameNum the frame number (for display purposes)
   @img the image to segment and track
   @occlusionImg a mask representing the objects that are occluding this
   @prediction the predicted maximum point
@@ -83,19 +84,20 @@ public:
   @evtNum the event number this tracker is assigned to
   @forgetConstant the tao forgetting constant
   @return true if object tracked*/
-  bool update(nub::soft_ref<MbariResultViewer>&rv, \
-              MbariImage< PixRGB<byte> >& img, \
-              const Image<byte> &occlusionImg, \
-              Point2D<int> &prediction, \
-              Rectangle &boundingBox, \
-              Image< byte >& binaryImg, \
+  bool update(nub::soft_ref<MbariResultViewer>&rv,
+              const uint frameNum,
+              Image< PixRGB<byte> >& img,
+              const Image<byte> &occlusionImg,
+              Point2D<int> &prediction,
+              Rectangle &boundingBox,
+              Image< byte >& binaryImg,
               const int evtNum,
               const float forgetConstant);
 
   /* !reset the tracker
   @img the image to segment and track
   @region the bounding box to initialize the tracker */
-  void reset(const MbariImage< PixRGB<byte> >& img, BitObject& bo, const float maxScale, const float forgetConstant);
+  void reset(const Image< PixRGB<byte> >& img, BitObject& bo, const float maxScale, const float forgetConstant);
 
 private:
 

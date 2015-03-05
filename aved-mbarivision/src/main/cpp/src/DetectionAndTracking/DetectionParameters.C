@@ -186,7 +186,7 @@ void DetectionParametersSingleton::initialize(DetectionParameters &p, const Dims
     float maxDistFloat = (float) maxDist;
 
     if (p.itsTrackingMode == TMKalmanFilter || p.itsTrackingMode == TMKalmanHough)
-        p.itsMaxCost = 2*maxDistFloat;
+        p.itsMaxCost = pow(maxDistFloat,2.0F);
     else
 	    p.itsMaxCost = maxDist;
     p.itsMaxDist = maxDist;
