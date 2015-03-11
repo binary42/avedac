@@ -31,9 +31,10 @@
 #include "Component/GlobalOpts.H"
 #include "Component/ModelManager.H"
 #include "Component/JobServerConfigurator.H"
-#include "Image/FilterOps.H"    // for lowPass5y()
+#include "Image/FilterOps.H"    // for lowPass3y()
 #include "Image/Kernels.H"      // for twofiftyfives()
 #include "Image/ColorOps.H"
+#include "Image/fancynorm.H"
 #include "Image/MorphOps.H"
 #include "Image/ShapeOps.H"   // for rescale()
 #include "Raster/GenericFrame.H"
@@ -63,8 +64,10 @@
 #include "Image/MbariImage.H"
 #include "Image/MbariImageCache.H"
 #include "Image/BitObject.H"
+#include "Image/DrawOps.H"
 #include "Image/IO.H"
 #include "Media/MbariResultViewer.H"
+#include "Motion/MotionEnergy.H"
 #include "Utils/Version.H"
 #include "Utils/MbariXMLParser.H"
 
@@ -224,6 +227,7 @@ int main(const int argc, const char** argv) {
     // initialize the visual event set
     VisualEventSet eventSet(dp, manager.getExtraArg(0));
     int countFrameDist = 1;
+    bool resetBrain = true;
 
     // are we loading the event structure from a file?
     const bool loadedEvents = rv->isLoadEventsNameSet();
@@ -251,6 +255,9 @@ int main(const int argc, const char** argv) {
     for(int i=0; i < 256; i++) {pdf[i] = 0.F; cdfw[i] = 0.f;}
     float prevEntropy = 0.f;
     const float entropyMax = 0.05f;
+    float H, entropyDiff;
+    PixRGB<byte> avgVal(0,0,0);
+    MotionEnergyPyrBuilder motion(Gaussian5, 0.99F);
 
     // initialize the XML if requested to save event set to XML
     if (rv->isSaveXMLEventsNameSet()) {
@@ -301,8 +308,8 @@ int main(const int argc, const char** argv) {
                 }
                 else {
                     // only update when entropy exceeds max to save computation
-                    float H = updateEntropyModel(img, pdf);
-                    float entropyDiff = H - prevEntropy;
+                    H = updateEntropyModel(img, pdf);
+                    entropyDiff = H - prevEntropy;
                     prevEntropy = H;
                     if (entropyDiff > entropyMax) {
                         cdfw = updateGammaCurve(img, pdf, false);
@@ -316,7 +323,7 @@ int main(const int argc, const char** argv) {
                     LINFO("Standard deviation in frame %d too low. Is this frame all black ? Not including this image in the cache", ifs->frame());
                     avgCache.push_back(avgCache.mean());
                 } else
-                    avgCache.push_back(lowPass5x(lowPass5y(img)));
+                    avgCache.push_back(lowPass3x(lowPass3y(img)));
             } else {
 
                 if (avgCache.size() == 0){
@@ -324,15 +331,15 @@ int main(const int argc, const char** argv) {
                 }
                 else {
                     // only update when entropy exceeds max to save computation
-                    float H = updateEntropyModel(img, pdf);
-                    float entropyDiff = H - prevEntropy;
+                    H = updateEntropyModel(img, pdf);
+                    entropyDiff = H - prevEntropy;
                     prevEntropy = H;
                     if (entropyDiff > entropyMax) {
                         cdfw = updateGammaCurve(img, pdf, false);
                     }
                 }
                 img = enhanceImage(img, cdfw);
-                avgCache.push_back(lowPass5x(lowPass5y(img)));
+                avgCache.push_back(lowPass3x(lowPass3y(img)));
             }
 
             // Get the MBARI metadata from the frame if it exists
@@ -361,21 +368,6 @@ int main(const int argc, const char** argv) {
                 img = avgCache[cacheFrameNum];
                 mbariImgEnhanced = outCache[cacheFrameNum];
                 metadata = mbariImgEnhanced.getMetaData();
-
-                if (dp.itsMinStdDev > 0.f) {
-                    stddev = stdev(luminance(mbariImgEnhanced));
-                    LINFO("Standard deviation in frame %d:  %f", curFrame, stddev);
-                }
-
-                const list<BitObject> bitObjectFrameList = eventSet.getBitObjectsForFrame(curFrame - 1);
-                if (!bitObjectFrameList.empty() && curFrame <= int(avgCache.size())) {
-                    Image< PixRGB<byte> > bgndImg = getBackgroundImage(
-                            mbariImgEnhanced, avgCache.mean(),
-                            prevImg,
-                            bitObjectFrameList);
-                    avgCache.push_back(bgndImg);
-                    rv->output(bgndImg, curFrame - 1, "Background_input");
-                }
                 prevImg = mbariImgEnhanced; // save the current frame for the next loop*/
 
             } else {
@@ -385,52 +377,44 @@ int main(const int argc, const char** argv) {
                     break;
                 }
 
-                const list<BitObject> bitObjectFrameList = eventSet.getBitObjectsForFrame(curFrame - 1);
-                if (!bitObjectFrameList.empty()) {
-                    Image< PixRGB<byte> > bgndImg = getBackgroundImage(
-                            img, avgCache.mean(),
-                            prevImg,
-                            bitObjectFrameList);
-                    avgCache.push_back(bgndImg);
-                    rv->output(bgndImg, curFrame - 1, "Background_input");
-                }
-
                 ifs->updateNext();
                 img = ifs->readRGB();
+                // only update when entropy exceeds max to save computation
+                float H = updateEntropyModel(img, pdf);
+                float entropyDiff = H - prevEntropy;
+                prevEntropy = H;
+                if (entropyDiff > entropyMax) {
+                   cdfw = updateGammaCurve(img, pdf, false);
+                }
+                img = enhanceImage(img, cdfw);
+                mbariImgEnhanced.updateData(img, curFrame);
 
                 if (dp.itsMinStdDev > 0.f) {
                     stddev = stdev(luminance(img));
                     LINFO("Standard deviation in frame %d:  %f", ifs->frame(), stddev);
-                    // only update when entropy exceeds max to save computation
-                    float H = updateEntropyModel(img, pdf);
-                    float entropyDiff = H - prevEntropy;
-                    prevEntropy = H;
-                    if (entropyDiff > entropyMax) {
-                       cdfw = updateGammaCurve(img, pdf, false);
-                    }
-                    img = enhanceImage(img, cdfw);
-                    // get the standard deviation in the input image
-                    // if there is little deviation do not add to the average cache
-                    if (stddev <= dp.itsMinStdDev && avgCache.size() > 0) {
-                        LINFO("Standard deviation low in frame %d. Not including this image in the cache. Is this frame all black or just noise ? ", ifs->frame());
-                        avgCache.push_back(avgCache.mean());
-                    } else {
-                        avgCache.push_back(lowPass5x(lowPass5y(img)));
-                        }
+                }
+
+                // get the standard deviation in the input image
+                // if there is little deviation do not add to the average cache
+                if (stddev <= dp.itsMinStdDev && avgCache.size() > 0) {
+                    LINFO("Standard deviation low in frame %d. Not including this image in the cache. Is this frame all black or just noise ? ", ifs->frame());
+                    avgCache.push_back(avgCache.mean());
                 } else {
-                    // only update when entropy exceeds max to save computation
-                    float H = updateEntropyModel(img, pdf);
-                    float entropyDiff = H - prevEntropy;
-                    prevEntropy = H;
-                    if (entropyDiff > entropyMax) {
-                       cdfw = updateGammaCurve(img, pdf, false);
+
+                    const list<BitObject> bitObjectFrameList = eventSet.getBitObjectsForFrame(curFrame - 1);
+                    if (!bitObjectFrameList.empty()) {
+                        Image< PixRGB<byte> > bgndImg = getBackgroundImage(
+                                img, avgCache.mean(),
+                                prevImg,
+                                bitObjectFrameList,avgVal);
+                        avgCache.push_back(lowPass3x(lowPass3y(img)));
+                        rv->output(bgndImg, curFrame - 1, "Background_input");
                     }
-                    img = enhanceImage(img, cdfw);
-                    avgCache.push_back(lowPass5x(lowPass5y(img)));
+                    else
+                        avgCache.push_back(lowPass3x(lowPass3y(img)));
                 }
 
                 // Get the MBARI metadata from the frame if it exists
-                mbariImgEnhanced.updateData(img, curFrame);
                 tc = mbariImgEnhanced.getMetaData().getTC();
                 metadata = mbariImgEnhanced.getMetaData();
                 if (tc.length() > 0)
@@ -466,46 +450,58 @@ int main(const int argc, const char** argv) {
 
         if (!loadedEvents) {
 
-            // update the mask
+            // update the dynamic mask
             if (dp.itsMaskDynamic) {
-                Image< byte > imgtmp = luminance(lowPass5x(lowPass5y(mbariImgEnhanced)));
-                float m = mean(imgtmp);
-                mask = maskArea(makeBinary(imgtmp, byte(m)),&dp);
 
-                /*maskArea(makeBinary2(img,
+                // Make dynamic mask
+                Image< byte > imgtmp = luminance(img2runsaliency);
+                float m = mean(imgtmp);
+                mask = maskArea(makeBinary2(imgtmp,
                                            byte(m-5),
                                            byte(m+5),
                                            byte(255),
-                                           byte(0)),&dp);*/
+                                           byte(0)),&dp);
+
+                // Create motion map
+                Image<byte> mmap = motion.updateMotion(luminance(lowPass3x(lowPass3y(mbariImgEnhanced))), staticClipMask);
+                rv->display(mmap, mbariImgEnhanced.getFrameNum(), "Motion");
+
+                // unmask where dynamic mask true but motion present
+                Image<byte>::iterator mitr = mask.beginw();
+                Image<byte>::iterator mmitr = mmap.beginw();
+                Image<PixRGB<byte>>::const_iterator ritr = mbariImgEnhanced.beginw(), stop = mbariImgEnhanced.end();
+
+                while(ritr != stop) {
+                   *mitr  = ( (*mitr) == 0 && (*mmitr) > 0) ? 255 : *mitr;
+                   mmitr++; ritr++; mitr++;
+                }
             }
             else
                 mask = staticClipMask;
 
             if (dp.itsMaskLasers) {
-                Image<PixRGB<float> > input = mbariImg;
+                Image<PixRGB<float> > input = mbariImgEnhanced;
                 Image<byte>::iterator mitr = mask.beginw();
                 Image<PixRGB<float>>::const_iterator ritr = input.beginw(), stop = input.end();
                 float thresholda = 50.F, thresholdl = 50.F;
                 // mask out any significant red in the L*a*b color space where strong red has positive a values
-                // TODO: make this a parameter the user can set
                 while(ritr != stop) {
                     const PixLab<float> pix = PixLab<float>(*ritr++);
                     float l = pix.p[0]/3.0F; // 1/3 weight
                     float a = pix.p[1]/3.0F; // 1/3 weight
-                    *mitr++ = (a > thresholda && l > thresholdl) ? 0 : *mitr;
+                    *mitr++  = (a > thresholda && l > thresholdl) ? 0 : *mitr;
                 }
             }
-
-            // mask is inverted so morphological operations are in reverse; here we are enlarging the mask
-            // enlarge the mask some to cover
-            Image<byte> se = twofiftyfives(4*dp.itsCleanupStructureElementSize);
+            // mask is inverted so morphological operations are in reverse; here we are enlarging the mask to cover
+            Image<byte> se = twofiftyfives(dp.itsCleanupStructureElementSize);
             mask = erodeImg(mask, se);
+
             rv->output(mask, mbariImgEnhanced.getFrameNum(), "Mask");
 
-            Image<byte> img2segmentGraph = maxRGB(avgCache.absDiffMean(mbariImgEnhanced) );
-            Image<PixRGB<byte>> img2segmentBin = avgCache.absDiffMean(mbariImgEnhanced);
+            Image<PixRGB<byte>> img2segmentBin = maskArea(avgCache.absDiffMean(mbariImgEnhanced),mask);
+            Image<byte> img2segmentGraph = maskArea(maxRGB(img2segmentBin), staticClipMask);
             Image<byte> bitImg(mbariImgEnhanced.getDims(), ZEROS);
-            Image< PixRGB<byte> > graphBitImg;
+            Image< PixRGB<byte> > graphBitImg(mbariImgEnhanced.getDims(), ZEROS);
 
             segmentation.run(mbariImgEnhanced.getFrameNum(), img2segmentBin, img2segmentGraph, 1.0F, 1.0F, \
                             graphBitImg, bitImg);
@@ -513,11 +509,11 @@ int main(const int argc, const char** argv) {
             // update the focus of expansion
             Vector2D curFOE = foeEst.updateFOE(bitImg);
 
-            rv->display(graphBitImg, curFrame, "GraphSegment");
-            rv->display(bitImg, curFrame, "BinarySegment");
+            rv->output(graphBitImg, curFrame, "GraphSegment");
+            rv->output(bitImg, curFrame, "BinarySegment");
 
             // update the events with the segmented images
-            eventSet.updateEvents(rv, mask, curFrame, img2segmentBin, prevImg, bitImg, graphBitImg, curFOE, metadata);
+            eventSet.updateEvents(rv, mask, curFrame, mbariImgEnhanced, prevImg, bitImg, graphBitImg, curFOE, metadata);
 
             // is counter at 0?
             --countFrameDist;
@@ -533,6 +529,9 @@ int main(const int argc, const char** argv) {
 
                     LINFO("Getting salient regions for frame: %06d", curFrame);
 
+                    if (resetBrain) brain->reset(MC_RECURSE);
+                    resetBrain = (resetBrain == true) ? false: true; //toggle reset
+
                     std::list<Winner> winlist = getSalientWinners(rv, mask, img2runsaliency, brain, seq, \
                                            dp.itsMaxEvolveTime, dp.itsMaxWTAPoints, mbariImgEnhanced.getFrameNum());
 
@@ -545,7 +544,7 @@ int main(const int argc, const char** argv) {
                         rv->output(showAllObjects(sobjs), curFrame, "Salient_Objects");
 
                     // initiate events with these objects
-                    eventSet.initiateEvents(sobjs, metadata, scaleW, scaleH, mbariImgEnhanced);
+                    eventSet.initiateEvents(sobjs, metadata, scaleW, scaleH, mbariImgEnhanced, curFOE);
 
                     winlist.clear();
                     sobjs.clear();
