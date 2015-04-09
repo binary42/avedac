@@ -39,7 +39,7 @@ class Winner
 public:
 
   //! Constructor
-  Winner(WTAwinner &winner, BitObject &bo);
+  Winner(WTAwinner &winner, BitObject &bo, uint frameNum);
 
   void setSMV(float sv);
 
@@ -47,11 +47,14 @@ public:
   inline WTAwinner getWTAwinner() const { return itsWinner; }
 
   // ######################################################################
-  inline BitObject getBitObject() const { return itsBitObject; }
+  inline uint getFrameNum() const { return itsFrameNum; }
 
+  // ######################################################################
+  inline BitObject getBitObject() const { return itsBitObject; }
 
 private:
   WTAwinner itsWinner;
   BitObject itsBitObject;
+  uint itsFrameNum;
 };
 #endif

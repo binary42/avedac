@@ -45,7 +45,7 @@ bool operator<(const edge &a, const edge &b) {
  * num_vertices: number of vertices in graph.
  * num_edges: number of edges in graph
  * edges: array of edges.
- * c: constant for treshold function.
+ * c: constant for threshold function.
  */
 universe *segment_graph(int num_vertices, int num_edges, edge *edges, 
 			float c) { 
@@ -64,7 +64,7 @@ universe *segment_graph(int num_vertices, int num_edges, edge *edges,
   for (int i = 0; i < num_edges; i++) {
     edge *pedge = &edges[i];
     
-    // components conected by this edge
+    // components connected by this edge
     int a = u->find(pedge->a);
     int b = u->find(pedge->b);
     if (a != b) {

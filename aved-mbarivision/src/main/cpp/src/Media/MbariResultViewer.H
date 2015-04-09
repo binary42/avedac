@@ -44,11 +44,12 @@
 #include "Image/MbariImage.H"
 #include "Utils/MbariXMLParser.H"
 
+
 #include <string>
 #include <vector>
 
-class ModelManager;
 class XWinManaged;
+class Logger;
 template <class T> class MbariImage;
 
 using namespace std;
@@ -58,12 +59,10 @@ using namespace std;
 class MbariResultViewer : public ModelComponent
 {
 public:
+
   //! Constructor - give a ModelManager and an OutputFrameSeries
   /* for both the events and and full-frame output */
-  MbariResultViewer(ModelManager& mgr, 
-			nub::soft_ref<OutputFrameSeries> evtofs, 
-			nub::soft_ref<OutputFrameSeries> ofs, 
-			string binDir);
+  MbariResultViewer(ModelManager& mgr, nub::soft_ref<Logger> logger);
 
  // ! Destructor
   virtual ~MbariResultViewer();
@@ -78,12 +77,10 @@ public:
   //! destroy all the windows
   virtual void reset1();
 	
-  //! updates the MbariFramesSeries output one frame
-  void updateNext();
-	
-  //! save and/or display intermediate result
-  /*! whether the result image is saved and/or displayed is
+  //! save and/or display image
+  /*! whether the image is saved and/or displayed is
     determined by the ModelParams
+    @param ofs the output frame series to use to save to
     @param img the image containing the intermediate result
     @param frameNum the frame number of the image
     @param resultName a string that defines the kind of intermediate
@@ -92,21 +89,9 @@ public:
     @param resNum if there are several results of this type for each frame,
     the number of the result*/
   template <class T>
-  void output(const Image<T>& img, const uint frameNum,
-	      const string& resultName, const int resNum = -1);	
-	
-  //! display intermediate result
-  /*!@param img the image containing the intermediate result
-    @param frameNum the frame number of the image
-    @param resultName a string that defines the kind of interemediate
-    result - this is appended to the filestem for the file name
-    and/or window title
-    @param resNum if there are several results of this type for each frame,
-    the number of the resul*/
-  template <class T>
-  void display(const Image<T>& img, const uint frameNum,
-	       const string& resultName, const int resNum = -1);
-				 
+  void output(nub::soft_ref<OutputFrameSeries> ofs, const Image<T>& img,
+            const uint frameNum, const string& resultName, const int resNum = -1);
+
   //! save intermediate result
   /*!@param img the image containing the intermediate result
     @param frameNum the frame number of the image
@@ -115,7 +100,7 @@ public:
     and/or window title
     @param resNum if there are several results of this type for each frame,
     the number of the resul*/
-  void save(const Image< PixRGB<byte> >& img, const uint frameNum,
+  void save(nub::soft_ref<OutputFrameSeries> ofs, const Image< PixRGB<byte> >& img, const uint frameNum,
 	    const string& resultName, const int resNum = -1);
 
   //! save intermediate result
@@ -126,7 +111,7 @@ public:
     and/or window title
     @param resNum if there are several results of this type for each frame,
     the number of the resul*/
-  void save(const Image<byte>& img, const uint frameNum,
+  void save(nub::soft_ref<OutputFrameSeries> ofs, const Image<byte>& img, const uint frameNum,
 	    const string& resultName, const int resNum = -1);
 
   //! save intermediate result
@@ -137,124 +122,32 @@ public:
     and/or window title
     @param resNum if there are several results of this type for each frame,
     the number of the resul*/
-  void save(const Image<float>& img, const uint frameNum,
+  void save(nub::soft_ref<OutputFrameSeries> ofs, const Image<float>& img, const uint frameNum,
 	    const string& resultName, const int resNum = -1);
 
-  //! save and possibly display an output frame
+  //! Create image output
   /*!Depending on the ModelParams, interesting events, candidates
     for interesting events and skipped event locations are marked
-    in the frame, the frame is displayed (if desired) and saved.
-    @param resultImg the output image
+    in the frame. Returns the generated image
+    @param resultImg the image to overlay the output on
     @param evts the event set to be used for drawing the events
     @param circleRadius the radius of the circles used for marking*/
 
-  void outputResultFrame(MbariImage< PixRGB<byte> >& resultImg, 
+  Image< PixRGB<byte> > createOutput(MbariImage< PixRGB<byte> >& resultImg,
 			 MbariVisualEvent::VisualEventSet& evts, 
 			 const int circleRadius, const float scaleW = 1.0F, const float scaleH = 1.0F);
 
-  //! check if the LoadEventsName is set
-  bool isLoadEventsNameSet() const;
-  
-  //! check if the Save Ouput is set
-  bool isSaveOutputSet() const;
 
-  //! check if the Display Ouput is set
-  bool isDisplayOutputSet() const;
+  //! display image
+  /*!@param img the image containing the image
+    @param frameNum the frame number of the image
+    @param resultName a string that defines what the image represents to put in the window title
+    @param resNum if there are several results of this type for each frame,
+    the number of the result*/
+  template <class T>
+  void display(const Image<T>& img, const uint frameNum,
+	       const string& resultName, const int resNum = -1);
 
-
-  //! load the VisualEventSet from the file LoadEventsName
-  void loadVisualEventSet(MbariVisualEvent::VisualEventSet& ves) const;
-
-  //! check if the LoadPropertiesName is set
-  bool isLoadPropertiesNameSet() const;
-
-  //! load the PropertyVector from the file LoadPropertiesName
-  void loadProperties(MbariVisualEvent::PropertyVectorSet& pvs) const;
-
-  //! check if the SaveEventsName is set
-  bool isSaveEventsNameSet() const;
-
-  //! save the VisualEventSet to the file SaveEventsName
-  void saveVisualEventSet(MbariVisualEvent::VisualEventSet& ves) const;
-
-  //! check if the SavePropertiesName is set
-  bool isSavePropertiesNameSet() const;
-
-  //! save the PropertyVector to the file SavePropertiesName
-  void saveProperties(MbariVisualEvent::PropertyVectorSet& pvs);
-
-  //! check if the SavePositionsName is set
-  bool isSavePositionsNameSet() const;
-
-  //! save the positions to the file SavePositionsName
-  void savePositions(const MbariVisualEvent::VisualEventSet& ves) const;
-
-  //! determine whether the frames actually need to be loaded
-  bool needFrames() const;
-
-  //! returns the size of the cache for running averages (from the command line)
-  uint getAvgCacheSize() const;
-
-  //! determine whether we have to save any event clips
-  bool isSaveEventClip() const;
-
-  //! return the number of event clips we have to save
-  uint numSaveEventClips() const;
-
-  //! returns the event number with idx to be saved as a clip
-  uint getSaveEventClipNum(uint idx) const;
-
-  //! save a cut-out piece of frame containing a single event
-  void saveSingleEventFrame(MbariImage< PixRGB<byte> >& img,
-			    int frameNum, MbariVisualEvent::VisualEvent *event);
-
-  //! save the VisualEventList to the file SaveEventsName
-  void saveVisualEvent(MbariVisualEvent::VisualEventSet& ves,
-		       std::list<MbariVisualEvent::VisualEvent *> &lves);
-						 
-  //! check if the SaveEventsSummaryName is set
-  bool isSaveEventSummaryNameSet() const;
-	
-  //! save the VisualEventList to the file SaveEventsSummaryName
-  void saveVisualEventSummary(string versionString,
-			      std::list<MbariVisualEvent::VisualEvent *> &ves);
-	
-  //! save the positions to the file SavePositionsName
-  void savePositions(const std::list<MbariVisualEvent::VisualEvent *> &ves) const;  
-	
-  //! check if the saveXMLEventsNameSet is set
-  bool isSaveXMLEventsNameSet() const;  
-
-  //! check if the metadataSource is set
-  bool hasMetadataSource() const;  
-	
-  //! check if save all event clips is set
-  bool isSaveAllEventClips() const;
-	
-  //! save the VisualEventList to the file saveXMLEventSetName
-  /*! @param ves Visual Event Set
-    @param currframe current frame we are writing 
-    @param timecode current frame timecode
-    @param fr frame range for this event set
-  */	
-  void saveVisualEventSetToXML(std::list<MbariVisualEvent::VisualEvent *> &ves,
-			       int currframe,
-			       string timecode,
-			       FrameRange fr);
-							     
-  //! Creates AVED XML document with header information: 
-  /*! @param versionString the version string that represents this binary 
-    @param fr frame range of this event sequence
-    @param timecodefirst starting timecode of this event sequence, e.g. in 00:01:12
-    @param timecodelast ending timecode of this event sequence, e.g. in 00:01:12
-    @param params detection parameters 
-    * */
-  void createXMLDocument(string versionString,
-			 FrameRange fr,
-			 string timecodefirst,
-			 string timecodelast,
-			 DetectionParameters params); 
-	
 protected:
 
   //! destroy windows and other internal variables
@@ -267,59 +160,30 @@ protected:
   //! make a label text from the reference number and the frame number
   string getLabel(const uint num, const uint frameNum, const int resNum = -1);
 
-  //! make the file stem for saving files
-  string getFileStem(const string& resultName, const int resNum = -1);
-
   //! draw an image to a window, deal with creating and rescaling the window
   template <class T>
   XWinManaged* displayImage(const Image<T>& img,
 			    XWinManaged* win,
 			    const char* label);
 
-  //! parse the SaveEventNumString and store the numbers in itsSaveEventNums
-  void parseSaveEventNums(const string& value);
+private:
 
-  OModelParam<bool> itsSaveResults;     //!<whether intermediate results are saved
-  OModelParam<bool> itsDisplayResults;  //!<whether intermediate results are displayed
-  OModelParam<BitObjectDrawMode> itsMarkInteresting; //!<the way interesting events are marked
-  OModelParam<float> itsOpacity;        //!<opacity of shape or outline markings of events
+  OModelParam<bool> itsDisplayResults;  //!<whether windows displayed are stored. useful for debugging.
   OModelParam<bool> itsMarkCandidate;   //!<whether candidates for int. events are marked
-  OModelParam<bool> itsMarkPrediction;  //!<whether predictions of event locations are marked
   OModelParam<bool> itsMarkFOE;         //!<whether the focus of expansion is marked
-  OModelParam<bool> itsSaveOutput;      //!<whether the output frames are saved
-  OModelParam<bool> itsDisplayOutput;   //!<whether the output frames are displayed
+  OModelParam<BitObjectDrawMode> itsMarkInteresting; //!<the way interesting events are marked
+  OModelParam<bool> itsMarkPrediction;  //!<whether predictions of event locations are marked
+  OModelParam<float> itsOpacity;        //!<opacity of shape or outline markings of events
+  OModelParam<Dims> itsRescaleDisplay;  //!<rescale intermediate results to this scale for display
+  OModelParam<bool> itsSaveBoringEvents; //! whether to save non-interesting/boring events
+  OModelParam<bool> itsSaveResults;     //!<whether intermediate results are saved
   OModelParam<bool> itsShowEventLabels; //!<whether the event labels are written into output frames
 
-  OModelParam<Dims> itsRescaleDisplay;  //!<rescale intermediate results to this scale for display
 
-  OModelParam<int> itsSizeAvgCache;     //!<the number of images used for running average
-
-  OModelParam<string> itsSaveEventsName;
-  OModelParam<string> itsLoadEventsName;
-  OModelParam<string> itsSavePropertiesName;
-  OModelParam<string> itsLoadPropertiesName;
-  OModelParam<string> itsSavePositionsName;
-
-  OModelParam<string> itsSaveEventNumString;
-  OModelParam<string> itsSaveSummaryEventsName;
-  OModelParam<string> itsSaveXMLEventSetName;
-  OModelParam<string> itsMetadataSource;
-  
-private:
-  bool itsSaveNonInterestingEvents; //!<whether the non-interesting events are saved or not
-	
-  MbariXMLParser* itsXMLParser;
   std::vector<string> itsResultNames;
   std::vector<XWinManaged*> itsResultWindows;
   XWinManaged* resFrameWindow;
   PixRGB<byte> colInteresting, colCandidate, colPrediction, colFOE;
-  nub::soft_ref<OutputFrameSeries> itsOfs, itsEvtOfs;
-  std::vector<uint> itsSaveEventNums;
-  bool XMLfileCreated;
-  bool appendEvents, appendEventSummary, appendEventsXML;
-  bool appendProperties;
-  bool itsSaveEventNumsAll;
-	
 };
 
 #endif /*MBARIRESULTVIEWER_H_*/

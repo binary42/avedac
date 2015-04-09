@@ -17,8 +17,8 @@
 #include "features.h"
 #include "utilities.h"
 
-#define MAP_SIZE 100.0f
-#define MAP_STEP 2.0f
+//#define MAP_SIZE 100.0f
+//#define MAP_STEP 2.0f
 
 namespace HoughTracker {
 bool sortVotesDesc (const std::pair<CvPoint, float>& A, const std::pair<CvPoint, float>& B);
@@ -51,8 +51,10 @@ class VoteTooLargeException: public std::exception {};
 class Node
 {
 public:
-	Node() : numPos(1.0f), numNeg(1.0f), probPos(0.5f)
+	Node(int size, int step) : numPos(1.0f), numNeg(1.0f), probPos(0.5f)
 	{
+		MapSize = size;
+		MapStep = step;
 		voteMap = cv::Mat( MapSize, MapSize, CV_32FC1, cv::Scalar(0.0f) );
 	};
 
@@ -65,14 +67,16 @@ public:
 	Node(const Node& n) : numPos(n.numPos), numNeg(n.numNeg), probPos(n.probPos)
 	{
 		voteMap = n.voteMap;
+		MapSize = n.MapSize;
+		MapStep = n.MapStep;
 	};
 
  
 	float numPos, numNeg;
 	float probPos;
 
-	static int MapStep;
-	static int MapSize;
+	int MapStep;
+	int MapSize;
 	cv::Mat voteMap;
 	mutable std::vector< std::pair<cv::Point, float> > buffered;
 
@@ -95,11 +99,11 @@ public:
 	inline void updateMap( const cv::Point& vote )
 	{
 		buffered.clear();
-		int idx = round(static_cast<float>(vote.x) / MapStep) + MapSize/2.0f;
-		int idy = round(static_cast<float>(vote.y) / MapStep) + MapSize/2.0f;
+		int idx = round(static_cast<float>(vote.x) / (float)MapStep) + (float)MapSize/2.0f;
+		int idy = round(static_cast<float>(vote.y) / (float)MapStep) + (float)MapSize/2.0f;
 
 		if(idx < 0 || idy < 0 || idx >= MapSize || idy >= MapSize) {
-			std::cout << "Vote is too large for Map (" << vote.x << "/" << vote.y << ")" << std::endl;
+			std::cout << "Vote is out of bounds for Map Size " << MapSize << "( " << idx << "," << idy << " "<< vote.x << "/" << vote.y << ")" << std::endl;
 			throw VoteTooLargeException();
 		}
 		else {
@@ -145,7 +149,7 @@ public:
 	~Fern();
 
 	void evaluate(Features& ft, const cv::Rect& ROI, cv::Mat& result, int stepSize = 1, float threshold = 0.5f) const;
-	void update(Features& ft, const cv::Point& pos, int label, const cv::Point& center);
+	void update(Features& ft, const cv::Point& pos, int label, const cv::Point& center, const int mapSize, const int mapStep);
 	void forget(const double& factor);
 	void clear();
 	int backProject(Features& ft, cv::Mat& projected, const cv::Rect& ROI, cv::Point& center, float radius, int stepSize = 1, float threshold = 0.5f) const;
@@ -259,11 +263,11 @@ public:
 		return cnt;
 	}
 
-	void update(Features& ft, const cv::Point& pos, int label, const cv::Point& center)
+	void update(Features& ft, const cv::Point& pos, int label, const cv::Point& center, const int mapSize, const int mapStep)
 	{
 		for(unsigned int f = 0; f < m_ferns.size(); f++)
 		{
-			m_ferns.at(f).update(ft, pos, label, center);
+			m_ferns.at(f).update(ft, pos, label, center, mapSize, mapStep);
     	}
 		isSorted = false;
     };

@@ -103,9 +103,9 @@ int Segmentation::getMinSize(const vector< float > & v) {
 // ######################################################################
 
 Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, const int min_size, 
-        std::list<Winner> &winners, float scaleW, float scaleH,
+        float scaleW, float scaleH,
         const Image < PixRGB<byte> >&input) {
-  LDEBUG("processing with sigma: %f k: %d minsize: %d ",sigma,k,min_size);
+  LINFO("processing with sigma: %f k: %d minsize: %d ",sigma,k,min_size);
 
     image<rgb> *im = new image<rgb > (input.getWidth(), input.getHeight());
 
@@ -120,7 +120,7 @@ Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, con
         }
 
     // run segmentation
-    image <rgb> *seg = segment_image(im, sigma, k, min_size, winners, scaleW, scaleH);
+    image <rgb> *seg = segment_image(im, sigma, k, min_size, 1.0f, 1.0f);
 
     // initialize the output image with the segmented results
     Image < PixRGB<byte> > output = input;
@@ -184,7 +184,7 @@ Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, con
  	}
  
 	//Threshold below the mean
-	if(src.getVal(i,j) > mean){
+	if(src.getVal(i,j) >= mean){
 	  resultfinal.setVal(i,j,0); 
 	}
 	else {
@@ -314,77 +314,57 @@ Image< PixRGB<byte> > Segmentation::runGraph(const float sigma, const int k, con
   }
 
   // ######################################################################
-  /*void Segmentation::runGraph(uint frameNum, Image<byte> &img2segment,
-   nub::soft_ref<MbariResultViewer> &rv, std::list<Winner> &winlistGraph, float scaleW, float scaleH,
-   Image< PixRGB<byte> >&graphImg, Image<byte>& bitImg)
-  {
+  Image< PixRGB<byte> > Segmentation::runGraph(Image< PixRGB<byte> > image, Rectangle region, float scale)
+{
     DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
-    Image<byte> graphBitImg(img2segment.getDims(), ZEROS);
-    // get graph parameters
     vector<float> p = getFloatParameters(dp.itsSegmentGraphParameters);
     const float sigma = getSigma(p);
-    const int k = getK(p);
-    const int min_size = getMinSize(p);
-    std::list<BitObject> sobjs;
+    const int k = (float)getK(p)*scale;
+    const int min_size = (float)getMinSize(p)*scale;
 
-    LINFO("Running graph segmentation for frame %d", frameNum);
-    graphImg = runGraph(sigma, k, min_size, winlistGraph, scaleW, scaleH, img2segment);
-    rv->output(graphImg, frameNum, "Segment_graph");
+    // run graph based segment algorithm on region of interest
+    Image< PixRGB<byte> > segmentIn = crop(image, region);
+    Image< PixRGB<byte> > graphImgRoi = runGraph(sigma, k, min_size, 1.0F, 1.0F, segmentIn);
+    Image< PixRGB<byte> > graphImg(image.getDims(), ZEROS);
 
-    sobjs = getSalientObjects(graphImg, winlistGraph);
-    if (sobjs.size() > 0 && dp.itsSegmentAlgorithmType == SAGraphCut)
-     bitImg = showAllObjects(sobjs);
-  }*/
+    // paste graphImgRoi into graphImg at given position
+    inplacePaste(graphImg, graphImgRoi, Point2D<int>(region.left(), region.top()));
+    return graphImg;
+  }
 
   // ######################################################################
-  void Segmentation::run(uint frameNum, Image<PixRGB<byte>>& img2segmentBin, Image<byte> &img2segmentGraph,
-                        float scaleW, float scaleH, Image< PixRGB<byte> >&graphImg, Image<byte>& bitImg)
+  void Segmentation::run(uint frameNum, Image<byte> &segmentIn, float scaleW, float scaleH, 
+                        Image< PixRGB<byte> >&graphSegmentOut, Image<byte>& binSegmentOut)
   {
     DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
     Image<byte> se = twofiftyfives(dp.itsCleanupStructureElementSize);
-    std::list<Winner> winlistGraph;
+    vector<float> p = getFloatParameters(dp.itsSegmentAdaptiveParameters);
+    const int size = getNeighborhoodSize(p);
+    const int conn = getOffset(p);
 
     LINFO("Running segmentation for frame %d", frameNum);
 
-    // run segmentation per options chosen and return binary representation of the image
     if (dp.itsSegmentAlgorithmType == SAGraphCut || dp.itsSegmentAlgorithmType == SABest) {
         vector<float> p = getFloatParameters(dp.itsSegmentGraphParameters);
         const float sigma = getSigma(p);
         const int k = getK(p);
         const int min_size = getMinSize(p);
 
-        graphImg = runGraph(sigma, k, min_size, winlistGraph, scaleW, scaleH, img2segmentGraph);
+        graphSegmentOut = runGraph(sigma, k, min_size, scaleW, scaleH, segmentIn);
+
+        const byte threshold = mean(segmentIn);
+        binSegmentOut = makeBinary(segmentIn, threshold);
     }
-
-    vector<float> p = getFloatParameters(dp.itsSegmentAdaptiveParameters);
-    const int size = getNeighborhoodSize(p);
-    const int conn = getOffset(p);
-
-    // Get the images to segment
-    /*Image<byte> r,b,g;
-    getComponents(img2segmentBin, r, g, b);
-    bitImg = makeBinary(maxRGB(img2segmentBin), byte(size));
-    bitImg = erodeImg(dilateImg(bitImg, se), se);*/
-
     if (dp.itsSegmentAlgorithmType == SAMeanAdaptiveThreshold) {
-        bitImg = mean_thresh(img2segmentGraph, size, conn);
-        bitImg = erodeImg(dilateImg(bitImg, se), se);
+        binSegmentOut = mean_thresh(segmentIn, size, conn);
+        binSegmentOut = erodeImg(dilateImg(binSegmentOut, se), se);
     }
-    else if (dp.itsSegmentAlgorithmType == SAMedianAdaptiveThreshold || dp.itsSegmentAlgorithmType == SABest ) {
-        bitImg = median_thresh(img2segmentGraph, size, conn);
-        bitImg = erodeImg(dilateImg(bitImg, se), se);
+    else if (dp.itsSegmentAlgorithmType == SAMedianAdaptiveThreshold || dp.itsSegmentAlgorithmType == SABest) {
+        binSegmentOut = median_thresh(segmentIn, size, conn);
+        binSegmentOut = erodeImg(dilateImg(binSegmentOut, se), se);
     }
     else if (dp.itsSegmentAlgorithmType == SAMeanMinMaxAdaptiveThreshold) {
-        bitImg = meanMaxMin_thresh(img2segmentGraph, size, conn);
-        bitImg = erodeImg(dilateImg(bitImg, se), se);
-    }
-
-    // if only using graphcut, need to generate a binary image for the focus of expansion update
-    if (dp.itsSegmentAlgorithmType == SAGraphCut) {
-        std::list<BitObject> sobjs = getSalientObjects(graphImg, winlistGraph);
-        if (sobjs.size() > 0) {
-             bitImg = showAllObjects(sobjs);
-         }
-         sobjs.clear();
+        binSegmentOut = meanMaxMin_thresh(segmentIn, size, conn);
+        binSegmentOut = erodeImg(dilateImg(binSegmentOut, se), se);
     }
   }

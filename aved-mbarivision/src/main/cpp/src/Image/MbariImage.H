@@ -72,6 +72,7 @@ public:
   inline MbariImage(Image<T> img, std::string ifms);
   inline MbariImage(Image<T> img, MbariMetaData md, std::string ifms);
   inline void updateData(Image<T> img, int nf);
+  inline void updateData(Image<T> img, MbariMetaData md, int nf);
   inline MbariMetaData getMetaData();
   inline std::string getStem();
   inline int getFrameNum();
@@ -113,6 +114,15 @@ void MbariImage<T>::updateData(Image<T> img, int nf)
 	
   std::string comments(Raster::getImageComments(fname));
   metaData.setMetaData(comments);
+}
+// ######################################################################
+template <class T> inline
+void MbariImage<T>::updateData(Image<T> img, MbariMetaData md, int nf)
+{
+  Image<T> A_copy( img );
+  this->swap(A_copy);
+  framenum = nf;
+  metaData = md;
 }
 
 // ######################################################################

@@ -509,8 +509,9 @@ DOMDocument* MbariXMLParser::parseXMLFile (std::string inputXML, std::string inp
 
 void MbariXMLParser::add(bool saveNonInterestingEvents,
                          std::list<MbariVisualEvent::VisualEvent *> &eventList,
-			 int eventframe,
-			 std::string eventframetimecode)
+			             int eventframe,
+			             std::string eventframetimecode,
+			             float scaleW, float scaleH)
 {
   // Create the body of the DOMDocument
   try {
@@ -591,14 +592,14 @@ void MbariXMLParser::add(bool saveNonInterestingEvents,
 	  XMLString::release(&currsizevalue);
 
 	  Point2D<int> p = tke.bitObject.getCentroid();
-	  s6 << (int)((float)p.i*tke.scaleW);
+	  s6 << (int)((float)p.i*scaleW);
 	  XMLCh* currxstring = XMLString::transcode("CurrX");
 	  XMLCh* currxvalue = XMLString::transcode(s6.str().c_str());
 	  eventObject->setAttribute(currxstring, currxvalue);
 	  XMLString::release(&currxstring);
 	  XMLString::release(&currxvalue);
 
-	  s7 << (int)((float)p.j*tke.scaleH);
+	  s7 << (int)((float)p.j*scaleH);
 	  XMLCh* currystring = XMLString::transcode("CurrY");
 	  XMLCh* curryvalue = XMLString::transcode(s7.str().c_str());
 	  eventObject->setAttribute(currystring, curryvalue);
@@ -607,10 +608,10 @@ void MbariXMLParser::add(bool saveNonInterestingEvents,
 
 	  Rectangle r = tke.bitObject.getBoundingBox();
 	  std::ostringstream llx,lly,urx,ury;
-	  llx << (int)((float)r.left()*tke.scaleW); 
-	  lly << (int)((float)r.bottomI()*tke.scaleH); 
-	  urx << (int)((float)r.rightI()*tke.scaleW);
-	  ury << (int)((float)r.top()*tke.scaleH);
+	  llx << (int)((float)r.left()*scaleW); 
+	  lly << (int)((float)r.bottomI()*scaleH); 
+	  urx << (int)((float)r.rightI()*scaleW);
+	  ury << (int)((float)r.top()*scaleH);
 
 	  // create bounding box element and add attributes
 	  XMLCh* boundingboxstring = XMLString::transcode("BoundingBox");

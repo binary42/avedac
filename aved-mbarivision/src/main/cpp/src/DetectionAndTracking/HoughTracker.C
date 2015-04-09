@@ -38,7 +38,6 @@
 
 #define STEP_WIDTH 1
 #define SHIFT_TO_CENTER
-#define SEARCH_WINDOW 20
 #define GRABCUT_ROUNDS 5
 
 #include <vector>
@@ -48,6 +47,8 @@ namespace HoughTracker {
 
 // ######################################################################
 HoughTracker::HoughTracker()
+:itsMapSize(DEFAULT_MAP_SIZE),
+itsMapStep(DEFAULT_MAP_STEP)
 {}
 
 // ######################################################################
@@ -73,6 +74,15 @@ void HoughTracker::free()
 void HoughTracker::reset(const Image< PixRGB<byte> >& img, BitObject& bo,
 						const float maxScale, const float forgetConstant)
 {
+	if (bo.getArea() > 10000) {
+		itsMapSize = 200.0F;
+		itsMapStep = 4.0F;
+	}
+	else {
+		itsMapSize = 100.0F;
+		itsMapStep = 2.0F;
+	}
+
     Rectangle region = bo.getBoundingBox();
     Point2D<int> center = bo.getCentroid();
 	LINFO("Resetting HoughTracker region top %d left %d width %d height %d", \
@@ -96,16 +106,16 @@ void HoughTracker::reset(const Image< PixRGB<byte> >& img, BitObject& bo,
 
 		//cv::Mat backProject(img.getDims().h(), img.getDims().w(), CV_8UC1, cv::Scalar(cv::GC_BGD));
 		//cv::rectangle(backProject, cv::Point(itsObject.x-10, itsObject.y-10), cv::Point(itsObject.x+itsObject.width+10, itsObject.y+itsObject.height+10), cv::Scalar(cv::GC_PR_BGD), -1);
-		///cv::rectangle(backProject, cv::Point(itsObject.x, itsObject.y), cv::Point(itsObject.x+itsObject.width, itsObject.y+itsObject.height), cv::Scalar(cv::GC_FGD), -1);
+		//cv::rectangle(backProject, cv::Point(itsObject.x, itsObject.y), cv::Point(itsObject.x+itsObject.width, itsObject.y+itsObject.height), cv::Scalar(cv::GC_FGD), -1);
  		itsFerns.initialize(20, cv::Size(baseSize, baseSize), 8, itsFeatures.getNumChannels());
 		itsMaxObject = intersect( itsImgRect, squarify(itsObject, maxScale));
 		cv::Point objCenter(center.i,center.j);
 
 		LINFO("Initial position: %d,%d %dx%d", itsObject.x,itsObject.y,itsObject.width,itsObject.height);
-	 	cv::Rect updateRegion = intersect(itsMaxObject + cv::Size(HOUGH_EDGE_OFFSET,HOUGH_EDGE_OFFSET) - cv::Point(10,10), itsImgRect);
+	 	cv::Rect updateRegion = intersect(itsMaxObject + cv::Size(3,3) - cv::Point(1,1), itsImgRect);
 		run(updateRegion, objCenter, backProject, forgetConstant);
 
-		itsSearchWindow = itsMaxObject + cv::Size(SEARCH_WINDOW,SEARCH_WINDOW) - cv::Point(SEARCH_WINDOW/2,SEARCH_WINDOW/2);
+		itsSearchWindow = itsMaxObject + cv::Size(3,3) - cv::Point(1,1);
 		LINFO(" Start tracking");
     }
     catch (...) {
@@ -186,11 +196,8 @@ bool HoughTracker::update(nub::soft_ref<MbariResultViewer>&rv,
 	  #endif
 	  }
 
-	  //showResult(rv, frame, backProject, itsMaxObject, getBoundingBox(backProject), "Hough", frameNum, evtNum);
-
-	  if(cnt > 0)
-	  {
-		cv::Rect updateRegion = intersect(itsMaxObject + cv::Size(HOUGH_EDGE_OFFSET,HOUGH_EDGE_OFFSET) - cv::Point(10,10), itsImgRect);
+	  if(cnt > 0) {
+		cv::Rect updateRegion = intersect(itsMaxObject + cv::Size(3,3) - cv::Point(1,1), itsImgRect);
 		run(updateRegion, center, backProject, forgetConstant);
 	  }
 
@@ -203,7 +210,7 @@ bool HoughTracker::update(nub::soft_ref<MbariResultViewer>&rv,
 		  const Dims dims(bbox.width, bbox.height);
 		  Rectangle r(topleft, dims);
 		  boundingBox = r;
-		  binaryImg = makeBinarySegmentation(rv, backProject, frameNum, evtNum);
+		  binaryImg = makeBinarySegmentation(backProject, frameNum, evtNum);
 		  return true;
 	  }
 	  return
@@ -215,7 +222,7 @@ bool HoughTracker::update(nub::soft_ref<MbariResultViewer>&rv,
   }
 }
 
-void HoughTracker::run(const cv::Rect& ROI, const cv::Point& center, const cv::Mat& mask, const float forgetConstant)
+bool HoughTracker::run(const cv::Rect& ROI, const cv::Point& center, const cv::Mat& mask, const float forgetConstant)
 {
     int numPos = 0;
     int numNeg = 0;
@@ -226,12 +233,12 @@ void HoughTracker::run(const cv::Rect& ROI, const cv::Point& center, const cv::M
         {
             if( (mask.at<unsigned char>( y, x ) == cv::GC_FGD) || (mask.at<unsigned char>( y, x ) == cv::GC_PR_FGD) )
             {
-              itsFerns.update(itsFeatures, cv::Point(x, y), 1, center);
+              itsFerns.update(itsFeatures, cv::Point(x, y), 1, center, itsMapSize, itsMapStep);
               numPos++;
            }
             else if(mask.at<unsigned char>( y, x ) == cv::GC_BGD)
            {
-              itsFerns.update(itsFeatures, cv::Point(x, y), 0, center);
+              itsFerns.update(itsFeatures, cv::Point(x, y), 0, center, itsMapSize, itsMapStep);
               numNeg++;
            }
         }
@@ -280,14 +287,10 @@ cv::Point HoughTracker::centerOfMass(const cv::Mat& mask)
 	return cv::Point( static_cast<int>(round(c_x/c_n)), static_cast<int>(round(c_y/c_n)));
 }
 
-Image< byte > HoughTracker::makeBinarySegmentation(nub::soft_ref<MbariResultViewer>&rv, \
-											const cv::Mat& backProject, \
-											const uint frameNum, \
-											const int evtNum)
+Image< byte > HoughTracker::makeBinarySegmentation( const cv::Mat& backProject,  const uint frameNum, const int evtNum)
 {
     DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
-    IplImage* display = cvCreateImage(cvSize(backProject.cols,backProject.rows), 8, 3 );
- 	Image< byte > output;
+    IplImage* display = cvCreateImage(cvSize(backProject.cols,backProject.rows), 8, 1 );
 
 	for(int x = 0; x < backProject.cols; x++)
 		for(int y = 0; y < backProject.rows; y++)
@@ -295,39 +298,22 @@ Image< byte > HoughTracker::makeBinarySegmentation(nub::soft_ref<MbariResultView
 			switch( backProject.at<unsigned char>(y,x) )
 			{
 				case cv::GC_BGD:
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+0  ) = 0;
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+1  ) = 0;
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+2  ) = 0;
+					CV_IMAGE_ELEM( (display), unsigned char, y, x  ) = 0;
 					break;
 				case cv::GC_FGD:
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+0 ) = 255;
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+1 ) = 255;
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+2 ) = 255;
+					CV_IMAGE_ELEM( (display), unsigned char, y, x ) = 1;
 					break;
 				case cv::GC_PR_BGD:
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+0  ) = 0;
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+1  ) = 0;
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+2  ) = 0;
+					CV_IMAGE_ELEM( (display), unsigned char, y, x  ) = 0;
 					break;
 				case cv::GC_PR_FGD:
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+0 ) = 255;
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+1 ) = 255;
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+2 ) = 255;
+					CV_IMAGE_ELEM( (display), unsigned char, y, x ) = 1;
 					break;
 				default:
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+0  ) = 255;
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+1  ) = 255;
-					CV_IMAGE_ELEM( (display), unsigned char, y, x*3+2  ) = 255;
+					CV_IMAGE_ELEM( (display), unsigned char, y, x  ) = 0;
 			}
 		}
-
-    LINFO("Binary");
-    output = luminance(ipl2rgb(display));
-    output = maskArea(output, &dp);
-    //#ifdef DEBUG
-    rv->output(output, frameNum, "Binary", -1);
-    //#endif
-    cvReleaseImage(&display);
+    Image< byte > output = ipl2gray(display);
     return output;
 }
 
@@ -392,59 +378,8 @@ void HoughTracker::showSegmentation(nub::soft_ref<MbariResultViewer>&rv,\
 	IplImage image = (IplImage)display;
     Image< PixRGB<byte> > output = ipl2rgb(&image);
     //#ifdef DEBUG
-    rv->output(output, frameNum, title, evtNum);
+    rv->display(output, frameNum, title, evtNum);
     //#endif
-}
-
-void HoughTracker::showResult(nub::soft_ref<MbariResultViewer>&rv, \
-                                const cv::Mat& frame, \
-                                const cv::Mat& backProject, \
-                                const cv::Rect& ROI, \
-                                const cv::Rect& object, \
-                                const std::string title, \
-                                const uint frameNum, \
-                                const int evtNum)
-{
-	cv::Mat display = frame.clone();
-	cv::Mat overlay = backProject.clone();
-
-	for(int x = 0; x < overlay.cols; x++)
-		for(int y = 0; y < overlay.rows; y++)
-		{
-			if( (overlay.at<unsigned char>( y, x ) == cv::GC_FGD) || (overlay.at<unsigned char>( y, x ) == cv::GC_PR_FGD) )
-				overlay.at<unsigned char>( y, x ) = 1;
-			else
-				overlay.at<unsigned char>( y, x ) = 0;
-		}
-
-	cv::Mat contour = overlay.clone();
-	cv::erode(contour, contour, cv::Mat(), cv::Point(-1, -1), 1);
-	cv::dilate(contour, contour, cv::Mat(), cv::Point(-1, -1), 5);
-	cv::erode(contour, contour, cv::Mat(), cv::Point(-1, -1), 2);
-	contour -= overlay;
-
-	for(int x = ROI.x-10; x < ROI.x+ROI.width+10; x++)
-		for(int y = ROI.y-10; y < ROI.y+ROI.height+10; y++)
-		{
-			if(overlay.at<unsigned char>( y, x ) > 0)
-			{
-				float val = (float)display.at<unsigned char>(y,x*3+2);
-				display.at<unsigned char>(y,x*3+2) = static_cast<unsigned char>(val * 0.7f + 255.0f * 0.3f);
-			}
-			else if(contour.at<unsigned char>( y, x ) > 0)
-			{
-				display.at<unsigned char>(y,x*3+2) = 255;
-				display.at<unsigned char>(y,x*3+1) = 0;
-				display.at<unsigned char>(y,x*3+0) = 0;
-			}
-		}
-
-
-	IplImage image = (IplImage)display;
-    Image< PixRGB<byte> > output = ipl2rgb(&image);
-    rv->output(output, frameNum, title, evtNum);
-	display.release();
-	overlay.release();
 }
 
 }

@@ -35,7 +35,6 @@
 #include "DetectionAndTracking/SaliencyTypes.H"
 #include "DetectionAndTracking/SegmentTypes.H"
 #include "DetectionAndTracking/ColorSpaceTypes.H"
-#include "DetectionAndTracking/Segmentation.H"
 #include "Image/BitObjectDrawModes.H"
 
 // Format here is:
@@ -68,56 +67,56 @@ const ModelOptionType MODOPT_ARG_FLOAT = {
 };
 void REQUEST_OPTIONALIAS_MBARI(OptionManager& m)
 {
-  m.requestOptionAlias(&OPT_MDPMosaicBenthicStills);
-  m.requestOptionAlias(&OPT_MDPBenthicVideo);
-  m.requestOptionAlias(&OPT_MDPEyeInTheSeaVideo);
-  m.requestOptionAlias(&OPT_MDPToolSledVideo640x360);
-  m.requestOptionAlias(&OPT_MDPMidwaterVideo);
-  m.requestOptionAlias(&OPT_MDPMosaicStills);
-  m.requestOptionAlias(&OPT_MDPTimeLapseStills);
-  m.requestOptionAlias(&OPT_MDPTimeLapseRover);
+  m.requestOptionAlias(&OPT_MMosaicBenthicStills);
+  m.requestOptionAlias(&OPT_MBenthicVideo);
+  m.requestOptionAlias(&OPT_MEyeInTheSeaVideo);
+  m.requestOptionAlias(&OPT_MToolSledVideo);
+  m.requestOptionAlias(&OPT_MMidwaterVideo);
+  m.requestOptionAlias(&OPT_MMosaicStills);
+  m.requestOptionAlias(&OPT_MTimeLapseStills);
+  m.requestOptionAlias(&OPT_MTimeLapseRover);
 }
 
 // #################### Mbari Alias options:
-const ModelOptionDef OPT_MDPToolSledVideo640x360 =
-  { MODOPT_ALIAS, "ALIASToolSledVideo640x360", &MOC_MBARI, OPTEXP_MRV,
+const ModelOptionDef OPT_MToolSledVideo =
+  { MODOPT_ALIAS, "ALIASToolSledVideo", &MOC_MBARI, OPTEXP_MRV,
     "Implements good choice of options to experiment with detecting  summary of results from a camera mounted on a "
     "benthic toolsled with shadowing and a moving frame",
-    "mbari-toolsled-video-480-270", '\0',"",
-    "--mbari-tracking-mode=KalmanFilterHough --rescale-input=640x480 --mbari-cache-size=90 "
-    "--mbari-min-event-area=100 --mbari-max-event-area=6000 --mbari-save-original-frame-spec --test-mode=true "
-    "--mbari-color-space=RGB --vc-chans=O  --use-random=true --mbari-min-event-frames=2 --num-orient=4 "
-    "--shape-estim-mode=ConspicuityMap --use-older-version=false --ori-interaction=SubtractMean "
-    "--ior-type=ShapeEst --maxnorm-type=FancyOne --mbari-saliency-input-image=DiffMean --mbari-mask-lasers=true "
-    "--levelspec=1-2,2-3,1 --oricomp-type=Steerable --mbari-dynamic-mask=true --mbari-se-size=2 "
+    "mbari-toolsled-video", '\0',"",
+    "--mbari-tracking-mode=KalmanFilterHough --rescale-input=640x360 --mbari-cache-size=60 "
+    "--mbari-min-event-area=100 --mbari-max-event-area=10000 --mbari-save-original-frame-spec --test-mode=true "
+    "--mbari-color-space=RGB --vc-chans=COKMF  --use-random=true --mbari-dynamic-mask=true "
+    "--shape-estim-mode=ConspicuityMap --use-older-version=false --ior-type=ShapeEst --maxnorm-type=FancyOne "
+    "--mbari-saliency-input-image=Raw --mbari-mask-lasers=true "
+    "--levelspec=1-3,2-4,1 --mbari-se-size=8 --qtime-decay=1.0 --mbari-max-evolve-msec=1000 "
     "--mbari-segment-algorithm=GraphCut  --mbari-segment-algorithm-input-image=DiffMean "
-    "--mbari-saliency-dist=1 --shape-estim-smoothmethod=None --mbari-max-evolve-msec=1000 "
+    "--mbari-saliency-dist=2 --shape-estim-smoothmethod=None --boring-sm-mv=1.0 "
     "--mbari-x-kalman-parameters=0.1,20.0 --mbari-y-kalman-parameters=0.1,20.0 "};
 
-const ModelOptionDef OPT_MDPMosaicBenthicStills =
+const ModelOptionDef OPT_MMosaicBenthicStills =
   { MODOPT_ALIAS, "ALIASMosaicBenthicStills", &MOC_MBARI, OPTEXP_MRV,
     "Implements good choice of options to experiment with "
     "processing still images from a still or moving camera traversing the sea bottom",
     "mbari-mosaic-benthic-stills", '\0',"",
     "--mbari-saliency-dist=1 --mbari-tracking-mode=None --mbari-max-event-frames=1 --mbari-min-event-frames=1 "
     "--mbari-keep-boring-WTA-points=yes --mbari-max-WTA-points=20 "
-    "--mbari-save-non-interesting-events=yes --mbari-segment-graph-parameters=0.95,500,250 "
+    "--mbari-save-boring-events=yes --mbari-segment-graph-parameters=0.95,500,250 "
     "--mbari-segment-algorithm-input-image=Luminance --mbari-color-space=RGB "
     "--mbari-saliency-input-image=Raw --levelspec=0-3,2-5,2 --mbari-save-original-frame-spec "
     "--mbari-max-evolve-msec=2000 --vc-chans=OC:5I --use-random=true --mbari-segment-algorithm=GraphCut " 
-    "--shape-estim-mode=ConspicuityMap --foa-radius=60 --fovea-radius=60 "
+    "--shape-estim-mode=None --foa-radius=60 --fovea-radius=60 "
     "--mbari-cache-size=1 --use-older-version=false --ori-interaction=SubtractMean "
     "--num-orient=16 --gabor-intens=20.0 --rescale-input=1920x1277 --ior-type=ShapeEst "
     "--maxnorm-type=FancyOne "  };
 
-const ModelOptionDef OPT_MDPEyeInTheSeaVideo =
+const ModelOptionDef OPT_MEyeInTheSeaVideo =
   { MODOPT_ALIAS, "ALIASEyeInTheSeaVideo", &MOC_MBARI, OPTEXP_MRV,
     "Options used for processing Eye-in-the-Sea Video from the  "
     "Ocean Research and Conservation Association (ORCA)",
     "mbari-eits-video", '\0',"", 
     "--mbari-tracking-mode=KalmanFilter "
     "--mbari-keep-boring-WTA-points=yes "
-    "--mbari-save-non-interesting-events=yes --mbari-save-original-frame-spec "
+    "--mbari-save-boring-events=yes --mbari-save-original-frame-spec "
     "--mbari-segment-algorithm-input-image=Luminance --mbari-color-space=RGB "
     "--mbari-saliency-input-image=Raw --mbari-cache-size=2 "
     "--mbari-max-WTA-points=15 --mbari-max-evolve-msec=1000 "
@@ -130,7 +129,7 @@ const ModelOptionDef OPT_MDPEyeInTheSeaVideo =
     "--mbari-event-expiration-frames=3 --rescale-input=320x240 "
     "--mbari-segment-graph-parameters=0.5,1500,500"  };
 
-const ModelOptionDef OPT_MDPBenthicVideo =
+const ModelOptionDef OPT_MBenthicVideo =
   { MODOPT_ALIAS, "ALIASBenthicVideo", &MOC_MBARI, OPTEXP_MRV,
     "Implements good choice of options to experiment with "
     "processing video from a moving camera traversing the sea bottom",
@@ -144,7 +143,7 @@ const ModelOptionDef OPT_MDPBenthicVideo =
     "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst --maxnorm-type=FancyOne "
     "--mbari-segment-graph-parameters=0.75,500,50 --mbari-segment-adaptive-parameters=2,2"};
 
-const ModelOptionDef OPT_MDPMidwaterVideo =
+const ModelOptionDef OPT_MMidwaterVideo =
   { MODOPT_ALIAS, "ALIASMidwaterVideo", &MOC_MBARI, OPTEXP_MRV,
    "Implements good choice of options to experiment with "
     "processing video from a moving camera traversing the midwater sea column",
@@ -157,7 +156,7 @@ const ModelOptionDef OPT_MDPMidwaterVideo =
     "--mbari-cache-size=60 --use-older-version=false --levelspec=1-3,2-5,3 "
     "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst --maxnorm-type=FancyOne "};
 
-const ModelOptionDef OPT_MDPMosaicStills =
+const ModelOptionDef OPT_MMosaicStills =
   { MODOPT_ALIAS, "ALIASMosaicStills", &MOC_MBARI, OPTEXP_MRV,
     "Implements good choice of options to experiment with "
     "still frames collected from a moving camera in mosaic form",
@@ -165,20 +164,20 @@ const ModelOptionDef OPT_MDPMosaicStills =
     "--mbari-saliency-dist=1 --mbari-tracking-mode=None --mbari-max-event-frames=1 --mbari-min-event-frames=1 "
     "--mbari-keep-boring-WTA-points=yes "
     "--boring-sm-mv=0.25 "
-    "--mbari-save-non-interesting-events=yes "
+    "--mbari-save-boring-events=yes "
     "--mbari-segment-algorithm-input-image=DiffMean --mbari-color-space=RGB"
     "--vc-type=Variance --use-random=true "
     "--mbari-saliency-input-image=Raw --mbari-cache-size=2 "
     "--mbari-max-WTA-points=25 --mbari-max-evolve-msec=15000" };
 
-const ModelOptionDef OPT_MDPTimeLapseStills =
+const ModelOptionDef OPT_MTimeLapseStills =
   { MODOPT_ALIAS, "ALIASTimeLapseStills", &MOC_MBARI, OPTEXP_MRV,
     "Implements good choice of options to experiment with "
     "still frames collected from a stationary time-lapse camera",
     "mbari-timelapse-stills", '\0',"",
     "--mbari-saliency-dist=1 --mbari-tracking-mode=NearestNeighbor "
     "--mbari-keep-boring-WTA-points=yes "
-    "--mbari-save-non-interesting-events=yes "
+    "--mbari-save-boring-events=yes "
     "--mbari-segment-algorithm-input-image=DiffMean --mbari-color-space=RGB"
     "--mbari-saliency-input-image=Raw --mbari-cache-size=10 "
     "--qtime-decay=1.0 "
@@ -186,7 +185,7 @@ const ModelOptionDef OPT_MDPTimeLapseStills =
     "--mbari-max-WTA-points=30 --mbari-max-evolve-msec=15000 "
     "--use-older-version=false "  };
 
-const ModelOptionDef OPT_MDPTimeLapseRover =
+const ModelOptionDef OPT_MTimeLapseRover =
   { MODOPT_ALIAS, "ALIASTimeLapseRover", &MOC_MBARI, OPTEXP_MRV,
     "Implements good choice of options to experiment with "
     "time-lapse still frames collected from a benthic moving camera ",
@@ -194,44 +193,78 @@ const ModelOptionDef OPT_MDPTimeLapseRover =
     "--mbari-saliency-dist=1  --mbari-tracking-mode=None --mbari-max-event-frames=1 --mbari-min-event-frames=1 "
     "--mbari-keep-boring-WTA-points=yes "
     "--qtime-decay=1.0 "
-    "--mbari-save-non-interesting-events=yes "
+    "--mbari-save-boring-events=yes "
     "--mbari-segment-algorithm-input-image=DiffMean --mbari-color-space=RGB"
     "--mbari-saliency-input-image=Raw "
     "--vc-chans=O:5IC --use-random=true  "
     "--mbari-max-WTA-points=15 --mbari-max-evolve-msec=15000" };
 
-// #################### MbariResultViewer options:
-// Used by: MbariResultViewer
-const ModelOptionDef OPT_MRVsaveEvents =
-  { MODOPT_ARG_STRING, "MRVsaveEvents", &MOC_MBARI, OPTEXP_MRV,
+// #################### Logger options:
+
+const ModelOptionDef OPT_LOGsaveOutput =
+  { MODOPT_FLAG, "LOGsaveOutput", &MOC_MBARI, OPTEXP_MRV,
+    "Save output frames in MBARI programs",
+    "mbari-save-output", '\0', "", "false" };
+
+const ModelOptionDef OPT_LOGdisplayOutput =
+  { MODOPT_FLAG, "LOGdisplayOutput", &MOC_MBARI, OPTEXP_MRV,
+    "Display output frames in MBARI programs",
+    "mbari-display-output", '\0', "", "false" };
+
+// Used by: Logger
+const ModelOptionDef OPT_LOGsaveEvents =
+  { MODOPT_ARG_STRING, "LOGsaveEvents", &MOC_MBARI, OPTEXP_MRV,
     "Save the event structure to a text file",
     "mbari-save-events", '\0', "fileName", "" };
 
-// Used by: MbariResultViewer
-const ModelOptionDef OPT_MRVloadEvents =
-  { MODOPT_ARG_STRING, "MRVloadEvents", &MOC_MBARI, OPTEXP_MRV,
+// Used by: Logger
+const ModelOptionDef OPT_LOGloadEvents =
+  { MODOPT_ARG_STRING, "LOGloadEvents", &MOC_MBARI, OPTEXP_MRV,
     "Load the event structure from a text file "
     "instead of computing it from the frames",
     "mbari-load-events", '\0', "fileName", "" };
-    
-// Used by: MbariResultViewer
-const ModelOptionDef OPT_MRVsaveProperties =
-  { MODOPT_ARG_STRING, "MRVsaveProperties", &MOC_MBARI, OPTEXP_MRV,
+
+// Used by: Logger
+const ModelOptionDef OPT_LOGsaveProperties =
+  { MODOPT_ARG_STRING, "LOGsaveProperties", &MOC_MBARI, OPTEXP_MRV,
     "Save the event property vector to a text file",
     "mbari-save-properties", '\0', "fileName", "" };
 
-// Used by: MbariResultViewer
-const ModelOptionDef OPT_MRVloadProperties =
-  { MODOPT_ARG_STRING, "MRVloadProperties", &MOC_MBARI, OPTEXP_MRV,
+// Used by: Logger
+const ModelOptionDef OPT_LOGloadProperties =
+  { MODOPT_ARG_STRING, "LOGloadProperties", &MOC_MBARI, OPTEXP_MRV,
     "Load the event property vector from a text file",
     "mbari-load-properties", '\0', "fileName", "" };
 
-// Used by: MbariResultViewer
-const ModelOptionDef OPT_MRVsavePositions =
-  { MODOPT_ARG_STRING, "MRVsavePositions", &MOC_MBARI, OPTEXP_MRV,
+// Used by: Logger
+const ModelOptionDef OPT_LOGsavePositions =
+  { MODOPT_ARG_STRING, "LOGsavePositions", &MOC_MBARI, OPTEXP_MRV,
     "Save the positions of events to a text file",
     "mbari-save-positions", '\0', "fileName", "" };
 
+// Used by: Logger
+const ModelOptionDef OPT_LOGsaveEventNums =
+  { MODOPT_ARG_STRING, "LOGsaveEventNums", &MOC_MBARI, OPTEXP_MRV,
+    "Save cropped, event-centered images of specific events, or all events. Will save according to bounding box.",
+    "mbari-save-event-num", '\0', "ev1,ev1,...,evN; or: all", "" };
+
+const ModelOptionDef OPT_LOGsaveSummaryEventsName =
+  { MODOPT_ARG_STRING, "LOGsummaryEvents", &MOC_MBARI, OPTEXP_MRV,
+    "Save a human readable summary of all the events to a text file",
+    "mbari-save-event-summary", '\0', "fileName", "" };
+
+const ModelOptionDef OPT_LOGsaveXMLEventSet =
+  { MODOPT_ARG_STRING, "LOGsaveXMLEventSet", &MOC_MBARI, OPTEXP_MRV,
+    "Save a XML output per all events",
+    "mbari-save-events-xml", '\0', "fileName", "" };
+
+const ModelOptionDef OPT_LOGmetadataSource =
+  { MODOPT_ARG_STRING, "LOGmetadataSource", &MOC_MBARI, OPTEXP_MRV,
+    "Add video input source information to XML output",
+    "mbari-source-metadata", '\0', "fileName", "" };
+
+
+// #################### MbariResultViewer options:
 // Used by: MbariResultViewer
 const ModelOptionDef OPT_MRVmarkInteresting =
   { MODOPT_ARG(BitObjectDrawMode), "MRVmarkInteresting", &MOC_MBARI, OPTEXP_MRV,
@@ -267,26 +300,14 @@ const ModelOptionDef OPT_MRVmarkFOE =
 // Used by: MbariResultViewer
 const ModelOptionDef OPT_MRVsaveResults =
   { MODOPT_FLAG, "MRVsaveResults", &MOC_MBARI, OPTEXP_MRV,
-    "Save intermediate results in MBARI programs to disc",
+    "Save algorithm output at various points in the MBARI programs to disk",
     "mbari-save-results", '\0', "", "false" };
 
 // Used by: MbariResultViewer
 const ModelOptionDef OPT_MRVdisplayResults =
   { MODOPT_FLAG, "MRVdisplayResults", &MOC_MBARI, OPTEXP_MRV,
-    "Display intermediate results in MBARI programs",
+    "Display algorithm output at various points in the MBARI programs",
     "mbari-display-results", '\0', "", "false" };
-
-// Used by: MbariResultViewer
-const ModelOptionDef OPT_MRVsaveOutput =
-  { MODOPT_FLAG, "MRVsaveOutput", &MOC_MBARI, OPTEXP_MRV,
-    "Save output frames in MBARI programs",
-    "mbari-save-output", '\0', "", "false" };
-
-// Used by: MbariResultViewer
-const ModelOptionDef OPT_MRVdisplayOutput =
-  { MODOPT_FLAG, "MRVdisplayOutput", &MOC_MBARI, OPTEXP_MRV,
-    "Display output frames in MBARI programs",
-    "mbari-display-output", '\0', "", "false" };
 
 // Used by: MbariResultViewer
 const ModelOptionDef OPT_MRVshowEventLabels =
@@ -297,29 +318,8 @@ const ModelOptionDef OPT_MRVshowEventLabels =
 // Used by: MbariResultViewer
 const ModelOptionDef OPT_MRVrescaleDisplay =
   { MODOPT_ARG(Dims), "MRVrescaleDisplay", &MOC_MBARI, OPTEXP_MRV,
-    "Rescale displays to <width>x<height>, or 0x0 for no rescaling",
+    "Rescale MBARI displays to <width>x<height>, or 0x0 for no rescaling",
     "mbari-rescale-display", '\0', "<width>x<height>", "0x0" };
-
-// Used by: MbariResultViewer
-const ModelOptionDef OPT_MRVsaveEventNums =
-  { MODOPT_ARG_STRING, "MRVsaveEventNums", &MOC_MBARI, OPTEXP_MRV,
-    "Save cropped, event-centered images of specific events, or all events. Will save according to bounding box.",
-    "mbari-save-event-num", '\0', "ev1,ev1,...,evN; or: all", "" };
-
-const ModelOptionDef OPT_MRVsaveSummaryEventsName =
-  { MODOPT_ARG_STRING, "MRVsummaryEvents", &MOC_MBARI, OPTEXP_MRV,
-    "Save a human readable summary of all the events to a text file",
-    "mbari-save-event-summary", '\0', "fileName", "" };
-    
-const ModelOptionDef OPT_MRVsaveXMLEventSet =
-  { MODOPT_ARG_STRING, "MRVsaveXMLEventSet", &MOC_MBARI, OPTEXP_MRV,
-    "Save a XML output per all events",
-    "mbari-save-events-xml", '\0', "fileName", "" }; 
-
-const ModelOptionDef OPT_MRVmetadataSource =
-  { MODOPT_ARG_STRING, "MRVmetadataSource", &MOC_MBARI, OPTEXP_MRV,
-    "Add video input source information to XML output",
-    "mbari-source-metadata", '\0', "fileName", "" };
 
 // #################### DetectionParametersModelComponent options:
 const ModelOptionDef OPT_MDPtrackingMode =
@@ -436,10 +436,10 @@ const ModelOptionDef OPT_MDPmaskLasers =
   { MODOPT_FLAG, "OPT_MDPmaskLasers", &MOC_MBARI, OPTEXP_MRV,
     "Mask lasers commonly used for measurement in underwater video.",
     "mbari-mask-lasers", '\0', "", "true" };
-const ModelOptionDef OPT_MDPsaveNonInterestingEvents =
-  { MODOPT_FLAG, "OPT_MDPsaveNonInterestingEvents", &MOC_MBARI, OPTEXP_MRV,
-    "Save non-interesting events. Default is to remove non-interesting events, set to true to save",
-    "mbari-save-non-interesting-events", '\1', "", "false" };
+const ModelOptionDef OPT_MDPsaveBoringEvents =
+  { MODOPT_FLAG, "OPT_MDPsaveBoringEvents", &MOC_MBARI, OPTEXP_MRV,
+    "Save boring events. Default is to remove boring (non-interesting) events, set to true to save",
+    "mbari-save-boring-events", '\1', "", "false" };
 const ModelOptionDef OPT_MDPsaveOriginalFrameSpec =
   { MODOPT_FLAG, "OPT_MDPsaveOriginalFrameSpec", &MOC_MBARI, OPTEXP_MRV,
     "Save events in original frame size specs, but run saliency computation on reduced frame size. This does nothing if the frames are not resized with the --rescale-input option. Default is set to false",

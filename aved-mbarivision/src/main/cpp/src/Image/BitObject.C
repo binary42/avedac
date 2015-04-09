@@ -29,6 +29,7 @@
 #include "Image/BitObject.H"
 
 #include "Image/CutPaste.H"    // for crop()
+#include "Image/DrawOps.H"     // for drawDisk
 #include "Image/IO.H"
 #include "Image/Kernels.H"     // for twofiftyfives()
 #include "Image/MorphOps.H"    // for erode/dilate
@@ -73,13 +74,13 @@ BitObject::BitObject(std::istream& is)
   readFromStream(is);
 }
 // ######################################################################
-BitObject::BitObject(const Image<byte>& img, const Point2D<int> location, const Rectangle boundingBox)
+BitObject::BitObject(const Image<byte>& img, const Point2D<int> location, const Rectangle boundingBox, const byte threshold)
 {
-  reset(img, location, boundingBox);
+  reset(img, location, boundingBox, threshold);
 }
 
 // ######################################################################
-int BitObject::reset(const Image<byte>& img, const Point2D<int> location, const Rectangle boundingBox)
+int BitObject::reset(const Image<byte>& img, const Point2D<int> location, const Rectangle boundingBox, const byte threshold)
 {
 
   ASSERT(img.initialized());
@@ -91,12 +92,12 @@ int BitObject::reset(const Image<byte>& img, const Point2D<int> location, const 
   Image<byte> dest;
 
   // threshold to get binary object
-  dest = highThresh(img, byte(0), byte(1));
+  dest = highThresh(img, threshold, byte(1));
 
   // count all foreground pixels as area
   int area = countParticles(dest, byte(1));
 
-  LINFO("AREA %d", area);
+  LINFO("area %d", area);
 
   // no object found? return -1
   if (area == 0)
@@ -226,8 +227,8 @@ int BitObject::reset(const Image<byte>& img)
   // cut out the object mask
   itsObjectMask = crop(img, itsBoundingBox);
 
-  //LINFO("BB: size: %i; %s; dims: %s",itsBoundingBox.width()*itsBoundingBox.height(),
-  //    toStr(itsBoundingBox).data(),toStr(itsObjectMask.getDims()).data());
+  LINFO("BB: size: %i; %s; dims: %s",itsBoundingBox.width()*itsBoundingBox.height(),
+      toStr(itsBoundingBox).data(),toStr(itsObjectMask.getDims()).data());
 
   return itsArea;
 }
@@ -685,12 +686,72 @@ bool BitObject::doesIntersect(const BitObject& other) const
                             crop(other.getObjectMask(byte(1),OBJECT),oCM));
   double s = sum(cor);
 
-  //LINFO("tCM = %s; oCM = %s; this.ObjMask.dims = %s; other.ObjMask.dims = %s; sum = %g",
-      //toStr(tCM).data(),toStr(oCM).data(),
-      //toStr(getObjectMask(byte(1),OBJECT).getDims()).data(),
-      //toStr(other.getObjectMask(byte(1),OBJECT).getDims()).data(),s);
+  LINFO("tCM = %s; oCM = %s; this.ObjMask.dims = %s; other.ObjMask.dims = %s; sum = %g",
+      toStr(tCM).data(),toStr(oCM).data(),
+      toStr(getObjectMask(byte(1),OBJECT).getDims()).data(),
+      toStr(other.getObjectMask(byte(1),OBJECT).getDims()).data(),s);
 
   return (s > 0.0);
+}
+
+// ######################################################################
+double BitObject::intersect(const BitObject& other) const
+{
+  // are this and other actually valid? no -> return false
+  if (!(isValid() && other.isValid()))
+    {
+      LINFO("no intersect, because one of the objects is invalid.");
+      return 0;
+    }
+
+  Rectangle tBB = getBoundingBox(IMAGE);
+  Rectangle oBB = other.getBoundingBox(IMAGE);
+
+  // compute the intersecting bounding box params
+  int ll = std::max(tBB.left(),oBB.left());
+  int rr = std::min(tBB.rightI(),oBB.rightI());
+  int tt = std::max(tBB.top(),oBB.top());
+  int bb = std::min(tBB.bottomI(),oBB.bottomI());
+
+  //LINFO("this.ObjMask.dims = %s; other.ObjMask.dims = %s",
+  //    toStr(getObjectMask(byte(1),OBJECT).getDims()).data(),
+  //    toStr(other.getObjectMask(byte(1),OBJECT).getDims()).data());
+
+  // is this a valid rectangle?
+  if ((ll > rr)||(tt > bb))
+    {
+      LINFO("No intersect because the bounding boxes don't overlap: %s and %s",
+         toStr(tBB).data(),toStr(oBB).data());
+      return 0;
+    }
+
+  // get the rectangles in order to crop the object masks
+  Rectangle tCM = Rectangle::tlbrI(tt - tBB.top(), ll - tBB.left(),
+                                  bb - tBB.top(), rr - tBB.left());
+  Rectangle oCM = Rectangle::tlbrI(tt - oBB.top(), ll - oBB.left(),
+                                  bb - oBB.top(), rr - oBB.left());
+
+  //LINFO("tCM = %s; oCM = %s; this.ObjMask.dims = %s; other.ObjMask.dims = %s",
+  //    toStr(tCM).data(),toStr(oCM).data(),
+  //    toStr(getObjectMask(byte(1),OBJECT).getDims()).data(),
+  //    toStr(other.getObjectMask(byte(1),OBJECT).getDims()).data());
+  //LINFO("tCM: P2D = %s, dims = %s; oCM: P2D = %s, dims = %s",
+  //    toStr(Point2D(tCM.left(), tCM.top())).data(),
+  //    toStr(Dims(tCM.width(), tCM.height())).data(),
+  //    toStr(Point2D(oCM.left(), oCM.top())).data(),
+  //    toStr(Dims(oCM.width(), oCM.height())).data());
+
+  // crop the object masks and get the intersecting image
+  Image<byte> cor = takeMin(crop(getObjectMask(byte(1),OBJECT),tCM),
+                            crop(other.getObjectMask(byte(1),OBJECT),oCM));
+  double s = sum(cor);
+
+  LINFO("tCM = %s; oCM = %s; this.ObjMask.dims = %s; other.ObjMask.dims = %s; sum = %g",
+      toStr(tCM).data(),toStr(oCM).data(),
+      toStr(getObjectMask(byte(1),OBJECT).getDims()).data(),
+      toStr(other.getObjectMask(byte(1),OBJECT).getDims()).data(),s);
+
+  return s;
 }
 
 // ######################################################################
@@ -715,7 +776,7 @@ void BitObject::drawShape(Image<T_or_RGB>& img,
     int h = (int) ((float) bbox.height() *scaleH);
     const Point2D<int> topleft(i,j);
     bbox = Rectangle(topleft, Dims(w,h));
-    mask = zoomXY(mask, scaleW, scaleH);
+    mask = rescaleNI(mask, d.w(), d.h());
   }
 
   int w = img.getWidth();
@@ -746,55 +807,25 @@ void BitObject::drawOutline(Image<T_or_RGB>& img,
   ASSERT(img.initialized());
   float op2 = 1.0F - opacity;
 
-  Image<byte> marked(img.getDims(), ZEROS);
   Dims d = img.getDims();
-  Image<byte> mask = itsObjectMask;
-  Rectangle bbox = itsBoundingBox;
+  Image<byte> mask = getObjectMask();
 
   // rescale if needed
-  if (d != itsImageDims) {
-    float scaleW = (float) d.w() / (float) itsImageDims.w();
-    float scaleH = (float) d.h() / (float) itsImageDims.h();
-    int i = (int) ((float) bbox.left() * scaleW);
-    int j = (int) ((float) bbox.top() * scaleH);
-    int w = (int) ((float) bbox.width() * scaleW);
-    int h = (int) ((float) bbox.height() * scaleH);
-    const Point2D<int> topleft(i,j);
-    bbox = Rectangle(topleft, Dims(w,h));
-    mask = zoomXY(mask, scaleW, scaleH);
+  if (d != itsImageDims)
+    mask = rescaleNI(mask, d.w(), d.h());
 
-    Image<byte> se = twofiftyfives(4);
-    mask = dilateImg(mask, se);
-  }
+  // object-shaped drawing
+  int thick = 1;
+  Image<byte> om(mask);
+  om = contour2D(om);       // compute binary contour image
+  const int w = img.getWidth();
+  const int h = img.getHeight();
+  Point2D<int> ppp;
+  for (ppp.j = 0; ppp.j < h; ppp.j ++)
+    for (ppp.i = 0; ppp.i < w; ppp.i ++)
+      if (om.getVal(ppp.i, ppp.j))  // got a contour point -> draw here
+        drawDisk(img, ppp, thick, T_or_RGB(img.getVal(ppp) * op2 + color * opacity));  // small disk for each point
 
-  int t = bbox.top();
-  int b = bbox.bottomI();
-  int l = bbox.left();
-  int r = bbox.rightI();
-  
-  for (int y = t; y <= b; ++y)
-    for (int x = l; x <= r; ++x)
-      {
-        if (mask.getVal(x-l,y-t) == 0) continue;
-        for (int dy = -1; dy <= 1; ++dy)
-          for (int dx = -1; dx <= 1; ++dx)
-            {
-              if ((dy == 0) && (dx == 0)) continue;
-              Point2D<int> pim(x+dx,y+dy);
-              if (!img.coordsOk(pim)) continue;
-
-              bool isBoundary = false;
-              Point2D<int> pm(x+dx-l,y+dy-t);
-              if (!mask.coordsOk(pm)) isBoundary = true;
-              else if (mask.getVal(pm) == 0) isBoundary = true;
-
-              if (isBoundary && marked.getVal(pim) == 0) 
-                {
-                  img.setVal(pim,T_or_RGB(img.getVal(pim) * op2 + color * opacity));
-                  marked.setVal(pim,byte(1));
-                }
-            } // end for dx,dy
-      } // end for x,y
 } // end drawOutline
   
 
@@ -818,7 +849,6 @@ void BitObject::drawBoundingBox(Image<T_or_RGB>& img,
     int w = (int) ((float) bbox.width() * scaleW);
     int h = (int) ((float) bbox.height() *scaleH);
     const Point2D<int> topleft(i,j);
-    LINFO("==========================================================================%g=%g======++++%d %d %d %d", scaleW, scaleH, i, j,w,h);
     bbox = Rectangle(topleft, Dims(w,h));
   }
 

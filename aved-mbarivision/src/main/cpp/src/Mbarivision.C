@@ -31,12 +31,14 @@
 #include "Component/GlobalOpts.H"
 #include "Component/ModelManager.H"
 #include "Component/JobServerConfigurator.H"
+#include "Features/HistogramOfGradients.H"
 #include "Image/FilterOps.H"    // for lowPass3y()
 #include "Image/Kernels.H"      // for twofiftyfives()
 #include "Image/ColorOps.H"
 #include "Image/fancynorm.H"
 #include "Image/MorphOps.H"
 #include "Image/ShapeOps.H"   // for rescale()
+#include "Learn/Bayes.H"
 #include "Raster/GenericFrame.H"
 #include "Raster/PngWriter.H"
 #include "Media/FrameRange.H"
@@ -53,6 +55,7 @@
 #include "Util/sformat.H"
 #include "Util/StringConversions.H"
 #include "Util/Pause.H"
+#include "Data/Logger.H"
 #include "Data/MbariMetaData.H"
 #include "Data/MbariOpts.H"
 #include "DetectionAndTracking/FOEestimator.H"
@@ -61,6 +64,8 @@
 #include "DetectionAndTracking/MbariFunctions.H"
 #include "DetectionAndTracking/Segmentation.H"
 #include "DetectionAndTracking/ColorSpaceTypes.H"
+#include "DetectionAndTracking/ObjectDetection.H"
+#include "DetectionAndTracking/Preprocess.H"
 #include "Image/MbariImage.H"
 #include "Image/MbariImageCache.H"
 #include "Image/BitObject.H"
@@ -68,6 +73,8 @@
 #include "Image/IO.H"
 #include "Media/MbariResultViewer.H"
 #include "Motion/MotionEnergy.H"
+#include "Motion/MotionOps.H"
+#include "Motion/OpticalFlow.H"
 #include "Utils/Version.H"
 #include "Utils/MbariXMLParser.H"
 
@@ -90,7 +97,6 @@ int main(const int argc, const char** argv) {
     setPause(true);
     #endif
     const int foaSizeRatio = 19;
-    const int circleRadiusRatio = 40;
 
     //initialize a few things
     ModelManager manager("MBARI Automated Visual Event Detection Program");
@@ -108,20 +114,23 @@ int main(const int argc, const char** argv) {
     nub::soft_ref<InputFrameSeries> ifs(new InputFrameSeries(manager));
     manager.addSubComponent(ifs);
 
-    nub::soft_ref<InputFrameSeries> ifsorg(new InputFrameSeries(manager));
-    manager.addSubComponent(ifsorg);
+    nub::soft_ref<ObjectDetection> objdet(new ObjectDetection(manager));
+    manager.addSubComponent(objdet);
 
-    nub::soft_ref<OutputFrameSeries> evtofs(new OutputFrameSeries(manager));
-    manager.addSubComponent(evtofs);
+    nub::soft_ref<Preprocess> preprocess(new Preprocess(manager));
+    manager.addSubComponent(preprocess);
 
     // Get the directory of this executable
     string exe(argv[0]);
     size_t found = exe.find_last_of("/\\");
-    nub::soft_ref<MbariResultViewer> rv(new MbariResultViewer(manager, evtofs, ofs, exe.substr(0, found)));
+    nub::soft_ref<Logger> logger(new Logger(manager, ifs, ofs, exe.substr(0, found)));
+    manager.addSubComponent(logger);
+
+    nub::soft_ref<MbariResultViewer> rv(new MbariResultViewer(manager, logger));
     manager.addSubComponent(rv);
 
-    nub::ref<DetectionParametersModelComponent> detectionParmsModel(new DetectionParametersModelComponent(manager));
-    manager.addSubComponent(detectionParmsModel);
+    nub::ref<DetectionParametersModelComponent> parms(new DetectionParametersModelComponent(manager));
+    manager.addSubComponent(parms);
 
     nub::ref<StdBrain> brain(new StdBrain(manager));
     manager.addSubComponent(brain);
@@ -134,27 +143,23 @@ int main(const int argc, const char** argv) {
 
     // Initialize brain defaults
     manager.setOptionValString(&OPT_UseRandom, "true");
-    manager.setOptionValString(&OPT_SVdisplayFOA, "true");
+  /*  manager.setOptionValString(&OPT_SVdisplayFOA, "true");
     manager.setOptionValString(&OPT_SVdisplayPatch, "false");
     manager.setOptionValString(&OPT_SVdisplayFOALinks, "false");
     manager.setOptionValString(&OPT_SVdisplayAdditive, "true");
     manager.setOptionValString(&OPT_SVdisplayTime, "false");
-    manager.setOptionValString(&OPT_SVdisplayBoring, "false");
+    manager.setOptionValString(&OPT_SVdisplayBoring, "false");*/
 
     // parse the command line
     if (manager.parseCommandLine(argc, argv, "", 0, -1) == false)
         LFATAL("Invalid command line argument. Aborting program now !");
 
     // set the range to be the same as the input frame range
-    FrameRange fr = ifs->getModelParamVal<FrameRange > ("InputFrameRange");
+    FrameRange fr = ifs->getModelParamVal< FrameRange > ("InputFrameRange");
     ofs->setModelParamVal(string("OutputFrameRange"), fr);
-    evtofs->setModelParamVal(string("OutputFrameRange"), fr);
-
-    // unset the rescaling in the event output frame series in case it is set
-    evtofs->setModelParamVal(string("OutputFrameDims"), Dims(0, 0));
 
     // get image dimensions and set a few parameters that depend on it
-    detectionParmsModel->reset(&dp);
+    parms->reset(&dp);
 
     // is this a a gray scale sequence ? if so disable computing the color channels
     // to save computation time. This assumes the color channel has no weight !
@@ -168,34 +173,15 @@ int main(const int argc, const char** argv) {
         }
     }
 
-    // get the dimensions of the raw input frames
-    Dims dims = ifs->peekDims();
-    float scaleW = 1.0f;
-    float scaleH = 1.0f;
+  // get the dimensions of the potentially scaled input frames
+    Dims scaledDims = ifs->peekDims();
 
-    // get a reference to our original frame source including scaling
-    const nub::ref<FrameIstream> ref = ifs->getFrameSource();
-    const Dims scaledDims = ref->peekDims();
-
-    // if the user has selected to retain the original dimensions in the events
-    // get the scaling factors and disable this in the output frame series
+    // if the user has selected to retain the original dimensions in the events disable scaling in the frame series
+    // and use the scaling factors directly
     if (dp.itsSaveOriginalFrameSpec) {
-        scaleW = (float) scaledDims.w() / (float) dims.w();
-        scaleH = (float) scaledDims.h() / (float) dims.h();
-
-        // unset the rescaling in the frame series in case set and requesting to save in original frame dimensions
-        ifsorg->setModelParamVal(string("InputFrameDims"), Dims(0, 0));
         ofs->setModelParamVal(string("OutputFrameDims"), Dims(0, 0));
+        ifs->setModelParamVal(string("InputFrameDims"), Dims(0, 0));
     }
-
-    // initialize static and dynamic clip masks
-    Image<byte> maskBrain(dims, ZEROS);
-    maskBrain = highThresh(maskBrain, byte(0), byte(255));
-    Image<byte> mask(dims, ZEROS);
-    Image<byte> staticClipMask(dims, ZEROS);
-    mask = highThresh(mask, byte(0), byte(255));
-    staticClipMask = maskArea(mask, &dp);
-    mask = staticClipMask;
 
     int foaRadius;
     const string foar = manager.getOptionValString(&OPT_FOAradius);
@@ -216,449 +202,535 @@ int main(const int argc, const char** argv) {
     // start all the ModelComponents
     manager.start();
 
-    int retval = 0;
-
     // set defaults for detection model parameters
-    DetectionParametersSingleton::initialize(dp, dims, foaRadius);
-
-    // initialize derived detection parameters
-    const int circleRadius = dims.w() / circleRadiusRatio;
+    DetectionParametersSingleton::initialize(dp, scaledDims, foaRadius);
 
     // initialize the visual event set
     VisualEventSet eventSet(dp, manager.getExtraArg(0));
-    int countFrameDist = 1;
-    bool resetBrain = true;
 
-    // are we loading the event structure from a file?
-    const bool loadedEvents = rv->isLoadEventsNameSet();
-    if (loadedEvents) rv->loadVisualEventSet(eventSet);
+    // initialize masks
+    Image<byte> mask(scaledDims, ZEROS);
+    mask = highThresh(mask, byte(0), byte(255));
+
+    Image<byte> staticClipMask(scaledDims, ZEROS);
+    mask = highThresh(mask, byte(0), byte(255));
+    staticClipMask = maskArea(mask, &dp);
+
+    // initialize the default mask
+    mask = staticClipMask;
+
+    // initialize the preprocess
+    preprocess->init(ifs, scaledDims);
+    ifs->reset1(); //reset to state after construction since the preprocessing caches input frames
+
+    // main loop:
+    printf("\nMAIN_LOOP\n\n");
+
+    int numSpots = 0;
+    uint frameNum = 0;
+    std::string outStr(manager.getOptionValString(&OPT_InputFrameSource).c_str());
+    MbariImage< PixRGB<byte> > input(manager.getOptionValString(&OPT_InputFrameSource).c_str());
+    MbariImage< PixRGB<byte> > prevInput(manager.getOptionValString(&OPT_InputFrameSource).c_str());
+    MbariImage< PixRGB <byte> > output(manager.getOptionValString(&OPT_InputFrameSource).c_str());
+    Image<byte>  foaIn;
+    Image<byte> binSegmentOut(input.getDims(), ZEROS);
+    Image< PixRGB<byte> > segmentIn(input.getDims(), ZEROS);
+    Image< PixRGB<byte> > inputRaw, inputScaled;
+    Image<byte> mmap, prevmmap;
+
+    // count between frames to run saliency; note two are required to compute motion and flick channel, otherwise can
+    // compute every frame in the case of still frames, or fast moving video with lots of interesting content
+    uint countFrameDist = dp.itsSaliencyFrameDist > 1 ? 2 : 1;
+    bool hasCovert; // flag to monitor whether visual cortex had any output
 
     // initialize property vector and FOE estimator
     PropertyVectorSet pvs;
     FOEestimator foeEst(20, 0);
+    Vector2D curFOE;
+    SimTime prevTime = seq->now();
 
-    // are we loading the set of property vectors from a file?
-    const bool loadedProperties = rv->isLoadPropertiesNameSet();
-    if (loadedProperties) rv->loadProperties(pvs);
+    MotionEnergyPyrBuilder motion(Gaussian5, 1.0F);
 
-    // initialize some more
-    FrameRange frameRange = FrameRange::fromString(manager.getOptionValString(&OPT_InputFrameRange));
-    ImageCacheAvg< PixRGB<byte> > avgCache(dp.itsSizeAvgCache);
-    MbariImageCache< PixRGB<byte> > outCache(dp.itsSizeAvgCache);
-    Image< PixRGB<byte> > img, img2runsaliency;
-    MbariImage< PixRGB<byte> > mbariImgEnhanced(manager.getOptionValString(&OPT_InputFrameSource).c_str());
-    MbariImage< PixRGB<byte> > mbariImg(manager.getOptionValString(&OPT_InputFrameSource).c_str());
-    MbariImage< PixRGB<byte> > prevImg(manager.getOptionValString(&OPT_InputFrameSource).c_str());
-    list<BitObject> bitObjectFrameList;
-    float stddev = 0.f; 
-    std::map<int, double> pdf,cdfw;
-    for(int i=0; i < 256; i++) {pdf[i] = 0.F; cdfw[i] = 0.f;}
-    float prevEntropy = 0.f;
-    const float entropyMax = 0.05f;
-    float H, entropyDiff;
-    PixRGB<byte> avgVal(0,0,0);
-    MotionEnergyPyrBuilder motion(Gaussian5, 0.99F);
+    // bayesian network with 324 features
+    Bayes bn(324, 0);
+    bn.load("/home/avedac/Desktop/avedac/examples/dws20140919_sledI_00006/bayes.net");
 
-    // initialize the XML if requested to save event set to XML
-    if (rv->isSaveXMLEventsNameSet()) {
-        Image< PixRGB<byte> > tmpimg;
-        MbariImage< PixRGB<byte> > mstart(manager.getOptionValString(&OPT_InputFrameSource).c_str());
-        MbariImage< PixRGB<byte> > mend(manager.getOptionValString(&OPT_InputFrameSource).c_str());
+    // create hog
+    bool normalizeHistogram = true;
+    bool fixedHistogram = true; // if false, cell size fixed
+    Dims cellSize = Dims(3,3); // if fixedHist is true, this is hist size, if false, this is cell size
+    //8x8 = 1296 features
+    //3x3 =  36 features
+    HistogramOfGradients hog(normalizeHistogram,cellSize,fixedHistogram);
 
-        // get the starting and ending timecodes from the frames 
-        nub::ref<FrameIstream> rep = ifs->getFrameSource();
+    std::string featureFileName = "predictions.txt";
+    std::ofstream featureFile;
+    featureFile.open(featureFileName.c_str(),std::ios::out);
 
-        rep->setFrameNumber(frameRange.getFirst());
-        tmpimg = rep->readRGB();
-        mstart.updateData(tmpimg, frameRange.getFirst());
+    while(1)
+    {
 
-        rep->setFrameNumber(frameRange.getLast());
-        tmpimg = rep->readRGB();
-        mend.updateData(tmpimg, frameRange.getLast());
+     // read new image in?
+     const FrameState is = ifs->updateNext();
 
-        // create the XML document with header information
-        rv->createXMLDocument(Version::versionString(),
-                frameRange,
-                mstart.getMetaData().getTC(),
-                mend.getMetaData().getTC(),
-                dp);
+     if (is == FRAME_COMPLETE) break; // done
+     if (is == FRAME_NEXT || is == FRAME_FINAL) // new frame
+     {
+        LINFO("Reading new frame");
+        numSpots = 0;
 
-        rep->setFrameNumber((frameRange.getFirst()));
-    }
+        //  cache and enhance image
+        inputRaw = ifs->readRGB();
+        inputScaled = rescale(inputRaw, scaledDims);
 
-    string tc;
-    // do we actually need to process the frames?
-    if (rv->needFrames()) {
-        while (avgCache.size() < dp.itsSizeAvgCache) {
-            if (ifs->frame() >= frameRange.getLast()) {
-                LERROR("Less input frames than necessary for sliding average - "
-                        "using all the frames for caching.");
-                break;
-            }
-            ifs->updateNext();
-            img = ifs->readRGB();
+        // get updated input image erasing previous bit objects
+        const list<BitObject> bitObjectFrameList = eventSet.getBitObjectsForFrame(frameNum - 1);
 
-            if (dp.itsMinStdDev > 0.f) {
-                stddev = stdev(luminance(img));
-                LINFO("Standard deviation in frame %d:  %f", ifs->frame(), stddev);
+        // update the background cache
+        if (!bitObjectFrameList.empty())
+            input = preprocess->update(inputScaled, prevInput, ifs->frame(), bitObjectFrameList);
+        else
+            input = preprocess->update(inputScaled, ifs->frame());
 
-                // first frame or exceeded entropy max ?  update gamma correction curve
-                if (avgCache.size() == 0){
-                    cdfw = updateGammaCurve(img, pdf, true);
-                }
-                else {
-                    // only update when entropy exceeds max to save computation
-                    H = updateEntropyModel(img, pdf);
-                    entropyDiff = H - prevEntropy;
-                    prevEntropy = H;
-                    if (entropyDiff > entropyMax) {
-                        cdfw = updateGammaCurve(img, pdf, false);
-                    }
-                }
-                img = enhanceImage(img, cdfw);
+        frameNum = input.getFrameNum();
 
-                // get the standard deviation in the input image
-                // if there is little deviation do not add to the average cache
-                if (stddev <= dp.itsMinStdDev && avgCache.size() > 0) {
-                    LINFO("Standard deviation in frame %d too low. Is this frame all black ? Not including this image in the cache", ifs->frame());
-                    avgCache.push_back(avgCache.mean());
-                } else
-                    avgCache.push_back(lowPass3x(lowPass3y(img)));
-            } else {
+        rv->output(ofs, input, frameNum, "Input");
 
-                if (avgCache.size() == 0){
-                    cdfw = updateGammaCurve(img, pdf, true);
-                }
-                else {
-                    // only update when entropy exceeds max to save computation
-                    H = updateEntropyModel(img, pdf);
-                    entropyDiff = H - prevEntropy;
-                    prevEntropy = H;
-                    if (entropyDiff > entropyMax) {
-                        cdfw = updateGammaCurve(img, pdf, false);
-                    }
-                }
-                img = enhanceImage(img, cdfw);
-                avgCache.push_back(lowPass3x(lowPass3y(img)));
-            }
-
-            // Get the MBARI metadata from the frame if it exists
-            mbariImgEnhanced.updateData(img, ifs->frame());
-            tc = mbariImgEnhanced.getMetaData().getTC();
-            metadata = mbariImgEnhanced.getMetaData();
-
-            if (tc.length() > 0)
-                LINFO("Caching frame %06d timecode: %s", ifs->frame(), tc.c_str());
-            else
-                LINFO("Caching frame %06d", ifs->frame());
-
-            outCache.push_back(mbariImgEnhanced);
+        // choose image to segment; these produce different results and vary depending on midwater/benthic/etc.
+        if (dp.itsSegmentAlgorithmInputType == SAILuminance) {
+            segmentIn = input;
+        } else if (dp.itsSegmentAlgorithmInputType == SAIDiffMean) {
+            segmentIn = preprocess->clampedDiffMean(input);
+        } else {
+            segmentIn = preprocess->clampedDiffMean(input);
         }
-    } // end if needFrames
 
-    // ######## loop over frames ####################
-    for (int curFrame = frameRange.getFirst(); curFrame <= frameRange.getLast(); ++curFrame) {
-        rv->updateNext();
-        if (rv->needFrames()) {
-            // get image from cache or load and low-pass
-            uint cacheFrameNum = curFrame - frameRange.getFirst();
-            if (cacheFrameNum < avgCache.size()) {
-                // we have cached this one already
-                LINFO("Processing frame %06d from cache.", curFrame);
-                img = avgCache[cacheFrameNum];
-                mbariImgEnhanced = outCache[cacheFrameNum];
-                metadata = mbariImgEnhanced.getMetaData();
-                prevImg = mbariImgEnhanced; // save the current frame for the next loop*/
+        segmentIn = maskArea(segmentIn, mask);
 
-            } else {
-                // This means we are out of input
-                if (ifs->frame() > frameRange.getLast()) {
-                    LERROR("%d > %d Premature end of frame sequence - bailing out.", ifs->frame(), frameRange.getLast());
-                    break;
-                }
+        rv->output(ofs, segmentIn, frameNum, "SegmentIn");
 
-                ifs->updateNext();
-                img = ifs->readRGB();
-                // only update when entropy exceeds max to save computation
-                float H = updateEntropyModel(img, pdf);
-                float entropyDiff = H - prevEntropy;
-                prevEntropy = H;
-                if (entropyDiff > entropyMax) {
-                   cdfw = updateGammaCurve(img, pdf, false);
-                }
-                img = enhanceImage(img, cdfw);
-                mbariImgEnhanced.updateData(img, curFrame);
+        /*Segmentation s;
+        Dims d = segmentIn.getDims();
+        Rectangle r = Rectangle::tlbrI(0,0,d.h()-1,d.w()-1);
+        Image<PixRGB<byte>> t = s.runGraph(segmentIn, r, 1.0);
+        rv->output(ofs, t, frameNum, "Segment1.0");
+        t = s.runGraph(segmentIn, r, 0.5);
+        rv->output(ofs, t, frameNum, "Segment.5");*/
 
-                if (dp.itsMinStdDev > 0.f) {
-                    stddev = stdev(luminance(img));
-                    LINFO("Standard deviation in frame %d:  %f", ifs->frame(), stddev);
-                }
+       // rutz::shared_ptr<OpticalFlow> flow =
+      //   getLucasKanadeOpticFlow(prevLum, lum);
+      // Image<PixRGB<byte> > opticFlow = drawOpticFlow(prevImage, flow);
+      // Image< PixRGB<byte> > disp(4*width, height, ZEROS);
+      // inplacePaste(disp, prevImage, Point2D<int>(0    ,0));
+      // inplacePaste(disp, currImage, Point2D<int>(width,0));
 
-                // get the standard deviation in the input image
-                // if there is little deviation do not add to the average cache
-                if (stddev <= dp.itsMinStdDev && avgCache.size() > 0) {
-                    LINFO("Standard deviation low in frame %d. Not including this image in the cache. Is this frame all black or just noise ? ", ifs->frame());
-                    avgCache.push_back(avgCache.mean());
-                } else {
+        Image<byte> hh(input.getDims(), ZEROS);
+        hh = highThresh(hh, byte(0), byte(255));
+        mmap = motion.updateMotion(luminance(inputScaled), hh);
+        rv->output(ofs, mmap, frameNum, "MMAP");
 
-                    const list<BitObject> bitObjectFrameList = eventSet.getBitObjectsForFrame(curFrame - 1);
-                    if (!bitObjectFrameList.empty()) {
-                        Image< PixRGB<byte> > bgndImg = getBackgroundImage(
-                                img, avgCache.mean(),
-                                prevImg,
-                                bitObjectFrameList,avgVal);
-                        avgCache.push_back(lowPass3x(lowPass3y(img)));
-                        rv->output(bgndImg, curFrame - 1, "Background_input");
-                    }
-                    else
-                        avgCache.push_back(lowPass3x(lowPass3y(img)));
-                }
+        if (prevInput.initialized()) {
 
-                // Get the MBARI metadata from the frame if it exists
-                tc = mbariImgEnhanced.getMetaData().getTC();
-                metadata = mbariImgEnhanced.getMetaData();
-                if (tc.length() > 0)
-                    LINFO("Caching frame %06d timecode: %s", curFrame, tc.c_str());
-                else
-                    LINFO("Caching frame %06d", curFrame);
+            // compute the optic flow
+            /*rutz::shared_ptr<MbariOpticalFlow> flow =  getOpticFlow
+            (Image<byte>(luminance(mmap2)),
+            Image<byte>(luminance(mmap)));
 
-                prevImg = mbariImgEnhanced; // save the current frame for the next loop*/
+            Image<PixRGB<byte> > opticFlow = drawOpticFlow(prevInput, flow);
+            rv->output(ofs, opticFlow, frameNum, "opticflow");
+            rv->output(ofs, flow->getFlowStrengthField(), frameNum, "OFStrength");
+            rv->output(ofs, flow->getVectorLengthField(), frameNum, "OFLength");
+
+            std::vector<rutz::shared_ptr<MbariFlowVector> > vectors = flow->getFlowVectors();
+            Image< float > ix(prevInput.getDims(), ZEROS);
+            Image< float > iy(prevInput.getDims(), ZEROS);
+            
+              // we are going to assume we have a sparse flow field
+              // and random access on the field
+              for(uint v = 0; v < vectors.size(); v++)
+                {
+                  Point2D<float> pt = vectors[v]->p1;
+                  uint i = pt.i;
+                  uint j = pt.j;
+                  float xmag  = 200.0f * vectors[v]->xmag;
+                  float ymag  = 200.0f * vectors[v]->ymag;
+                  //ix.setVal(i,j, xmag );
+                  //iy.setVal(i,j, ymag );
+                  if(xmag > 0.0) ix.setVal(i,j, xmag );
+                  if(ymag > 0.0) iy.setVal(i,j, ymag );
+             }
+
+            int numBins = 8;
+            const int lineSize = 20;
+
+            Image<float> mag, ori;
+            gradientSobel(flow->getFlowStrengthField(), mag, ori, 3);
+            rv->output(ofs, static_cast< Image<byte> >(mag), frameNum, "OFXYm");
+            rv->output(ofs, static_cast< Image<byte> >(ori), frameNum, "OFXYo");
+          //  rv->output(ofs, static_cast< Image<byte> >(ix), frameNum, "ix");
+          //  rv->output(ofs, static_cast< Image<byte> >(ix), frameNum, "ix");
+          //  rv->output(ofs, static_cast< Image<byte> >(mag), frameNum, "XGM");
+
+          //  ImageSet<float> imgFeatures = getFeatures(ix, numBins);
+          //  Image<PixRGB<byte> > hogImage = getHistogramImage(imgFeatures, lineSize);
+           // rv->output(ofs, hogImage, frameNum, "ixHOG");
+
+         //   gradientSobel(iy, mag, ori, 3);
+         //   rv->output(ofs, static_cast< Image<byte> >(iy), frameNum, "iy");
+         //   rv->output(ofs, static_cast< Image<byte> >(mag), frameNum, "YGM");
+
+         //   imgFeatures = getFeatures(iy, numBins);
+          //  hogImage = getHistogramImage(imgFeatures, lineSize);
+           // rv->output(ofs, hogImage, frameNum, "iyHOG");
+
+            Image<float> yFilter(1, 3, ZEROS);
+            Image<float> xFilter(3, 1, ZEROS);
+            yFilter.setVal(0, 0, 1.F);
+            yFilter.setVal(0, 2, 1.F);
+            xFilter.setVal(0, 0, 1.F);
+            xFilter.setVal(2, 0, 1.F);
+
+            Image<float> yiy = sepFilter(iy, Image<float>(), yFilter, CONV_BOUNDARY_CLEAN);
+            Image<float> xix = sepFilter(ix, xFilter, Image<float>(), CONV_BOUNDARY_CLEAN);
+
+            rv->output(ofs, static_cast< Image<byte> >(yiy), frameNum, "YYder");
+            rv->output(ofs, static_cast< Image<byte> >(xix), frameNum, "XXder");
+
+            Image<float> yix = sepFilter(iy, xFilter, Image<float>(), CONV_BOUNDARY_CLEAN);
+            Image<float> xiy = sepFilter(ix, Image<float>(), yFilter, CONV_BOUNDARY_CLEAN);
+
+            rv->output(ofs, static_cast< Image<byte> >(yix), frameNum, "YXder");
+            rv->output(ofs, static_cast< Image<byte> >(xiy), frameNum, "XYder");
+
+            ImageSet<float> imgFeatures = getFeatures(mmap, 4);
+            Image<PixRGB<byte> > hogImage = getHistogramImage(imgFeatures, lineSize);
+            rv->output(ofs, hogImage, frameNum, "HOG1a");
+
+            imgFeatures = getFeatures(mmap, 8);
+            hogImage = getHistogramImage(imgFeatures, lineSize);
+            rv->output(ofs, hogImage, frameNum, "HOG1b");
+
+            imgFeatures = getFeatures(segmentIn, numBins);
+            hogImage = getHistogramImage(imgFeatures, lineSize);
+            rv->output(ofs, hogImage, frameNum, "HOG2");
+
+            imgFeatures = getFeatures(input, numBins);
+            hogImage = getHistogramImage(imgFeatures, lineSize);
+            rv->output(ofs, hogImage, frameNum, "HOG3");*/
+
+            /*
+            int numBins = 12;
+            LINFO("Computing HOG");
+            const int lineSize = 2;
+            ImageSet<float> hist1 = getFeatures(xix, numBins);
+            ImageSet<float> hist2 = getFeatures(yix, numBins);
+            Image<PixRGB<byte> > hogImage1 = getHistogramImage(hist1, lineSize);
+            Image<PixRGB<byte> > hogImage2 = getHistogramImage(hist2, lineSize);
+            Image<PixRGB<byte>> outHist =  hogImage1 - hogImage2;
+            rv->output(ofs, outHist, frameNum, "IMHdiffx");
+
+            hist1 = getFeatures(xiy, numBins);
+            hist2 = getFeatures(yiy, numBins);
+            hogImage1 = getHistogramImage(hist1, lineSize);
+            hogImage2 = getHistogramImage(hist2, lineSize);
+            outHist =  hogImage1 - hogImage2;
+            rv->output(ofs, outHist, frameNum, "IMHdiffy");
+
+            ImageSet<float> imgFeatures = getFeatures(input, numBins);
+            hogImage2 = getHistogramImage(imgFeatures, lineSize);
+            rv->output(ofs, hogImage2, frameNum, "HOGinput");*/
+
+            //hogImage2 = getHistogramImage(filterFeatures, lineSize);
+            //rv->output(ofs, hogImage2, frameNum - 1, "HOGevt", (*event)->getEventNum());
+
+            //ImageSet<float> filterFeatures = getFeatures(evtImg, 1);
+            //std::vector<float> ret = HistogramOfGradients::createHistogramFromGradient(gradmag,gradang);
+            //std::vector<float> tmp = calculateJunctionHistogram(gradmag,gradang);
+            //ret.insert(ret.end(),tmp.begin(),tmp.end());
+
+            // this is a list of all the events that have a token in this frame
+            std::list<MbariVisualEvent::VisualEvent *> eventFrameList;
+            eventFrameList = eventSet.getEventsForFrame(frameNum - 1);
+
+            // dump information about the bayes classifier
+            //for(uint i=0; i<bn.getNumFeatures(); i++)
+            //  LINFO("Feature %i: mean %f, stddevSq %f", i, bn.getMean(0, i), bn.getStdevSq(0, i));
+
+            // for each bit object, extract features and save the output
+            std::list<MbariVisualEvent::VisualEvent *>::iterator event;
+            for (event = eventFrameList.begin(); event != eventFrameList.end(); ++event) {
+
+                LINFO("==============================================searching for event %d", (*event)->getEventNum());
+
+                Rectangle bbox = (*event)->getToken(frameNum-1).bitObject.getBoundingBox();
+                Image< PixRGB<byte> > in =  preprocess->clampedDiffMean(prevInput);
+                std::vector<double> features = getFeatures2(prevmmap, in, hog, scaledDims, bbox);
+
+                // try to classify using histogram features
+                //double prob = 0.;
+                // int cls = bn.classify(features, &prob);
+
+                // create the file stem and write out the features
+                string evnum(sformat("evt%04d_%06d.dat", (*event)->getEventNum(), frameNum-1));
+                std::ofstream eofs(evnum);
+                eofs.precision(12);
+                std::vector<double>::iterator eitr = features.begin(), stop = features.end();
+                while(eitr != stop)   eofs << *eitr++ << " ";
+                eofs.close();
+
+                // if probability small, no matches found, so add a new class by event number
+                //if (prob < 0.1) {
+                //if ((*event)->getEventNum() <  maxClasses) {
+                //    bn.learn(features,  (*event)->getEventNum());
+                // }
+
+                 // calculate the bounding box for sliding window based on the prediction
+                 const Point2D<int> pred = (*event)->predictedLocation();
+
+                 Dims dims = input.getDims();
+
+                 // is the prediction too far outside the image?
+                 int gone = dp.itsMaxDist;
+                 if ((pred.i < -gone) || (pred.i >= (dims.w() + gone)) ||
+                     (pred.j < -gone) || (pred.j >= (dims.h() + gone)))
+                   {
+                     break;
+                   }
+
+                 // adjust prediction if negative
+                 const Point2D<int> center =  Point2D<int>(std::max(pred.i,0), std::max(pred.j,0));
+
+                 // get the region used for searching for a match based on the maximum dimension
+                 Dims maxDims = (*event)->getMaxObjectDims();
+                 Dims searchDims = Dims((float)maxDims.w()*4.0,(float)maxDims.h()*4.0);
+                 Rectangle region = Rectangle::centerDims(center, searchDims);
+                 region = region.getOverlap(Rectangle(Point2D<int>(0, 0), inputRaw.getDims() - 1));
+                 Dims windowDims = (*event)->getToken(frameNum - 1).bitObject.getObjectDims();
+
+                 // run overlapping sliding box over a region centered at the predicted location
+                 Dims stepDims(windowDims.w()/4.F, windowDims.h()/4.F);
             }
+        }
 
-            // Get the saliency input image
+        // update the focus of expansion - is this still needed ?
+        foaIn = luminance(input);
+        const byte threshold = mean(foaIn);
+        curFOE = foeEst.updateFOE(makeBinary(foaIn, threshold));
+
+        // update the open events
+        eventSet.updateEvents(rv, mask, frameNum, input, prevInput, segmentIn, curFOE, metadata);
+
+        // is counter within 1 of reset? queue two successive images in the brain for motion and flicker computation
+        --countFrameDist;
+        if (countFrameDist <= 1 ) {
+
+            Image< PixRGB<byte> > brainInput;
+
+            // Get image to input into the brain
             if (dp.itsSaliencyInputType == SIDiffMean) {
-                if (dp.itsSizeAvgCache > 1) {
-                    img2runsaliency = avgCache.absDiffMean(mbariImgEnhanced);
-                } else
+                if (dp.itsSizeAvgCache > 1)
+                    brainInput = preprocess->absDiffMean(input);
+                else
                     LFATAL("ERROR - must specify an imaging cache size "
                         "to use the DiffMean option. Try setting the"
                         "--mbari-cache-size option to something > 1");
-            } else if (dp.itsSaliencyInputType == SIRaw) {
-                img2runsaliency = mbariImgEnhanced;
-            } else {
-                img2runsaliency = mbariImgEnhanced;
             }
-        } // end if needFrames
-
-    // update the original input frame series for display/output images
-    ifsorg->updateNext();
-    mbariImg.updateData(ifsorg->readRGB(), mbariImgEnhanced.getFrameNum());
-
-    rv->output(mbariImgEnhanced, mbariImgEnhanced.getFrameNum(), "Input");
-
-	if (dp.itsSizeAvgCache > 1) rv->output(avgCache.mean(), mbariImgEnhanced.getFrameNum(), "Background_mean");
-
-        if (!loadedEvents) {
-
-            // update the dynamic mask
-            if (dp.itsMaskDynamic) {
-
-                // Make dynamic mask
-                Image< byte > imgtmp = luminance(img2runsaliency);
-                float m = mean(imgtmp);
-                mask = maskArea(makeBinary2(imgtmp,
-                                           byte(m-5),
-                                           byte(m+5),
-                                           byte(255),
-                                           byte(0)),&dp);
-
-                // Create motion map
-                Image<byte> mmap = motion.updateMotion(luminance(lowPass3x(lowPass3y(mbariImgEnhanced))), staticClipMask);
-                rv->display(mmap, mbariImgEnhanced.getFrameNum(), "Motion");
-
-                // unmask where dynamic mask true but motion present
-                Image<byte>::iterator mitr = mask.beginw();
-                Image<byte>::iterator mmitr = mmap.beginw();
-                Image<PixRGB<byte>>::const_iterator ritr = mbariImgEnhanced.beginw(), stop = mbariImgEnhanced.end();
-
-                while(ritr != stop) {
-                   *mitr  = ( (*mitr) == 0 && (*mmitr) > 0) ? 255 : *mitr;
-                   mmitr++; ritr++; mitr++;
-                }
+            else if (dp.itsSaliencyInputType == SIRaw) {
+                brainInput = rescale(inputRaw, Dims(960,540));
             }
             else
-                mask = staticClipMask;
+                brainInput = input;
 
-            if (dp.itsMaskLasers) {
-                Image<PixRGB<float> > input = mbariImgEnhanced;
-                Image<byte>::iterator mitr = mask.beginw();
-                Image<PixRGB<float>>::const_iterator ritr = input.beginw(), stop = input.end();
-                float thresholda = 50.F, thresholdl = 50.F;
-                // mask out any significant red in the L*a*b color space where strong red has positive a values
-                while(ritr != stop) {
-                    const PixLab<float> pix = PixLab<float>(*ritr++);
-                    float l = pix.p[0]/3.0F; // 1/3 weight
-                    float a = pix.p[1]/3.0F; // 1/3 weight
-                    *mitr++  = (a > thresholda && l > thresholdl) ? 0 : *mitr;
-                }
-            }
-            // mask is inverted so morphological operations are in reverse; here we are enlarging the mask to cover
-            Image<byte> se = twofiftyfives(dp.itsCleanupStructureElementSize);
-            mask = erodeImg(mask, se);
+            rv->display(brainInput, frameNum, "BrainInput");;
 
-            rv->output(mask, mbariImgEnhanced.getFrameNum(), "Mask");
+            // post new input frame for processing
+            rutz::shared_ptr<SimEventInputFrame> e(new SimEventInputFrame(brain.get(), GenericFrame(brainInput), 0));
+            seq->post(e);
 
-            Image<PixRGB<byte>> img2segmentBin = maskArea(avgCache.absDiffMean(mbariImgEnhanced),mask);
-            Image<byte> img2segmentGraph = maskArea(maxRGB(img2segmentBin), staticClipMask);
-            Image<byte> bitImg(mbariImgEnhanced.getDims(), ZEROS);
-            Image< PixRGB<byte> > graphBitImg(mbariImgEnhanced.getDims(), ZEROS);
-
-            segmentation.run(mbariImgEnhanced.getFrameNum(), img2segmentBin, img2segmentGraph, 1.0F, 1.0F, \
-                            graphBitImg, bitImg);
-
-            // update the focus of expansion
-            Vector2D curFOE = foeEst.updateFOE(bitImg);
-
-            rv->output(graphBitImg, curFrame, "GraphSegment");
-            rv->output(bitImg, curFrame, "BinarySegment");
-
-            // update the events with the segmented images
-            eventSet.updateEvents(rv, mask, curFrame, mbariImgEnhanced, prevImg, bitImg, graphBitImg, curFOE, metadata);
-
-            // is counter at 0?
-            --countFrameDist;
-            if (countFrameDist == 0) {
-
-                countFrameDist = dp.itsSaliencyFrameDist;
-
-                // Simulate what the saliency masked input by applying the mask here before display
-                // the mask is actually applied in the brain model separately
-                rv->output(maskArea(img2runsaliency,mask), mbariImgEnhanced.getFrameNum(), "Saliency_input");
-
-                if (stddev >= dp.itsMinStdDev) {
-
-                    LINFO("Getting salient regions for frame: %06d", curFrame);
-
-                    if (resetBrain) brain->reset(MC_RECURSE);
-                    resetBrain = (resetBrain == true) ? false: true; //toggle reset
-
-                    std::list<Winner> winlist = getSalientWinners(rv, mask, img2runsaliency, brain, seq, \
-                                           dp.itsMaxEvolveTime, dp.itsMaxWTAPoints, mbariImgEnhanced.getFrameNum());
-
-                    std::list<BitObject> sobjs = getSalientObjects(graphBitImg, bitImg, winlist, mask);
-
-                    if (winlist.size() > 0)
-                        rv->output(showAllWinners(winlist, mbariImgEnhanced, dp.itsMaxDist), curFrame, "Winners");
-
-                    if (sobjs.size() > 0)
-                        rv->output(showAllObjects(sobjs), curFrame, "Salient_Objects");
-
-                    // initiate events with these objects
-                    eventSet.initiateEvents(sobjs, metadata, scaleW, scaleH, mbariImgEnhanced, curFOE);
-
-                    winlist.clear();
-                    sobjs.clear();
-                }
-            }
-            // last frame? -> close everyone
-            if (mbariImgEnhanced.getFrameNum() == frameRange.getLast()) {
-                eventSet.closeAll();
-            }
-
-            // prune invalid events
-            eventSet.cleanUp(curFrame);
-
-        } // end if (!loadedEvents)
-
-        // if not saving in the original frame dimensions, rescale back
-        if (!dp.itsSaveOriginalFrameSpec)  rescale(mbariImg, dims);
-
-        // this is a list of all the events that have a token in this frame
-        list<VisualEvent *> eventFrameList;
-
-        // this is a complete list of all those events that are ready to be written
-        list<VisualEvent *> eventListToSave;
-
-        if (!loadedEvents) {
-            // get event frame list for this frame and those events that are ready to be saved
-            // this is a list of all the events that have a token in this frame
-            eventFrameList = eventSet.getEventsForFrame(mbariImg.getFrameNum());
-
-            // this is a complete list of all those events that are ready to be written
-            eventListToSave = eventSet.getEventsReadyToSave(mbariImg.getFrameNum());
-
-            // write out eventSet?
-            if (rv->isSaveEventsNameSet()) rv->saveVisualEvent(eventSet, eventFrameList);
-
-            // write out summary ?
-            if (rv->isSaveEventSummaryNameSet()) rv->saveVisualEventSummary(Version::versionString(), eventListToSave);
-
-            // flag events that have been saved for delete
-            list<VisualEvent *>::iterator i;
-            for (i = eventListToSave.begin(); i != eventListToSave.end(); ++i)
-                (*i)->flagWriteComplete();
-
-            // write out positions?
-            if (rv->isSavePositionsNameSet()) rv->savePositions(eventFrameList);
-
-            PropertyVectorSet pvsToSave = eventSet.getPropertyVectorSetToSave();
-
-            // write out property vector set?
-            if (rv->isSavePropertiesNameSet()) rv->saveProperties(pvsToSave);
         }
 
-        // do this only when we actually load frames
-        if (rv->needFrames()) {
-            // need to obtain the property vector set?
-            if (!loadedProperties) pvs = eventSet.getPropertyVectorSet();
+    }
 
-            // get a list of events for this frame
-            eventFrameList = eventSet.getEventsForFrame(mbariImg.getFrameNum());
+    // check for map output and mask if needed on frame before saliency run
+    // the reason mask here and not in the pyramid is because the blur around the inside of the clip mask in the model
+    // can mask out interesting objects, particularly for large masks around the edge
+    SeC<SimEventVisualCortexOutput> s = seq->check<SimEventVisualCortexOutput>(brain.get());
+    if ( s && (is == FRAME_NEXT || is == FRAME_FINAL) && countFrameDist == 0  ) {
 
-            // write out eventSet to XML?
-            if (rv->isSaveXMLEventsNameSet()) {
-                rv->saveVisualEventSetToXML(eventFrameList,
-                        mbariImg.getFrameNum(),
-                        mbariImg.getMetaData().getTC(),
-                        frameRange);
-            }
+        LINFO("Updating visual cortex output for frame %d", frameNum);
 
-            // display or write results  ?
-            if (rv->isDisplayOutputSet() || rv->isSaveOutputSet()) {
-                rv->outputResultFrame(mbariImg,
-                        eventSet,
-                        circleRadius,
-                        scaleW, scaleH);
-            }
+        // get saliency map and dimensions
+        Image<float> sm = s->vco();
+        Dims dimsm = sm.getDims();
 
-            // need to save any event clips?
-            if (rv->isSaveAllEventClips()) {
-                //save all events
-                list<VisualEvent *>::iterator i;
-                for (i = eventFrameList.begin(); i != eventFrameList.end(); ++i)
-                    rv->saveSingleEventFrame(mbariImg, mbariImg.getFrameNum(), *i);
-            } else {
-                // need to save any particular event clips?
-                uint csavenum = rv->numSaveEventClips();
-                for (uint idx = 0; idx < csavenum; ++idx) {
-                    uint evnum = rv->getSaveEventClipNum(idx);
-                    if (!eventSet.doesEventExist(evnum)) continue;
-
-                    VisualEvent *event = eventSet.getEventByNumber(evnum);
-                    if (event->frameInRange(mbariImg.getFrameNum()))
-                        rv->saveSingleEventFrame(mbariImg, mbariImg.getFrameNum(), event);
-                }
+        // update the laser mask
+        if (dp.itsMaskLasers) {
+            LINFO("Masking lasers in L*a*b color space");
+            Image<PixRGB<float> > in = input;
+            Image<byte>::iterator mitr = mask.beginw();
+            Image<PixRGB<float>>::const_iterator ritr = in.beginw(), stop = in.end();
+            float thresholda = 50.F, thresholdl = 50.F;
+            // mask out any significant red in the L*a*b color space where strong red has positive a values
+            while(ritr != stop) {
+                const PixLab<float> pix = PixLab<float>(*ritr++);
+                float l = pix.p[0]/3.0F; // 1/3 weight
+                float a = pix.p[1]/3.0F; // 1/3 weight
+                *mitr++  = (a > thresholda && l > thresholdl) ? 0 : *mitr;
             }
         }
 
-        if (!loadedEvents) {
-            //flag events that have been saved for delete otherwise takes too much memory
-            list<VisualEvent *>::iterator i;
-            for (i = eventListToSave.begin(); i != eventListToSave.end(); ++i)
-                (*i)->flagForDelete();
-            while (!eventFrameList.empty()) eventFrameList.pop_front();
-            while (!eventListToSave.empty()) eventListToSave.pop_front();
+        // mask is inverted so morphological operations are in reverse; here we are enlarging the mask to cover
+        Image<byte> se = twofiftyfives(dp.itsCleanupStructureElementSize);
+        mask = erodeImg(mask, se);
+        rv->output(ofs, mask, frameNum, "Mask");
+
+        // rescale the mask if needed
+        Image<byte> maskRescaled = rescale(mask, dimsm);
+
+        // mask out equipment, etc.
+        Image<float>::iterator smitr = sm.beginw();
+        Image<byte>::const_iterator mitr = maskRescaled.beginw(), stop = maskRescaled.end();
+
+        // set voltage to 0 where mask is 0
+        while(mitr != stop) {
+           *smitr  = ( (*mitr) == 0 ) ? 0.F : *smitr;
+           mitr++; smitr++;
         }
-        #ifdef DEBUG
-        if ( pause.checkPause()) Raster::waitForKey();
-		continue;
-		#endif
-    } // end loop over all frames
+
+        // post as new output so other simulation modules can iterate on this
+        rutz::shared_ptr<SimEventVisualCortexOutput> newsm(new SimEventVisualCortexOutput(brain.get(), sm));
+        seq->post(newsm);
+    }
+
+    hasCovert = false;
+
+    // reached distance between computing saliency in frames ?
+    if (countFrameDist == 0) {
+        countFrameDist = dp.itsSaliencyFrameDist;
+
+        // initialize the max time to simulate
+        const SimTime simMaxEvolveTime = seq->now() + SimTime::MSECS(dp.itsMaxEvolveTime);
+
+        std::list<Winner> winlist;
+        std::list<BitObject> objs;
+        float scaleH = 1.0f, scaleW = 1.0F;
+
+        // search for new winners until reached max time, max spots or boring WTA point
+        while (seq->now().msecs() < simMaxEvolveTime.msecs()) {
+
+            // evolve the brain and other simulation modules
+            seq->evolve();
+
+            // found a new winner ?
+            if (SeC<SimEventWTAwinner> e = seq->check<SimEventWTAwinner>(brain.get())) {
+                LINFO("##### time now:%f msecs max evolve time:%f msecs frame: %d #####", \
+                        seq->now().msecs(), simMaxEvolveTime.msecs(), frameNum);
+                hasCovert = true;
+                numSpots++;
+                WTAwinner win = e->winner();
+                LINFO("##### winner #%d found at [%d; %d] with %f voltage frame: %d#####",
+                        numSpots, win.p.i, win.p.j, win.sv, frameNum);
+
+                // winner not boring, or if keeping boring winners
+                // grab Focus Of Attention (FOA) mask shape to later guide winner selection
+                if (SeC<SimEventShapeEstimatorOutput> se = seq->check<SimEventShapeEstimatorOutput>(brain.get())) {
+                    Image<byte> foamask = Image<byte>(se->smoothMask()*255);
+
+                    // rescale if needed
+                    if (scaledDims != foamask.getDims()) {
+                        scaleW = (float) scaledDims.w()/(float) foamask.getDims().w();
+                        scaleH = (float) scaledDims.h()/(float) foamask.getDims().h();
+                        foamask = rescale(foamask, scaledDims);
+                        win.p.i = (int) ( (float) win.p.i*scaleW );
+                        win.p.j = (int) ( (float) win.p.j*scaleH );
+                    }
+
+                    // create bit object out of FOA mask
+                    BitObject bo;
+                    bo.reset(makeBinary(foamask,byte(0),byte(0),byte(1)));
+                    bo.setSMV(win.sv);
+
+                    // if have valid bit object out of the FOA mask, run object detection
+                    if (bo.isValid() && bo.getArea() >= dp.itsMinEventArea) {
+                        Winner w(win, bo, frameNum);
+                        std::list<BitObject> bos = objdet->run(rv, input, w, segmentIn);
+                        objs.splice(objs.end(), bos);
+                        winlist.push_back(w);
+                    }
+                }
+
+                if (win.boring) {
+                    LINFO("##### boring event detected #####");
+                    break;
+                }
+
+                if (numSpots >= dp.itsMaxWTAPoints) {
+                    LINFO("##### found maximum number of salient spots #####");
+                    break;
+                }
+
+                if (seq->now().msecs() >= simMaxEvolveTime.msecs()) {
+                    LINFO("##### time limit reached time now:%f msecs max evolve time:%f msecs frame: %d #####", \
+                            seq->now().msecs(), simMaxEvolveTime.msecs(), frameNum);
+                    break;
+                }
+
+        } // check for winner
+
+        }// end brain while iteration loop
+
+        // create new events with this
+        eventSet.initiateEvents(objs, frameNum, metadata, segmentIn, curFOE);
+
+        rv->output(ofs, showAllWinners(winlist, input, dp.itsMaxDist), frameNum, "Winners");
+        winlist.clear();
+        objs.clear();
+
+        prevTime = seq->now(); // time before current step
+    }
+
+    const FrameState os = ofs->updateNext();
+
+    if (os == FRAME_NEXT || os == FRAME_FINAL) {
+        // create MBARI image with metadata from input and original input frame
+        output.updateData(inputRaw, input.getMetaData(), ofs->frame());
+
+        // prune invalid events
+        eventSet.cleanUp(ofs->frame());
+
+        // write out/display anything that's ready
+        logger->run(rv, output, eventSet, scaledDims);
+
+        // save anything requested from brain model
+        if (hasCovert)
+            brain->save(SimModuleSaveInfo(ofs, *seq));
+
+        // save the input image
+        prevInput = input;
+        prevmmap = mmap;
+
+        // reset the brain, but only when distance between running saliency is more than every frame
+        if (countFrameDist == dp.itsSaliencyFrameDist && dp.itsSaliencyFrameDist > 1) {
+            brain->reset(MC_RECURSE);
+            seq->resetTime(prevTime);
+        }
+    }
+
+    if (os == FRAME_FINAL) {
+         // last frame? -> close everyone
+        eventSet.closeAll();
+    break;
+    }
+
+    #ifdef DEBUG
+    if ( pause.checkPause()) Raster::waitForKey();// || ifs->shouldWait() || ofs->shouldWait()) Raster::waitForKey();
+    continue;
+    #endif
+    } // end while
     //######################################################
     LINFO("%s done!!!", PACKAGE);
     manager.stop();
-    return retval;
-
+    return 0;
 } // end main
 
 

@@ -53,13 +53,13 @@ parameters*/
 // Default multiplier for determining the maximum event area
 #define MAX_SIZE_FACTOR 700
 // Default multiplier for determining the maximum tracking distance
-#define MAX_DIST_RATIO 40
+#define MAX_DIST_RATIO 60
 // Default maximum number of frames an event can be before closing
 // -1 = unlimited
 // 10 minutes @ 30 fps = 18000
 #define DEFAULT_MAX_EVENT_FRAMES  -1
 // Default minimum number of frames an event can be before considered interesting
-#define DEFAULT_MIN_EVENT_FRAMES 3
+#define DEFAULT_MIN_EVENT_FRAMES 1
 // Default values for the mask. This is the mask that
 // masks out video overlays, equipment, etc.
 // By default there is no mask

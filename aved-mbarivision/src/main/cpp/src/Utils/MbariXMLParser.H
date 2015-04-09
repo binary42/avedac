@@ -87,7 +87,8 @@ public:
   void add(bool saveNonInterestingEvents,
 	   std::list<MbariVisualEvent::VisualEvent *> &eventList,
 	   int eventframe,
-	   std::string eventframetimecode);
+	   std::string eventframetimecode,
+	   float scaleW, float scaleH);
   void writeDocument(std::string path);
   bool isXMLValid(std::string inputXML);
 

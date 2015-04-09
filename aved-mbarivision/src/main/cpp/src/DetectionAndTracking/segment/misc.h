@@ -38,8 +38,8 @@ inline bool operator==(const rgb &a, const rgb &b) {
 template <class T>
 inline T abs(const T &x) { return (x > 0 ? x : -x); };
 
-template <class T>
-inline int sign(const T &x) { return (x >= 0 ? 1 : -1); };
+//template <class T>
+//inline int sign(const T &x) { return (x >= 0 ? 1 : -1); };
 
 template <class T>
 inline T square(const T &x) { return x*x; };

@@ -24,10 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 #include "misc.h"
 #include "filter.h"
 #include "segment-graph.h"
-//#include "DetectionAndTracking/segment/image.h"
-//#include "DetectionAndTracking/segment/misc.h"
-//#include "DetectionAndTracking/segment/filter.h"
-//#include "DetectionAndTracking/segment/segment-graph.h"
 
 // random color
 rgb random_rgb(){ 
@@ -64,12 +60,10 @@ static inline float diff(image<float> *r, image<float> *g, image<float> *b,
  * sigma: to smooth the image.
  * c: constant for threshold function.
  * min_size: minimum component size (enforced by post-processing stage).
- * winners: each color is awarded a winner. These are assigned to a winner-take-all mapping
  * scaleW: amount to scale X seedWinner
  * scaleH: amount to scale H seedWinner.
  */
-image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
-			  std::list<Winner> &winners, float scaleW, float scaleH) {
+image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size, float scaleW, float scaleH) {
   int width = im->width();
   int height = im->height();
 
@@ -170,17 +164,8 @@ image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
                 }
             iter++;
             }
-            if (found == false) {
+            if (found == false)
                 seedColors.push_back(seedColor);
-                WTAwinner win = WTAwinner::NONE();
-                win.p.i = (int) ( (float) x*scaleW);
-                win.p.j = (int) ( (float) y*scaleH);
-                win.sv = 0.f;
-                BitObject bo;
-                //LINFO("##### winner #%d found at [%d; %d]  frame: %d#####",
-               //         numSpots, win.p.i, win.p.j, framenum);
-               winners.push_back(Winner(win, bo));
-            }
     }
   }
 

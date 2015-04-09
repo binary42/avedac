@@ -215,7 +215,7 @@ DetectionParametersModelComponent::DetectionParametersModelComponent(ModelManage
 : ModelComponent(mgr, std::string("DetectionParameters"), std::string("DetectionParameters")),
 itsMaxEvolveTime(&OPT_MDPmaxEvolveTime, this),
 itsMaxWTAPoints(&OPT_MDPmaxWTAPoints, this),
-itsSaveNonInteresting(&OPT_MDPsaveNonInterestingEvents, this),
+itsSaveNonInteresting(&OPT_MDPsaveBoringEvents, this),
 itsSaveOriginalFrameSpec(&OPT_MDPsaveOriginalFrameSpec, this),
 itsEventExpirationFrames(&OPT_MDPeventExpirationFrames, this),
 itsTrackingMode(&OPT_MDPtrackingMode, this),

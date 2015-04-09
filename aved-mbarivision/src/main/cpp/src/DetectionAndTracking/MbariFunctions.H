@@ -36,11 +36,41 @@
 #include "Neuro/WinnerTakeAll.H"
 #include "Neuro/StdBrain.H"
 #include "Simulation/SimEventQueueConfigurator.H"
+#include "Features/HistogramOfGradients.H"
 #include "Image/Point2D.H"
+#include "Image/Image.H"
+#include "Image/Pixels.H"
+#include "Image/ImageSet.H"
 #include "Data/Winner.H"
 #include "DetectionAndTracking/DetectionParameters.H"
 #include "Image/Transforms.H"
 #include "Parallel/pvisionTCP-defs.H"
+#include "Util/Types.H"
+
+#include <vector>
+#include <string>
+
+//TODO: clean this up, and support more ori
+// unit vectors used to compute gradient orientation
+const double itsUU[9] = {1.0000,
+  0.9397,
+  0.7660,
+  0.500,
+  0.1736,
+  -0.1736,
+  -0.5000,
+  -0.7660,
+  -0.9397};
+const double itsVV[9] = {0.0000,
+  0.3420,
+  0.6428,
+  0.8660,
+  0.9848,
+  0.9848,
+  0.8660,
+  0.6428,
+  0.3420};
+
 class Token;
 class MbariResultViewer;
 class Brain; 
@@ -75,15 +105,35 @@ std::list<BitObject> extractBitObjects(const Image<byte>& bitImg,
         const int maxSize);
 
 //! extract a set of BitObjects from a color labeled images, which intersect region
-/*! Same as above, except assumption is image is color labeled by 
- * external segmentation algorithm. Image is then flooded starting 
- * from each point within region, and each BitObject exceeding the 
- * minSize is stored in the list of BitObjects that is returned. */
+/*! Same as above, except assumption is image is color and to be segmented using graphcut */
 std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
         const Point2D<int> seed,
-        Rectangle region, 
+        const Rectangle searchRegion,
+        const Rectangle segmentRegion,
+        const int minSize,
+        const int maxSize,
+        const float minIntensity = 5.0F);
+
+//! extract a set of BitObjects from a color labeled images, which intersect region
+/*! Same as above, except assumption is image is color labeled by
+ * external segmentation algorithm. Image is then flooded starting
+ * from each point within region, and each BitObject exceeding the
+ * minSize is stored in the list of BitObjects that is returned. */
+std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
+        Image< byte >& mask,
+        const Point2D<int> seed,
+        const Rectangle region,
         const int minSize,
         const int maxSize);
+
+//! extract a single BitObject from image using graphCut algorithm.
+/*! Same as above, except assumption is image has no labeling and is just
+ * a raw image. Returns invalid BitObject if none found */
+BitObject extractBitObject(const Image<PixRGB <byte> >& image,
+                            const Point2D<int> seed,
+                            const Rectangle region,
+                            const int minSize,
+                            const int maxSize);
 
  //! returns list of SalientWinners of the most salient points
 /*! @param manager the model manager
@@ -123,12 +173,18 @@ std::list<WTAwinner> getGraphWinners(const Image<PixRGB<byte> >& graphBitImg,
 std::list<BitObject> getSalientObjects(const Image<PixRGB<byte> >& graphBitImg,
         const list<Winner> &winners);
 
+//! returns the FOA BitObjects near the winning locations points
+/*!*@param mask user supplied mask for equipment, etc.
+ @param winners list of  winners*/
+std::list<BitObject> getFOAObjects(const list<Winner> &winners, const Image< byte >& mask);
+
 //! returns the largest BitObjects near the most winning locations points
 // if bit object cannot be found in graphBitImg or bitImg, returns the foamask image
 /*!*@param graphBitImg a color coded image used for extracting BitObjects at the
  * winner locations
  * @param bitImg a binary image used for extracting BitObjects at the winner locations
- @param winners list of Salient winners*/
+ @param winners list of Salient winners
+ *@param mask user supplied mask for equipment, etc. */
 std::list<BitObject> getSalientObjects(const Image<PixRGB<byte> >& graphBitImg,
         const Image<byte>& bitImg, const list<Winner> &winners, const Image< byte >& mask);
 
@@ -156,12 +212,12 @@ Image< PixRGB <byte> > maskArea(const Image< PixRGB<byte> >& img, const Image<by
 // ! Return the max value of a matrix
 float getMax(const Image<float> matrix);
 
-// ! Return the picture to add to the background Model: take in consideration if it's a fixedCam then 
-// objects detected are not included into it
+// ! Return the picture to add to the background Model: take in consideration if it's a fixed camera then
+// objects detected are not included into it. Only use this for moving camera background image updates.
 Image< PixRGB<byte> > getBackgroundImage(const Image< PixRGB<byte> > &img,
         const Image< PixRGB<byte> > &currentBackgroundMean,
         Image< PixRGB<byte> > savePreviousPicture,
-        const list<BitObject> &bitObjectFrameList);
+        const list<BitObject> &bitObjectFrameList, PixRGB<byte> &avgVal);
 
 // ! Return the image to add to the mask cache
 Image< byte > getMaskImage(const Image< byte > &img, const list<BitObject> &bitObjectFrameList);
@@ -172,16 +228,31 @@ BitObject findBestBitObject(Rectangle r1, int maxDist, std::list<BitObject>& sob
 // ! Return the float parameters
 vector< float > getFloatParameters(const string  &str);
 
-// ! Adjust gamma  in place in @hsvRes image
-void adjustGamma(Image<byte>&lum, std::map<int, double> &cdfw, Image<PixHSV<float> >&hsvRes);
+//! Compute HOG features on an RGB image
+ImageSet<float> getFeatures(const Image<PixRGB<byte> >& img, int numBins);
 
-// ! Constrast enhance image
-Image<PixRGB<byte> > enhanceImage(const Image<PixRGB<byte> >& img, std::map<int, double> &cdfw);
+ImageSet<float> getOriHistogram(const Image<float>& mag,
+  const Image<float>& ori, int numOrientations, int numBins);
 
-// ! Update the mapping curve for contrast enhancement; returns the cumulative distribution function
-std::map<int, double> updateGammaCurve(const Image<PixRGB<byte> >& img, std::map<int, double> &pdf,  bool init = true);
+ImageSet<double> computeFeatures(const ImageSet<float>& hist);
 
-// ! Update the entropy model for contrast enhancement; returns theapproximation of entropy
-float updateEntropyModel(const Image<PixRGB<byte> >& img, std::map<int, double> &pdf);
+Image<PixRGB<byte> > getHistogramImage(const ImageSet<float>& hist, const int binSize=20);
+
+//! Compute the gradient on a color img by taking the max gradient
+//! If numOrientations > 0 then snap to the best orientation
+void getMaxGradient(const Image<PixRGB<byte> >& img,
+  Image<float>& mag, Image<float>& ori,
+  int numOrientations = -1);
+
+Image<double> getHistogramEnergy(const ImageSet<float>& hist);
+
+Image<float> convolveFeatures(const ImageSet<float>& imgFeatures, const ImageSet<float>& filterFeatures);
+
+vector<double> getFeatures(Image<PixRGB <byte> > &prevInput, Image<PixRGB <byte> > &input,
+                                HistogramOfGradients &hog,  Dims scaledDims, Rectangle bbox) ;
+
+vector<double> getFeatures2(Image< byte > &mmapInput, Image<PixRGB <byte> > &rawInput, HistogramOfGradients &hog,
+                                Dims scaledDims, Rectangle bbox);
 
 #endif
+

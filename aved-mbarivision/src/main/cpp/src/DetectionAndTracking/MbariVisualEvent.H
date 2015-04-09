@@ -31,7 +31,6 @@
 #ifndef VISUALEVENT_H_DEFINED
 #define VISUALEVENT_H_DEFINED
 
-#include "Image/OpenCVUtil.H"
 #include "Image/KalmanFilter.H"
 #include "Image/Point2D.H"
 #include "Image/Rectangle.H"
@@ -41,7 +40,6 @@
 #include "DetectionAndTracking/HoughTracker.H"
 #include "Data/MbariMetaData.H"
 #include "Image/BitObject.H"
-#include "Image/MbariImage.H"
 
 #include <list>
 #include <string>
@@ -67,7 +65,7 @@ namespace MbariVisualEvent {
     Token (BitObject bo, uint frame);
 	
     //!constructor with the location being the centroid of the BitObject
-    Token (BitObject bo, uint frame, const MbariMetaData& m, float w, float h);
+    Token (BitObject bo, uint frame, const MbariMetaData& m);
 	
     //!read the Token from the input stream is
     Token (std::istream& is);
@@ -108,9 +106,6 @@ namespace MbariVisualEvent {
 	
     //! write the Token's position to the output stream os
     void writePosition(std::ostream& os) const;
-
-    //! scaling factors for writing to the output stream os
-    float scaleW, scaleH;
 
      //! copy operator
     Token & operator=(const Token& tk);
@@ -171,7 +166,7 @@ namespace MbariVisualEvent {
     /*!@param tk the first token for this event
     @param parms the detection parameters
     @param img the image the token was extracted from*/
-    VisualEvent(Token tk, const DetectionParameters &parms,  MbariImage< PixRGB<byte> >& img);
+    VisualEvent(Token tk, const DetectionParameters &parms, Image< PixRGB<byte> >& img);
 	  
     //! destructor
     ~VisualEvent();
@@ -212,7 +207,7 @@ namespace MbariVisualEvent {
 
 	//! updates the Hough-based tracker
 	// !@returns false if tracker fails
-	bool updateHoughTracker(nub::soft_ref<MbariResultViewer>& rv, uint frameNum, Image< PixRGB<byte> >& img,
+	bool updateHoughTracker(nub::soft_ref<MbariResultViewer>&rv,  uint frameNum, Image< PixRGB<byte> >& img,
 	                        const Image< byte >& occlusionImg, Image< byte >& binaryImg,
 	                        Point2D<int> &prediction,  Rectangle &boundingBox);
 
@@ -292,7 +287,7 @@ namespace MbariVisualEvent {
     //!return a token based on a frame number
     inline Token getToken(const uint frame_num) const;
 	  
-    //!return a token based on a frame number
+    //!return reset bit object contained in frame number
     inline void resetBitObject(const uint frame_num, BitObject &obj);
 	  
     //!return whether frame_num is between start frame and end frame
@@ -392,19 +387,16 @@ namespace MbariVisualEvent {
     void writePositions(std::ostream& os) const;
 	
     //!update events with new binary map
-    /*!@param rv the results viewer for showing intermediate results
-      @param img image to update events from
-      @param binMap binary image used to extract BitObjects from
-      @param curFOE the current focus of expansion for detecting unusual 
-      motion
+    /*!@param img image to update events from
+      @param prevImg previous frame image used in Hough tracker initialization
+      @param segmentIn  image used to run segmentation to extract BitObjects from
+      @param curFOE the current focus of expansion for detecting unusual motion
       @param metadata associated with current frame number*/
-    void updateEvents(nub::soft_ref<MbariResultViewer>& rv, \
-                      const Image< byte >& mask,
+    void updateEvents(nub::soft_ref<MbariResultViewer>&rv, const Image< byte >& mask,
                       const uint frameNum,
                       Image< PixRGB<byte> >& img,
                       Image< PixRGB<byte> >& prevImg,
-                      const Image< byte >& binMap,
-                      const Image< PixRGB< byte > >& graphMap,
+                      const Image< PixRGB<byte> >& segmentIn,
                       const Vector2D& curFOE,
                       const MbariMetaData &m);
 
@@ -421,11 +413,14 @@ namespace MbariVisualEvent {
     void insert(VisualEvent *event);
 
     //! initiate new events for all BitObjects in bos if they aren't tracked yet
-    void initiateEvents(std::list<BitObject>& bos, const MbariMetaData &metadata, \
-    float scaleW, float scaleH, MbariImage< PixRGB<byte> >& img);
-	
+    void initiateEvents(std::list<BitObject>& bos,
+                                      const int frameNum,
+                                      const MbariMetaData &metadata,
+                                      Image< PixRGB<byte> >& img,
+                                      const Vector2D& curFOE);
+
     //! if obj intersects with any of the event at frameNum, reset SMV and Hough bounds
-    bool resetIntersect(MbariImage< PixRGB<byte> >& img, BitObject& obj, int frameNum);
+    bool resetIntersect(Image< PixRGB<byte> >& img, BitObject& obj, const Vector2D& curFOE, int frameNum);
 
     //! if obj intersects with any of the event at frameNum, reset SMV
     bool doesIntersect(BitObject& obj, int frameNum);
@@ -506,8 +501,7 @@ namespace MbariVisualEvent {
     // runs the nearest neighbor tracking on @param event
     // returns true if able to track
     bool runNearestNeighborTracker(VisualEvent *event, const uint frameNum, const MbariMetaData &m,
-                               const Image<byte>& binMap,
-                               const Image<PixRGB<byte>>& graphMap,
+                               const Image< PixRGB<byte> >& segmentIn,
                                const Vector2D& curFOE,
                                bool skip  = false);
 	
@@ -515,15 +509,13 @@ namespace MbariVisualEvent {
     // returns true if able to track
     bool runKalmanTracker(VisualEvent *event, const uint frameNum, const MbariMetaData &m,
                           Image< PixRGB<byte> >& img,
-                          const Image<byte>& binMap,
-                          const Image<PixRGB<byte>>& graphMap,
+                          const Image< PixRGB<byte> >& segmentIn,
                           const Vector2D& curFOE,
                           bool skip = false);
 
 	// run the Hough-based tracker on @param event
 	// returns true if able to track
-    bool runHoughTracker( nub::soft_ref<MbariResultViewer>& rv,
-                                VisualEvent *currEvent, const uint frameNum, const MbariMetaData &m,
+    bool runHoughTracker(nub::soft_ref<MbariResultViewer>&rv, VisualEvent *currEvent, const uint frameNum, const MbariMetaData &m,
                                 Image< PixRGB<byte> >& img,
                                 const Image< byte >& mask,
                                 const Vector2D& curFOE,
@@ -531,21 +523,17 @@ namespace MbariVisualEvent {
 
 	// run the combination Hough and NearestNeighbor tracker on @param event
     void runNearestNeighborHoughTracker(VisualEvent *event, const uint frameNum, const MbariMetaData &m,
-                               const Image< byte >& binMap,
-                               const Image< PixRGB < byte > >& graphMap,
+                               const Image< PixRGB<byte> >& segmentIn,
                                const Image< byte >& mask,
                                const Vector2D& curFOE,
-                               nub::soft_ref<MbariResultViewer>& rv,
                                Image< PixRGB< byte> >& img,
                                Image< PixRGB< byte> >& prevImg);
 
 	// run the combination Hough and Kalman tracker on @param event
-    void runKalmanHoughTracker(VisualEvent *event, const uint frameNum, const MbariMetaData &m,
-                               const Image< byte >& binMap,
-                               const Image< PixRGB< byte > >& graphMap,
+    void runKalmanHoughTracker(nub::soft_ref<MbariResultViewer>&rv, VisualEvent *event, const uint frameNum, const MbariMetaData &m,
+                               const Image< PixRGB<byte> >& segmentIn,
                                const Image< byte >& mask,
                                const Vector2D& curFOE,
-                               nub::soft_ref<MbariResultViewer>& rv,
                                Image< PixRGB< byte> >& img,
                                Image< PixRGB< byte> >& prevImg);
 
@@ -661,11 +649,11 @@ namespace MbariVisualEvent {
     return empty;
   }
   // ######################################################################
-  inline void VisualEvent::resetBitObject(const uint frame_num, 
+  inline void VisualEvent::resetBitObject(const uint frame_num,
                                           BitObject &obj)
   {
     ASSERT (frameInRange(frame_num));
-    tokens[frame_num - startframe].bitObject.setSMV(obj.getSMV());
+    tokens[frame_num - startframe].bitObject = obj;
   }
 	
   // ######################################################################

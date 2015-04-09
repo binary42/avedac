@@ -29,9 +29,10 @@
 #include "Data/Winner.H"
 
 // ######################################################################
-Winner::Winner(WTAwinner &winner, BitObject &bo) :
+Winner::Winner(WTAwinner &winner, BitObject &bo,uint frameNum) :
 itsWinner(winner),
-itsBitObject(bo)
+itsBitObject(bo),
+itsFrameNum(frameNum)
 {
 }
 

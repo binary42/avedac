@@ -60,16 +60,16 @@ public:
   Image<byte> mean_thresh(const Image<byte>& src,  const int size, const int con);
   Image<byte> median_thresh(const Image<byte>& src, const int size, const int con);
   Image<byte> meanMaxMin_thresh(const Image<byte>& src, const int size, const int con);
-  void run(uint frameNum, Image<PixRGB<byte>>& img2segmentBin, Image<byte>& img2segmentGraph,
-          float scaleW, float scaleH, Image< PixRGB<byte> >&graphImg, Image<byte>& bitImg);
-
+  Image< PixRGB<byte> > runGraph(Image< PixRGB<byte> > image, Rectangle region, float scale);
+  void run(uint frameNum, Image<byte> &segmentIn, float scaleW, float scaleH,
+                        Image< PixRGB<byte> >&graphSegmentOut, Image<byte>& binSegmentOut);
 private:
 
   /* private functions related to the BinaryAdaptive algorithm */
   byte getThreshold(const Image<byte> &bwImg);
   Image<byte> runBinaryAdaptive(const Image<byte>& src, const byte& threshold, const float& pct);
   /* private functions related to the GraphCut algorithm */
-  Image< PixRGB<byte> > runGraph(const float sigma, const int k, const int min_size, list<Winner> &winners,\
+  Image< PixRGB<byte> > runGraph(const float sigma, const int k, const int min_size,
    float scaleW, float scaleH, const Image < PixRGB<byte> > &image);
 };
 

@@ -31,7 +31,9 @@
  */ 
 #include <list>
 
+#include "Image/OpenCVUtil.H"
 #include "DetectionAndTracking/MbariFunctions.H"
+#include "DetectionAndTracking/Segmentation.H"
 #include "Channels/ChannelOpts.H"
 #include "Component/GlobalOpts.H"
 #include "Component/JobServerConfigurator.H"
@@ -46,9 +48,13 @@
 #include "Image/Geometry2D.H"
 #include "Image/MorphOps.H"
 #include "Data/Winner.H"
+#include "DetectionAndTracking/DetectionParameters.H"
+#include "DetectionAndTracking/MbariVisualEvent.H"
 #include "Media/MediaSimEvents.H"
 #include "Media/SimFrameSeries.H"
 #include "Media/MediaOpts.H"
+#include "Motion/OpticalFlow.H"
+#include "Motion/MotionOps.H"
 #include "Neuro/StdBrain.H"
 #include "Neuro/NeuroOpts.H"
 #include "Neuro/NeuroSimEvents.H"
@@ -64,7 +70,6 @@
 #include "Image/BitObject.H"
 #include "Image/DrawOps.H"
 #include "Image/Kernels.H"      // for twofiftyfives()
-#include "DetectionAndTracking/DetectionParameters.H"
 #include "Media/MbariResultViewer.H"
 
 // ######################################################################
@@ -90,63 +95,208 @@ bool isGrayscale(const Image<PixRGB<byte> >& src)
 
   return false;
 }
+
 // ######################################################################
-std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& graphBitImg,
-        const Point2D<int> seed,
-        Rectangle region,
-        const int minSize,
-        const int maxSize) {
+BitObject extractBitObject( const Image<PixRGB <byte> >& image,
+                            const Point2D<int> seed,
+                            Rectangle region,
+                            const int minSize,
+                            const int maxSize) {
 
-    std::list<BitObject> bos;
-    Dims d = graphBitImg.getDims();
-    region = region.getOverlap(Rectangle(Point2D<int>(0, 0), d - 1));
-    std::list<PixRGB<byte>> seedColors;
-    Image<byte> labelImg(graphBitImg.getDims(), ZEROS);
-    Image<byte> bitImg(graphBitImg.getDims(), ZEROS);
-    PixRGB<byte> black(0,0,0);
-    bool found = false;
+    cv::Mat input = img2ipl(image);
+    cv::Rect rectangle(region.left(), region.top(), region.width(), region.height());
+    cv::Mat result; //segmentation result (4 possible values)
+    cv::Mat fgmdl, bgmdl; // the models (internally used)
+    grabCut(input, result, rectangle, fgmdl, bgmdl, 5, cv::GC_INIT_WITH_RECT);
 
-    // get the bit object(s) in this region
-    for (int ry = region.top(); ry <= region.bottomO(); ++ry)
-        for (int rx = region.left(); rx <= region.rightO(); ++rx) {
-            PixRGB<byte> newColor = graphBitImg.getVal(Point2D<int>(rx,ry));
-            found = false;
+    // convert to image and create bit object from it
+    cv::Mat mask(input.size(), CV_8UC1,cv::Scalar(0));
+    mask = result ==  (cv::GC_PR_FGD | cv::GC_FGD) ; //compare and set the results to 255
+	IplImage boimage = (IplImage)mask;
+    Image< byte > output = ipl2gray(&boimage);
+    BitObject bo(output, seed, byte(255));
 
-            std::list<PixRGB<byte>>::const_iterator iter = seedColors.begin();
-            while (iter != seedColors.end()) {
-                PixRGB<byte> color = (*iter);
-                // found  seed color
-                if (color == newColor) {
-                    found = true;
-                    break;
-                    }
-                iter++;
-            }
-            if (!found  && newColor != black) {
-                seedColors.push_back(newColor);
-                // create a binary representation with the 1 equal to the
-                // color at the center of the seed everything else 0
-                Image< PixRGB<byte> >::const_iterator sptr = graphBitImg.begin();
-                Image<byte>::iterator rptr = bitImg.beginw();
-                while (sptr != graphBitImg.end())
-                    *rptr++ = (*sptr++ == newColor) ? 1 : 0;
-
-                BitObject obj;
-                Image<byte> dest = obj.reset(bitImg, Point2D<int>(rx, ry));
-
-                 // if the object is in range, keep it
-                 if (obj.getArea() >= minSize && obj.getArea() <= maxSize) {
-                     LDEBUG("found object size: %d", obj.getArea());
-                     bos.push_back(obj);
-                 }
-                 else
-                     LDEBUG("found object but out of range in size %d minsize: %d maxsize: %d ",\
-                    obj.getArea(), minSize, maxSize);
-
-            }
+    if (bo.isValid()) {
+        LINFO("Extracted BitObject size %d", bo.getArea());
+        return bo;
     }
+    else
+        bo.freeMem(); //invalidate the object
+
+    return bo;
+}
+
+// ######################################################################
+std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& image,
+        const Point2D<int> seed,
+        const Rectangle searchRegion,
+        const Rectangle segmentRegion,
+        const int minSize,
+        const int maxSize,
+        const float minIntensity)
+{
+    Rectangle regionSearch = searchRegion.getOverlap(Rectangle(Point2D<int>(0, 0), image.getDims() - 1));
+    Rectangle regionSegment = segmentRegion.getOverlap(Rectangle(Point2D<int>(0, 0), image.getDims() - 1));
+    std::list<BitObject> bos;
+    BitObject largestBo;
+    if (regionSegment.width() < 2 || regionSegment.height() < 2) {
+        LINFO("Segment region too small region to run graph cut algorithm ");
+        return bos;
+    }
+
+    Segmentation segment;
+    float scale = 1.0f;
+
+    // iterate on the graph scale to try to find bit objects
+    for (int i = 0; i < 3; i++) {
+
+        std::list<BitObject> gbos;
+
+        if (bos.size() > 1 && searchRegion == segmentRegion)
+            break;
+
+        Image< PixRGB<byte> > graphBitImg = segment.runGraph(image, regionSegment, scale);
+        scale = scale * 0.80;
+
+        std::list<PixRGB<byte>> seedColors;
+        Image<byte> labelImg(graphBitImg.getDims(), ZEROS);
+        Image<byte> bitImg(graphBitImg.getDims(), ZEROS);
+        bool found;
+
+        // get the bit object(s) in the search region
+        for (int ry = regionSearch.top(); ry <= regionSearch.bottomO(); ++ry)
+            for (int rx = regionSearch.left(); rx <= regionSearch.rightO(); ++rx) {
+                PixRGB<byte> newColor = graphBitImg.getVal(Point2D<int>(rx,ry));
+                found = true;
+
+                // check if not a new seed color
+                std::list<PixRGB<byte>>::const_iterator iter = seedColors.begin();
+                while (iter != seedColors.end()) {
+                    PixRGB<byte> colorSeed = (*iter);
+                    // found existing seed color
+                    if (colorSeed == newColor) {
+                        found = false;
+                        break;
+                        }
+                    iter++;
+                }
+
+                // found a new seed color
+                if (found) {
+                    seedColors.push_back(newColor);
+                    // create a binary representation with the 1 equal to the
+                    // color at the center of the seed everything else 0
+                    Image< PixRGB<byte> >::const_iterator sptr = graphBitImg.begin();
+                    Image<byte>::iterator rptr = bitImg.beginw();
+                    while (sptr != graphBitImg.end())
+                        *rptr++ = (*sptr++ == newColor) ? 1 : 0;
+
+                    BitObject obj;
+                    Image<byte> dest = obj.reset(bitImg, Point2D<int>(rx, ry));
+                    obj.setMaxMinAvgIntensity(luminance(image));
+
+                    float maxI, minI, avgI;
+
+                     // if the object is in range, keep it
+                     obj.getMaxMinAvgIntensity(maxI, minI, avgI);
+                     if (obj.getArea() >= minSize && obj.getArea() <= maxSize && avgI > minIntensity) {
+                         LINFO("found object size: %d avg intensity: %f", obj.getArea(), avgI);
+                         bos.push_back(obj);
+                     }
+                     else
+                        LINFO("found object but out of range in size %d minsize: %d maxsize: %d or intensity %f min intensity %f ",\
+                        obj.getArea(), minSize, maxSize, avgI, minIntensity);
+
+                }
+        }
+    }
+
     return bos;
 }
+
+// ######################################################################
+/*std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& image,
+        const Rectangle foregroundRegion,
+        const Rectangle region,
+        const int minSize,
+        const int maxSize)
+{
+
+    std::list<BitObject> bos;
+    if (region.width() < 2 || region.height() < 2) {
+        LINFO("Too small region to run graph cut algorithm ");
+        return bos;
+    }
+
+    cv::Mat input = img2ipl(image);
+    cv::Rect rectangle(foregroundRegion.left(), foregroundRegion.top(), foregroundRegion.width(), foregroundRegion.height());
+    cv::Rect rectangle(region.left(), region.top(), region.width(), region.height());
+    cv::Mat mask; //segmentation result (4 possible values)
+    cv::Mat fgmdl, bgmdl; // the models (internally used)
+    grabCut(input, mask, rectangle, fgmdl, bgmdl, 5, cv::GC_INIT_WITH_RECT);
+	//grabCut(subframe, subbackProject, itsObject, fgmdl, bgmdl, GRABCUT_ROUNDS, cv::GC_INIT_WITH_MASK);
+
+    cv::Mat imgrey(input.size(), CV_8U,cv::Scalar(0));
+    cv::Mat imcanny(input.size(), CV_8U,cv::Scalar(0));
+    //cv::Mat imbin(input.size(), CV_8UC1,cv::Scalar(0));
+    imgrey = mask == (cv::GC_PR_FGD | cv::GC_FGD) ; // set all foreground results to 255
+    Canny(imgrey, imcanny, 255, 1);
+    //imbin = threshold(mask, 255, 1, cv::THRESH_BINARY); // convert to binary as needed for BitObjects
+
+	IplImage grey = (IplImage)imgrey;
+    Image< byte > output = ipl2gray(&grey);
+
+    // get blobs and create BitObjects out of each
+    std::vector< std::vector<cv::Point> > contours;
+    std::vector< cv::Point > contour;
+    std::vector< cv::Vec4i > hierarchy;
+    cv::Point2f center;
+    cv::Rect boundRect;
+    float radius;
+    findContours(imgrey, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    cv::Moments m;
+
+    LINFO("======================================Found %d contours", contours.size());
+
+    for (int i = 0; i< contours.size(); i++) {
+        boundRect = boundingRect(cv::Mat(contours[i]));
+        m = moments(contours[i]);
+        cv::Point pt1 = boundRect.tl();
+        cv::Point pt2 = boundRect.br();
+        int width = pt2.x - pt1.x;
+        int height = pt2.y - pt1.y;
+        Point2D<int> ctr((int)(m.m10/m.m00),(int)(m.m01/m.m00));
+
+        if (ctr.i < 0 || ctr.j < 0)  {
+            std::vector<cv::Point> pts2 = contours[i];
+            cv::Point ptr2 = pts2.back();
+            ctr = Point2D<int>(ptr2.x, ptr2.y);
+        }
+        LINFO("====================center %d,%d top left %d,%d width %d height %d ", ctr.i, ctr.j,\
+                                                                                    pt1.x, pt1.y, width, height);
+        const Point2D<int> topleft(pt1.x, pt1.y);
+		const Dims dims(width, height);
+        Rectangle bbox(topleft, dims);
+        BitObject bo(output, ctr, byte(255));
+
+        // if can't find a valid bit object because butterfly-shaped contour, e.g. try choosing a point along
+        // the edge of the contour
+        if (!bo.isValid()) {
+            LINFO("Invalid bit object maybe because of butterfly-shaped contour...trying point along the contour");
+            std::vector<cv::Point> pts = contours[i];
+            cv::Point pt = pts.back();
+            bo.reset(output, Point2D<int>(pt.x, pt.y), byte(255));
+        }
+
+        LINFO("==============area %d< %d < %d", minSize, bo.getArea(), maxSize);
+
+        if (bo.getArea() >= minSize && bo.getArea() <= maxSize)
+            bos.push_back(bo);
+    }
+
+    return bos;
+
+}*/
 
 std::list<BitObject> extractBitObjects(const Image<byte>& bImg,
         Rectangle region,
@@ -207,7 +357,7 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg,
         LDEBUG("Extracting bit objects from winning point: %d %d/region %s minSize %d maxSize %d", \
         winner.i, winner.j, convertToString(region).c_str(), p.itsMinEventArea, p.itsMaxEventArea);
 
-        std::list<BitObject> sobjs = extractBitObjects(graphBitImg, winner, region, p.itsMinEventArea, p.itsMaxEventArea);
+        std::list<BitObject> sobjs = extractBitObjects(graphBitImg, winner, region, region, p.itsMinEventArea, p.itsMaxEventArea);
 
 	    LDEBUG("Found bitobject(s) in graphBitImg: %ld", sobjs.size());
 
@@ -261,6 +411,7 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg,
     }// end while iter != winners.end()
     return bos;
 }
+
 // ######################################################################
 BitObject findBestBitObject(Rectangle r1, int maxDist, std::list<BitObject>& sobjs, std::list<BitObject>& bos )
 {
@@ -281,11 +432,11 @@ BitObject findBestBitObject(Rectangle r1, int maxDist, std::list<BitObject>& sob
         }
         else {
             bool keepGoing = true;
-            // loop until we find a closest object
+
+            // loop until we find a closest largest object within an acceptable distance to the winner
             while (keepGoing) {
                 // no object left -> go to the next salient point
                 if (sobjs.empty()) break;
-                // find the largest object within acceptable distance to the winner
                 largest = sobjs.begin();
                 int maxSize = 0;
 
@@ -296,6 +447,7 @@ BitObject findBestBitObject(Rectangle r1, int maxDist, std::list<BitObject>& sob
                       distul = sqrt(pow((double)(r1.top() - r2.top()),2.0) +  pow((double)(r1.left() - r2.left()),2.0));
                       distbr = sqrt(pow((double)(r1.bottomI() - r2.bottomI()),2.0) + pow((double)(r1.rightI() - r2.rightI()),2.0));
 
+                    // if within the maximum allowed distance keep
                     if (siter->getArea() > maxSize && distul < maxDist && distbr < maxDist) {
                         maxSize = siter->getArea();
                         largest = siter;
@@ -321,6 +473,33 @@ BitObject findBestBitObject(Rectangle r1, int maxDist, std::list<BitObject>& sob
     }
 
     return bo;
+}
+
+// ######################################################################
+
+std::list<BitObject> getFOAObjects(const list<Winner> &winners, const Image< byte >& mask) {
+    DetectionParameters p = DetectionParametersSingleton::instance()->itsParameters;
+    std::list<Winner>::const_iterator iter = winners.begin();
+    std::list<BitObject> bos;
+
+    // go through each winner and extract salient regions
+    while (iter != winners.end()) {
+        Image< byte > img = (*iter).getBitObject().getObjectMask();
+
+        // mask FOA with user supplied mask
+        img = maskArea(img, mask);
+        BitObject boFOA(img);
+
+        int area = boFOA.getArea();
+
+        if (area >= p.itsMinEventArea && area <= p.itsMaxEventArea) {
+            boFOA.setSMV((*iter).getWTAwinner().sv);
+            bos.push_back(boFOA);
+        }
+
+        iter++;
+    }// end while iter != winners.end()
+    return bos;
 }
 
 // ######################################################################
@@ -359,13 +538,13 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg,
 
         std::list<BitObject> sobjsBin, sobjsGraph;
 
-        int maxArea = boFOA.getArea();
+        int maxArea = std::min(boFOA.getArea(), p.itsMaxEventArea);
         int minArea = p.itsMinEventArea;
 
-        // if the graph or binary segmented images have no deviation, no sense in extracting objects from them
+        // get region from the graphcut using the foa mask as a guiding rectangle
         LINFO("Extracting bit objects from winning point %i: %d %d/region %s minSize %d maxSize %d", \
-                i, winner.i, winner.j, convertToString(regionGraph).c_str(), minArea, maxArea);
-        sobjsGraph = extractBitObjects(graphBitImgMasked, winner, regionGraph, minArea, maxArea);
+                i, winner.i, winner.j, convertToString(boFOA.getBoundingBox()).c_str(), minArea, maxArea);
+        sobjsGraph = extractBitObjects(graphBitImgMasked, winner, boFOA.getBoundingBox(), boFOA.getBoundingBox(), minArea, maxArea);
         LINFO("Found bitobject(s) in graphcut img: %ld", sobjsGraph.size());
 
         LINFO("Extracting bit objects from winning point %i: %d %d/region %s minSize %d maxSize %d", \
@@ -386,7 +565,7 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg,
             // check for intersections
             bool found = true;
             for (biter = bos.begin(); biter != bos.end(); ++biter)
-                if (biter->doesIntersect(bo))
+                if (biter->isValid() && biter->doesIntersect(bo))
                     found = false;
 
             int area = bo.getArea();
@@ -402,7 +581,7 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg,
                 // check for intersections
                 bool found = true;
                 for (biter = bos.begin(); biter != bos.end(); ++biter)
-                    if (biter->doesIntersect(boFOA))
+                    if (biter->isValid() && biter->doesIntersect(boFOA))
                         found = false;
 
                 if (found) {
@@ -467,14 +646,14 @@ list<Winner> getSalientWinners(
     }
 
     LINFO("Start at %.2fms", seq->now().msecs());
-    brain->reset(MC_RECURSE);
+    //brain->reset(MC_RECURSE);
     seq->resetTime();
     float scale = 1.0F;
     Dims size = img.getDims();
     Dims newSize = size;
 
-    // Scale down if either dimension is greater than 480
-    if (size.w() > 480 || size.h() > 480){
+    // Scale down if width greater than 640
+    if (size.w() > 640){
         scale = 2.0f;
         newSize = Dims(size/scale);
     }
@@ -523,8 +702,8 @@ list<Winner> getSalientWinners(
                     bo.reset(makeBinary(foamask,byte(0),byte(0),byte(1)));
                     bo.setSMV(win.sv);
 
-                    if (bo.isValid() && bo.getArea() > 0)
-                        winners.push_back(Winner(win, bo));
+                    if (bo.isValid() && bo.getArea() > p.itsMinEventArea && (!win.boring || p.itsKeepWTABoring) )
+                        winners.push_back(Winner(win, bo, framenum));
                 }
 
                 // if a boring event detected, and not keeping boring WTA points then break simulation
@@ -547,7 +726,7 @@ list<Winner> getSalientWinners(
                     rutz::shared_ptr<SimEventBreak>
                             e(new SimEventBreak(brain.get(), "##### time limit reached #####"));
                     seq->post(e);
-                } 
+                }
             }
             
             if (seq->now().msecs() >= simMaxEvolveTime.msecs()) {
@@ -787,7 +966,8 @@ Image< byte > getMaskImage(const Image< byte > &img, const list<BitObject> &bitO
 
 Image< PixRGB<byte> > getBackgroundImage(const Image< PixRGB<byte> > &img,
         const Image< PixRGB<byte> > &currentBackgroundMean, Image< PixRGB<byte> > savePreviousPicture,
-        const list<BitObject> &bitObjectFrameList) {
+        const list<BitObject> &bitObjectFrameList, PixRGB<byte> &avgVal) {
+    int numPixels = 0;PixRGB<float> avgValFlt;
     if (!bitObjectFrameList.empty()) {
         Image<byte> bgMask = showAllObjects(bitObjectFrameList);
         if (bgMask.getWidth() > 0) {
@@ -798,15 +978,21 @@ Image< PixRGB<byte> > getBackgroundImage(const Image< PixRGB<byte> > &img,
                     if (bgMask.getVal(i, j) > 125) {
                         // if the pixel is included in an event -> take the current backgroundValue
                         val = currentBackgroundMean.getVal(i, j);
-                    } else { // if the pixel is really a background pixel
+                        avgValFlt += PixRGB<float> (val);
+                        numPixels++;
+                     } else { // if the pixel is really a background pixel
                         val = savePreviousPicture.getVal(i, j);
                     }
                     cacheImg.setVal(i, j, val);
                 }
             }
-            return cacheImg;
+            if (numPixels > 0)
+                avgVal = PixRGB<byte>(avgValFlt / (float) numPixels);
+             return cacheImg;
         } else {
-            return savePreviousPicture;
+            if (numPixels > 0)
+                avgVal = PixRGB<byte>(avgValFlt / (float) numPixels);
+             return savePreviousPicture;
         } // if no event found in the frame just add the complete frame
     }
     return img;
@@ -844,98 +1030,510 @@ vector< float > getFloatParameters(const string  &str) {
     return aFloats;
 }
 
-// ######################################################################
-void adjustGamma(Image<byte>&lum, std::map<int, double> &cdfw, Image<PixHSV<float> >&hsvRes)
- {
-  Image<byte>::iterator aptr = lum.beginw();
-  Image<PixHSV<float> >::iterator itr = hsvRes.beginw();
-  while(itr != hsvRes.endw())
+Image<float> convolveFeatures(const ImageSet<float>& imgFeatures,
+                                   const ImageSet<float>& filterFeatures)
+{
+  if (imgFeatures.size() == 0)
+    return Image<float>();
+
+  ASSERT(imgFeatures.size() == filterFeatures.size());
+
+  //Compute size of output
+  int w = imgFeatures[0].getWidth() - filterFeatures[0].getWidth() + 1;
+  int h = imgFeatures[0].getHeight() - filterFeatures[0].getHeight() + 1;
+
+  int filtWidth = filterFeatures[0].getWidth();
+  int filtHeight = filterFeatures[0].getHeight();
+  int srcWidth = imgFeatures[0].getWidth();
+
+  Image<float> score(w,h, ZEROS);
+
+  for(uint i=0; i<imgFeatures.size(); i++)
+  {
+    Image<float>::const_iterator srcPtr = imgFeatures[i].begin();
+    Image<float>::const_iterator filtPtr = filterFeatures[i].begin();
+    Image<float>::iterator dstPtr = score.beginw();
+
+    for(int y=0; y<h; y++)
+      for(int x=0; x<w; x++)
+      {
+        //Convolve the filter
+        float val = 0;
+        for(int yp = 0; yp < filtHeight; yp++)
+          for(int xp = 0; xp < filtWidth; xp++)
+          {
+            val += srcPtr[(y+yp)*srcWidth + (x+xp)] * filtPtr[yp*filtWidth + xp];
+          }
+
+        *(dstPtr++) += val;
+      }
+  }
+
+  return score;
+}
+
+
+ImageSet<float> getOriHistogram(const Image<float>& mag, const Image<float>& ori, int numOrientations, int numBins)
+{
+  Dims blocksDims = Dims(
+      (int)round((double)mag.getWidth()/double(numBins)),
+      (int)round((double)mag.getHeight()/double(numBins)));
+
+  ImageSet<float> hist(numOrientations, blocksDims, ZEROS);
+
+  Image<float>::const_iterator magPtr = mag.begin(), oriPtr = ori.begin();
+  //Set the with an height to a whole bin numbers. 
+  //If needed replicate the data when summing the bins
+  int w = blocksDims.w()*numBins; 
+  int h = blocksDims.h()*numBins;
+  int magW = mag.getWidth(); 
+  int magH = mag.getHeight();
+  int histWidth = blocksDims.w(); 
+  int histHeight = blocksDims.h();
+
+  for (int y = 1; y < h-1; y ++)
+    for (int x = 1; x < w-1; x ++)
     {
-      int valint = (int) (*aptr);
-      float gamma = 1 - cdfw[valint];
-      // apply gamma in the value only, preserving hue and saturation
-      itr->p[2] = pow(itr->p[2], gamma);
-      ++aptr;
-      ++itr;
+      // add to 4 histograms around pixel using linear interpolation
+      double xp = ((double)x+0.5)/(double)numBins - 0.5;
+      double yp = ((double)y+0.5)/(double)numBins - 0.5;
+      int ixp = (int)floor(xp);
+      int iyp = (int)floor(yp);
+      double vx0 = xp-ixp;
+      double vy0 = yp-iyp;
+      double vx1 = 1.0-vx0;
+      double vy1 = 1.0-vy0;
+      
+
+      //If we are outside out mag/ori data, then use the last values in it
+      int magX = std::min(x, magW-2);
+      int magY = std::min(y, magH-2);
+      double mag = magPtr[magY*magW  + magX];
+      int ori = int(oriPtr[magY*magW + magX]);
+
+      Image<float>::iterator histPtr = hist[ori].beginw();
+
+      if (ixp >= 0 && iyp >= 0)
+        histPtr[iyp*histWidth + ixp] += vx1*vy1*mag;
+
+      if (ixp+1 < histWidth && iyp >= 0)
+        histPtr[iyp*histWidth + ixp+1] += vx0*vy1*mag;
+
+      if (ixp >= 0 && iyp+1 < histHeight) 
+        histPtr[(iyp+1)*histWidth + ixp] += vx1*vy0*mag;
+
+      if (ixp+1 < histWidth && iyp+1 < histHeight) 
+        histPtr[(iyp+1)*histWidth + ixp+1] += vx0*vy0*mag;
     }
+
+  return hist;
 }
 
-// ######################################################################
- Image<PixRGB<byte> > enhanceImage(const Image<PixRGB<byte> >& img, std::map<int, double> &cdfw)
+
+ImageSet<double> computeFeatures(const ImageSet<float>& hist)
 {
-    Image<byte> lumImg = luminance(img);
-    Image<PixRGB<float> > input = img;
-    Image<PixHSV<float> > hsvRes = static_cast< Image<PixHSV<float> > > (input/255);
-    adjustGamma(lumImg, cdfw, hsvRes);
-    Image<PixRGB<float> > foutput = static_cast< Image<PixRGB<float> > > (hsvRes);
-    foutput = foutput * 255.0F;
-    Image<PixRGB<byte> > rgbImg = static_cast< Image<PixRGB<int> >>(foutput);
 
-    return rgbImg;
+  // compute energy in each block by summing over orientations
+  Image<double> norm = getHistogramEnergy(hist);
+
+  const int w = norm.getWidth();
+  const int h = norm.getHeight();
+  
+  const int numFeatures = hist.size() +   //Contrast-sensitive features
+                    hist.size()/2 + //contrast-insensitive features
+                    4 +             //texture features
+                    1;              //trancation feature (this is zero map???)
+
+  const int featuresW = std::max(w-2, 0);
+  const int featuresH = std::max(h-2, 0);
+
+  ImageSet<double> features(numFeatures, Dims(featuresW, featuresH), ZEROS);
+
+  Image<double>::const_iterator normPtr = norm.begin();
+  Image<double>::const_iterator ptr;
+
+  // small value, used to avoid division by zero
+  const double eps = 0.0001;
+
+  for(int y=0; y<featuresH; y++)
+    for(int x=0; x<featuresW; x++)
+    {
+
+      //Combine the norm values of neighboring bins
+      ptr = normPtr + (y+1)*w + x+1;
+      const double n1 = 1.0 / sqrt(*ptr + *(ptr+1) +
+                                   *(ptr+w) + *(ptr+w+1) +
+                                   eps);
+      ptr = normPtr + y*w + x+1;
+      const double n2 = 1.0 / sqrt(*ptr + *(ptr+1) +
+                                   *(ptr+w) + *(ptr+w+1) +
+                                   eps);
+      ptr = normPtr + (y+1)*w + x;
+      const double n3 = 1.0 / sqrt(*ptr + *(ptr+1) +
+                                   *(ptr+w) + *(ptr+w+1) +
+                                   eps);
+      ptr = normPtr + y*w + x;      
+      const double n4 = 1.0 / sqrt(*ptr + *(ptr+1) +
+                                   *(ptr+w) + *(ptr+w+1) +
+                                   eps);
+
+      //For texture features
+      double t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+
+      // contrast-sensitive features
+      uint featureId = 0;
+      for(uint ori=0; ori < hist.size(); ori++)
+      {
+        Image<float>::const_iterator histPtr = hist[ori].begin();
+        const float histVal = histPtr[(y+1)*w + x+1];
+        double h1 = std::min(histVal * n1, 0.2);
+        double h2 = std::min(histVal * n2, 0.2);
+        double h3 = std::min(histVal * n3, 0.2);
+        double h4 = std::min(histVal * n4, 0.2);
+
+        t1 += h1; t2 += h2; t3 += h3; t4 += h4;
+
+        Image<double>::iterator featuresPtr = features[featureId++].beginw();
+        featuresPtr[y*featuresW + x] = 0.5 * (h1 + h2 + h3 + h4);
+      }
+
+      // contrast-insensitive features
+      int halfOriSize = hist.size()/2;
+      for(int ori=0; ori < halfOriSize; ori++)
+      {
+        Image<float>::const_iterator histPtr1 = hist[ori].begin();
+        Image<float>::const_iterator histPtr2 = hist[ori+halfOriSize].begin();
+        const double sum = histPtr1[(y+1)*w + x+1] + histPtr2[(y+1)*w + x+1];
+        double h1 = std::min(sum * n1, 0.2);
+        double h2 = std::min(sum * n2, 0.2);
+        double h3 = std::min(sum * n3, 0.2);
+        double h4 = std::min(sum * n4, 0.2);
+
+        Image<double>::iterator featuresPtr = features[featureId++].beginw();
+        featuresPtr[y*featuresW + x] = 0.5 * (h1 + h2 + h3 + h4);
+      }
+
+      // texture features
+      Image<double>::iterator featuresPtr = features[featureId++].beginw();
+      featuresPtr[y*featuresW + x] = 0.2357 * t1;
+
+      featuresPtr = features[featureId++].beginw();
+      featuresPtr[y*featuresW + x] = 0.2357 * t2;
+      
+      featuresPtr = features[featureId++].beginw();
+      featuresPtr[y*featuresW + x] = 0.2357 * t3;
+
+      featuresPtr = features[featureId++].beginw();
+      featuresPtr[y*featuresW + x] = 0.2357 * t4;
+
+      // truncation feature
+      // This seems to be just 0, do we need it?
+      featuresPtr = features[featureId++].beginw();
+      featuresPtr[y*featuresW + x] = 0;
+
+    }
+
+
+
+  return features;
+
 }
 
-// ######################################################################
-std::map<int, double> updateGammaCurve(const Image<PixRGB<byte> >& img, std::map<int, double> &pdf, bool init)
+
+Image<PixRGB<byte> > getHistogramImage(const ImageSet<float>& hist, const int lineSize)
 {
-    LINFO("Updating gamma curve");
-    std::map<int, double> pdfw,cdfw;
-    float pdfmin = 1.f;
-    float pdfmax = 0.f;
+  if (hist.size() == 0)
+    return Image<PixRGB<byte> >();
 
-    if (init){
-        Dims d = img.getDims();
-        float ttl = d.w()*d.h();
-        Histogram h(luminance(img));
-        for(int i=0 ; i< 256; i++) {
-            // fast pdf approximation
-            pdf[i] = h.getValue(i)/ttl;
-            if (pdf[i] < pdfmin)
-                pdfmin = pdf[i];
-            if (pdf[i] > pdfmax)
-                pdfmax = pdf[i];
-        }
+
+  Image<float> img(hist[0].getDims()*lineSize, ZEROS);
+  //Create a one histogram with the maximum features for the 9 orientations
+  //TODO: features need to be separated
+  for(uint feature=0; feature<9; feature++)
+  {
+    float ori = (float)feature/M_PI + (M_PI/2);
+    for(int y=0; y<hist[feature].getHeight(); y++)
+    {
+      for(int x=0; x<hist[feature].getWidth(); x++)
+      {
+        float histVal = hist[feature].getVal(x,y);
+
+        //TODO: is this redundant since the first 9 features are
+        //contained in the signed 18 features?
+        if (hist[feature+9].getVal(x,y) > histVal)
+          histVal = 100.f*hist[feature+9].getVal(x,y);
+        if (hist[feature+18].getVal(x,y) > histVal)
+          histVal = 100.f*hist[feature+18].getVal(x,y);
+        if (histVal < 0) histVal = 0; //TODO: do we want this?
+
+        drawLine(img, Point2D<int>((lineSize/2) + x*lineSize,
+                                   (lineSize/2) + y*lineSize),
+                                   -ori, lineSize,
+                                   histVal);
+      }
     }
-    else {
-        for(int i=0 ; i< 256; i++) {
-            if (pdf[i] < pdfmin)
-                pdfmin = pdf[i];
-            if (pdf[i] > pdfmax)
-                pdfmax = pdf[i];
-        }
-    }
+  }
 
-    // fast weighting distribution
-    float alpha = 1.0f;
-    float sumpdfw = 0.f;
-    for(int i=0 ; i<  256; i++) {
-        pdfw[i] = pdfmax * pow( (pdf[i] - pdfmin) / (pdfmax - pdfmin) , alpha);
-        sumpdfw += pdfw[i];
-    }
+  inplaceNormalize(img, 0.0F, 255.0F);
 
-    // modified cumulative distribution function
-    for(int i=0; i< 256; i++)
-      for(int k=0; k< i; k++)
-        cdfw[i] += pdfw[k]/sumpdfw;
-
-    return cdfw;
+  return toRGB(img);
 }
 
-// ######################################################################
-float updateEntropyModel(const Image<PixRGB<byte> >& img, std::map<int, double> &pdf){
-    Dims d = img.getDims();
-    Histogram h(luminance(img));
-    float ttl = d.w()*d.h();
 
-    // fast pdf approximation
-    for(int i=0 ; i< 256; i++)
-        pdf[i] = h.getValue(i)/ttl;
+ImageSet<float> getFeatures(const Image<PixRGB<byte> >& img, int numBins)
+{
+  int itsNumOrientations = 18;
 
-    // calculate entropy
-    float H = 0.f;
-    for(int i=0 ; i< 256; i++) {
-        if (pdf[i] > 0.F)
-            H += pdf[i]*log(pdf[i]);
+  Image<float> mag, ori;
+  getMaxGradient(img, mag, ori, itsNumOrientations);
+
+  ImageSet<float> histogram = getOriHistogram(mag, ori, itsNumOrientations, numBins);
+
+  ImageSet<double> features = computeFeatures(histogram);
+
+  return features;
+}
+
+void getMaxGradient(const Image<PixRGB<byte> >& img,
+    Image<float>& mag, Image<float>& ori,
+    int numOrientations)
+{
+  if (numOrientations != 0 &&
+      numOrientations > 18)
+    LFATAL("Can only support up to 18 orientations for now.");
+  
+  mag.resize(img.getDims()); ori.resize(img.getDims());
+
+  Image<PixRGB<byte> >::const_iterator src = img.begin();
+  Image<float>::iterator mPtr = mag.beginw(), oPtr = ori.beginw();
+  const int w = mag.getWidth(), h = mag.getHeight();
+
+  float zero = 0;
+
+  // first row is all zeros:
+  for (int i = 0; i < w; i ++) { *mPtr ++ = zero; *oPtr ++ = zero; }
+  src += w;
+
+  // loop over inner rows:
+  for (int j = 1; j < h-1; j ++)
+    {
+      // leftmost pixel is zero:
+      *mPtr ++ = zero; *oPtr ++ = zero; ++ src;
+
+      // loop over inner columns:
+      for (int i = 1; i < w-1; i ++)
+        {
+          PixRGB<int> valx = src[1] - src[-1];
+          PixRGB<int> valy = src[w] - src[-w];
+
+          //Mag
+          double mag1 = (valx.red()*valx.red()) + (valy.red()*valy.red());
+          double mag2 = (valx.green()*valx.green()) + (valy.green()*valy.green());
+          double mag3 = (valx.blue()*valx.blue()) + (valy.blue()*valy.blue());
+
+          double mag = mag1;
+          double dx = valx.red();
+          double dy = valy.red();
+
+          //Get the channel with the strongest gradient
+          if (mag2 > mag)
+          {
+            dx = valx.green();
+            dy = valy.green();
+            mag = mag2;
+          }
+          if (mag3 > mag)
+          {
+            dx = valx.blue();
+            dy = valy.blue();
+            mag = mag3;
+          }
+
+          *mPtr++ = sqrt(mag);
+          if (numOrientations > 0)
+          {
+            //Snap to num orientations
+            double bestDot = 0;
+            int bestOri = 0;
+            for (int ori = 0; ori < numOrientations/2; ori++) {
+              double dot = itsUU[ori]*dx + itsVV[ori]*dy;
+              if (dot > bestDot) {
+                bestDot = dot;
+                bestOri = ori;
+              } else if (-dot > bestDot) {
+                bestDot = -dot;
+                bestOri = ori+(numOrientations/2);
+              }
+            }
+            *oPtr++ = bestOri;
+
+          } else {
+            *oPtr++ = atan2(dy, dx);
+          }
+          ++ src;
+        }
+
+      // rightmost pixel is zero:
+      *mPtr ++ = zero; *oPtr ++ = zero; ++ src;
     }
 
-    return -1*H;
+  // last row is all zeros:
+  for (int i = 0; i < w; i ++) { *mPtr ++ = zero; *oPtr ++ = zero; }
+}
+
+Image<double> getHistogramEnergy(const ImageSet<float>& hist)
+{
+  if (hist.size() == 0)
+    return Image<double>();
+
+  Image<double> norm(hist[0].getDims(), ZEROS);
+
+  //TODO: check for overflow
+  int halfOriSize = hist.size()/2;
+  // compute energy in each block by summing over orientations
+  for(int ori=0; ori<halfOriSize; ori++)
+  {
+    Image<float>::const_iterator src1Ptr = hist[ori].begin();
+    Image<float>::const_iterator src2Ptr = hist[ori+halfOriSize].begin();
+
+    Image<double>::iterator normPtr = norm.beginw();
+    Image<double>::const_iterator normPtrEnd = norm.end();
+
+    while(normPtr < normPtrEnd)
+    {
+      *(normPtr++) += (*src1Ptr + *src2Ptr) * (*src1Ptr + *src2Ptr);
+      src1Ptr++;
+      src2Ptr++;
+    }
+  }
+
+  return norm;
+}
+
+std::vector<double> getFeatures2(Image< byte > &mmapInput, Image<PixRGB <byte> > &rawInput, HistogramOfGradients &hog,
+                                Dims scaledDims, Rectangle bbox)
+{
+    // compute the correct bounding box and cut it out
+    Dims dims = rawInput.getDims();
+    float scaleW = (float)dims.w()/(float)scaledDims.w();
+    float scaleH = (float)dims.h()/(float)scaledDims.h();
+    Rectangle bboxScaled = Rectangle::tlbrI(bbox.top()*scaleH, bbox.left()*scaleW,
+                                            (bbox.top() + bbox.height())*scaleH,
+                                            (bbox.left() + bbox.width())*scaleW);
+    bboxScaled = bboxScaled.getOverlap(Rectangle(Point2D<int>(0, 0), dims - 1));
+
+    // scale if needed and cut out the rectangle and save it
+    Image<float>  lum,rg,by;
+    Image< PixRGB<byte> > rawCroppedInput = crop(rawInput, bboxScaled);
+    Image< byte > mmapCroppedInput = crop(mmapInput, bboxScaled);
+
+    // get the static features features used in training
+    getLAB(rawCroppedInput, lum, rg, by);
+    std::vector<float> hist = hog.createHistogram(lum,rg,by);
+    std::vector<double> histDouble(hist.begin(), hist.end());
+
+    // get the motion features used in training
+    hist = hog.createHistogram(mmapCroppedInput);
+    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
+
+    return histDouble;
+}
+
+std::vector<double> getFeatures(Image<PixRGB <byte> > &prevInput, Image<PixRGB <byte> > &input,
+                                HistogramOfGradients &hog,  Dims scaledDims, Rectangle bbox)
+{
+
+    // compute the correct bounding box and cut it out
+    Dims dims = input.getDims();
+    float scaleW = (float)dims.w()/(float)scaledDims.w();
+    float scaleH = (float)dims.h()/(float)scaledDims.h();
+    Rectangle bboxScaled = Rectangle::tlbrI(bbox.top()*scaleH, bbox.left()*scaleW,
+                                            (bbox.top() + bbox.height())*scaleH,
+                                            (bbox.left() + bbox.width())*scaleW);
+    bboxScaled = bboxScaled.getOverlap(Rectangle(Point2D<int>(0, 0), dims - 1));
+    
+    // scale if needed and cut out the rectangle and save it
+    Image<float>  lum,rg1,by1;
+    Image< PixRGB<byte> > evtImg = crop(prevInput, bboxScaled);
+    Image< PixRGB<byte> > evtImgPrev = crop(input, bboxScaled);
+
+    // get the features used in training
+    getLAB(evtImg, lum, rg1, by1);
+    std::vector<float> hist = hog.createHistogram(lum,rg1,by1);
+    std::vector<double> histDouble(hist.begin(), hist.end());
+    
+    Image<float> rg(evtImg.getDims(), ZEROS);
+    Image<float> by(evtImg.getDims(), ZEROS);
+    // compute the optic flow
+    rutz::shared_ptr<MbariOpticalFlow> flow =
+    getOpticFlow
+    (Image<byte>(luminance(evtImg)),
+    Image<byte>(luminance(evtImgPrev)));
+    
+    Image<PixRGB<byte> > opticFlow = drawOpticFlow(evtImgPrev, flow);
+    //rv->display(opticFlow, frameNum, "opticflow");
+    std::vector<rutz::shared_ptr<MbariFlowVector> > vectors = flow->getFlowVectors();
+    Image< float > xflow(evtImg.getDims(), ZEROS);
+    Image< float > yflow(evtImg.getDims(), ZEROS);
+    
+    // we are going to assume we have a sparse flow field
+    // and random access on the field
+    for(uint v = 0; v < vectors.size(); v++)
+    {
+      Point2D<float> pt = vectors[v]->p1;
+      uint i = pt.i;
+      uint j = pt.j;
+      float xmag  = 100.0f * vectors[v]->xmag;
+      float ymag  = 100.0f * vectors[v]->ymag;
+      xflow.setVal(i,j, xmag );
+      yflow.setVal(i,j, ymag );
+      //if(xmag > 0.0) xflow.setVal(i,j, xmag );
+      //if(ymag > 0.0) yflow.setVal(i,j, ymag );
+    }
+    
+    Image<float> mag, ori;
+    gradientSobel(xflow, mag, ori, 3);
+    //rv->display(static_cast< Image<byte> >(xflow), frameNum, "XFlow");
+    //rv->display(static_cast< Image<byte> >(mag), frameNum, "XGradmag");
+    hist = hog.createHistogram(static_cast< Image<byte> >(xflow),rg,by);
+    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
+    
+    gradientSobel(yflow, mag, ori, 3);
+    //rv->display(static_cast< Image<byte> >(yflow), frameNum, "YFlow");
+    //rv->display(static_cast< Image<byte> >(mag), frameNum, "YGradmag");
+    hist = hog.createHistogram(static_cast< Image<byte> >(yflow),rg,by);
+    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
+    
+    Image<float> yFilter(1, 3, ZEROS);
+    Image<float> xFilter(3, 1, ZEROS);
+    yFilter.setVal(0, 0, 1.F);
+    yFilter.setVal(0, 2, 1.F);
+    xFilter.setVal(0, 0, 1.F);
+    xFilter.setVal(2, 0, 1.F);
+    
+    Image<float> yyflow = sepFilter(yflow, Image<float>(), yFilter, CONV_BOUNDARY_CLEAN);
+    Image<float> xxflow = sepFilter(xflow, xFilter, Image<float>(), CONV_BOUNDARY_CLEAN);
+    hist = hog.createHistogram(static_cast< Image<byte> >(yyflow),rg,by);
+    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
+    hist = hog.createHistogram(static_cast< Image<byte> >(xxflow),rg,by);
+    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
+    
+    //rv->display(static_cast< Image<byte> >(yyflow), frameNum, "YYder");
+    //rv->display(static_cast< Image<byte> >(xxflow), frameNum, "XXder");
+    
+    Image<float> yxflow = sepFilter(yflow, xFilter, Image<float>(), CONV_BOUNDARY_CLEAN);
+    Image<float> xyflow = sepFilter(xflow, Image<float>(), yFilter, CONV_BOUNDARY_CLEAN);
+    hist = hog.createHistogram(static_cast< Image<byte> >(yxflow),rg,by);
+    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
+    hist = hog.createHistogram(static_cast< Image<byte> >(xyflow),rg,by);
+    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
+    
+    //rv->display(static_cast< Image<byte> >(yxflow), frameNum, "YXder");
+    //rv->display(static_cast< Image<byte> >(xyflow), frameNum, "XYder");
+    hist = hog.createHistogram(static_cast< Image<byte> >(yxflow),rg,by);
+    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
+    hist = hog.createHistogram(static_cast< Image<byte> >(xyflow),rg,by);
+    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
+
+    return histDouble;
 }

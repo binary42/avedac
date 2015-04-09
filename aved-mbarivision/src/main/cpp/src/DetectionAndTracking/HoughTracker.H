@@ -44,7 +44,8 @@
 
 #define DEFAULT_FORGET_CONSTANT 0.90f
 #define DEFAULT_SCALE_INCREASE 1.25F
-#define HOUGH_EDGE_OFFSET 20
+#define DEFAULT_MAP_SIZE 100
+#define DEFAULT_MAP_STEP 2
 
 template <class T> class Image;
 template <class T> class PixRGB;
@@ -75,8 +76,7 @@ public:
   void free();
 
   //! update with a new frame from the video
-  /* !@rv the results viewer to display intermediate results
-  @frameNum the frame number (for display purposes)
+  /* @frameNum the frame number (for display purposes)
   @img the image to segment and track
   @occlusionImg a mask representing the objects that are occluding this
   @prediction the predicted maximum point
@@ -101,7 +101,7 @@ public:
 
 private:
 
-  void run(const cv::Rect& ROI, const cv::Point& center, const cv::Mat& mask, const float forgetConstant);
+  bool run(const cv::Rect& ROI, const cv::Point& center, const cv::Mat& mask, const float forgetConstant);
 
   //! calculates the center of mass of the foreground segment
   // to be used to track. This center is of the currently visible part of the tracked
@@ -113,21 +113,8 @@ private:
   /*!@return the bounding box region*/
   cv::Rect getBoundingBox(const cv::Mat& backproject);
 
-  //! converts Hough-based back projection  to binary
-  Image< byte > makeBinarySegmentation(nub::soft_ref<MbariResultViewer>&rv, \
-											const cv::Mat& backproject, \
-											const uint frameNum, \
-											const int evtNum);
-
-  //! colorisze and show the end results
-  void showResult(nub::soft_ref<MbariResultViewer>&rv, \
-                                const cv::Mat& frame, \
-                                const cv::Mat& backproject, \
-                                const cv::Rect& ROI, \
-                                const cv::Rect& object, \
-                                const std::string title, \
-                                const uint frameNum, \
-                                const int evtNum);
+  //! converts Hough-based back projection  to binary foreground labeled as 1 and background as 0
+  Image< byte > makeBinarySegmentation(const cv::Mat& backproject, const uint frameNum, const int evtNum);
 
   //! show the segmentation request
   void showSegmentation(nub::soft_ref<MbariResultViewer>& rv, \
@@ -135,8 +122,6 @@ private:
                         const std::string title, \
                         const uint frameNum, \
                         const int evtNum);
-
-
 
   //! mask known occlusions in back project image; sets pixels that are occluded to background
   cv::Mat maskOcclusion(const Image<byte> &occlusionImg,  const cv::Mat& backProject);
@@ -151,6 +136,7 @@ private:
   cv::Rect itsMaxObject, itsImgRect, itsObject, itsSearchWindow;
   Features itsFeatures;
   cv::Point itsMaxLoc;
+  int itsMapSize, itsMapStep;
 };
 }
 #endif

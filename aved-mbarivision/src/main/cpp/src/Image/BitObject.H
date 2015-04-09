@@ -60,9 +60,8 @@ public:
   /*!@param img Image from which the object is extracted
     @param boundingBox the bounding box of the object
     @param center a point that represents the center of the object
-    @return the area of the extracted object; -1 if no object could
-    be extracted - in this case the BitObject is invalid */
-  BitObject(const Image<byte>& img, const Point2D<int> center, const Rectangle boundingBox);
+    @param threshold for flooding*/
+  BitObject(const Image<byte>& img, const Point2D<int> center, const Rectangle boundingBox, const byte threshold = 1);
 
   //! custom operator used when combining std::lists of
   /*BitObjects   */
@@ -103,7 +102,7 @@ public:
     @param center a point that represents the center of the object
     @return the area of the extracted object; -1 if no object could
     be extracted - in this case the BitObject is invalid */
-  int reset(const Image<byte>& img, const Point2D<int> center, const Rectangle boundingBox);
+  int reset(const Image<byte>& img, const Point2D<int> center, const Rectangle boundingBox, const byte threshold = 1);
 
   //! delete all stored data, makes the object invalid
   void freeMem();
@@ -197,6 +196,9 @@ public:
   /*! if the intersection is empty, an invalid BitObject is returned*/
   //BitObject intersection(const BitObject& other);
   bool doesIntersect(const BitObject& other) const;
+
+  //! returns the amount of pixel intersection of this BitObject with other
+  double intersect(const BitObject& other) const;
  
   //! draw the shape of this BitObject into img with color
   template <class T_or_RGB>

@@ -24,9 +24,7 @@
  *  
  * This work would not be possible without the generous support of the 
  * David and Lucile Packard Foundation:q
- m:q
- :
- */ 
+ */
 
 /*!@file MbariModelOptionDef.H Types for defining command-line options. */
 
@@ -40,13 +38,34 @@ extern void REQUEST_OPTIONALIAS_MBARI(OptionManager& m);
 struct ModelOptionCateg;
 extern const ModelOptionCateg MOC_MBARI;
 
+//! General command-line-options
+extern const ModelOptionDef OPT_MMosaicStills;
+extern const ModelOptionDef OPT_MMosaicBenthicStills;
+extern const ModelOptionDef OPT_MTimeLapseStills;
+extern const ModelOptionDef OPT_MTimeLapseRover;
+extern const ModelOptionDef OPT_MMidwaterVideo;
+extern const ModelOptionDef OPT_MEyeInTheSeaVideo;
+extern const ModelOptionDef OPT_MBenthicVideo;
+extern const ModelOptionDef OPT_MMidwaterVideo;
+extern const ModelOptionDef OPT_MToolSledVideo;
+
+//! Command-line options for Logger
+//@{
+extern const ModelOptionDef OPT_LOGsaveEvents;
+extern const ModelOptionDef OPT_LOGloadEvents;
+extern const ModelOptionDef OPT_LOGsaveProperties;
+extern const ModelOptionDef OPT_LOGloadProperties;
+extern const ModelOptionDef OPT_LOGsavePositions;
+extern const ModelOptionDef OPT_LOGsaveOutput;
+extern const ModelOptionDef OPT_LOGdisplayOutput;
+extern const ModelOptionDef OPT_LOGsaveEventNums;
+extern const ModelOptionDef OPT_LOGsaveSummaryEventsName;
+extern const ModelOptionDef OPT_LOGsaveXMLEventSet;
+extern const ModelOptionDef OPT_LOGmetadataSource;
+
+
 //! Command-line options for MbariResultManager
 //@{
-extern const ModelOptionDef OPT_MRVsaveEvents;
-extern const ModelOptionDef OPT_MRVloadEvents;
-extern const ModelOptionDef OPT_MRVsaveProperties;
-extern const ModelOptionDef OPT_MRVloadProperties;
-extern const ModelOptionDef OPT_MRVsavePositions;
 extern const ModelOptionDef OPT_MRVmarkInteresting;
 extern const ModelOptionDef OPT_MRVopacity;
 extern const ModelOptionDef OPT_MRVmarkCandidate;
@@ -54,14 +73,8 @@ extern const ModelOptionDef OPT_MRVmarkPrediction;
 extern const ModelOptionDef OPT_MRVmarkFOE;
 extern const ModelOptionDef OPT_MRVsaveResults;
 extern const ModelOptionDef OPT_MRVdisplayResults;
-extern const ModelOptionDef OPT_MRVsaveOutput;
-extern const ModelOptionDef OPT_MRVdisplayOutput;
 extern const ModelOptionDef OPT_MRVshowEventLabels;
 extern const ModelOptionDef OPT_MRVrescaleDisplay;
-extern const ModelOptionDef OPT_MRVsaveEventNums;
-extern const ModelOptionDef OPT_MRVsaveSummaryEventsName;
-extern const ModelOptionDef OPT_MRVsaveXMLEventSet;
-extern const ModelOptionDef OPT_MRVmetadataSource;
 //@}
 
 //! Command-line options for DetectionParametersModelComponent
@@ -75,11 +88,8 @@ extern const ModelOptionDef OPT_MDPsegmentAdaptiveParameters;
 extern const ModelOptionDef OPT_MDPcleanupSESize;
 extern const ModelOptionDef OPT_MDPmaxEvolveTime;
 extern const ModelOptionDef OPT_MDPmaxWTAPoints;
-extern const ModelOptionDef OPT_MDPsaveNonInterestingEvents;
+extern const ModelOptionDef OPT_MDPsaveBoringEvents;
 extern const ModelOptionDef OPT_MDPsaveOriginalFrameSpec;
-extern const ModelOptionDef OPT_MDPBenthicVideo;
-extern const ModelOptionDef OPT_MDPMidwaterVideo;
-extern const ModelOptionDef OPT_MDPToolSledVideo640x360;
 extern const ModelOptionDef OPT_MDPcolorSpace;
 extern const ModelOptionDef OPT_MDPminStdDev;
 extern const ModelOptionDef OPT_MDPeventExpirationFrames;
@@ -96,13 +106,6 @@ extern const ModelOptionDef OPT_MDPmaxEventArea;
 extern const ModelOptionDef OPT_MDPminEventFrames;
 extern const ModelOptionDef OPT_MDPmaxEventFrames;
 extern const ModelOptionDef OPT_MDPsizeAvgCache;
-extern const ModelOptionDef OPT_MDPMosaicStills;
-extern const ModelOptionDef OPT_MDPMosaicBenthicStills;
-extern const ModelOptionDef OPT_MDPTimeLapseStills;
-extern const ModelOptionDef OPT_MDPTimeLapseRover;
-extern const ModelOptionDef OPT_MDPMidwaterVideo;
-extern const ModelOptionDef OPT_MDPEyeInTheSeaVideo;
-extern const ModelOptionDef OPT_MDPBenthicVideo;
 extern const ModelOptionDef OPT_MDPmaskDynamic;
 extern const ModelOptionDef OPT_MDPmaskLasers;
 extern const ModelOptionDef OPT_MDPXKalmanFilterParameters;
