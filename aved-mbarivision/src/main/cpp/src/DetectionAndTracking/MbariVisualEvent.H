@@ -208,11 +208,10 @@ namespace MbariVisualEvent {
 	//! updates the Hough-based tracker
 	// !@returns false if tracker fails
 	bool updateHoughTracker(nub::soft_ref<MbariResultViewer>&rv,  uint frameNum, Image< PixRGB<byte> >& img,
-	                        const Image< byte >& occlusionImg, Image< byte >& binaryImg,
-	                        Point2D<int> &prediction,  Rectangle &boundingBox);
+	                        const Image< byte >& occlusionImg, Image< byte >& binaryImg, Rectangle &boundingBox);
 
     //! reset the Hough-based tracker
-    void resetHoughTracker(Image< PixRGB<byte> >& img, BitObject &bo, float maxScale );
+    void resetHoughTracker(Image< PixRGB<byte> >& img, BitObject &bo);
 
     //! free up memory associated with the Hough-based tracker
     void freeHoughTracker();
@@ -293,8 +292,8 @@ namespace MbariVisualEvent {
     //!return whether frame_num is between start frame and end frame
     inline bool frameInRange(const uint frame_num) const;	
 
-    //! return the last bit object area that was used to initialize the Hough tracker
-    inline int getHoughArea() const;
+    //! return true if the  initialize the Hough tracker
+    inline bool getHoughReset() const;
 
     //! return the forget constant that is used with the Hough tracker
     inline void setForgetConstant(float constant);
@@ -347,7 +346,7 @@ namespace MbariVisualEvent {
     HoughTracker::HoughTracker hTracker;
     TrackerType itsTrackerType;
     bool itsTrackerChanged;
-    uint houghArea;
+    bool itsHoughReset;
     float houghConstant;
     static const std::string trackerName[];
     //! True if interesting, otherwise false (for boring) defaults to boring
@@ -508,7 +507,6 @@ namespace MbariVisualEvent {
     // runs the Kalman filter tracking on @param event
     // returns true if able to track
     bool runKalmanTracker(VisualEvent *event, const uint frameNum, const MbariMetaData &m,
-                          Image< PixRGB<byte> >& img,
                           const Image< PixRGB<byte> >& segmentIn,
                           const Vector2D& curFOE,
                           bool skip = false);
@@ -663,9 +661,9 @@ namespace MbariVisualEvent {
   }
 
   // ######################################################################
-  inline int VisualEvent::getHoughArea() const
+  inline bool VisualEvent::getHoughReset() const
   {
-    return houghArea;
+    return itsHoughReset;
   }
 
   // ######################################################################

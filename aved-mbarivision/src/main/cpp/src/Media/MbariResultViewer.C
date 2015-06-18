@@ -71,6 +71,7 @@ colCandidate(COL_CANDIDATE),
 colPrediction(COL_PREDICTION),
 colFOE(COL_FOE)
 {
+    displayResults = false;
 }
 
 
@@ -84,7 +85,6 @@ MbariResultViewer::~MbariResultViewer() {
 void MbariResultViewer::paramChanged(ModelParamBase * const param,
         const bool valueChanged,
         ParamClient::ChangeStatus* status) {
-    ModelComponent::paramChanged(param, valueChanged, status);
 
     // if the param is out itsMarkCandidate set the color accordingly
     // if the param is set to Save all non-interesting events, mark candidates
@@ -106,6 +106,7 @@ void MbariResultViewer::paramChanged(ModelParamBase * const param,
         if (itsMarkFOE.getVal()) colFOE = COL_FOE;
         else colFOE = COL_TRANSPARENT;
     }
+    ModelComponent::paramChanged(param, valueChanged, status);
 }
 
 // ######################################################################
@@ -234,9 +235,11 @@ Image<PixRGB <byte> > MbariResultViewer::createOutput(MbariImage< PixRGB<byte> >
 template <class T>
 void MbariResultViewer::display(const Image<T>& img, const uint frameNum,
 const string& resultName, const int resNum) {
+ if (itsDisplayResults.getVal()) {
     uint num = getNumFromString(resultName);
     itsResultWindows[num] = displayImage(img, itsResultWindows[num],
             getLabel(num, frameNum, resNum).c_str());
+ }
 }
 
 // #############################################################################

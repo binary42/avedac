@@ -104,15 +104,16 @@ std::list<BitObject> extractBitObjects(const Image<byte>& bitImg,
         const int minSize,
         const int maxSize);
 
-//! extract a set of BitObjects from a color labeled images, which intersect region
-/*! Same as above, except assumption is image is color and to be segmented using graphcut */
+//! extract a set of BitObjects from image, which intersect region
+/*! Same as above, except images are extracted from graphcut output from
+ region defined in @param segmentRegion */
 std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& bImg,
         const Point2D<int> seed,
         const Rectangle searchRegion,
         const Rectangle segmentRegion,
         const int minSize,
         const int maxSize,
-        const float minIntensity = 5.0F);
+        const float minIntensity = 0.0F);
 
 //! extract a set of BitObjects from a color labeled images, which intersect region
 /*! Same as above, except assumption is image is color labeled by
@@ -248,11 +249,15 @@ Image<double> getHistogramEnergy(const ImageSet<float>& hist);
 
 Image<float> convolveFeatures(const ImageSet<float>& imgFeatures, const ImageSet<float>& filterFeatures);
 
-vector<double> getFeatures(Image<PixRGB <byte> > &prevInput, Image<PixRGB <byte> > &input,
+vector<double> getFeaturesHOG(Image< byte > &mmapInput, Image<PixRGB <byte> > &rawInput, HistogramOfGradients &hog,
+                                Dims scaledDims, Rectangle bbox);
+
+vector<double> getFeaturesHOGMMAP(Image< byte > &mmapInput, Image<PixRGB <byte> > &rawInput, HistogramOfGradients &hog,
+                                Dims scaledDims, Rectangle bbox);
+
+vector<double> getFeaturesMBH(Image<PixRGB <byte> > &prevInput, Image<PixRGB <byte> > &input,
                                 HistogramOfGradients &hog,  Dims scaledDims, Rectangle bbox) ;
 
-vector<double> getFeatures2(Image< byte > &mmapInput, Image<PixRGB <byte> > &rawInput, HistogramOfGradients &hog,
-                                Dims scaledDims, Rectangle bbox);
 
 #endif
 

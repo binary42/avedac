@@ -65,6 +65,8 @@ itsMaskXPosition(DEFAULT_MASK_X_POSITION),
 itsMaskYPosition(DEFAULT_MASK_Y_POSITION),
 itsMaskWidth(DEFAULT_MASK_HEIGHT),
 itsMaskHeight(DEFAULT_MASK_WIDTH),
+itsRescaleSaliency(Dims(0,0)),
+itsUseFoaMaskRegion(DEFAULT_FOA_MASK_REGION),
 itsSegmentAlgorithmType(DEFAULT_SEGMENT_ALGORITHM_TYPE),
 itsSegmentAlgorithmInputType(DEFAULT_SEGMENT_ALGORITHM_INPUT_TYPE),
 itsSegmentGraphParameters(DEFAULT_SEGMENT_GRAPH_PARAMETERS),
@@ -93,6 +95,8 @@ void DetectionParameters::writeToStream(std::ostream& os) {
     os << "\tsegmentalgorithmtype:" << segmentAlgorithmType(itsSegmentAlgorithmType);
     os << "\tsegmentadaptiveparameters:" << itsSegmentAdaptiveParameters;
     os << "\tsaliencyinputimagetype:" << saliencyInputImageType(itsSaliencyInputType);
+    os << "\tusefoamaskregion:" << itsUseFoaMaskRegion;
+    os << "\tsaliencyrescale:" << toStr(itsRescaleSaliency);
     os << "\tsegmentgraphparameters:" << itsSegmentGraphParameters;
     os << "\txkalmanfilterparameters:" << itsXKalmanFilterParameters;
     os << "\tykalmanfilterparameters:" << itsYKalmanFilterParameters;
@@ -140,6 +144,8 @@ DetectionParameters &DetectionParameters::operator=(const DetectionParameters& p
     this->itsXKalmanFilterParameters = p.itsXKalmanFilterParameters;
     this->itsYKalmanFilterParameters = p.itsYKalmanFilterParameters;
     this->itsCleanupStructureElementSize = p.itsCleanupStructureElementSize;
+    this->itsRescaleSaliency = p.itsRescaleSaliency;
+    this->itsUseFoaMaskRegion = p.itsUseFoaMaskRegion;
     this->itsSaliencyInputType = p.itsSaliencyInputType;
     this->itsSaliencyFrameDist = p.itsSaliencyFrameDist;
     this->itsKeepWTABoring = p.itsKeepWTABoring;
@@ -185,7 +191,7 @@ void DetectionParametersSingleton::initialize(DetectionParameters &p, const Dims
     float maxAreaDiff = maxDist * maxDist / 4.0F;
     float maxDistFloat = (float) maxDist;
 
-    if (p.itsTrackingMode == TMKalmanFilter || p.itsTrackingMode == TMKalmanHough)
+    if (p.itsTrackingMode == TMKalmanFilter || p.itsTrackingMode == TMKalmanHough ||  p.itsTrackingMode == TMHough )
         p.itsMaxCost = pow(maxDistFloat,2.0F);
     else
 	    p.itsMaxCost = maxDist;
@@ -226,6 +232,8 @@ itsMinEventFrames(&OPT_MDPminEventFrames, this),
 itsMaxEventArea(&OPT_MDPmaxEventArea, this),
 itsMinEventArea(&OPT_MDPminEventArea, this),
 itsSaliencyFrameDist(&OPT_MDPsaliencyFrameDist, this),
+itsRescaleSaliency(&OPT_MDPrescaleSaliency, this),
+itsUseFoaMaskRegion(&OPT_MDPuseFoaMaskRegion, this),
 itsMaskPath(&OPT_MDPmaskPath, this),
 itsSizeAvgCache(&OPT_MDPsizeAvgCache, this),
 itsMaskXPosition(&OPT_MDPmaskXPosition, this),
@@ -256,6 +264,8 @@ void DetectionParametersModelComponent::reset(DetectionParameters *p) {
         p->itsTrackingMode = itsTrackingMode.getVal();
      if (itsSaliencyInputType.getVal() > 0)
         p->itsSaliencyInputType = itsSaliencyInputType.getVal();
+    p->itsRescaleSaliency = itsRescaleSaliency.getVal();
+    p->itsUseFoaMaskRegion = itsUseFoaMaskRegion.getVal();
     if (itsCleanupStructureElementSize.getVal() > 1 && itsCleanupStructureElementSize.getVal() <= MAX_SE_SIZE)
         p->itsCleanupStructureElementSize = itsCleanupStructureElementSize.getVal();
     if (itsMaskPath.getVal().length() > 0)

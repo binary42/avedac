@@ -17,8 +17,8 @@
 #include "features.h"
 #include "utilities.h"
 
-//#define MAP_SIZE 100.0f
-//#define MAP_STEP 2.0f
+#define MAP_SIZE 100.0f
+#define MAP_STEP 2.0f
 
 namespace HoughTracker {
 bool sortVotesDesc (const std::pair<CvPoint, float>& A, const std::pair<CvPoint, float>& B);
@@ -149,7 +149,7 @@ public:
 	~Fern();
 
 	void evaluate(Features& ft, const cv::Rect& ROI, cv::Mat& result, int stepSize = 1, float threshold = 0.5f) const;
-	void update(Features& ft, const cv::Point& pos, int label, const cv::Point& center, const int mapSize, const int mapStep);
+	void update(Features& ft, const cv::Point& pos, int label, const cv::Point& center);
 	void forget(const double& factor);
 	void clear();
 	int backProject(Features& ft, cv::Mat& projected, const cv::Rect& ROI, cv::Point& center, float radius, int stepSize = 1, float threshold = 0.5f) const;
@@ -263,11 +263,11 @@ public:
 		return cnt;
 	}
 
-	void update(Features& ft, const cv::Point& pos, int label, const cv::Point& center, const int mapSize, const int mapStep)
+	void update(Features& ft, const cv::Point& pos, int label, const cv::Point& center)
 	{
 		for(unsigned int f = 0; f < m_ferns.size(); f++)
 		{
-			m_ferns.at(f).update(ft, pos, label, center, mapSize, mapStep);
+			m_ferns.at(f).update(ft, pos, label, center);
     	}
 		isSorted = false;
     };

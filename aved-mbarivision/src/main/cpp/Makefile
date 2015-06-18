@@ -9,9 +9,10 @@ BINDIR	    := target/build/bin/
 LIBDIR      := target/build/lib/
 SCHEMADIR   := schema/
 CXX         := /opt/centos/devtoolset-1.1/root/usr/bin/g++
-CXXFLAGS    := -I /opt/centos/devtoolset-1.1/root/usr/include/c++/4.7.2/ -Wall -g -std=c++11 -march=nocona
+CXXFLAGS    := -I /opt/centos/devtoolset-1.1/root/usr/include/c++/4.7.2/ 
 DEFS        := -DINST_BYTE=1 -DINST_FLOAT=1 -DHAVE_OPENCV2=1 -DHAVE_OPENCV=1 -DCV_MAJOR_VERSION=2.4.9
-CPPFLAGS    := -I /opt/centos/devtoolset-1.1/root/usr/include/c++/4.7.2/ -I$(OPENCVROOT)/include/opencv -I$(OPENCVROOT)/include/opencv2 -I$(SALIENCYROOT)/src -I$(XERCESCROOT)/src -I$(SRCDIR) -include $(SALIENCYROOT)/config.h 
+#CPPFLAGS    := -c -O3 -fPIC -I /opt/centos/devtoolset-1.1/root/usr/include/c++/4.7.2/ -I$(OPENCVROOT)/include/opencv -I$(OPENCVROOT)/include/opencv2 -I$(SALIENCYROOT)/src -I$(XERCESCROOT)/src -I$(SRCDIR) -include $(SALIENCYROOT)/config.h
+CPPFLAGS    := -c -g -I /opt/centos/devtoolset-1.1/root/usr/include/c++/4.7.2/ -I$(OPENCVROOT)/include/opencv -I$(OPENCVROOT)/include/opencv2 -I$(SALIENCYROOT)/src -I$(XERCESCROOT)/src -I$(SRCDIR) -include $(SALIENCYROOT)/config.h
 LDFLAGS     := -L /opt/centos/devtoolset-1.1/root/usr/lib/gcc/x86_64-redhat-linux/4.7.2/ -L/usr/local/lib64 -L/usr/local/lib -L$(OPENCVROOT) -L$(SALIENCYROOT)/build/obj -L$(XERCESCROOT)/lib -lxerces-c -lopencv_core -lopencv_imgproc -lopencv_video -lopencv_objdetect -lopencv_legacy
 DEPFILE	    := alldepends
 COMPILE1    := @echo 

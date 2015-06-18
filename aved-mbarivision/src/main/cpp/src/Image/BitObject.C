@@ -658,7 +658,7 @@ bool BitObject::doesIntersect(const BitObject& other) const
   //    toStr(other.getObjectMask(byte(1),OBJECT).getDims()).data());
 
   // is this a valid rectangle?
-  if ((ll > rr)||(tt > bb)) 
+  if ((ll > rr)||(tt > bb))
     {
       //LINFO("No intersect because the bounding boxes don't overlap: %s and %s",
       //    toStr(tBB).data(),toStr(oBB).data());
@@ -686,7 +686,7 @@ bool BitObject::doesIntersect(const BitObject& other) const
                             crop(other.getObjectMask(byte(1),OBJECT),oCM));
   double s = sum(cor);
 
-  LINFO("tCM = %s; oCM = %s; this.ObjMask.dims = %s; other.ObjMask.dims = %s; sum = %g",
+  LDEBUG("tCM = %s; oCM = %s; this.ObjMask.dims = %s; other.ObjMask.dims = %s; sum = %g",
       toStr(tCM).data(),toStr(oCM).data(),
       toStr(getObjectMask(byte(1),OBJECT).getDims()).data(),
       toStr(other.getObjectMask(byte(1),OBJECT).getDims()).data(),s);
@@ -746,7 +746,7 @@ double BitObject::intersect(const BitObject& other) const
                             crop(other.getObjectMask(byte(1),OBJECT),oCM));
   double s = sum(cor);
 
-  LINFO("tCM = %s; oCM = %s; this.ObjMask.dims = %s; other.ObjMask.dims = %s; sum = %g",
+  LDEBUG("tCM = %s; oCM = %s; this.ObjMask.dims = %s; other.ObjMask.dims = %s; sum = %g",
       toStr(tCM).data(),toStr(oCM).data(),
       toStr(getObjectMask(byte(1),OBJECT).getDims()).data(),
       toStr(other.getObjectMask(byte(1),OBJECT).getDims()).data(),s);

@@ -139,7 +139,7 @@ void Fern::clear()
 	numNeg = 1.0f;
 }
 
-void Fern::update(Features& ft, const cv::Point& pos, int label, const cv::Point& center, const int mapSize, const int mapStep)
+void Fern::update(Features& ft, const cv::Point& pos, int label, const cv::Point& center)
 {
 	unsigned int idx = calcIndex(ft, pos);
 	std::map< unsigned int, Node >::iterator it = m_nodeTable.find( idx );
@@ -147,7 +147,7 @@ void Fern::update(Features& ft, const cv::Point& pos, int label, const cv::Point
 	if(it == m_nodeTable.end())
 	{
 		// insert new node
-		Node newnode(mapSize, mapStep);
+		Node newnode(MAP_SIZE, MAP_STEP);
 		it = m_nodeTable.insert ( std::make_pair( idx, newnode) ).first;
 	}
 

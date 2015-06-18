@@ -53,6 +53,7 @@ extern const ModelOptionDef OPT_MToolSledVideo;
 //@{
 extern const ModelOptionDef OPT_LOGsaveEvents;
 extern const ModelOptionDef OPT_LOGloadEvents;
+extern const ModelOptionDef OPT_LOGsaveEventFeatures;
 extern const ModelOptionDef OPT_LOGsaveProperties;
 extern const ModelOptionDef OPT_LOGloadProperties;
 extern const ModelOptionDef OPT_LOGsavePositions;
@@ -79,6 +80,7 @@ extern const ModelOptionDef OPT_MRVrescaleDisplay;
 
 //! Command-line options for DetectionParametersModelComponent
 //@{
+extern const ModelOptionDef OPT_MDPrescaleSaliency;
 extern const ModelOptionDef OPT_MDPsaliencyInputImage;
 extern const ModelOptionDef OPT_MDPsaliencyFrameDist;
 extern const ModelOptionDef OPT_MDPsegmentAlgorithmInputImage;
@@ -93,6 +95,7 @@ extern const ModelOptionDef OPT_MDPsaveOriginalFrameSpec;
 extern const ModelOptionDef OPT_MDPcolorSpace;
 extern const ModelOptionDef OPT_MDPminStdDev;
 extern const ModelOptionDef OPT_MDPeventExpirationFrames;
+extern const ModelOptionDef OPT_MDPuseFoaMaskRegion;
 
 extern const ModelOptionDef OPT_MDPkeepBoringWTAPoints;
 extern const ModelOptionDef OPT_MDPtrackingMode;

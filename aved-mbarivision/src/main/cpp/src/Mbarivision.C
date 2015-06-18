@@ -81,7 +81,7 @@
 #include <iostream>
 #include <sstream>
 #include <signal.h>
-
+#include <fstream>
 //#define DEBUG
 
 using namespace MbariVisualEvent;
@@ -143,6 +143,7 @@ int main(const int argc, const char** argv) {
 
     // Initialize brain defaults
     manager.setOptionValString(&OPT_UseRandom, "true");
+    manager.setOptionValString(&OPT_SVdisplayBoring, "false");
   /*  manager.setOptionValString(&OPT_SVdisplayFOA, "true");
     manager.setOptionValString(&OPT_SVdisplayPatch, "false");
     manager.setOptionValString(&OPT_SVdisplayFOALinks, "false");
@@ -173,7 +174,7 @@ int main(const int argc, const char** argv) {
         }
     }
 
-  // get the dimensions of the potentially scaled input frames
+    // get the dimensions of the potentially scaled input frames
     Dims scaledDims = ifs->peekDims();
 
     // if the user has selected to retain the original dimensions in the events disable scaling in the frame series
@@ -199,6 +200,9 @@ int main(const int argc, const char** argv) {
     // get reference to the SimEventQueue
     nub::soft_ref<SimEventQueue> seq = seqc->getQ();
 
+    // get file output string 
+    string saveFeatures = manager.getOptionValString(&OPT_LOGsaveEventFeatures);
+
     // start all the ModelComponents
     manager.start();
 
@@ -216,9 +220,6 @@ int main(const int argc, const char** argv) {
     mask = highThresh(mask, byte(0), byte(255));
     staticClipMask = maskArea(mask, &dp);
 
-    // initialize the default mask
-    mask = staticClipMask;
-
     // initialize the preprocess
     preprocess->init(ifs, scaledDims);
     ifs->reset1(); //reset to state after construction since the preprocessing caches input frames
@@ -228,7 +229,6 @@ int main(const int argc, const char** argv) {
 
     int numSpots = 0;
     uint frameNum = 0;
-    std::string outStr(manager.getOptionValString(&OPT_InputFrameSource).c_str());
     MbariImage< PixRGB<byte> > input(manager.getOptionValString(&OPT_InputFrameSource).c_str());
     MbariImage< PixRGB<byte> > prevInput(manager.getOptionValString(&OPT_InputFrameSource).c_str());
     MbariImage< PixRGB <byte> > output(manager.getOptionValString(&OPT_InputFrameSource).c_str());
@@ -238,16 +238,14 @@ int main(const int argc, const char** argv) {
     Image< PixRGB<byte> > inputRaw, inputScaled;
     Image<byte> mmap, prevmmap;
 
-    // count between frames to run saliency; note two are required to compute motion and flick channel, otherwise can
-    // compute every frame in the case of still frames, or fast moving video with lots of interesting content
-    uint countFrameDist = dp.itsSaliencyFrameDist > 1 ? 2 : 1;
+    // count between frames to run saliency
+    uint countFrameDist = 1;
     bool hasCovert; // flag to monitor whether visual cortex had any output
 
     // initialize property vector and FOE estimator
     PropertyVectorSet pvs;
     FOEestimator foeEst(20, 0);
     Vector2D curFOE;
-    SimTime prevTime = seq->now();
 
     MotionEnergyPyrBuilder motion(Gaussian5, 1.0F);
 
@@ -258,10 +256,12 @@ int main(const int argc, const char** argv) {
     // create hog
     bool normalizeHistogram = true;
     bool fixedHistogram = true; // if false, cell size fixed
-    Dims cellSize = Dims(3,3); // if fixedHist is true, this is hist size, if false, this is cell size
+    Dims cellSizeSmall = Dims(3,3); // if fixedHist is true, this is hist size, if false, this is cell size
+    Dims cellSizeLarge = Dims(8,8); // if fixedHist is true, this is hist size, if false, this is cell size
     //8x8 = 1296 features
     //3x3 =  36 features
-    HistogramOfGradients hog(normalizeHistogram,cellSize,fixedHistogram);
+    HistogramOfGradients hog3x3(normalizeHistogram,cellSizeSmall,fixedHistogram);
+    HistogramOfGradients hog8x8(normalizeHistogram,cellSizeLarge,fixedHistogram);
 
     std::string featureFileName = "predictions.txt";
     std::ofstream featureFile;
@@ -279,22 +279,22 @@ int main(const int argc, const char** argv) {
         LINFO("Reading new frame");
         numSpots = 0;
 
-        //  cache and enhance image
+        // initialize the default mask
+        mask = staticClipMask;
+
+        // cache and enhance image
         inputRaw = ifs->readRGB();
         inputScaled = rescale(inputRaw, scaledDims);
 
         // get updated input image erasing previous bit objects
         const list<BitObject> bitObjectFrameList = eventSet.getBitObjectsForFrame(frameNum - 1);
 
-        // update the background cache
-        if (!bitObjectFrameList.empty())
-            input = preprocess->update(inputScaled, prevInput, ifs->frame(), bitObjectFrameList);
-        else
-            input = preprocess->update(inputScaled, ifs->frame());
+        // update the background cache 
+        input = preprocess->update(inputScaled, prevInput, ifs->frame(), bitObjectFrameList);
 
         frameNum = input.getFrameNum();
 
-        rv->output(ofs, input, frameNum, "Input");
+        rv->display(input, frameNum, "Input");
 
         // choose image to segment; these produce different results and vary depending on midwater/benthic/etc.
         if (dp.itsSegmentAlgorithmInputType == SAILuminance) {
@@ -307,209 +307,20 @@ int main(const int argc, const char** argv) {
 
         segmentIn = maskArea(segmentIn, mask);
 
-        rv->output(ofs, segmentIn, frameNum, "SegmentIn");
-
-        /*Segmentation s;
-        Dims d = segmentIn.getDims();
-        Rectangle r = Rectangle::tlbrI(0,0,d.h()-1,d.w()-1);
-        Image<PixRGB<byte>> t = s.runGraph(segmentIn, r, 1.0);
-        rv->output(ofs, t, frameNum, "Segment1.0");
-        t = s.runGraph(segmentIn, r, 0.5);
-        rv->output(ofs, t, frameNum, "Segment.5");*/
-
-       // rutz::shared_ptr<OpticalFlow> flow =
-      //   getLucasKanadeOpticFlow(prevLum, lum);
-      // Image<PixRGB<byte> > opticFlow = drawOpticFlow(prevImage, flow);
-      // Image< PixRGB<byte> > disp(4*width, height, ZEROS);
-      // inplacePaste(disp, prevImage, Point2D<int>(0    ,0));
-      // inplacePaste(disp, currImage, Point2D<int>(width,0));
-
         Image<byte> hh(input.getDims(), ZEROS);
         hh = highThresh(hh, byte(0), byte(255));
-        mmap = motion.updateMotion(luminance(inputScaled), hh);
-        rv->output(ofs, mmap, frameNum, "MMAP");
+        Image<byte> mmap = motion.updateMotion(luminance(inputScaled), hh);
+        rv->display(mmap, frameNum, "Motion");
 
         if (prevInput.initialized()) {
 
-            // compute the optic flow
-            /*rutz::shared_ptr<MbariOpticalFlow> flow =  getOpticFlow
-            (Image<byte>(luminance(mmap2)),
-            Image<byte>(luminance(mmap)));
-
-            Image<PixRGB<byte> > opticFlow = drawOpticFlow(prevInput, flow);
-            rv->output(ofs, opticFlow, frameNum, "opticflow");
-            rv->output(ofs, flow->getFlowStrengthField(), frameNum, "OFStrength");
-            rv->output(ofs, flow->getVectorLengthField(), frameNum, "OFLength");
-
-            std::vector<rutz::shared_ptr<MbariFlowVector> > vectors = flow->getFlowVectors();
-            Image< float > ix(prevInput.getDims(), ZEROS);
-            Image< float > iy(prevInput.getDims(), ZEROS);
-            
-              // we are going to assume we have a sparse flow field
-              // and random access on the field
-              for(uint v = 0; v < vectors.size(); v++)
-                {
-                  Point2D<float> pt = vectors[v]->p1;
-                  uint i = pt.i;
-                  uint j = pt.j;
-                  float xmag  = 200.0f * vectors[v]->xmag;
-                  float ymag  = 200.0f * vectors[v]->ymag;
-                  //ix.setVal(i,j, xmag );
-                  //iy.setVal(i,j, ymag );
-                  if(xmag > 0.0) ix.setVal(i,j, xmag );
-                  if(ymag > 0.0) iy.setVal(i,j, ymag );
-             }
-
-            int numBins = 8;
-            const int lineSize = 20;
-
-            Image<float> mag, ori;
-            gradientSobel(flow->getFlowStrengthField(), mag, ori, 3);
-            rv->output(ofs, static_cast< Image<byte> >(mag), frameNum, "OFXYm");
-            rv->output(ofs, static_cast< Image<byte> >(ori), frameNum, "OFXYo");
-          //  rv->output(ofs, static_cast< Image<byte> >(ix), frameNum, "ix");
-          //  rv->output(ofs, static_cast< Image<byte> >(ix), frameNum, "ix");
-          //  rv->output(ofs, static_cast< Image<byte> >(mag), frameNum, "XGM");
-
-          //  ImageSet<float> imgFeatures = getFeatures(ix, numBins);
-          //  Image<PixRGB<byte> > hogImage = getHistogramImage(imgFeatures, lineSize);
-           // rv->output(ofs, hogImage, frameNum, "ixHOG");
-
-         //   gradientSobel(iy, mag, ori, 3);
-         //   rv->output(ofs, static_cast< Image<byte> >(iy), frameNum, "iy");
-         //   rv->output(ofs, static_cast< Image<byte> >(mag), frameNum, "YGM");
-
-         //   imgFeatures = getFeatures(iy, numBins);
-          //  hogImage = getHistogramImage(imgFeatures, lineSize);
-           // rv->output(ofs, hogImage, frameNum, "iyHOG");
-
-            Image<float> yFilter(1, 3, ZEROS);
-            Image<float> xFilter(3, 1, ZEROS);
-            yFilter.setVal(0, 0, 1.F);
-            yFilter.setVal(0, 2, 1.F);
-            xFilter.setVal(0, 0, 1.F);
-            xFilter.setVal(2, 0, 1.F);
-
-            Image<float> yiy = sepFilter(iy, Image<float>(), yFilter, CONV_BOUNDARY_CLEAN);
-            Image<float> xix = sepFilter(ix, xFilter, Image<float>(), CONV_BOUNDARY_CLEAN);
-
-            rv->output(ofs, static_cast< Image<byte> >(yiy), frameNum, "YYder");
-            rv->output(ofs, static_cast< Image<byte> >(xix), frameNum, "XXder");
-
-            Image<float> yix = sepFilter(iy, xFilter, Image<float>(), CONV_BOUNDARY_CLEAN);
-            Image<float> xiy = sepFilter(ix, Image<float>(), yFilter, CONV_BOUNDARY_CLEAN);
-
-            rv->output(ofs, static_cast< Image<byte> >(yix), frameNum, "YXder");
-            rv->output(ofs, static_cast< Image<byte> >(xiy), frameNum, "XYder");
-
-            ImageSet<float> imgFeatures = getFeatures(mmap, 4);
-            Image<PixRGB<byte> > hogImage = getHistogramImage(imgFeatures, lineSize);
-            rv->output(ofs, hogImage, frameNum, "HOG1a");
-
-            imgFeatures = getFeatures(mmap, 8);
-            hogImage = getHistogramImage(imgFeatures, lineSize);
-            rv->output(ofs, hogImage, frameNum, "HOG1b");
-
-            imgFeatures = getFeatures(segmentIn, numBins);
-            hogImage = getHistogramImage(imgFeatures, lineSize);
-            rv->output(ofs, hogImage, frameNum, "HOG2");
-
-            imgFeatures = getFeatures(input, numBins);
-            hogImage = getHistogramImage(imgFeatures, lineSize);
-            rv->output(ofs, hogImage, frameNum, "HOG3");*/
-
-            /*
-            int numBins = 12;
-            LINFO("Computing HOG");
-            const int lineSize = 2;
-            ImageSet<float> hist1 = getFeatures(xix, numBins);
-            ImageSet<float> hist2 = getFeatures(yix, numBins);
-            Image<PixRGB<byte> > hogImage1 = getHistogramImage(hist1, lineSize);
-            Image<PixRGB<byte> > hogImage2 = getHistogramImage(hist2, lineSize);
-            Image<PixRGB<byte>> outHist =  hogImage1 - hogImage2;
-            rv->output(ofs, outHist, frameNum, "IMHdiffx");
-
-            hist1 = getFeatures(xiy, numBins);
-            hist2 = getFeatures(yiy, numBins);
-            hogImage1 = getHistogramImage(hist1, lineSize);
-            hogImage2 = getHistogramImage(hist2, lineSize);
-            outHist =  hogImage1 - hogImage2;
-            rv->output(ofs, outHist, frameNum, "IMHdiffy");
-
-            ImageSet<float> imgFeatures = getFeatures(input, numBins);
-            hogImage2 = getHistogramImage(imgFeatures, lineSize);
-            rv->output(ofs, hogImage2, frameNum, "HOGinput");*/
-
-            //hogImage2 = getHistogramImage(filterFeatures, lineSize);
-            //rv->output(ofs, hogImage2, frameNum - 1, "HOGevt", (*event)->getEventNum());
-
-            //ImageSet<float> filterFeatures = getFeatures(evtImg, 1);
-            //std::vector<float> ret = HistogramOfGradients::createHistogramFromGradient(gradmag,gradang);
-            //std::vector<float> tmp = calculateJunctionHistogram(gradmag,gradang);
-            //ret.insert(ret.end(),tmp.begin(),tmp.end());
-
-            // this is a list of all the events that have a token in this frame
-            std::list<MbariVisualEvent::VisualEvent *> eventFrameList;
-            eventFrameList = eventSet.getEventsForFrame(frameNum - 1);
+            prevmmap = motion.updateMotion(luminance(prevInput), hh);
+            Image< PixRGB<byte> > in =  preprocess->clampedDiffMean(prevInput);
 
             // dump information about the bayes classifier
             //for(uint i=0; i<bn.getNumFeatures(); i++)
             //  LINFO("Feature %i: mean %f, stddevSq %f", i, bn.getMean(0, i), bn.getStdevSq(0, i));
-
-            // for each bit object, extract features and save the output
-            std::list<MbariVisualEvent::VisualEvent *>::iterator event;
-            for (event = eventFrameList.begin(); event != eventFrameList.end(); ++event) {
-
-                LINFO("==============================================searching for event %d", (*event)->getEventNum());
-
-                Rectangle bbox = (*event)->getToken(frameNum-1).bitObject.getBoundingBox();
-                Image< PixRGB<byte> > in =  preprocess->clampedDiffMean(prevInput);
-                std::vector<double> features = getFeatures2(prevmmap, in, hog, scaledDims, bbox);
-
-                // try to classify using histogram features
-                //double prob = 0.;
-                // int cls = bn.classify(features, &prob);
-
-                // create the file stem and write out the features
-                string evnum(sformat("evt%04d_%06d.dat", (*event)->getEventNum(), frameNum-1));
-                std::ofstream eofs(evnum);
-                eofs.precision(12);
-                std::vector<double>::iterator eitr = features.begin(), stop = features.end();
-                while(eitr != stop)   eofs << *eitr++ << " ";
-                eofs.close();
-
-                // if probability small, no matches found, so add a new class by event number
-                //if (prob < 0.1) {
-                //if ((*event)->getEventNum() <  maxClasses) {
-                //    bn.learn(features,  (*event)->getEventNum());
-                // }
-
-                 // calculate the bounding box for sliding window based on the prediction
-                 const Point2D<int> pred = (*event)->predictedLocation();
-
-                 Dims dims = input.getDims();
-
-                 // is the prediction too far outside the image?
-                 int gone = dp.itsMaxDist;
-                 if ((pred.i < -gone) || (pred.i >= (dims.w() + gone)) ||
-                     (pred.j < -gone) || (pred.j >= (dims.h() + gone)))
-                   {
-                     break;
-                   }
-
-                 // adjust prediction if negative
-                 const Point2D<int> center =  Point2D<int>(std::max(pred.i,0), std::max(pred.j,0));
-
-                 // get the region used for searching for a match based on the maximum dimension
-                 Dims maxDims = (*event)->getMaxObjectDims();
-                 Dims searchDims = Dims((float)maxDims.w()*4.0,(float)maxDims.h()*4.0);
-                 Rectangle region = Rectangle::centerDims(center, searchDims);
-                 region = region.getOverlap(Rectangle(Point2D<int>(0, 0), inputRaw.getDims() - 1));
-                 Dims windowDims = (*event)->getToken(frameNum - 1).bitObject.getObjectDims();
-
-                 // run overlapping sliding box over a region centered at the predicted location
-                 Dims stepDims(windowDims.w()/4.F, windowDims.h()/4.F);
-            }
+            logger->saveFeatures(frameNum, eventSet, in, prevmmap, hog3x3, hog8x8, input, prevInput, scaledDims);
         }
 
         // update the focus of expansion - is this still needed ?
@@ -529,24 +340,24 @@ int main(const int argc, const char** argv) {
             // Get image to input into the brain
             if (dp.itsSaliencyInputType == SIDiffMean) {
                 if (dp.itsSizeAvgCache > 1)
-                    brainInput = preprocess->absDiffMean(input);
+                    brainInput = rescale(preprocess->clampedDiffMean(input), dp.itsRescaleSaliency);
                 else
                     LFATAL("ERROR - must specify an imaging cache size "
                         "to use the DiffMean option. Try setting the"
                         "--mbari-cache-size option to something > 1");
             }
             else if (dp.itsSaliencyInputType == SIRaw) {
-                brainInput = rescale(inputRaw, Dims(960,540));
+                brainInput = rescale(inputRaw, dp.itsRescaleSaliency);
             }
             else
-                brainInput = input;
+                brainInput = rescale(inputRaw, dp.itsRescaleSaliency);
 
-            rv->display(brainInput, frameNum, "BrainInput");;
+            rv->display(brainInput, frameNum, "BrainInput");
 
             // post new input frame for processing
             rutz::shared_ptr<SimEventInputFrame> e(new SimEventInputFrame(brain.get(), GenericFrame(brainInput), 0));
+            seq->resetTime(seq->now());
             seq->post(e);
-
         }
 
     }
@@ -559,16 +370,12 @@ int main(const int argc, const char** argv) {
 
         LINFO("Updating visual cortex output for frame %d", frameNum);
 
-        // get saliency map and dimensions
-        Image<float> sm = s->vco();
-        Dims dimsm = sm.getDims();
-
         // update the laser mask
         if (dp.itsMaskLasers) {
             LINFO("Masking lasers in L*a*b color space");
-            Image<PixRGB<float> > in = input;
+            Image< PixRGB<float> > in = input;
             Image<byte>::iterator mitr = mask.beginw();
-            Image<PixRGB<float>>::const_iterator ritr = in.beginw(), stop = in.end();
+            Image< PixRGB<float> >::const_iterator ritr = in.beginw(), stop = in.end();
             float thresholda = 50.F, thresholdl = 50.F;
             // mask out any significant red in the L*a*b color space where strong red has positive a values
             while(ritr != stop) {
@@ -584,20 +391,24 @@ int main(const int argc, const char** argv) {
         mask = erodeImg(mask, se);
         rv->output(ofs, mask, frameNum, "Mask");
 
+        // get saliency map and dimensions
+        Image<float> sm = s->vco();
+        Dims dimsm = sm.getDims();
+
         // rescale the mask if needed
         Image<byte> maskRescaled = rescale(mask, dimsm);
 
-        // mask out equipment, etc.
+        // mask out equipment, etc. in saliency map
         Image<float>::iterator smitr = sm.beginw();
         Image<byte>::const_iterator mitr = maskRescaled.beginw(), stop = maskRescaled.end();
-
         // set voltage to 0 where mask is 0
         while(mitr != stop) {
            *smitr  = ( (*mitr) == 0 ) ? 0.F : *smitr;
            mitr++; smitr++;
         }
 
-        // post as new output so other simulation modules can iterate on this
+        // post revised saliency map as new output from the Visual Cortex so other simulation modules can iterate on this
+        LINFO("Posting revised saliency map");
         rutz::shared_ptr<SimEventVisualCortexOutput> newsm(new SimEventVisualCortexOutput(brain.get(), sm));
         seq->post(newsm);
     }
@@ -616,6 +427,7 @@ int main(const int argc, const char** argv) {
         float scaleH = 1.0f, scaleW = 1.0F;
 
         // search for new winners until reached max time, max spots or boring WTA point
+        LINFO("Searching for new winners...");
         while (seq->now().msecs() < simMaxEvolveTime.msecs()) {
 
             // evolve the brain and other simulation modules
@@ -631,12 +443,13 @@ int main(const int argc, const char** argv) {
                 LINFO("##### winner #%d found at [%d; %d] with %f voltage frame: %d#####",
                         numSpots, win.p.i, win.p.j, win.sv, frameNum);
 
-                // winner not boring, or if keeping boring winners
-                // grab Focus Of Attention (FOA) mask shape to later guide winner selection
-                if (SeC<SimEventShapeEstimatorOutput> se = seq->check<SimEventShapeEstimatorOutput>(brain.get())) {
+                // winner not boring
+                if (!win.boring) {
+                    // grab Focus Of Attention (FOA) mask shape to later guide object selection
+                    if (SeC<SimEventShapeEstimatorOutput> se = seq->check<SimEventShapeEstimatorOutput>(brain.get())) {
                     Image<byte> foamask = Image<byte>(se->smoothMask()*255);
 
-                    // rescale if needed
+                    // rescale if needed back to the dimensions of the potentially rescaled input
                     if (scaledDims != foamask.getDims()) {
                         scaleW = (float) scaledDims.w()/(float) foamask.getDims().w();
                         scaleH = (float) scaledDims.h()/(float) foamask.getDims().h();
@@ -650,13 +463,12 @@ int main(const int argc, const char** argv) {
                     bo.reset(makeBinary(foamask,byte(0),byte(0),byte(1)));
                     bo.setSMV(win.sv);
 
-                    // if have valid bit object out of the FOA mask, run object detection
+                    // if have valid bit object out of the FOA mask, keep winner
                     if (bo.isValid() && bo.getArea() >= dp.itsMinEventArea) {
                         Winner w(win, bo, frameNum);
-                        std::list<BitObject> bos = objdet->run(rv, input, w, segmentIn);
-                        objs.splice(objs.end(), bos);
                         winlist.push_back(w);
                     }
+                }
                 }
 
                 if (win.boring) {
@@ -679,14 +491,21 @@ int main(const int argc, const char** argv) {
 
         }// end brain while iteration loop
 
+        /*rv->display(segmentIn, frameNum, "SegmentIn");
+        Dims d = segmentIn.getDims();
+        Rectangle r = Rectangle::tlbrI(0,0,d.h()-1,d.w()-1);
+        Image< PixRGB<byte> > t = segmentation.runGraph(segmentIn, r, 1.0);
+        rv->display(t, frameNum, "Segment1.0");
+        t = segmentation.runGraph(segmentIn, r, 0.5);
+        rv->display(t, frameNum, "Segment.5");*/
+        objs = objdet->run(rv, winlist, segmentIn);
+
         // create new events with this
         eventSet.initiateEvents(objs, frameNum, metadata, segmentIn, curFOE);
 
         rv->output(ofs, showAllWinners(winlist, input, dp.itsMaxDist), frameNum, "Winners");
         winlist.clear();
         objs.clear();
-
-        prevTime = seq->now(); // time before current step
     }
 
     const FrameState os = ofs->updateNext();
@@ -712,7 +531,6 @@ int main(const int argc, const char** argv) {
         // reset the brain, but only when distance between running saliency is more than every frame
         if (countFrameDist == dp.itsSaliencyFrameDist && dp.itsSaliencyFrameDist > 1) {
             brain->reset(MC_RECURSE);
-            seq->resetTime(prevTime);
         }
     }
 

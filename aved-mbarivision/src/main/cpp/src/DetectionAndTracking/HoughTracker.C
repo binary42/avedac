@@ -47,14 +47,12 @@ namespace HoughTracker {
 
 // ######################################################################
 HoughTracker::HoughTracker()
-:itsMapSize(DEFAULT_MAP_SIZE),
-itsMapStep(DEFAULT_MAP_STEP)
 {}
 
 // ######################################################################
-HoughTracker::HoughTracker(const Image< PixRGB<byte> >& img, BitObject &bo, const float maxScale)
+HoughTracker::HoughTracker(const Image< PixRGB<byte> >& img, BitObject &bo)
 {
-   	reset(img, bo, DEFAULT_FORGET_CONSTANT, maxScale);
+   	reset(img, bo, DEFAULT_FORGET_CONSTANT);
 }
 
 // ######################################################################
@@ -71,18 +69,8 @@ void HoughTracker::free()
 }
 
 // ######################################################################
-void HoughTracker::reset(const Image< PixRGB<byte> >& img, BitObject& bo,
-						const float maxScale, const float forgetConstant)
+void HoughTracker::reset(const Image< PixRGB<byte> >& img, BitObject& bo, const float forgetConstant)
 {
-	if (bo.getArea() > 10000) {
-		itsMapSize = 200.0F;
-		itsMapStep = 4.0F;
-	}
-	else {
-		itsMapSize = 100.0F;
-		itsMapStep = 2.0F;
-	}
-
     Rectangle region = bo.getBoundingBox();
     Point2D<int> center = bo.getCentroid();
 	LINFO("Resetting HoughTracker region top %d left %d width %d height %d", \
@@ -108,14 +96,14 @@ void HoughTracker::reset(const Image< PixRGB<byte> >& img, BitObject& bo,
 		//cv::rectangle(backProject, cv::Point(itsObject.x-10, itsObject.y-10), cv::Point(itsObject.x+itsObject.width+10, itsObject.y+itsObject.height+10), cv::Scalar(cv::GC_PR_BGD), -1);
 		//cv::rectangle(backProject, cv::Point(itsObject.x, itsObject.y), cv::Point(itsObject.x+itsObject.width, itsObject.y+itsObject.height), cv::Scalar(cv::GC_FGD), -1);
  		itsFerns.initialize(20, cv::Size(baseSize, baseSize), 8, itsFeatures.getNumChannels());
-		itsMaxObject = intersect( itsImgRect, squarify(itsObject, maxScale));
+		itsMaxObject = intersect( itsImgRect, squarify(itsObject, DEFAULT_SCALE_INCREASE));
 		cv::Point objCenter(center.i,center.j);
 
 		LINFO("Initial position: %d,%d %dx%d", itsObject.x,itsObject.y,itsObject.width,itsObject.height);
-	 	cv::Rect updateRegion = intersect(itsMaxObject + cv::Size(3,3) - cv::Point(1,1), itsImgRect);
+	 	cv::Rect updateRegion = intersect(itsMaxObject + cv::Size(10,10) - cv::Point(5,5), itsImgRect);
 		run(updateRegion, objCenter, backProject, forgetConstant);
 
-		itsSearchWindow = itsMaxObject + cv::Size(3,3) - cv::Point(1,1);
+		itsSearchWindow = itsMaxObject + cv::Size(10,10) - cv::Point(5,5);
 		LINFO(" Start tracking");
     }
     catch (...) {
@@ -128,8 +116,7 @@ bool HoughTracker::update(nub::soft_ref<MbariResultViewer>&rv,
 							const uint frameNum,
                             Image< PixRGB<byte> >& img,
                             const Image<byte> &occlusionImg,
-                            Point2D<int> &prediction,
-                            Rectangle &boundingBox,
+                            Rectangle &region,
                             Image<byte>& binaryImg,
                             const int evtNum,
                             const float forgetConstant)
@@ -146,6 +133,14 @@ bool HoughTracker::update(nub::soft_ref<MbariResultViewer>&rv,
   cv::Point center;
   DetectionParameters dp = DetectionParametersSingleton::instance()->itsParameters;
 
+  int baseSize = 12;
+  itsObject = cv::Rect(region.left(), region.top(), region.width(), region.height());
+  itsImgRect = cv::Rect(baseSize/2, baseSize/2, img.getDims().w()-baseSize, img.getDims().h()-baseSize);
+  itsMaxObject = intersect( itsImgRect, squarify(itsObject, DEFAULT_SCALE_INCREASE));
+  LINFO("Reset position: %d,%d %dx%d", itsObject.x,itsObject.y,itsObject.width,itsObject.height);
+  cv::Rect updateRegion = intersect(itsMaxObject + cv::Size(10,10) - cv::Point(5,5), itsImgRect);
+  itsSearchWindow = itsMaxObject + cv::Size(10,10) - cv::Point(5,5);
+
   try
   {
 	  LINFO("Evaluate");
@@ -155,9 +150,6 @@ bool HoughTracker::update(nub::soft_ref<MbariResultViewer>&rv,
 	  normalize(out, out, 255, 0, cv::NORM_MINMAX);
 	  minMaxLoc(result, &minVal, &maxVal, &minLoc, &itsMaxLoc);
 	  LINFO("Locate: maximum is at (%d/%d: %f)", itsMaxLoc.x, itsMaxLoc.y, maxVal);
-
-	  Point2D<int> ptMax(itsMaxLoc.x, itsMaxLoc.y);
-	  prediction = ptMax;
 
 	  if(maxVal < 3.0f) {
 	  	LINFO("Max val too small: %f", maxVal);
@@ -186,7 +178,7 @@ bool HoughTracker::update(nub::soft_ref<MbariResultViewer>&rv,
 		cv::Mat fgmdl, bgmdl;
 		grabCut(subframe, subbackProject, itsObject, fgmdl, bgmdl, GRABCUT_ROUNDS, cv::GC_INIT_WITH_MASK);
 		backProject = maskOcclusion(occlusionImg,  backProject);
-		showSegmentation(rv, backProject, "Segmentation", frameNum, evtNum);
+		showSegmentation(rv, subbackProject, "Segmentation", frameNum, evtNum);
 
 	  #ifdef SHIFT_TO_CENTER
 		center = centerOfMass(backProject);
@@ -197,19 +189,12 @@ bool HoughTracker::update(nub::soft_ref<MbariResultViewer>&rv,
 	  }
 
 	  if(cnt > 0) {
-		cv::Rect updateRegion = intersect(itsMaxObject + cv::Size(3,3) - cv::Point(1,1), itsImgRect);
+		cv::Rect updateRegion = intersect(itsMaxObject + cv::Size(10,10) - cv::Point(5,5), itsImgRect);
 		run(updateRegion, center, backProject, forgetConstant);
 	  }
 
-	  Point2D<int> ptCenter(center.x, center.y);
-	  prediction = ptCenter;
-
 	  cv::Rect bbox = getBoundingBox(backProject);
 	  if (bbox.width >=0 && bbox.height >=0) {
-		  const Point2D<int> topleft(bbox.x, bbox.y);
-		  const Dims dims(bbox.width, bbox.height);
-		  Rectangle r(topleft, dims);
-		  boundingBox = r;
 		  binaryImg = makeBinarySegmentation(backProject, frameNum, evtNum);
 		  return true;
 	  }
@@ -233,12 +218,12 @@ bool HoughTracker::run(const cv::Rect& ROI, const cv::Point& center, const cv::M
         {
             if( (mask.at<unsigned char>( y, x ) == cv::GC_FGD) || (mask.at<unsigned char>( y, x ) == cv::GC_PR_FGD) )
             {
-              itsFerns.update(itsFeatures, cv::Point(x, y), 1, center, itsMapSize, itsMapStep);
+              itsFerns.update(itsFeatures, cv::Point(x, y), 1, center);
               numPos++;
            }
             else if(mask.at<unsigned char>( y, x ) == cv::GC_BGD)
            {
-              itsFerns.update(itsFeatures, cv::Point(x, y), 0, center, itsMapSize, itsMapStep);
+              itsFerns.update(itsFeatures, cv::Point(x, y), 0, center);
               numNeg++;
            }
         }
@@ -341,6 +326,7 @@ void HoughTracker::showSegmentation(nub::soft_ref<MbariResultViewer>&rv,\
  									const uint frameNum, \
  									const int evtNum)
 {
+    #ifdef DEBUG
     cv::Mat display(backProject.rows, backProject.cols, CV_8UC3, cv::Scalar(0,0,0));
 
 	for(int x = 0; x < backProject.cols; x++)
@@ -377,9 +363,8 @@ void HoughTracker::showSegmentation(nub::soft_ref<MbariResultViewer>&rv,\
 
 	IplImage image = (IplImage)display;
     Image< PixRGB<byte> > output = ipl2rgb(&image);
-    //#ifdef DEBUG
     rv->display(output, frameNum, title, evtNum);
-    //#endif
+    #endif
 }
 
 }

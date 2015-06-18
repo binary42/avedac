@@ -139,12 +139,9 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& image,
     Rectangle regionSegment = segmentRegion.getOverlap(Rectangle(Point2D<int>(0, 0), image.getDims() - 1));
     std::list<BitObject> bos;
     BitObject largestBo;
-    if (regionSegment.width() < 2 || regionSegment.height() < 2) {
-        LINFO("Segment region too small region to run graph cut algorithm ");
-        return bos;
-    }
-
     Segmentation segment;
+    Dims orgDims = image.getDims();
+    Rectangle tBB = segmentRegion.getOverlap(Rectangle(Point2D<int>(0, 0), image.getDims() - 1));
     float scale = 1.0f;
 
     // iterate on the graph scale to try to find bit objects
@@ -152,16 +149,14 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& image,
 
         std::list<BitObject> gbos;
 
-        if (bos.size() > 1 && searchRegion == segmentRegion)
-            break;
-
         Image< PixRGB<byte> > graphBitImg = segment.runGraph(image, regionSegment, scale);
-        scale = scale * 0.80;
+        scale = scale * 0.50;
 
-        std::list<PixRGB<byte>> seedColors;
+        std::list< PixRGB<byte> > seedColors;
         Image<byte> labelImg(graphBitImg.getDims(), ZEROS);
         Image<byte> bitImg(graphBitImg.getDims(), ZEROS);
         bool found;
+        uint numFound = 0;
 
         // get the bit object(s) in the search region
         for (int ry = regionSearch.top(); ry <= regionSearch.bottomO(); ++ry)
@@ -170,7 +165,7 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& image,
                 found = true;
 
                 // check if not a new seed color
-                std::list<PixRGB<byte>>::const_iterator iter = seedColors.begin();
+                std::list< PixRGB<byte> >::const_iterator iter = seedColors.begin();
                 while (iter != seedColors.end()) {
                     PixRGB<byte> colorSeed = (*iter);
                     // found existing seed color
@@ -196,21 +191,32 @@ std::list<BitObject> extractBitObjects(const Image<PixRGB <byte> >& image,
                     obj.setMaxMinAvgIntensity(luminance(image));
 
                     float maxI, minI, avgI;
+                    obj.getMaxMinAvgIntensity(maxI, minI, avgI);
+                    Rectangle oBB = obj.getBoundingBox();
 
-                     // if the object is in range, keep it
-                     obj.getMaxMinAvgIntensity(maxI, minI, avgI);
-                     if (obj.getArea() >= minSize && obj.getArea() <= maxSize && avgI > minIntensity) {
-                         LINFO("found object size: %d avg intensity: %f", obj.getArea(), avgI);
-                         bos.push_back(obj);
-                     }
-                     else
-                        LINFO("found object but out of range in size %d minsize: %d maxsize: %d or intensity %f min intensity %f ",\
-                        obj.getArea(), minSize, maxSize, avgI, minIntensity);
+                    // if the object is in range in size, intensity, and does not intersect with
+                    // the segment region bounding box, keep it
+                    if (obj.getArea() >= minSize && obj.getArea() <= maxSize && avgI > minIntensity
+                    && ( (oBB.left() > tBB.left()) &&
+                        (oBB.rightI() < tBB.rightI()) &&
+                        (oBB.top() > tBB.top()) &&
+                        (oBB.bottomI() < tBB.bottomI()))) {
+                     LDEBUG("found object size: %d avg intensity: %f", obj.getArea(), avgI);
+                     bos.push_back(obj);
+                     numFound++;
+                    }
+                    else
+                     LDEBUG("found object but out of range in size %d minsize: %d maxsize: %d or "
+                           "intensity %f min intensity %f or intersects with segment region %s %s ",
+                        obj.getArea(), minSize, maxSize, avgI, minIntensity, toStr(tBB).data(), toStr(oBB).data());
 
                 }
         }
+
+        LINFO("Found %d bit objects", numFound);
     }
 
+    LINFO("Found %d total bit objects", bos.size());
     return bos;
 }
 
@@ -560,7 +566,7 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg,
 
         std::list<BitObject>::iterator biter;
 
-        if (bo.isValid()) {
+        /*if (bo.isValid()) {
 
             // check for intersections
             bool found = true;
@@ -574,7 +580,7 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg,
                 bos.push_back(bo);
             }
         }
-        else {
+        else {*/
             // if still can't find object, try to use the foamask
             int area = boFOA.getArea();
             if (area >= p.itsMinEventArea && area <= p.itsMaxEventArea) {
@@ -589,7 +595,7 @@ std::list<BitObject> getSalientObjects(const Image< PixRGB<byte> >& graphBitImg,
                     bos.push_back(boFOA);
                 }
             }
-        }
+        //}
 
         i++;
         iter++;
@@ -664,15 +670,11 @@ list<Winner> getSalientWinners(
     const SimTime simMaxEvolveTime = SimTime::MSECS(seq->now().msecs()) + SimTime::MSECS(p.itsMaxEvolveTime);
 
     InputFrame iframe = InputFrame::fromRgb(&resizedImg, seq->now(), &resizedClipMask, InputFrame::emptyCache);
-    //InputFrame iframe = InputFrame::fromRgb(&img, seq->now(), &clipMask, InputFrame::emptyCache);
 
     // Post the image to the queue:
     seq->post(rutz::make_shared(new SimEventRetinaImage(brain.get(), InputFrame(iframe),
                                                       Rectangle(Point2D<int>(0,0), newSize),
                                                       Point2D<int>(0,0))));
-    /*seq->post(rutz::make_shared(new SimEventRetinaImage(brain.get(), InputFrame(iframe),
-                                                      Rectangle(Point2D<int>(0,0), size),
-                                                      Point2D<int>(0,0))));*/
 
     try { 
 
@@ -757,12 +759,34 @@ Image< PixRGB<byte > > showAllWinners(const list<Winner> winlist, const Image< P
         //drawCircle(result, ctr, maxDist, red);
          // write the number of each winner
         //std::string numText = toStr(i);
+
         // write the text and create the overlay image
         std::ostringstream ss;
         ss.precision(3);
-        ss << toStr(i) << "," << 1000.F*bo.getSMV() << " mV";
+        ss << toStr(i) << "," << 1000.F*bo.getSMV() << "mV";
 
-        writeText(result, ctr+offset, ss.str().data());
+        string textboxstring =  ss.str();
+
+        // create a text box scaled from 720x480
+        Image< PixRGB<byte> > textImg;
+        const Dims d = img.getDims();
+        const int numW = (8 * d.w()) / 720;
+        const int numH = (25 * d.h()) / 480;
+        const int fntH = (20 * d.h()) / 480;
+
+        // create the timecode text adding padding extra 10 pixels to ensure fits
+        textImg.resize(numW * textboxstring.length() + 10, numH, NO_INIT);
+        textImg.clear(COL_WHITE);
+
+        // set the maximum font height. This may not necessarily
+        // be the maximum height, but will match the largest
+        // that is closest to fntH
+        const SimpleFont f = SimpleFont::fixedMaxHeight(fntH);
+
+        writeText(textImg, Point2D<int>(0, 0), textboxstring.c_str(), COL_BLACK,
+                COL_WHITE, f, true);
+
+        pasteImage(result, textImg, COL_TRANSPARENT, ctr+offset, 0.25F);
         bo.drawOutline(result, color);
         i++;
     }
@@ -1410,7 +1434,7 @@ Image<double> getHistogramEnergy(const ImageSet<float>& hist)
   return norm;
 }
 
-std::vector<double> getFeatures2(Image< byte > &mmapInput, Image<PixRGB <byte> > &rawInput, HistogramOfGradients &hog,
+std::vector<double> getFeaturesHOGMMAP(Image< byte > &mmapInput, Image<PixRGB <byte> > &rawInput, HistogramOfGradients &hog,
                                 Dims scaledDims, Rectangle bbox)
 {
     // compute the correct bounding box and cut it out
@@ -1427,22 +1451,42 @@ std::vector<double> getFeatures2(Image< byte > &mmapInput, Image<PixRGB <byte> >
     Image< PixRGB<byte> > rawCroppedInput = crop(rawInput, bboxScaled);
     Image< byte > mmapCroppedInput = crop(mmapInput, bboxScaled);
 
-    // get the static features features used in training
+    // get the static features used in training
     getLAB(rawCroppedInput, lum, rg, by);
     std::vector<float> hist = hog.createHistogram(lum,rg,by);
     std::vector<double> histDouble(hist.begin(), hist.end());
 
-    // get the motion features used in training
-    hist = hog.createHistogram(mmapCroppedInput);
-    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
+    return histDouble;
+}
+
+std::vector<double> getFeaturesHOG(Image< byte > &rawImgInput, Image<PixRGB <byte> > &rawInput, HistogramOfGradients &hog,
+                                Dims scaledDims, Rectangle bbox)
+{
+    // compute the correct bounding box and cut it out
+    Dims dims = rawInput.getDims();
+    float scaleW = (float)dims.w()/(float)scaledDims.w();
+    float scaleH = (float)dims.h()/(float)scaledDims.h();
+    Rectangle bboxScaled = Rectangle::tlbrI(bbox.top()*scaleH, bbox.left()*scaleW,
+                                            (bbox.top() + bbox.height())*scaleH,
+                                            (bbox.left() + bbox.width())*scaleW);
+    bboxScaled = bboxScaled.getOverlap(Rectangle(Point2D<int>(0, 0), dims - 1));
+
+    // scale if needed and cut out the rectangle and save it
+    Image< PixRGB<byte> > rawCroppedInput = crop(rawInput, bboxScaled);
+
+    // get the HOG features used in training
+    Image<float>  lum,rg,by;
+    getLAB(rawCroppedInput, lum, rg, by);
+    std::vector<float> hist = hog.createHistogram(lum,rg,by);
+    std::vector<double> histDouble(hist.begin(), hist.end());
 
     return histDouble;
 }
 
-std::vector<double> getFeatures(Image<PixRGB <byte> > &prevInput, Image<PixRGB <byte> > &input,
-                                HistogramOfGradients &hog,  Dims scaledDims, Rectangle bbox)
-{
 
+std::vector<double> getFeaturesMBH(Image<PixRGB <byte> > &prevInput, Image<PixRGB <byte> > &input, HistogramOfGradients &hog,
+                                    Dims scaledDims, Rectangle bbox)
+{
     // compute the correct bounding box and cut it out
     Dims dims = input.getDims();
     float scaleW = (float)dims.w()/(float)scaledDims.w();
@@ -1458,12 +1502,9 @@ std::vector<double> getFeatures(Image<PixRGB <byte> > &prevInput, Image<PixRGB <
     Image< PixRGB<byte> > evtImgPrev = crop(input, bboxScaled);
 
     // get the features used in training
-    getLAB(evtImg, lum, rg1, by1);
-    std::vector<float> hist = hog.createHistogram(lum,rg1,by1);
-    std::vector<double> histDouble(hist.begin(), hist.end());
-    
     Image<float> rg(evtImg.getDims(), ZEROS);
     Image<float> by(evtImg.getDims(), ZEROS);
+
     // compute the optic flow
     rutz::shared_ptr<MbariOpticalFlow> flow =
     getOpticFlow
@@ -1492,17 +1533,18 @@ std::vector<double> getFeatures(Image<PixRGB <byte> > &prevInput, Image<PixRGB <
     }
     
     Image<float> mag, ori;
+    std::vector<double> hist; 
     gradientSobel(xflow, mag, ori, 3);
     //rv->display(static_cast< Image<byte> >(xflow), frameNum, "XFlow");
     //rv->display(static_cast< Image<byte> >(mag), frameNum, "XGradmag");
-    hist = hog.createHistogram(static_cast< Image<byte> >(xflow),rg,by);
-    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
-    
+    std::vector<float> histx = hog.createHistogram(static_cast< Image<byte> >(xflow),rg,by);
+    hist.insert(hist.begin(), histx.begin(), histx.end());
+
     gradientSobel(yflow, mag, ori, 3);
     //rv->display(static_cast< Image<byte> >(yflow), frameNum, "YFlow");
     //rv->display(static_cast< Image<byte> >(mag), frameNum, "YGradmag");
-    hist = hog.createHistogram(static_cast< Image<byte> >(yflow),rg,by);
-    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
+    std::vector<float> histy = hog.createHistogram(static_cast< Image<byte> >(yflow),rg,by);
+    hist.insert(hist.begin(), histy.begin(), histy.end());
     
     Image<float> yFilter(1, 3, ZEROS);
     Image<float> xFilter(3, 1, ZEROS);
@@ -1512,28 +1554,32 @@ std::vector<double> getFeatures(Image<PixRGB <byte> > &prevInput, Image<PixRGB <
     xFilter.setVal(2, 0, 1.F);
     
     Image<float> yyflow = sepFilter(yflow, Image<float>(), yFilter, CONV_BOUNDARY_CLEAN);
+    histy = hog.createHistogram(static_cast< Image<byte> >(yyflow),rg,by);
+    hist.insert(hist.begin(), histy.begin(), histy.end());
+
     Image<float> xxflow = sepFilter(xflow, xFilter, Image<float>(), CONV_BOUNDARY_CLEAN);
-    hist = hog.createHistogram(static_cast< Image<byte> >(yyflow),rg,by);
-    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
-    hist = hog.createHistogram(static_cast< Image<byte> >(xxflow),rg,by);
-    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
+    histx = hog.createHistogram(static_cast< Image<byte> >(xxflow),rg,by);
+    hist.insert(hist.begin(), histx.begin(), histx.end());
     
     //rv->display(static_cast< Image<byte> >(yyflow), frameNum, "YYder");
     //rv->display(static_cast< Image<byte> >(xxflow), frameNum, "XXder");
     
     Image<float> yxflow = sepFilter(yflow, xFilter, Image<float>(), CONV_BOUNDARY_CLEAN);
+    histy = hog.createHistogram(static_cast< Image<byte> >(yxflow),rg,by);
+    hist.insert(hist.begin(), histy.begin(), histy.end());
+
     Image<float> xyflow = sepFilter(xflow, Image<float>(), yFilter, CONV_BOUNDARY_CLEAN);
-    hist = hog.createHistogram(static_cast< Image<byte> >(yxflow),rg,by);
-    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
-    hist = hog.createHistogram(static_cast< Image<byte> >(xyflow),rg,by);
-    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
+    histx = hog.createHistogram(static_cast< Image<byte> >(xyflow),rg,by);
+    hist.insert(hist.begin(), histx.begin(), histx.end());
     
     //rv->display(static_cast< Image<byte> >(yxflow), frameNum, "YXder");
     //rv->display(static_cast< Image<byte> >(xyflow), frameNum, "XYder");
-    hist = hog.createHistogram(static_cast< Image<byte> >(yxflow),rg,by);
-    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
-    hist = hog.createHistogram(static_cast< Image<byte> >(xyflow),rg,by);
-    histDouble.insert(histDouble.begin(), hist.begin(), hist.end());
+    histy = hog.createHistogram(static_cast< Image<byte> >(yxflow),rg,by);
+    hist.insert(hist.begin(), histy.begin(), histy.end());
+    histx = hog.createHistogram(static_cast< Image<byte> >(xyflow),rg,by);
+    hist.insert(hist.begin(), histx.begin(), histx.end());
+
+    std::vector<double> histDouble(hist.begin(), hist.end());
 
     return histDouble;
 }

@@ -83,12 +83,12 @@ const ModelOptionDef OPT_MToolSledVideo =
     "Implements good choice of options to experiment with detecting  summary of results from a camera mounted on a "
     "benthic toolsled with shadowing and a moving frame",
     "mbari-toolsled-video", '\0',"",
-    "--mbari-tracking-mode=KalmanFilterHough --rescale-input=640x360 --mbari-cache-size=60 "
+    "--mbari-tracking-mode=KalmanFilterHough --mbari-cache-size=60 "
     "--mbari-min-event-area=100 --mbari-max-event-area=10000 --mbari-save-original-frame-spec --test-mode=true "
     "--mbari-color-space=RGB --vc-chans=COKMF  --use-random=true --mbari-dynamic-mask=true "
     "--shape-estim-mode=ConspicuityMap --use-older-version=false --ior-type=ShapeEst --maxnorm-type=FancyOne "
     "--mbari-saliency-input-image=Raw --mbari-mask-lasers=true "
-    "--levelspec=1-3,2-4,1 --mbari-se-size=8 --qtime-decay=1.0 --mbari-max-evolve-msec=1000 "
+    "--levelspec=1-3,2-4,1 --mbari-se-size=10 --qtime-decay=1.0 --mbari-max-evolve-msec=1000 "
     "--mbari-segment-algorithm=GraphCut  --mbari-segment-algorithm-input-image=DiffMean "
     "--mbari-saliency-dist=2 --shape-estim-smoothmethod=None --boring-sm-mv=1.0 "
     "--mbari-x-kalman-parameters=0.1,20.0 --mbari-y-kalman-parameters=0.1,20.0 "};
@@ -145,16 +145,18 @@ const ModelOptionDef OPT_MBenthicVideo =
 
 const ModelOptionDef OPT_MMidwaterVideo =
   { MODOPT_ALIAS, "ALIASMidwaterVideo", &MOC_MBARI, OPTEXP_MRV,
-   "Implements good choice of options to experiment with "
+    "Implements good choice of options to experiment with "
     "processing video from a moving camera traversing the midwater sea column",
     "mbari-midwater-video", '\0',"",
-    "--mbari-saliency-dist=3 --mbari-max-WTA-points=10 --mbari-segment-graph-parameters=0.75,100,50"
-    "--mbari-tracking-mode=KalmanFilter  --mbari-segment-algorithm=MeanAdaptive  "
-    "--mbari-saliency-input-image=DiffMean --mbari-segment-algorithm-input-image=Luminance "
-    "--vc-chans=I:5OC --mbari-color-space=RGB --use-random=true --shape-estim-smoothmethod=None"
-    "--ori-interaction=None --oricomp-type=Steerable --boring-sm-mv=1.0  -mbari-x-kalman-parameters=0.1,0.10"
-    "--mbari-cache-size=60 --use-older-version=false --levelspec=1-3,2-5,3 "
-    "--shape-estim-mode=ConspicuityMap --ior-type=ShapeEst --maxnorm-type=FancyOne "};
+    "--mbari-tracking-mode=KalmanFilterHough --mbari-cache-size=60 "
+    "--mbari-min-event-area=100 --mbari-max-event-area=10000 --mbari-save-original-frame-spec --test-mode=true "
+    "--mbari-color-space=RGB --vc-chans=I:5OCF  --use-random=true --mbari-dynamic-mask=true "
+    "--shape-estim-mode=ConspicuityMap --use-older-version=false --ior-type=ShapeEst --maxnorm-type=FancyOne "
+    "--mbari-saliency-input-image=Raw  --mbari-x-kalman-parameters=0.1,0.10"
+    "--levelspec=1-3,2-4,1 --mbari-se-size=10 --qtime-decay=1.0 --mbari-max-evolve-msec=1000 "
+    "--mbari-segment-algorithm=GraphCut  --mbari-segment-algorithm-input-image=DiffMean "
+    "--mbari-saliency-dist=2 --shape-estim-smoothmethod=None --boring-sm-mv=1.0 "
+    "--mbari-x-kalman-parameters=0.1,20.0 --mbari-y-kalman-parameters=0.1,20.0 "};
 
 const ModelOptionDef OPT_MMosaicStills =
   { MODOPT_ALIAS, "ALIASMosaicStills", &MOC_MBARI, OPTEXP_MRV,
@@ -216,6 +218,12 @@ const ModelOptionDef OPT_LOGsaveEvents =
   { MODOPT_ARG_STRING, "LOGsaveEvents", &MOC_MBARI, OPTEXP_MRV,
     "Save the event structure to a text file",
     "mbari-save-events", '\0', "fileName", "" };
+
+//TODO: move this to Logger.C from Mbarivision.C
+const ModelOptionDef OPT_LOGsaveEventFeatures =
+  { MODOPT_ARG_STRING, "LOGsaveEventFeatures", &MOC_MBARI, OPTEXP_MRV,
+    "Save the event features and append string to each data file name",
+    "mbari-save-event-features", '\0', "string", "" };
 
 // Used by: Logger
 const ModelOptionDef OPT_LOGloadEvents =
@@ -300,7 +308,7 @@ const ModelOptionDef OPT_MRVmarkFOE =
 // Used by: MbariResultViewer
 const ModelOptionDef OPT_MRVsaveResults =
   { MODOPT_FLAG, "MRVsaveResults", &MOC_MBARI, OPTEXP_MRV,
-    "Save algorithm output at various points in the MBARI programs to disk",
+    "Save algorithm results at various points in the MBARI programs to disk",
     "mbari-save-results", '\0', "", "false" };
 
 // Used by: MbariResultViewer
@@ -322,6 +330,14 @@ const ModelOptionDef OPT_MRVrescaleDisplay =
     "mbari-rescale-display", '\0', "<width>x<height>", "0x0" };
 
 // #################### DetectionParametersModelComponent options:
+const ModelOptionDef OPT_MDPrescaleSaliency =
+  { MODOPT_ARG(Dims), "MDPrescaleSaliency", &MOC_MBARI, OPTEXP_MRV,
+    "Rescale input to the saliency algorithm to <width>x<height>, or 0x0 for no rescaling",
+    "mbari-rescale-saliency", '\0', "<width>x<height>", "0x0" };
+const ModelOptionDef OPT_MDPuseFoaMaskRegion =
+  { MODOPT_FLAG, "OPT_MDPuseFoaMaskRegion", &MOC_MBARI, OPTEXP_MRV,
+    "Use foa mask region to guide detection instead of simply using the foamask as the object detection ",
+    "mbari-use-foa-mask-region", '\0', "", "false" };
 const ModelOptionDef OPT_MDPtrackingMode =
   { MODOPT_ARG(TrackingMode), "MDPtrackingMode", &MOC_MBARI, OPTEXP_MRV,
     "Way to mark interesting events in output of MBARI programs",
@@ -452,7 +468,7 @@ const ModelOptionDef OPT_MDPeventExpirationFrames = {
    MODOPT_ARG_INT, "MDPeventExpirationFrames", &MOC_MBARI, OPTEXP_MRV,
    "How long to keep an event in memory before removing it if no bit objects found to combine with the event. Useful for noisy video or reduced frame rate video where tracking problems occur.",
     "mbari-event-expiration-frames", '\0', "<int>",
-    "0" }; 
+    "0" };
 
 // ####################
 

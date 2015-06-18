@@ -43,9 +43,7 @@
 #include "nub/ref.h"
 
 #define DEFAULT_FORGET_CONSTANT 0.90f
-#define DEFAULT_SCALE_INCREASE 1.25F
-#define DEFAULT_MAP_SIZE 100
-#define DEFAULT_MAP_STEP 2
+#define DEFAULT_SCALE_INCREASE 1.05F // scale increase per frame
 
 template <class T> class Image;
 template <class T> class PixRGB;
@@ -63,8 +61,9 @@ class HoughTracker
 public:
   //! constructor
   /* !@img the image to segment and track
-  @region the bounding box to initialize the tracker */
-  HoughTracker(const Image< PixRGB<byte> >& img, BitObject& bo, float maxScale);
+  @bo the BitObject used to initialize the tracker. This is more refined than just a bounding box and helps
+   produce more accurate tracking  */
+  HoughTracker(const Image< PixRGB<byte> >& img, BitObject& bo);
 
   //! constructor
   HoughTracker();
@@ -79,7 +78,7 @@ public:
   /* @frameNum the frame number (for display purposes)
   @img the image to segment and track
   @occlusionImg a mask representing the objects that are occluding this
-  @prediction the predicted maximum point
+  @boundingBox the predicted bounding box to run Hough search
   @binaryImg the tracked object; object pixels are white; all other pixels are black
   @evtNum the event number this tracker is assigned to
   @forgetConstant the tao forgetting constant
@@ -88,7 +87,6 @@ public:
               const uint frameNum,
               Image< PixRGB<byte> >& img,
               const Image<byte> &occlusionImg,
-              Point2D<int> &prediction,
               Rectangle &boundingBox,
               Image< byte >& binaryImg,
               const int evtNum,
@@ -96,8 +94,10 @@ public:
 
   /* !reset the tracker
   @img the image to segment and track
-  @region the bounding box to initialize the tracker */
-  void reset(const Image< PixRGB<byte> >& img, BitObject& bo, const float maxScale, const float forgetConstant);
+  @bo the BitObject used to initialize the tracker
+  @maxScale the maximum scale e.g. 2.0 allows the objects to grow by 2x the initial area
+  @forgetConstant the tao forgetting constant */
+  void reset(const Image< PixRGB<byte> >& img, BitObject& bo, const float forgetConstant);
 
 private:
 
@@ -136,7 +136,6 @@ private:
   cv::Rect itsMaxObject, itsImgRect, itsObject, itsSearchWindow;
   Features itsFeatures;
   cv::Point itsMaxLoc;
-  int itsMapSize, itsMapStep;
 };
 }
 #endif

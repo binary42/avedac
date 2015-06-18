@@ -184,6 +184,7 @@ private:
   std::vector<XWinManaged*> itsResultWindows;
   XWinManaged* resFrameWindow;
   PixRGB<byte> colInteresting, colCandidate, colPrediction, colFOE;
+  bool displayResults;
 };
 
 #endif /*MBARIRESULTVIEWER_H_*/

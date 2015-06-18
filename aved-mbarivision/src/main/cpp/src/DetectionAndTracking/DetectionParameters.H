@@ -116,6 +116,8 @@ parameters*/
 #define DEFAULT_EVENT_EXPIRATION_FRAMES 0
 // Default is not to create a dynamic mask
 #define DEFAULT_DYNAMIC_MASK false
+// Default is to not use the foa mask region and simply use the foa mask itself as the detection
+#define DEFAULT_FOA_MASK_REGION false
 // Default is true to enable masking of the graph cut output
 #define DEFAULT_MASK_GRAPHCUT true
 
@@ -184,6 +186,10 @@ public:
     int itsCleanupStructureElementSize;
      // @param itsSaliencyInputImageType = type of image to input into saliency computation
     SaliencyInputImageType itsSaliencyInputType;
+     // @param itsRescaleSaliency = amount to rescale saliency input image
+    Dims itsRescaleSaliency;
+    // @param itsUseFoaMaskRegion = true if want the foamask region only to be used for detection instead of the mask itself.
+    bool itsUseFoaMaskRegion;
     //! @param itsKeepWTABoring = true if want to keep WTA boring points as candidates for detections
     bool itsKeepWTABoring;
     //! @param itsMaxCost = used for maximum cost function in tracking algorithm
@@ -241,6 +247,7 @@ private:
     OModelParam<int> itsMaxWTAPoints;
     OModelParam<bool> itsSaveNonInteresting;
     OModelParam<bool> itsSaveOriginalFrameSpec;
+    OModelParam<bool> itsUseFoaMaskRegion;
     OModelParam<int> itsEventExpirationFrames;
     OModelParam<TrackingMode> itsTrackingMode;
     OModelParam<ColorSpaceType> itsColorSpaceType;
@@ -256,6 +263,7 @@ private:
     OModelParam<int> itsMaskYPosition;
     OModelParam<int> itsMaskWidth;
     OModelParam<int> itsMaskHeight;
+    OModelParam<Dims> itsRescaleSaliency;
     OModelParam<SegmentAlgorithmType> itsSegmentAlgorithmType;
     OModelParam<SegmentAlgorithmInputImageType> itsSegmentAlgorithmInputType;
     OModelParam<std::string> itsSegmentGraphParameters;
