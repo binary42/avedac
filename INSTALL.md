@@ -1,20 +1,16 @@
-Table of Contents
+##Table of Contents
 
 1. System Requirements
-
 2. About this Software
-
 3. Installation on Linux
-
 4. Installation on MacOSX
-
 5. Developer Notes
 
 
 1. System Requirements
------------------------------------------------------------------------------
+---
 
-****Important ****
+**Important **
 This not a pure Java software package. This software includes C++, Matlab,
 and Java code.  It currently only works on Linux/Fedora, however
 certain components will also build on MacOSx. To build the entire package,
@@ -69,8 +65,8 @@ you need:
         Matlab is required to build the aved-classifier module
 	which is used in the graphical interface module aved-ui.
 
-2.  About this Software
------------------------------------------------------------------------------
+2. About this Software
+---
 This software is used to automate detection and tracking of animals
 in underwater video. It was developed in collaboration between the Monterey
 Bay Aquarium Research Institute (MBARI), The California Institute of Technology.
@@ -80,8 +76,8 @@ This work would not be possible without the generous support of the
 David and Lucile Packard Foundation.
 
 
-3.  Installation on Linux
------------------------------------------------------------------------------
+3. Installation on Linux
+---
 
 	3.1. Set the environment following variables to match your installation
 	     
@@ -106,8 +102,8 @@ David and Lucile Packard Foundation.
 	     	$ ./build
 
 
-4.  Installation on MacOSX
------------------------------------------------------------------------------
+4. Installation on MacOSX
+---
 
 Currently aved-mbarivision and aved-pmbarivision will not build on MacOSX.
 However, the graphical interface and classifier code will build on MacOSX.
