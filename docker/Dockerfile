@@ -17,26 +17,10 @@ RUN apt-get update && apt-get install -q -y \
  
   #mesa-common-dev \
 
-# Set ~/torch as working directory
+# Set /root as working directory
 WORKDIR /root/
 
 ADD build.sh build.sh
 RUN chmod +x build.sh
 CMD ["cd /root"]
-CMD ["./build.sh"]
-
-#ADD . /src
-#ADD . /src
-#RUN cd /src && make
-
-#IN /foo { touch /hello.txt }
-
-#IN /var/build {
-#    FROM busybox
-#    EXPOSE 80
-#    ENTRYPOINT /usr/local/bin/app
-#}
-
-#RUN cp /src/build/app /var/build/usr/local/bin/app
-#PUBLISH /var/build
-#PUBLISH /foo
+RUN cd /saliency && ./build.sh
