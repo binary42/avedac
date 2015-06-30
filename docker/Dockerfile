@@ -2,7 +2,10 @@ FROM ubuntu:14.10
 MAINTAINER Danelle Cline <dcline@mbari.org>
 
 RUN apt-get update && apt-get install -q -y \
+  git \
   wget \
+  cmake \
+  unzip \
   build-essential \
   subversion \
   autoconf \
@@ -13,9 +16,10 @@ RUN apt-get update && apt-get install -q -y \
   libx11-dev \
   libxext-dev \
   freeglut3-dev \ 
-  liblapack-dev 
- 
-  #mesa-common-dev \
+  liblapack-dev \ 
+  mesa-common-dev \
+  libgl1-mesa-dev
+
 
 # Set /root as working directory
 WORKDIR /root/
