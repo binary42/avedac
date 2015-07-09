@@ -4,18 +4,15 @@
  sudo mv docker-compose /usr/bin/
  chmod +x /usr/bin/docker-compose```
  
-* Check environment variables
-```docker-compose run saliency  env```
-
 * Build
 Get the password from http://ilab.usc.edu/toolkit/downloads.shtml> for the toolkit, then run the Docker build with that
 ```build.sh <password>```
-Alternatively, edit Docker, replacing the SALIENCY_SVN_PASSWORD with the password and run  
+Alternatively, edit Docker file replacing the SALIENCY_SVN_PASSWORD with the password then run  
 ```docker build -t saliency```
 
 * Run
 ```docker run -ti -e DISPLAY=$DISPLAY danellecline/saliency /bin/bash```
 
-* tidbits
-  http://stackoverflow.com/questions/29377853/how-to-use-environment-variables-in-docker-compose
+* Check environment variables in the docker compose file with
+```docker-compose run saliency  env```
 
