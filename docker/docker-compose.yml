@@ -1,0 +1,6 @@
+web:
+  build: .
+  environment: 
+    - FOOBAR=test
+  volumes:
+   - .:/code
