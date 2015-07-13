@@ -1,0 +1,12 @@
+{
+ "schedule": "R\/2015-07-13T00:00:00Z\/PT2M",
+ "name": "dockerjob",
+ "container": {
+   "type": "DOCKER",
+   "image": "libmesos/ubuntu"
+ },
+ "cpus": "0.5",
+ "mem": "512",
+ "uris": [],
+ "command": "while sleep 10; do date -u +%T; done"
+}

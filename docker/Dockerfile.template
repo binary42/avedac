@@ -18,7 +18,8 @@ RUN apt-get update && apt-get install -q -y \
   freeglut3-dev \ 
   liblapack-dev \ 
   mesa-common-dev \
-  libgl1-mesa-dev
+  libgl1-mesa-dev \
+  liblapack-dev
 
 
 # Set /code as working directory
@@ -35,7 +36,6 @@ RUN pwd
 RUN cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_TBB=ON -D WITH_V4L=OFF -D INSTALL_C_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF -D BUILD_EXAMPLES=OFF -D WITH_OPENGL=ON ..
 RUN make
 RUN make install
-RUN cd .. 
 #RUN rm *.zip
 
 # Supress warning about storing unencrypted password that prompts yes/no answer 
@@ -45,12 +45,14 @@ RUN echo "store-plaintext-passwords=off" >> ~/.subversion/config
 
 # Build saliency
 RUN export CFLAGS='-L /usr/lib/x86_64-linux-gnu/'
+WORKDIR /code
 RUN svn checkout --username anonsvn --password SALIENCY_SVN_PASSWORD svn://isvn.usc.edu/software/invt/trunk/saliency
+WORKDIR /code/saliency
+RUN pwd
 RUN export SALIENCYROOT=`pwd`/saliency
-RUN cd saliency
 RUN autoconf configure.ac > configure
 RUN ./configure
 # remove line that's failing in latest code
 RUN sed -i '/omnicamera/d' ./depoptions.in
 RUN make core
-RUN cd .. 
+
